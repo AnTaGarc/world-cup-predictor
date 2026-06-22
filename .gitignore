@@ -37,6 +37,9 @@ data/*.log
 data/streamlit.*.log
 data/qa*.log
 
+# External dataset downloads (re-downloadable via the import scripts)
+data/external/
+
 # Streamlit local cache / secrets
 .streamlit/secrets.toml
 

@@ -144,6 +144,8 @@ def predict_match_markets(
     advanced_form: XgFormAdjustment | None = None,
     outcome_probabilities: dict[str, float] | None = None,
     outcome_weight: float = 0.80,
+    deep_outcome_probabilities: dict[str, float] | None = None,
+    deep_outcome_weight: float = 0.40,
     host_factor_a: float = 1.0,
     host_factor_b: float = 1.0,
     corrections: ModelCorrections | None = None,
@@ -207,6 +209,16 @@ def predict_match_markets(
             host_ratio = max(0.50, min(2.0, host_factor_a / host_factor_b if host_factor_b else 1.0))
             process_delta += 1.50 * math.log(host_ratio)
         adjusted_ml_1x2 = _tilt_home_away(ml_1x2, process_delta)
+        # If the deep-stats classifier produced probabilities, fold them into
+        # the ML side via a weighted ensemble of the two classifiers. Caller
+        # controls deep_outcome_weight (0 = ignore deep, 1 = use deep only).
+        if deep_outcome_probabilities is not None:
+            deep_1x2 = _normalize_1x2(deep_outcome_probabilities)
+            dw = max(0.0, min(1.0, deep_outcome_weight))
+            adjusted_ml_1x2 = _normalize_1x2({
+                key: (1.0 - dw) * adjusted_ml_1x2[key] + dw * deep_1x2[key]
+                for key in ("home", "draw", "away")
+            })
         weight = max(0.0, min(1.0, outcome_weight))
         blended = {
             key: weight * adjusted_ml_1x2[key] + (1.0 - weight) * score_1x2[key]

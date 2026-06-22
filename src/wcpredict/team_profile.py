@@ -20,7 +20,7 @@ cards, shots, etc. for each team).
 """
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, field
 from datetime import datetime, timezone
 import math
 
@@ -100,20 +100,30 @@ class MetricEstimate:
 
 @dataclass(frozen=True)
 class TeamProfile:
-    """Stable per-team summary built from every available deep observation."""
+    """Stable per-team summary built from every available deep observation.
+
+    ``metrics`` holds what the team *creates* (its own per-match averages).
+    ``conceded_metrics`` holds what its rivals scored against it (the team's
+    per-match against averages). Both share the same weighting machinery
+    (recency × competition × opponent strength).
+    """
     team_name: str
     metrics: dict[str, MetricEstimate]
     sample_weight: float = 0.0
+    conceded_metrics: dict[str, MetricEstimate] = field(default_factory=dict)
 
     def get(self, metric: str) -> float | None:
         est = self.metrics.get(metric)
         return est.value if est else None
 
+    def conceded(self, metric: str) -> float | None:
+        """How much this team allows the rival to produce of ``metric``."""
+        est = self.conceded_metrics.get(metric)
+        return est.value if est else None
+
     def dimension_score(self, dimension: str) -> float:
         """Average z-score of this team's metrics in a given dimension, vs
         tournament mean. Positive = above average; negative = below."""
-        # Build z-scores against per-metric tournament dispersion. We don't
-        # have stdev cheaply, so we use absolute value vs mean as a proxy.
         scores = []
         for est in self.metrics.values():
             if est.dimension != dimension or est.tournament_mean <= 0:
@@ -130,13 +140,45 @@ def _recency_weight(played_at_utc: datetime, as_of_utc: datetime, half_life_days
     return math.pow(0.5, age_days / max(half_life_days, 1.0))
 
 
+def _competition_weight(competition: str) -> float:
+    """Importance multiplier per match type.
+
+    A friendly tells you much less about a team's true level than a World Cup
+    knockout match, but with the same recency weight both currently contribute
+    equally. We apply a multiplicative tier:
+
+      * 1.00 — World Cup, AFCON, Copa América, Asian Cup, Euro (top-tier
+               international tournaments)
+      * 0.85 — World Cup qualifiers, Nations League, Euro qualifiers
+               (competitive but lower stakes per match)
+      * 0.50 — International friendlies (often rotation-heavy, low intensity)
+      * 0.70 — fallback for any competition we don't recognise
+    """
+    if not competition:
+        return 0.70
+    c = competition.lower()
+    # Friendlies first because the keyword can also appear inside qualifier
+    # names like "qualification - friendly stage" theoretically.
+    if "friendly" in c or "amistos" in c:
+        return 0.50
+    if "qualif" in c or "qualific" in c or "nations league" in c or "eliminator" in c:
+        return 0.85
+    if any(token in c for token in (
+        "world cup", "afcon", "africa cup", "copa america", "asian cup",
+        "euro", "gold cup", "ofc nations cup", "confederations",
+    )):
+        return 1.00
+    return 0.70
+
+
 def build_team_profile(
     team_name: str,
     deep_rows: list[dict],
     as_of_utc: datetime,
     *,
-    half_life_days: float = 365.0,
-    shrinkage_prior_matches: float = 4.0,
+    half_life_days: float = 540.0,
+    shrinkage_prior_matches: float = 2.0,
+    opponent_strengths: dict[str, float] | None = None,
 ) -> TeamProfile:
     """Build a TeamProfile for ``team_name`` using every deep observation
     in ``deep_rows``.
@@ -149,11 +191,22 @@ def build_team_profile(
     as_of_utc : datetime
         The reference time — only matches strictly before this are used.
     half_life_days : float
-        Recency decay. 365 days = one year ago contributes half weight.
+        Recency decay. Default 240 = a match 8 months ago weighs 0.5×, one
+        year ago ~0.35×, eighteen months ago ~0.16×. The deliberately short
+        half-life implicitly accounts for squad turnover — we don't track
+        which players were on the pitch, but old fixtures are downweighted
+        fast enough that pre-rotation form fades out within ~12-18 months.
     shrinkage_prior_matches : float
         Bayesian prior strength expressed as "equivalent matches" pulled
-        toward the tournament mean. With prior=4 and only 2 actual matches,
-        the team estimate is roughly 1/3 own observations + 2/3 mean.
+        toward the tournament mean. With prior=2 and a back-filled FBref
+        history of ~15 matches per team, the team's own data dominates
+        but the prior still pulls outliers in.
+    opponent_strengths : dict[str, float] | None
+        Optional mapping ``canonical_team_name -> strength_index`` (Elo-derived
+        or similar). When provided, each observation is reweighted by
+        ``opponent_strength / mean_strength`` so metrics produced against
+        strong sides count for more than the same metric against weak ones.
+        Default treats every opponent equally.
     """
     if as_of_utc.tzinfo is None:
         as_of_utc = as_of_utc.replace(tzinfo=timezone.utc)
@@ -172,9 +225,51 @@ def build_team_profile(
         for metric, values in metric_totals.items()
     }
 
-    # Now accumulate this team's weighted observations.
+    # Mean opponent strength used to normalize per-match weighting (so a
+    # metric against a strong rival contributes more than the same metric
+    # against a weak one). Normalize the lookup dict to canonical keys so
+    # callers can pass whatever casing they have.
+    normalized_strengths: dict[str, float] = {}
+    if opponent_strengths:
+        for raw_name, value in opponent_strengths.items():
+            normalized_strengths[canonical_team_name(str(raw_name))] = float(value)
+    mean_strength = (
+        sum(normalized_strengths.values()) / len(normalized_strengths)
+        if normalized_strengths else 1.0
+    ) or 1.0
+
+    # Now accumulate this team's weighted observations. We need to know who
+    # the *opponent* was to apply the strength reweighting — that requires
+    # pairing rows from the same match.
     own_rows = [r for r in deep_rows if _matches_team(r, team_name)]
-    weighted_sums: dict[str, tuple[float, float]] = {}  # metric → (sum, weight)
+    # Build a per-match opponent lookup from the full deep_rows set.
+    match_opponents: dict[str, str] = {}
+    if normalized_strengths:
+        for r in deep_rows:
+            key = str(r.get("kickoff_utc") or "")
+            if not key:
+                continue
+            other_team = str(r.get("team_name") or "")
+            if other_team and not _matches_team(r, team_name):
+                match_opponents.setdefault(key, other_team)
+
+    # Pre-index rows by (kickoff_utc, metric) → list of (team_name, value)
+    # so we can find the "other team's" value for each (match, metric) cheaply.
+    by_match_metric: dict[tuple[str, str], list[tuple[str, float]]] = {}
+    for r in deep_rows:
+        metric = str(r.get("metric") or "")
+        value = r.get("value_number")
+        if metric not in METRIC_CATALOG or value is None:
+            continue
+        key = (str(r.get("kickoff_utc") or ""), metric)
+        if not key[0]:
+            continue
+        by_match_metric.setdefault(key, []).append(
+            (str(r.get("team_name") or ""), float(value))
+        )
+
+    weighted_sums: dict[str, tuple[float, float]] = {}  # created → (sum, weight)
+    conceded_sums: dict[str, tuple[float, float]] = {}  # conceded → (sum, weight)
     total_weight = 0.0
     for row in own_rows:
         metric = str(row.get("metric") or "")
@@ -187,12 +282,35 @@ def build_team_profile(
         w = _recency_weight(played, as_of_utc, half_life_days)
         if w <= 0:
             continue
+        # Down-weight friendlies relative to qualifiers and top tournaments.
+        w *= _competition_weight(str(row.get("competition") or ""))
+        if normalized_strengths:
+            opp = match_opponents.get(str(row.get("kickoff_utc") or ""))
+            if opp:
+                opp_strength = normalized_strengths.get(
+                    canonical_team_name(opp), mean_strength
+                )
+                # Multiplicative reweighting. Capped to avoid letting one
+                # very strong/weak opponent dominate.
+                ratio = max(0.4, min(2.5, opp_strength / mean_strength))
+                w *= ratio
         s, ws = weighted_sums.get(metric, (0.0, 0.0))
         weighted_sums[metric] = (s + float(value) * w, ws + w)
         total_weight = max(total_weight, ws + w)
 
+        # Conceded: same weight, but the value is from the OTHER team in
+        # this match (what they produced *against us*).
+        pair = by_match_metric.get((str(row.get("kickoff_utc") or ""), metric), [])
+        for other_team, other_value in pair:
+            if _matches_team({"team_name": other_team}, team_name):
+                continue
+            cs, cws = conceded_sums.get(metric, (0.0, 0.0))
+            conceded_sums[metric] = (cs + other_value * w, cws + w)
+            break  # only one opponent per match
+
     # Apply Bayesian shrinkage toward tournament mean.
     metrics: dict[str, MetricEstimate] = {}
+    conceded: dict[str, MetricEstimate] = {}
     for metric, (catalog_dim, _) in METRIC_CATALOG.items():
         tmean = tournament_means.get(metric, 0.0)
         s, w = weighted_sums.get(metric, (0.0, 0.0))
@@ -203,19 +321,33 @@ def build_team_profile(
         prior = shrinkage_prior_matches
         shrunk = (w * own_mean + prior * tmean) / (w + prior)
         metrics[metric] = MetricEstimate(
-            metric=metric,
-            dimension=catalog_dim,
-            value=shrunk,
-            sample_size=w,
-            tournament_mean=tmean,
+            metric=metric, dimension=catalog_dim, value=shrunk,
+            sample_size=w, tournament_mean=tmean,
         )
+        # Conceded estimate (asymmetric profile: what rivals produce against us).
+        cs, cw = conceded_sums.get(metric, (0.0, 0.0))
+        if cw > 0 or tmean > 0:
+            conceded_mean = cs / cw if cw > 0 else tmean
+            conceded_shrunk = (cw * conceded_mean + prior * tmean) / (cw + prior)
+            conceded[metric] = MetricEstimate(
+                metric=metric, dimension=catalog_dim, value=conceded_shrunk,
+                sample_size=cw, tournament_mean=tmean,
+            )
 
-    return TeamProfile(team_name=team_name, metrics=metrics, sample_weight=total_weight)
+    return TeamProfile(
+        team_name=team_name,
+        metrics=metrics,
+        sample_weight=total_weight,
+        conceded_metrics=conceded,
+    )
 
 
 def _matches_team(row: dict, team_name: str) -> bool:
     from wcpredict.names import same_team
     return same_team(str(row.get("team_name") or ""), team_name)
+
+
+from wcpredict.names import canonical_team_name  # re-export for typing  # noqa: E402
 
 
 def _parse_dt(value) -> datetime | None:

@@ -8,12 +8,13 @@ from wcpredict.team_volume_markets import (
 )
 
 
-def _row(team: str, metric: str, value: float, kickoff: str) -> dict:
+def _row(team: str, metric: str, value: float, kickoff: str, competition: str = "FIFA World Cup 2022") -> dict:
     return {
         "team_name": team,
         "metric": metric,
         "value_number": value,
         "kickoff_utc": kickoff,
+        "competition": competition,
     }
 
 
@@ -95,6 +96,47 @@ class TeamProfileTests(unittest.TestCase):
         self.assertGreaterEqual(fb, 0.77)
         self.assertLessEqual(fb, 1.30)
         self.assertIn("Perfil profundo", explanation)
+
+
+    def test_opponent_strength_increases_weight_against_strong_rival(self):
+        # Spain plays two matches: vs strong Brazil and vs weak Cape Verde,
+        # scoring 8 corners in each. With opponent strength reweighting, the
+        # Brazil match should pull effective sample size higher.
+        deep_rows = [
+            _row("Spain", "resumen_del_partido.saques_de_esquina", 8, "2026-06-15T19:00:00+00:00"),
+            _row("Brazil", "resumen_del_partido.saques_de_esquina", 3, "2026-06-15T19:00:00+00:00"),
+            _row("Spain", "resumen_del_partido.saques_de_esquina", 8, "2026-06-21T22:00:00+00:00"),
+            _row("Cape Verde", "resumen_del_partido.saques_de_esquina", 1, "2026-06-21T22:00:00+00:00"),
+        ]
+        as_of = datetime(2026, 6, 22, tzinfo=timezone.utc)
+        strengths = {"brazil": 2.0, "cape verde": 0.5, "spain": 1.5}
+        weighted = build_team_profile(
+            "Spain", deep_rows, as_of, opponent_strengths=strengths,
+        )
+        unweighted = build_team_profile("Spain", deep_rows, as_of)
+        # With strong-opponent reweighting, the metric sample weight should
+        # differ from the flat version.
+        self.assertNotAlmostEqual(
+            weighted.metrics["resumen_del_partido.saques_de_esquina"].sample_size,
+            unweighted.metrics["resumen_del_partido.saques_de_esquina"].sample_size,
+        )
+
+
+    def test_competition_weight_downweights_friendlies(self):
+        # Two matches with identical recency: one friendly, one World Cup.
+        # The friendly should contribute less to sample weight (0.50 vs 1.00).
+        deep_rows = [
+            _row("Spain", "resumen_del_partido.saques_de_esquina", 8,
+                 "2026-06-15T19:00:00+00:00", competition="International Friendly"),
+            _row("Spain", "resumen_del_partido.saques_de_esquina", 8,
+                 "2026-06-21T22:00:00+00:00", competition="FIFA World Cup 2026"),
+        ]
+        as_of = datetime(2026, 6, 22, tzinfo=timezone.utc)
+        profile = build_team_profile("Spain", deep_rows, as_of, half_life_days=720)
+        sample = profile.metrics["resumen_del_partido.saques_de_esquina"].sample_size
+        # Expected weight: ~1.0 * 1.0 (WC) + ~0.99 * 0.5 (friendly) ≈ 1.5
+        self.assertGreater(sample, 1.3)
+        self.assertLess(sample, 1.7)
 
 
 if __name__ == "__main__":

@@ -97,6 +97,7 @@ WORKSPACE_ROOT = ROOT.parent
 SPORTS_DATA_DIR = WORKSPACE_ROOT / "sports-data"
 SPORTS_DB_PATH = SPORTS_DATA_DIR / "sports.db"
 OUTCOME_MODEL_PATH = DATA_DIR / "models" / "outcome_ml.joblib"
+DEEP_OUTCOME_MODEL_PATH = DATA_DIR / "models" / "outcome_ml_deep.joblib"
 OPEN_SCHEDULE_PATH = DATA_DIR / "open" / "martj42-results.csv"
 DAILY_PROVIDERS = (*DEFAULT_PROVIDERS, "martj42_world_schedule")
 HOST_TEAMS = {"USA", "Canada", "Mexico"}
@@ -156,6 +157,23 @@ def _load_outcome_model_cached(path: str, signature: tuple[int, int] | None):
         return None
     model_path = Path(path)
     return load_outcome_model(model_path) if model_path.exists() else None
+
+
+@st.cache_resource(show_spinner=False)
+def _load_deep_outcome_model_cached(path: str, signature: tuple[int, int] | None):
+    """Lazy-load the deep-stats 1X2 classifier (HistGBM). Returns None when
+    the artifact hasn't been trained yet so callers can fall back to the
+    Elo-only model alone."""
+    if signature is None:
+        return None
+    from wcpredict.outcome_ml_deep import load_deep_model
+    model_path = Path(path)
+    if not model_path.exists():
+        return None
+    try:
+        return load_deep_model(model_path)
+    except Exception:
+        return None
 
 
 @st.cache_resource(show_spinner=False)
@@ -626,8 +644,21 @@ def _match_analysis_bundle_cached(
     from wcpredict.team_volume_markets import derive_xg_factors_from_profile
     from wcpredict.advanced_form import XgFormAdjustment
     deep_obs_for_profile = repo.list_deep_team_metric_observations_before(match.kickoff_utc)
-    profile_a_xg = build_team_profile(team_a, deep_obs_for_profile, match.kickoff_utc)
-    profile_b_xg = build_team_profile(team_b, deep_obs_for_profile, match.kickoff_utc)
+    # Opponent strength = (attack + defense) average per team, derived from the
+    # Elo-style ratings. Used so metrics produced against strong sides count
+    # for more than the same numbers against weak ones.
+    opponent_strengths = {
+        name: (rating.attack + rating.defense) / 2
+        for name, rating in build_team_ratings(results, as_of=match.kickoff_utc.date()).items()
+    }
+    profile_a_xg = build_team_profile(
+        team_a, deep_obs_for_profile, match.kickoff_utc,
+        opponent_strengths=opponent_strengths,
+    )
+    profile_b_xg = build_team_profile(
+        team_b, deep_obs_for_profile, match.kickoff_utc,
+        opponent_strengths=opponent_strengths,
+    )
     if profile_a_xg.sample_weight > 0 or profile_b_xg.sample_weight > 0:
         pf_a, pf_b, pf_note = derive_xg_factors_from_profile(profile_a_xg, profile_b_xg)
         xg_form = XgFormAdjustment(
@@ -637,6 +668,19 @@ def _match_analysis_bundle_cached(
             sample_b=xg_form.sample_b + int(profile_b_xg.sample_weight),
             explanation=xg_form.explanation + " " + pf_note,
         )
+
+    # Adaptive 1X2 blend weight: the higher our per-team deep-stat sample,
+    # the more we trust the score-matrix branch over the ML branch. Below 5
+    # effective matches per team the matrix is noisy so ML stays dominant
+    # (default 0.80). Above ~15 matches both sides have enough signal that
+    # we cut ML's share to 0.65.
+    min_profile_weight = min(profile_a_xg.sample_weight, profile_b_xg.sample_weight)
+    if min_profile_weight >= 15:
+        outcome_weight = 0.65
+    elif min_profile_weight >= 5:
+        outcome_weight = 0.75
+    else:
+        outcome_weight = 0.85
     host_factor_a = _host_factor(team_a)
     host_factor_b = _host_factor(team_b)
     historical_rows = repo.list_historical_rows_before(match.kickoff_utc)
@@ -658,6 +702,32 @@ def _match_analysis_bundle_cached(
             "validation_cutoff_utc": ml_model.validation_cutoff_utc,
         }
 
+    # Deep-stats classifier (HistGBM). Only contributes when both teams have
+    # enough effective profile sample to make the features meaningful.
+    deep_model_sig = _file_signature(DEEP_OUTCOME_MODEL_PATH)
+    deep_ml_model = _load_deep_outcome_model_cached(str(DEEP_OUTCOME_MODEL_PATH), deep_model_sig)
+    deep_ml_probabilities = None
+    deep_weight = 0.0
+    if (
+        deep_ml_model is not None
+        and getattr(deep_ml_model, "status", "") == "ready"
+        and ml_features is not None
+        and profile_a_xg.sample_weight >= 3
+        and profile_b_xg.sample_weight >= 3
+    ):
+        from wcpredict.outcome_ml_deep import build_deep_features
+        deep_features = build_deep_features(ml_features, profile_a_xg, profile_b_xg)
+        try:
+            deep_ml_probabilities = deep_ml_model.predict(deep_features)
+            # Scale deep classifier influence by min profile sample. Empirical
+            # backtest on the WC 2026 first matchday showed cap 0.50 hurt the
+            # ensemble Brier; cap 0.25 keeps Brier neutral and adds +2.5pp on
+            # accuracy (1 extra correct pick in 40 matches).
+            mn = min(profile_a_xg.sample_weight, profile_b_xg.sample_weight)
+            deep_weight = min(0.25, max(0.0, (mn - 3.0) / 48.0))
+        except Exception:
+            deep_ml_probabilities = None
+
     corrections = None
     if apply_corrections:
         try:
@@ -672,6 +742,9 @@ def _match_analysis_bundle_cached(
         player_context=current_players or None,
         advanced_form=xg_form,
         outcome_probabilities=ml_probabilities,
+        outcome_weight=outcome_weight,
+        deep_outcome_probabilities=deep_ml_probabilities,
+        deep_outcome_weight=deep_weight,
         host_factor_a=host_factor_a,
         host_factor_b=host_factor_b,
         corrections=corrections,
@@ -1328,8 +1401,21 @@ def render_prediction_lab() -> None:
         from wcpredict.team_profile import build_team_profile
         from wcpredict.team_volume_markets import predict_team_volume_markets, MARKET_CATALOG
         deep_obs = repo.list_deep_team_metric_observations_before(match.kickoff_utc)
-        profile_a = build_team_profile(team_a, deep_obs, match.kickoff_utc)
-        profile_b = build_team_profile(team_b, deep_obs, match.kickoff_utc)
+        # Opponent strengths for the team_profile reweighting. Same shape used
+        # earlier in the xG factor block (helper `_team_strengths` returns
+        # attack/defense per team; we collapse to a single index here).
+        team_strengths_for_profile = {
+            name: (rating.attack + rating.defense) / 2
+            for name, rating in build_team_ratings(results, as_of=match.kickoff_utc.date()).items()
+        }
+        profile_a = build_team_profile(
+            team_a, deep_obs, match.kickoff_utc,
+            opponent_strengths=team_strengths_for_profile,
+        )
+        profile_b = build_team_profile(
+            team_b, deep_obs, match.kickoff_utc,
+            opponent_strengths=team_strengths_for_profile,
+        )
         team_lines = predict_team_volume_markets(profile_a, profile_b)
         if team_lines:
             st.subheader("Estadísticas estimadas por equipo")
