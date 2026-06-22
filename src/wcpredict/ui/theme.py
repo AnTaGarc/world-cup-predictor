@@ -448,10 +448,20 @@ div[data-testid="stDataEditor"] tbody tr:hover {
 
 /* ---- Mobile ---- */
 @media (max-width: 720px) {
-  /* Tighter page padding. Extra bottom padding leaves room for Streamlit
-     Cloud's floating "Manage app" badge so it doesn't cover the last row. */
+  /* Top padding leaves room for Streamlit's sticky header (sidebar toggle +
+     deploy/share buttons live there). Bottom padding leaves room for the
+     floating "Manage app" badge on Streamlit Cloud. */
   .block-container,
-  [data-testid="stMainBlockContainer"] { padding: 1rem 0.75rem 6rem !important; }
+  [data-testid="stMainBlockContainer"] { padding: 3.5rem 0.75rem 6rem !important; }
+  /* Make sure Streamlit's header is opaque so content scrolling underneath
+     doesn't show through. */
+  [data-testid="stHeader"] {
+    background: #ffffff !important;
+    height: 3rem;
+    min-height: 3rem;
+    box-shadow: 0 1px 0 var(--line);
+  }
+  [data-testid="stHeader"]::before { display: none; }
 
   /* Wide audit/comparison tables are already wrapped in .audit-table-wrap
      which provides horizontal scroll. Hint the scrollbar visually. */
