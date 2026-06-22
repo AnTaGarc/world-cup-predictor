@@ -573,13 +573,14 @@ div[data-testid="stDataEditor"] tbody tr:hover {
 _PWA_HEAD = """
 <script>
 (function() {
-  // st.components.v1.html runs the script inside an iframe; we hop up to the
-  // parent document (the actual Streamlit page) and inject PWA meta tags +
-  // an inline manifest so the app can be "installed" to the home screen on
-  // iOS/Android. No static file server needed — the manifest is delivered via
-  // a Blob URL.
+  // Hop from the components iframe to the real Streamlit page document.
   var doc;
   try { doc = window.parent.document; } catch (e) { doc = document; }
+
+  // Force a useful title BEFORE Chrome/Safari snapshot it for the install
+  // prompt or "Add to home screen" shortcut. Streamlit's initial title is
+  // "Streamlit" which leaks into bookmarks if we don't override it eagerly.
+  try { window.parent.document.title = 'Mundial 2026'; } catch (e) {}
 
   var v = doc.querySelector('meta[name="viewport"]');
   if (!v) { v = doc.createElement('meta'); v.name = 'viewport'; doc.head.appendChild(v); }
@@ -598,38 +599,43 @@ _PWA_HEAD = """
   ensureMeta('apple-mobile-web-app-status-bar-style', 'black-translucent');
   ensureMeta('apple-mobile-web-app-title', 'Mundial 2026');
   ensureMeta('mobile-web-app-capable', 'yes');
+  ensureMeta('application-name', 'Mundial 2026');
   ensureMeta('theme-color', '#0f2342');
   ensureMeta('color-scheme', 'light');
 
-  var iconSvg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192">' +
-    '<rect width="192" height="192" rx="32" fill="#0f2342"/>' +
-    '<text x="96" y="128" text-anchor="middle" font-family="Inter,sans-serif" ' +
-    'font-size="100" font-weight="800" fill="#ffffff">⚽</text></svg>';
-  var iconUri = 'data:image/svg+xml;utf8,' + encodeURIComponent(iconSvg);
-
-  var apple = doc.head.querySelector('link[rel="apple-touch-icon"]');
-  if (!apple) { apple = doc.createElement('link'); apple.rel = 'apple-touch-icon'; doc.head.appendChild(apple); }
-  apple.href = iconUri;
-
-  if (!doc.head.querySelector('link[rel="manifest"][data-pwa-injected]')) {
-    var manifest = {
-      name: 'Analista del Mundial 2026',
-      short_name: 'Mundial 2026',
-      description: 'Predicción, datos y calibración del Mundial 2026.',
-      start_url: window.parent.location.pathname || '/',
-      display: 'standalone',
-      background_color: '#f7f9fc',
-      theme_color: '#0f2342',
-      orientation: 'portrait',
-      icons: [{src: iconUri, sizes: '192x192', type: 'image/svg+xml', purpose: 'any maskable'}]
-    };
-    var blob = new Blob([JSON.stringify(manifest)], {type: 'application/manifest+json'});
-    var link = doc.createElement('link');
-    link.rel = 'manifest';
-    link.href = URL.createObjectURL(blob);
-    link.setAttribute('data-pwa-injected', '1');
-    doc.head.appendChild(link);
+  // Real PNG icons served from Streamlit's static folder (enableStaticServing
+  // = true). Chrome on Android refuses to show an "Install app" prompt when
+  // the manifest icon is an SVG data URI — it requires a proper PNG that it
+  // can fetch by URL.
+  function ensureLink(rel, href, opts) {
+    var sel = 'link[rel="' + rel + '"]' + ((opts && opts.sizes) ? '[sizes="' + opts.sizes + '"]' : '');
+    var el = doc.head.querySelector(sel);
+    if (!el) {
+      el = doc.createElement('link');
+      el.rel = rel;
+      if (opts && opts.sizes) el.setAttribute('sizes', opts.sizes);
+      if (opts && opts.type) el.setAttribute('type', opts.type);
+      doc.head.appendChild(el);
+    }
+    el.href = href;
   }
+  ensureLink('icon', '/app/static/icon-192.png', {sizes: '192x192', type: 'image/png'});
+  ensureLink('icon', '/app/static/icon-512.png', {sizes: '512x512', type: 'image/png'});
+  ensureLink('apple-touch-icon', '/app/static/apple-touch-icon.png', {sizes: '180x180'});
+  ensureLink('manifest', '/app/static/manifest.json');
+
+  // Register the service worker from the parent window. Chrome on Android
+  // requires a registered SW with a fetch handler before it considers the app
+  // installable. Scope is /app/static/ (the SW's natural path); that's enough
+  // for the install criteria — we don't actually need to intercept anything.
+  try {
+    var w = window.parent;
+    if (w && 'serviceWorker' in w.navigator) {
+      w.navigator.serviceWorker
+        .register('/app/static/sw.js', {scope: '/app/static/'})
+        .catch(function (err) { console.warn('SW register failed', err); });
+    }
+  } catch (e) {}
 })();
 </script>
 """
