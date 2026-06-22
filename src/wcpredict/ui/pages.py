@@ -469,15 +469,38 @@ def _prediction_index(predictions: list[MarketPrediction]) -> dict[tuple[str, st
 
 
 def _database_summary() -> dict[str, int | bool]:
+    """Counters shown in the Resumen hero. Filtered to the 2026 World Cup so
+    the historical backfill (~4k matches, ~150 teams from past tournaments)
+    doesn't drown out the figures we actually care about."""
     repo = _repo()
+    wc_filter = "competition = 'FIFA World Cup 2026'"
     with sqlite3.connect(repo.path) as con:
         return {
             "exists": repo.path.exists(),
-            "matches": con.execute("SELECT COUNT(*) FROM matches").fetchone()[0],
-            "teams": con.execute("SELECT COUNT(*) FROM teams").fetchone()[0],
-            "odds": con.execute("SELECT COUNT(*) FROM manual_odds").fetchone()[0],
-            "predictions": con.execute("SELECT COUNT(*) FROM predictions").fetchone()[0],
-            "imports": con.execute("SELECT COUNT(*) FROM import_runs").fetchone()[0],
+            "matches": con.execute(
+                f"SELECT COUNT(*) FROM matches WHERE {wc_filter}"
+            ).fetchone()[0],
+            # Teams: only those appearing in WC2026 matches.
+            "teams": con.execute(
+                "SELECT COUNT(DISTINCT t.id) FROM teams t "
+                "JOIN matches m ON t.id IN (m.team_a_id, m.team_b_id) "
+                f"WHERE m.{wc_filter}"
+            ).fetchone()[0],
+            "odds": con.execute(
+                "SELECT COUNT(*) FROM manual_odds o "
+                "JOIN matches m ON m.id = o.match_id "
+                f"WHERE m.{wc_filter}"
+            ).fetchone()[0],
+            "predictions": con.execute(
+                "SELECT COUNT(*) FROM predictions p "
+                "JOIN matches m ON m.id = p.match_id "
+                f"WHERE m.{wc_filter}"
+            ).fetchone()[0],
+            "imports": con.execute(
+                "SELECT COUNT(*) FROM import_runs i "
+                "JOIN matches m ON m.id = i.match_id "
+                f"WHERE m.{wc_filter}"
+            ).fetchone()[0],
         }
 
 
