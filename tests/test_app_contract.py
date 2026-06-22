@@ -48,7 +48,7 @@ class AppContractTests(unittest.TestCase):
     def test_odds_and_player_ev_paths_avoid_heavy_rerun_work(self):
         source = (Path(__file__).parents[1] / "src" / "wcpredict" / "ui" / "pages.py").read_text(encoding="utf-8")
         self.assertIn("@st.cache_resource(show_spinner=False)\ndef _repo", source)
-        self.assertIn("@st.cache_data(ttl=900, show_spinner=False)\ndef _refresh_current_world_cup_banks_cached", source)
+        self.assertIn("@st.cache_resource(ttl=900, show_spinner=False)\ndef _refresh_current_world_cup_banks_cached", source)
         self.assertIn("_load_outcome_model_cached", source)
         self.assertIn("prediction_index = _prediction_index(predictions)", source)
         self.assertIn("player_ev_comparison = compare_odds_to_probability", source)
@@ -58,7 +58,7 @@ class AppContractTests(unittest.TestCase):
         source = (Path(__file__).parents[1] / "src" / "wcpredict" / "ui" / "pages.py").read_text(encoding="utf-8")
         self.assertIn("class MatchAnalysisBundle", source)
         self.assertIn(
-            "@st.cache_data(show_spinner=False)\ndef _match_analysis_bundle_cached",
+            "@st.cache_resource(show_spinner=False)\ndef _match_analysis_bundle_cached",
             source,
         )
         self.assertIn("bundle = _match_analysis_bundle(match)", source)
@@ -71,11 +71,11 @@ class AppContractTests(unittest.TestCase):
     def test_dashboard_and_data_quality_reuse_cached_collector_and_match_lists(self):
         source = (Path(__file__).parents[1] / "src" / "wcpredict" / "ui" / "pages.py").read_text(encoding="utf-8")
         self.assertIn(
-            "@st.cache_data(show_spinner=False)\ndef _matches_cached",
+            "@st.cache_resource(show_spinner=False)\ndef _matches_cached",
             source,
         )
         self.assertIn(
-            "@st.cache_data(show_spinner=False)\ndef _collector_bundle_cached",
+            "@st.cache_resource(show_spinner=False)\ndef _collector_bundle_cached",
             source,
         )
         self.assertIn("@st.cache_resource(show_spinner=False)\ndef _store_cached", source)
@@ -87,7 +87,7 @@ class AppContractTests(unittest.TestCase):
     def test_player_intelligence_caches_profiles_and_clusters(self):
         source = (Path(__file__).parents[1] / "src" / "wcpredict" / "ui" / "pages.py").read_text(encoding="utf-8")
         self.assertIn(
-            "@st.cache_data(show_spinner=False)\ndef _player_intelligence_rows_cached",
+            "@st.cache_resource(show_spinner=False)\ndef _player_intelligence_rows_cached",
             source,
         )
         self.assertIn("_player_intelligence_rows_cached(_db_signature()", source)
@@ -128,7 +128,7 @@ class AppContractTests(unittest.TestCase):
 
     def test_refresh_button_surfaces_providers_and_invalidates_cache(self):
         source = (Path(__file__).parents[1] / "src" / "wcpredict" / "ui" / "pages.py").read_text(encoding="utf-8")
-        self.assertIn("st.cache_data.clear()", source)
+        self.assertIn("st.cache_resource.clear()", source)
         self.assertIn("Llamadas hechas", source)
         self.assertIn("Proveedores OK", source)
         self.assertIn("Faltantes", source)

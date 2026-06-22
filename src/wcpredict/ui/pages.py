@@ -167,8 +167,12 @@ def _store() -> CollectorStore:
     return _store_cached()
 
 
-@st.cache_data(show_spinner=False)
+@st.cache_resource(show_spinner=False)
 def _matches_cached(db_sig: tuple[int, int]):
+    # Uses cache_resource (not cache_data) because Match holds nested Team
+    # dataclasses with datetime fields that recent Streamlit versions refuse
+    # to serialize for cache_data. The list is immutable per db signature so
+    # caching as a resource is safe.
     return _repo().list_matches()
 
 
@@ -176,7 +180,7 @@ def _list_matches():
     return _matches_cached(_db_signature())
 
 
-@st.cache_data(show_spinner=False)
+@st.cache_resource(show_spinner=False)
 def _collector_bundle_cached(
     team_a: str, team_b: str, date_iso: str, sports_db_sig: tuple[int, int]
 ) -> CollectorEventBundle | None:
@@ -184,12 +188,12 @@ def _collector_bundle_cached(
     return _store_cached().find_event(team_a, team_b, _date.fromisoformat(date_iso))
 
 
-@st.cache_data(show_spinner=False)
+@st.cache_resource(show_spinner=False)
 def _calibration_summary_cached(db_sig: tuple[int, int]):
     return summarize_by_market_family(_repo().list_all_backtests())
 
 
-@st.cache_data(show_spinner=False)
+@st.cache_resource(show_spinner=False)
 def _freshness_rows_cached(db_sig: tuple[int, int], minute_bucket: str):
     repo = _repo()
     return dataset_freshness_rows(
@@ -204,7 +208,7 @@ def _freshness_rows_now():
     return _freshness_rows_cached(_db_signature(), bucket)
 
 
-@st.cache_data(show_spinner=False)
+@st.cache_resource(show_spinner=False)
 def _all_evidence_statuses_cached(db_sig: tuple[int, int]) -> dict[int, dict]:
     return _repo().get_all_match_evidence_statuses()
 
@@ -213,17 +217,17 @@ def _all_evidence_statuses() -> dict[int, dict]:
     return _all_evidence_statuses_cached(_db_signature())
 
 
-@st.cache_data(show_spinner=False)
+@st.cache_resource(show_spinner=False)
 def _deep_obs_counts_cached(db_sig: tuple[int, int]) -> dict[int, int]:
     return _repo().count_deep_observations_by_match()
 
 
-@st.cache_data(show_spinner=False)
+@st.cache_resource(show_spinner=False)
 def _import_runs_cached(db_sig: tuple[int, int]) -> dict[int, bool]:
     return _repo().has_import_runs_by_match()
 
 
-@st.cache_data(show_spinner=False, ttl=3600)
+@st.cache_resource(show_spinner=False, ttl=3600)
 def _calibration_bias_report_cached(db_sig: tuple[int, int]):
     """Recompute the global-bias report for all finished matches with deep stats."""
     repo = _repo()
@@ -292,7 +296,7 @@ def _active_corrections() -> ModelCorrections | None:
     return corrections if corrections_active(corrections) else None
 
 
-@st.cache_data(show_spinner=False)
+@st.cache_resource(show_spinner=False)
 def _player_intelligence_rows_cached(db_sig: tuple[int, int], minimum_minutes: int):
     repo = _repo()
     profiles = build_player_profiles(
@@ -370,7 +374,7 @@ def _visible_frame(data) -> pd.DataFrame:
     return pd.DataFrame(localize_table_columns(frame.to_dict(orient="records")))
 
 
-@st.cache_data(ttl=900, show_spinner=False)
+@st.cache_resource(ttl=900, show_spinner=False)
 def _refresh_current_world_cup_banks_cached(
     refresh_bucket: str,
     providers: tuple[str, ...],
@@ -566,7 +570,7 @@ class MatchAnalysisBundle:
     corrections: object = None
 
 
-@st.cache_data(show_spinner=False)
+@st.cache_resource(show_spinner=False)
 def _match_analysis_bundle_cached(
     match_id: int,
     db_sig: tuple[int, int],
@@ -1109,7 +1113,7 @@ def render_prediction_lab() -> None:
             cached = result.bundle
             # New bundle data → invalidate cached analysis so the prediction
             # actually reflects the freshly imported evidence.
-            st.cache_data.clear()
+            st.cache_data.clear(); st.cache_resource.clear()
         status_tone = {
             "complete": ("success", "Datos del partido completos."),
             "partial": ("warning", "Datos parciales: el modelo usa lo disponible y marca lo que falta."),
@@ -1690,7 +1694,7 @@ def render_prediction_lab() -> None:
             try:
                 collection = load_deep_match_file(stored)
                 imported_deep = repo.import_deep_match_collection(collection, datetime.now(timezone.utc))
-                st.cache_data.clear()
+                st.cache_data.clear(); st.cache_resource.clear()
                 st.success(
                     f"Importados {imported_deep.imported_matches}; sin cambios {imported_deep.unchanged_matches}; "
                     f"observaciones {imported_deep.observations}."
@@ -2320,7 +2324,7 @@ def render_player_intelligence() -> None:
                     "Proveedor con error: " + ", ".join(refresh_result.failed)
                     + ". Se conservan los datos cacheados."
                 )
-            st.cache_data.clear()
+            st.cache_data.clear(); st.cache_resource.clear()
             st.rerun()
     performance_tab, sentiment_tab = st.tabs(["Rendimiento y estilos", "Sentimiento prepartido"])
     with performance_tab:
