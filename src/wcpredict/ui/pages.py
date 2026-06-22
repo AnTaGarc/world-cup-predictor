@@ -1326,36 +1326,54 @@ def render_prediction_lab() -> None:
         # corners, yellow cards, shots, etc. — markets the global "total" view
         # cannot resolve at the team level.
         from wcpredict.team_profile import build_team_profile
-        from wcpredict.team_volume_markets import predict_team_volume_markets
+        from wcpredict.team_volume_markets import predict_team_volume_markets, MARKET_CATALOG
         deep_obs = repo.list_deep_team_metric_observations_before(match.kickoff_utc)
         profile_a = build_team_profile(team_a, deep_obs, match.kickoff_utc)
         profile_b = build_team_profile(team_b, deep_obs, match.kickoff_utc)
         team_lines = predict_team_volume_markets(profile_a, profile_b)
         if team_lines:
-            st.subheader("Mercados por equipo (deep stats)")
+            st.subheader("Estadísticas estimadas por equipo")
             st.caption(
-                "Predicciones individuales por selección: mezcla del histórico propio (45%), "
-                "del rival (30%) y la media del torneo (25%), regularizadas hacia la media."
+                "Valor esperado por partido para cada métrica, derivado del perfil "
+                "deep (45% propio + 30% rival + 25% media del torneo). Las líneas "
+                "over/under aparecen en la pestaña Mercados y EV cuando hay cuotas."
             )
-            team_market_rows = [
-                {
-                    "Mercado": row.label,
-                    "Equipo": row.team_name,
-                    "Línea": row.line,
-                    "Esperado": round(row.expected, 2),
-                    "Prob. más": row.over_probability,
-                    "Confianza": row.confidence,
-                    "Muestra": round(row.sample_size, 1),
+            # Collapse the per-line rows into a single per-(team, market) row
+            # showing only the expected value. Confidence/sample come along
+            # so the user knows how trustworthy each number is.
+            expected_by_team_metric: dict[tuple[str, str], dict] = {}
+            for row in team_lines:
+                key = (row.team_name, row.market)
+                if key in expected_by_team_metric:
+                    continue
+                expected_by_team_metric[key] = {
+                    "team": row.team_name,
+                    "market": row.market,
+                    "label": row.label,
+                    "expected": row.expected,
+                    "confidence": row.confidence,
+                    "sample": row.sample_size,
                 }
-                for row in team_lines
-            ]
+            # Pivot: rows = metric, columns = [team_a, team_b], values = expected.
+            market_order = [m for m in MARKET_CATALOG.keys()]
+            stat_rows = []
+            for market_id in market_order:
+                label = MARKET_CATALOG[market_id]["label"]
+                a = expected_by_team_metric.get((team_a, market_id))
+                b = expected_by_team_metric.get((team_b, market_id))
+                if not a and not b:
+                    continue
+                stat_rows.append({
+                    "Estadística": label,
+                    team_a: round(a["expected"], 2) if a else None,
+                    team_b: round(b["expected"], 2) if b else None,
+                    "Confianza": (a or b)["confidence"],
+                    "Muestra": round((a or b)["sample"], 1),
+                })
             st.dataframe(
-                pd.DataFrame(team_market_rows),
+                pd.DataFrame(stat_rows),
                 width="stretch",
                 hide_index=True,
-                column_config={
-                    "Prob. más": st.column_config.ProgressColumn(format="%.1f%%", min_value=0, max_value=1),
-                },
             )
         if st.button("Guardar snapshot de predicciones", width="stretch"):
             now = datetime.now(timezone.utc)
