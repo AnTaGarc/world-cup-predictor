@@ -195,7 +195,14 @@ def _matches_cached(db_sig: tuple[int, int]):
 
 
 def _list_matches():
-    return _matches_cached(_db_signature())
+    """Return matches the UI cares about — i.e. the World Cup 2026 fixtures.
+
+    The DB now also holds ~4k historical matches from the StatsBomb +
+    eatpizzanot back-fills used to train the deep-stats classifier. Those
+    should NOT appear in the schedule selectboxes, dashboard counters or
+    backtesting panel — they're training data, not part of the tournament.
+    """
+    return [m for m in _matches_cached(_db_signature()) if m.competition == "FIFA World Cup 2026"]
 
 
 @st.cache_resource(show_spinner=False)
@@ -332,6 +339,68 @@ def _player_intelligence_rows_cached(db_sig: tuple[int, int], minimum_minutes: i
         {**row, **styles.get((row["player_name"], row["team_name"]), {})}
         for row in profiles
     ]
+
+
+@st.fragment
+def _render_player_panel(
+    frame: pd.DataFrame,
+    metric: str,
+    title: str,
+    total_col: str,
+    total_label: str,
+    rate_col: str | None,
+    rate_label: str | None,
+) -> None:
+    """Render one ranking panel inside the Jugadores tab.
+
+    Wrapped in ``st.fragment`` so that the search input and sort radio
+    inside this panel only re-run THIS panel's body on interaction, not the
+    whole player-intelligence view (which had to rebuild every other tab's
+    HTML on every keystroke — the source of the lag the user reported).
+    """
+    if metric not in frame:
+        st.info(f"La fuente actual no publica datos suficientes para {title.lower()}.")
+        return
+    subset = frame[frame[metric].notna()]
+    if rate_col and total_col in subset:
+        subset = subset[subset[total_col] > 0]
+    if rate_col:
+        sort_col1, sort_col2 = st.columns([2, 1])
+        with sort_col1:
+            search = st.text_input(
+                "Buscar jugador", key=f"search_{metric}",
+                placeholder="Nombre del jugador…", label_visibility="collapsed",
+            ).strip()
+        with sort_col2:
+            sort_choice = st.radio(
+                "Ordenar por", [total_label, rate_label], horizontal=True,
+                key=f"sort_{metric}", label_visibility="collapsed",
+            )
+        if search:
+            mask = (
+                subset["player_name"].astype(str).str.contains(search, case=False, na=False)
+                | subset["team_name"].astype(str).str.contains(search, case=False, na=False)
+            )
+            subset = subset[mask]
+        if sort_choice == total_label:
+            ranked = subset.sort_values([total_col, rate_col], ascending=[False, False]).head(50)
+        else:
+            ranked = subset.sort_values([rate_col, total_col], ascending=[False, False]).head(50)
+    else:
+        ranked = subset.sort_values(metric, ascending=False).head(30)
+    if ranked.empty:
+        empty_state("Sin resultados", "Ningún jugador coincide con el filtro.", icon="🔍")
+        return
+    _render_player_ranking_table(ranked, total_col, total_label, rate_col, rate_label)
+    # Chart in an expander — Altair rendering is the heaviest step and most
+    # users don't need to expand the bar chart every interaction.
+    with st.expander(f"📊 Gráfico — top 15 por {title.lower()}"):
+        chart = alt.Chart(ranked.head(15)).mark_bar(cornerRadiusEnd=4, color="#1769E0").encode(
+            y=alt.Y("player_name:N", sort="-x", title=None),
+            x=alt.X(f"{metric}:Q", title=title),
+            tooltip=["player_name", "team_name", "minutes", alt.Tooltip(f"{metric}:Q", format=".2f")],
+        ).properties(height=360)
+        st.altair_chart(chart, width="stretch")
 
 
 def _render_player_ranking_table(
@@ -2518,49 +2587,9 @@ def render_player_intelligence() -> None:
             ]
             for panel, (metric, title, total_col, total_label, rate_col, rate_label) in zip(ranking_tabs, ranking_specs):
                 with panel:
-                    if metric not in frame:
-                        st.info(f"La fuente actual no publica datos suficientes para {title.lower()}.")
-                        continue
-                    subset = frame[frame[metric].notna()]
-                    if rate_col and total_col in subset:
-                        subset = subset[subset[total_col] > 0]
-                    if rate_col:
-                        sort_col1, sort_col2 = st.columns([2, 1])
-                        with sort_col1:
-                            search = st.text_input(
-                                "Buscar jugador",
-                                key=f"search_{metric}",
-                                placeholder="Nombre del jugador…",
-                                label_visibility="collapsed",
-                            ).strip()
-                        with sort_col2:
-                            sort_choice = st.radio(
-                                "Ordenar por",
-                                [total_label, rate_label],
-                                horizontal=True,
-                                key=f"sort_{metric}",
-                                label_visibility="collapsed",
-                            )
-                        if search:
-                            mask = subset["player_name"].astype(str).str.contains(search, case=False, na=False) | \
-                                   subset["team_name"].astype(str).str.contains(search, case=False, na=False)
-                            subset = subset[mask]
-                        if sort_choice == total_label:
-                            ranked = subset.sort_values([total_col, rate_col], ascending=[False, False]).head(50)
-                        else:
-                            ranked = subset.sort_values([rate_col, total_col], ascending=[False, False]).head(50)
-                    else:
-                        ranked = subset.sort_values(metric, ascending=False).head(30)
-                    if ranked.empty:
-                        empty_state("Sin resultados", "Ningún jugador coincide con el filtro.", icon="🔍")
-                        continue
-                    _render_player_ranking_table(ranked, total_col, total_label, rate_col, rate_label)
-                    chart = alt.Chart(ranked.head(15)).mark_bar(cornerRadiusEnd=4, color="#1769E0").encode(
-                        y=alt.Y("player_name:N", sort="-x", title=None),
-                        x=alt.X(f"{metric}:Q", title=title),
-                        tooltip=["player_name", "team_name", "minutes", alt.Tooltip(f"{metric}:Q", format=".2f")],
-                    ).properties(height=360)
-                    st.altair_chart(chart, width="stretch")
+                    _render_player_panel(
+                        frame, metric, title, total_col, total_label, rate_col, rate_label,
+                    )
             if "passes_per90" not in frame:
                 callout("Pases: sin cobertura en el banco diario actual. Se conserva como dato desconocido y no como 0; aparecerá cuando una fuente revisada lo aporte.")
             st.caption("Impacto estandariza solo métricas realmente disponibles. Todas las clasificaciones muestran minutos y partidos para contextualizar la muestra.")

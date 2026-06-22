@@ -123,8 +123,13 @@ def crest_html(team_name: str | None, *, size: int = 20, alt: str | None = None)
     )
 
 
+@lru_cache(maxsize=256)
 def team_with_crest_html(team_name: str | None, *, size: int = 20) -> str:
-    """Crest + team name on a single line, vertically centered."""
+    """Crest + team name on a single line, vertically centered.
+
+    Cached because the player ranking tables render 50 rows × 4 tabs and used
+    to rebuild the base64 data URI each time the search box was typed in.
+    Caching by (team_name, size) collapses that to one lookup per team."""
     if not team_name:
         return ""
     icon = crest_html(team_name, size=size)
