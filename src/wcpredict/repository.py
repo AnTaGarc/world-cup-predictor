@@ -1918,14 +1918,16 @@ class Repository:
             daily = [
                 dict(row)
                 for row in con.execute(
-                    "SELECT player_name, team_name, minutes, goals, assists, shots, shots_on_target, passes, yellow_cards "
+                    "SELECT player_name, team_name, position, minutes, goals, assists, shots, "
+                    "shots_on_target, passes, yellow_cards, tackles_won, interceptions, save_percentage "
                     "FROM current_wc_player_stats"
                 ).fetchall()
             ]
             structured = [
                 dict(row)
                 for row in con.execute(
-                    "SELECT p.name AS player_name, t.name AS team_name, ps.minutes, ps.goals, ps.assists, ps.shots, ps.shots_on_target, ps.passes, ps.yellow_cards "
+                    "SELECT p.name AS player_name, t.name AS team_name, p.position, "
+                    "ps.minutes, ps.goals, ps.assists, ps.shots, ps.shots_on_target, ps.passes, ps.yellow_cards "
                     "FROM player_match_stats ps JOIN players p ON p.id=ps.player_id JOIN teams t ON t.id=p.team_id"
                 ).fetchall()
             ]

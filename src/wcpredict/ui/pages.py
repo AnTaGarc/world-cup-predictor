@@ -361,6 +361,13 @@ def _render_player_panel(
     if metric not in frame:
         st.info(f"La fuente actual no publica datos suficientes para {title.lower()}.")
         return
+    if metric == "impact":
+        st.caption(
+            "Escala 0-100 (percentil del jugador dentro de su posición). "
+            "Cada rol pondera lo suyo: delanteros premia goles/tiros, medios "
+            "asistencias/pases, defensas tackles+despejes, porteros % paradas. "
+            "El slider de minutos solo filtra la vista; la puntuación es estable."
+        )
     subset = frame[frame[metric].notna()]
     if rate_col and total_col in subset:
         subset = subset[subset[total_col] > 0]
@@ -403,6 +410,9 @@ def _render_player_panel(
         st.altair_chart(chart, width="stretch")
 
 
+_POSITION_LABEL = {"ATT": "Delantero", "MID": "Medio", "DEF": "Defensa", "GK": "Portero"}
+
+
 def _render_player_ranking_table(
     ranked: pd.DataFrame,
     total_col: str,
@@ -411,11 +421,12 @@ def _render_player_ranking_table(
     rate_label: str | None,
 ) -> None:
     """Render a player ranking as an HTML table with crests inline next to the
-    team name. Used by the Jugadores tab for the Goles/Asistencias/Tiros panels."""
+    team name. The Impacto tab also shows the player's position label so the
+    user can see why a goalkeeper or defender ranks where they do (they're
+    scored against players of the same role, not against strikers)."""
     from wcpredict.ui.crests import team_with_crest_html
-    # Counting columns ("goals", "assists", "shots") render as integers; the
-    # "impact" column is a standardized score so we keep two decimals.
     total_is_integer = total_col in {"goals", "assists", "shots"}
+    show_position = total_col == "impact"
     rows_html = []
     for _, row in ranked.iterrows():
         team_cell = team_with_crest_html(str(row.get("team_name") or ""), size=20)
@@ -425,14 +436,17 @@ def _render_player_ranking_table(
         elif total_is_integer:
             total_display = str(int(total_value))
         else:
-            total_display = f"{float(total_value):.2f}"
-        cells = [
-            f'<td class="pt-name">{row.get("player_name") or ""}</td>',
+            total_display = f"{float(total_value):.1f}" if total_col == "impact" else f"{float(total_value):.2f}"
+        cells = [f'<td class="pt-name">{row.get("player_name") or ""}</td>']
+        if show_position:
+            pos_label = _POSITION_LABEL.get(str(row.get("position_group") or ""), "")
+            cells.append(f'<td class="pt-pos">{pos_label}</td>')
+        cells.extend([
             f'<td class="pt-team">{team_cell}</td>',
             f'<td class="pt-num">{int(row.get("minutes") or 0)}</td>',
             f'<td class="pt-num">{int(row.get("matches") or 0)}</td>',
             f'<td class="pt-num pt-strong">{total_display}</td>',
-        ]
+        ])
         if rate_col:
             rate_value = row.get(rate_col)
             cells.append(
@@ -440,10 +454,13 @@ def _render_player_ranking_table(
                 if rate_value is not None and not pd.isna(rate_value) else '<td class="pt-num">—</td>'
             )
         rows_html.append("<tr>" + "".join(cells) + "</tr>")
-    header_cells = [
-        '<th>Jugador</th>', '<th>Selección</th>', '<th>Minutos</th>',
-        '<th>Partidos</th>', f'<th>{total_label}</th>',
-    ]
+    header_cells = ['<th>Jugador</th>']
+    if show_position:
+        header_cells.append('<th>Posición</th>')
+    header_cells.extend([
+        '<th>Selección</th>', '<th>Minutos</th>', '<th>Partidos</th>',
+        f'<th>{total_label}</th>',
+    ])
     if rate_label:
         header_cells.append(f'<th>{rate_label}</th>')
     table_html = (
