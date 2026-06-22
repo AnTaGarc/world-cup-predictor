@@ -25,7 +25,14 @@ from wcpredict.ratings import MatchResult, build_team_ratings, expected_goals_fo
 # the low-score draws relative to independent Poisson; NB dispersion gives a
 # slightly fatter goal tail than pure Poisson, so 2-1/3-1/3-2 outcomes get the
 # weight the data actually supports when xG is high.
-DEFAULT_BASE_GOALS_PER_TEAM = 1.35
+# Calibrated empirically on the WC 2026 first matchday (40 finished matches).
+# The historical default (1.35) was tuned on long-run international means
+# but underestimated the tournament total by +0.48 goals/match (~19%).
+# Sweep: 1.45→bias +0.29, 1.50→+0.19, 1.55→+0.10, 1.60→+0.01. We pick 1.55
+# because it gives the best Over 2.5 log-loss (0.6469) while keeping BTTS
+# log-loss close to optimum (0.6717 vs 0.6688 at 1.60). Re-evaluate after
+# the round of 16 once we have more samples.
+DEFAULT_BASE_GOALS_PER_TEAM = 1.55
 DEFAULT_DIXON_COLES_RHO = -0.10
 DEFAULT_NB_DISPERSION = 0.08
 
