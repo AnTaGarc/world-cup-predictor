@@ -6,6 +6,7 @@ altair>=5.3
 Pillow>=10.4
 scikit-learn>=1.5
 joblib>=1.4
-# OCR (used to ingest match screenshots). If you don't need it, remove these.
-rapidocr>=3.0
-onnxruntime>=1.19
+# OCR (rapidocr + onnxruntime) intentionally OMITTED for Streamlit Cloud:
+# they require system libs (libgl1, libglib2.0-0) that aren't installable
+# on the current Debian image. The OCR is only used for the "upload match
+# screenshot" flow, which is desktop-only. Install locally if you need it.
