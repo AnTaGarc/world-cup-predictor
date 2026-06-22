@@ -448,9 +448,19 @@ div[data-testid="stDataEditor"] tbody tr:hover {
 
 /* ---- Mobile ---- */
 @media (max-width: 720px) {
-  /* Tighter page padding */
+  /* Tighter page padding. Extra bottom padding leaves room for Streamlit
+     Cloud's floating "Manage app" badge so it doesn't cover the last row. */
   .block-container,
-  [data-testid="stMainBlockContainer"] { padding: 1rem 0.75rem 4rem !important; }
+  [data-testid="stMainBlockContainer"] { padding: 1rem 0.75rem 6rem !important; }
+
+  /* Wide audit/comparison tables are already wrapped in .audit-table-wrap
+     which provides horizontal scroll. Hint the scrollbar visually. */
+  .audit-table-wrap::-webkit-scrollbar { height: 6px; }
+  .audit-table-wrap::-webkit-scrollbar-thumb {
+    background: rgba(16, 35, 63, 0.25); border-radius: 3px;
+  }
+  /* st.dataframe is already virtualized but we let it use full width. */
+  [data-testid="stDataFrame"] { width: 100% !important; }
 
   /* Hero */
   .hero {

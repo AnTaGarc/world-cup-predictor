@@ -750,7 +750,8 @@ def _render_audit_table(rows) -> None:
     # the colour is applied per row using the AuditRow severity directly.
     records = audit_rows_to_records(rows)
     html_parts = [
-        '<table style="width:100%; border-collapse:separate; border-spacing:0 4px; font-size:0.92rem;">',
+        '<div class="audit-table-wrap" style="overflow-x:auto;-webkit-overflow-scrolling:touch;max-width:100%;margin:4px 0 12px;">',
+        '<table style="width:100%; border-collapse:separate; border-spacing:0 4px; font-size:0.92rem; min-width:560px;">',
         '<thead><tr>'
         '<th style="text-align:left;padding:6px 10px;color:#5b6b80;font-weight:600">Métrica</th>'
         '<th style="text-align:left;padding:6px 10px;color:#5b6b80;font-weight:600">Predicho</th>'
@@ -768,7 +769,7 @@ def _render_audit_table(rows) -> None:
             f'<td style="padding:8px 10px;text-align:right;color:{colour};font-weight:700">{record["Δ"]}</td>'
             '</tr>'
         )
-    html_parts.append('</tbody></table>')
+    html_parts.append('</tbody></table></div>')
     st.markdown("".join(html_parts), unsafe_allow_html=True)
 
 
@@ -776,7 +777,8 @@ def _render_per_team_audit_table(rows: list[dict], team_a: str, team_b: str) -> 
     if not rows:
         return
     html_parts = [
-        '<table style="width:100%; border-collapse:separate; border-spacing:0 4px; font-size:0.92rem;">',
+        '<div class="audit-table-wrap" style="overflow-x:auto;-webkit-overflow-scrolling:touch;max-width:100%;margin:4px 0 12px;">',
+        '<table style="width:100%; border-collapse:separate; border-spacing:0 4px; font-size:0.92rem; min-width:560px;">',
         '<thead><tr>'
         '<th rowspan="2" style="text-align:left;padding:6px 10px;color:#5b6b80;font-weight:600">Métrica</th>'
         f'<th colspan="3" style="text-align:center;padding:6px 10px;color:#10233F;font-weight:700;background:#0b1f3a11">{team_a}</th>'
@@ -807,7 +809,7 @@ def _render_per_team_audit_table(rows: list[dict], team_a: str, team_b: str) -> 
             f'<td style="padding:8px 10px;text-align:right;color:{cb};font-weight:700;background:{cb}1f">{tb["delta_label"]}</td>'
             '</tr>'
         )
-    html_parts.append('</tbody></table>')
+    html_parts.append('</tbody></table></div>')
     st.markdown("".join(html_parts), unsafe_allow_html=True)
 
 
