@@ -1,0 +1,73 @@
+date,stage,group,team_a,team_b,venue,status,kickoff_utc
+2026-06-11,Group stage,A,Mexico,South Africa,Mexico City Stadium,scheduled,2026-06-11T23:00:00+00:00
+2026-06-11,Group stage,A,Korea Republic,Czechia,Guadalajara Stadium,scheduled,2026-06-12T02:00:00+00:00
+2026-06-12,Group stage,B,Canada,Bosnia and Herzegovina,Toronto Stadium,scheduled,2026-06-12T21:00:00+00:00
+2026-06-12,Group stage,D,USA,Paraguay,Los Angeles Stadium,scheduled,2026-06-13T02:00:00+00:00
+2026-06-13,Group stage,C,Haiti,Scotland,Boston Stadium,scheduled,2026-06-13T16:00:00+00:00
+2026-06-13,Group stage,D,Australia,Turkiye,BC Place Vancouver,scheduled,2026-06-13T19:00:00+00:00
+2026-06-13,Group stage,C,Brazil,Morocco,New York New Jersey Stadium,scheduled,2026-06-14T00:00:00+00:00
+2026-06-13,Group stage,B,Qatar,Switzerland,San Francisco Bay Area Stadium,scheduled,2026-06-14T02:00:00+00:00
+2026-06-14,Group stage,E,Cote d'Ivoire,Ecuador,Philadelphia Stadium,scheduled,2026-06-14T16:00:00+00:00
+2026-06-14,Group stage,E,Germany,Curacao,Houston Stadium,scheduled,2026-06-14T22:00:00+00:00
+2026-06-14,Group stage,F,Netherlands,Japan,Dallas Stadium,scheduled,2026-06-15T01:00:00+00:00
+2026-06-14,Group stage,F,Sweden,Tunisia,Monterrey Stadium,scheduled,2026-06-15T02:00:00+00:00
+2026-06-15,Group stage,H,Saudi Arabia,Uruguay,Miami Stadium,scheduled,2026-06-15T16:00:00+00:00
+2026-06-15,Group stage,H,Spain,Cabo Verde,Atlanta Stadium,scheduled,2026-06-15T19:00:00+00:00
+2026-06-15,Group stage,G,IR Iran,New Zealand,Los Angeles Stadium,scheduled,2026-06-16T01:00:00+00:00
+2026-06-15,Group stage,G,Belgium,Egypt,Seattle Stadium,scheduled,2026-06-16T02:00:00+00:00
+2026-06-16,Group stage,I,France,Senegal,New York New Jersey Stadium,scheduled,2026-06-16T16:00:00+00:00
+2026-06-16,Group stage,I,Iraq,Norway,Boston Stadium,scheduled,2026-06-16T22:00:00+00:00
+2026-06-16,Group stage,J,Argentina,Algeria,Kansas City Stadium,scheduled,2026-06-17T01:00:00+00:00
+2026-06-16,Group stage,J,Austria,Jordan,San Francisco Bay Area Stadium,scheduled,2026-06-17T02:00:00+00:00
+2026-06-17,Group stage,L,Ghana,Panama,Toronto Stadium,scheduled,2026-06-17T16:00:00+00:00
+2026-06-17,Group stage,L,England,Croatia,Dallas Stadium,scheduled,2026-06-17T22:00:00+00:00
+2026-06-17,Group stage,K,Portugal,Congo DR,Houston Stadium,scheduled,2026-06-18T01:00:00+00:00
+2026-06-17,Group stage,K,Uzbekistan,Colombia,Mexico City Stadium,scheduled,2026-06-18T02:00:00+00:00
+2026-06-18,Group stage,A,Czechia,South Africa,Mercedes-Benz Stadium,scheduled,2026-06-18T16:00:00+00:00
+2026-06-18,Group stage,B,Switzerland,Bosnia and Herzegovina,SoFi Stadium,scheduled,2026-06-18T19:00:00+00:00
+2026-06-18,Group stage,B,Canada,Qatar,BC Place,scheduled,2026-06-18T22:00:00+00:00
+2026-06-19,Group stage,A,Mexico,South Korea,Estadio Akron,scheduled,2026-06-19T01:00:00+00:00
+2026-06-19,Group stage,D,USA,Australia,Lumen Field,scheduled,2026-06-19T16:00:00+00:00
+2026-06-19,Group stage,C,Scotland,Morocco,Gillette Stadium,scheduled,2026-06-19T19:00:00+00:00
+2026-06-19,Group stage,C,Brazil,Haiti,Lincoln Financial Field,scheduled,2026-06-19T22:00:00+00:00
+2026-06-19,Group stage,D,Turkiye,Paraguay,Levi's Stadium,scheduled,2026-06-20T01:00:00+00:00
+2026-06-20,Group stage,E,Germany,Cote d'Ivoire,BMO Field,scheduled,2026-06-20T16:00:00+00:00
+2026-06-20,Group stage,E,Ecuador,Curacao,Arrowhead Stadium,scheduled,2026-06-20T19:00:00+00:00
+2026-06-20,Group stage,F,Netherlands,Sweden,NRG Stadium,scheduled,2026-06-20T22:00:00+00:00
+2026-06-20,Group stage,F,Tunisia,Japan,Estadio Akron,scheduled,2026-06-21T01:00:00+00:00
+2026-06-21,Group stage,G,Belgium,IR Iran,SoFi Stadium,scheduled,2026-06-21T16:00:00+00:00
+2026-06-21,Group stage,G,New Zealand,Egypt,BC Place,scheduled,2026-06-21T19:00:00+00:00
+2026-06-21,Group stage,H,Spain,Saudi Arabia,Mercedes-Benz Stadium,scheduled,2026-06-21T22:00:00+00:00
+2026-06-21,Group stage,H,Uruguay,Cabo Verde,Hard Rock Stadium,scheduled,2026-06-22T01:00:00+00:00
+2026-06-22,Group stage,I,France,Iraq,Lincoln Financial Field,scheduled,2026-06-22T16:00:00+00:00
+2026-06-22,Group stage,I,Norway,Senegal,MetLife Stadium,scheduled,2026-06-22T19:00:00+00:00
+2026-06-22,Group stage,J,Argentina,Austria,AT&T Stadium,scheduled,2026-06-22T22:00:00+00:00
+2026-06-22,Group stage,J,Jordan,Algeria,Levi's Stadium,scheduled,2026-06-23T01:00:00+00:00
+2026-06-23,Group stage,K,Portugal,Uzbekistan,NRG Stadium,scheduled,2026-06-23T16:00:00+00:00
+2026-06-23,Group stage,K,Colombia,Congo DR,Estadio Akron,scheduled,2026-06-23T19:00:00+00:00
+2026-06-23,Group stage,L,England,Ghana,Gillette Stadium,scheduled,2026-06-23T22:00:00+00:00
+2026-06-23,Group stage,L,Panama,Croatia,BMO Field,scheduled,2026-06-24T01:00:00+00:00
+2026-06-24,Group stage,A,Mexico,Czechia,Mexico City Stadium,scheduled,2026-06-24T22:00:00+00:00
+2026-06-24,Group stage,A,South Africa,South Korea,Estadio Akron,scheduled,2026-06-24T22:00:00+00:00
+2026-06-24,Group stage,B,Canada,Switzerland,BC Place,scheduled,2026-06-25T01:00:00+00:00
+2026-06-24,Group stage,B,Bosnia and Herzegovina,Qatar,Lumen Field,scheduled,2026-06-25T01:00:00+00:00
+2026-06-25,Group stage,C,Scotland,Brazil,Hard Rock Stadium,scheduled,2026-06-25T22:00:00+00:00
+2026-06-25,Group stage,C,Morocco,Haiti,Mercedes-Benz Stadium,scheduled,2026-06-25T22:00:00+00:00
+2026-06-25,Group stage,D,Turkiye,USA,MetLife Stadium,scheduled,2026-06-26T01:00:00+00:00
+2026-06-25,Group stage,D,Paraguay,Australia,Arrowhead Stadium,scheduled,2026-06-26T01:00:00+00:00
+2026-06-26,Group stage,E,Curacao,Cote d'Ivoire,Arrowhead Stadium,scheduled,2026-06-26T22:00:00+00:00
+2026-06-26,Group stage,E,Germany,Ecuador,Lincoln Financial Field,scheduled,2026-06-26T22:00:00+00:00
+2026-06-26,Group stage,F,Sweden,Japan,Estadio BBVA,scheduled,2026-06-27T01:00:00+00:00
+2026-06-26,Group stage,F,Netherlands,Tunisia,NRG Stadium,scheduled,2026-06-27T01:00:00+00:00
+2026-06-27,Group stage,G,Egypt,IR Iran,SoFi Stadium,scheduled,2026-06-27T22:00:00+00:00
+2026-06-27,Group stage,G,New Zealand,Belgium,BC Place,scheduled,2026-06-27T22:00:00+00:00
+2026-06-27,Group stage,H,Cape Verde,Saudi Arabia,Hard Rock Stadium,scheduled,2026-06-28T01:00:00+00:00
+2026-06-27,Group stage,H,Spain,Uruguay,Mercedes-Benz Stadium,scheduled,2026-06-28T01:00:00+00:00
+2026-06-28,Group stage,I,France,Norway,MetLife Stadium,scheduled,2026-06-28T22:00:00+00:00
+2026-06-28,Group stage,I,Senegal,Iraq,Gillette Stadium,scheduled,2026-06-28T22:00:00+00:00
+2026-06-28,Group stage,J,Algeria,Austria,Levi's Stadium,scheduled,2026-06-29T01:00:00+00:00
+2026-06-28,Group stage,J,Jordan,Argentina,AT&T Stadium,scheduled,2026-06-29T01:00:00+00:00
+2026-06-29,Group stage,K,Colombia,Portugal,Estadio Akron,scheduled,2026-06-29T22:00:00+00:00
+2026-06-29,Group stage,K,Congo DR,Uzbekistan,NRG Stadium,scheduled,2026-06-29T22:00:00+00:00
+2026-06-29,Group stage,L,Panama,England,BMO Field,scheduled,2026-06-30T01:00:00+00:00
+2026-06-29,Group stage,L,Croatia,Ghana,Lumen Field,scheduled,2026-06-30T01:00:00+00:00

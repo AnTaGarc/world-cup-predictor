@@ -1,0 +1,46 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# IDEs / editors
+.vscode/
+.idea/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+*.err.log
+*.out.log
+
+# SQLite backups (the live DB is committed; backups are noise)
+data/*.bak
+data/*.sqlite-journal
+data/*.sqlite-wal
+data/*.sqlite-shm
+
+# Per-run logs inside data/
+data/*.log
+data/streamlit.*.log
+data/qa*.log
+
+# Streamlit local cache / secrets
+.streamlit/secrets.toml
+
+# Project-internal
+.codex/
+.claude/
+claude-design-context/

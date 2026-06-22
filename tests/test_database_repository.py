@@ -1,0 +1,117 @@
+from datetime import datetime, timezone
+from contextlib import closing
+from pathlib import Path
+import sqlite3
+import tempfile
+import unittest
+
+from wcpredict.database import initialize_database
+from wcpredict.evidence import EvidenceStatus
+from wcpredict.repository import Repository
+
+
+class DatabaseRepositoryTests(unittest.TestCase):
+    def test_acquisition_schema_and_evidence_states(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            db_path = Path(tmp) / "worldcup.sqlite"
+            initialize_database(db_path)
+            with closing(sqlite3.connect(db_path)) as con:
+                tables = {
+                    row[0]
+                    for row in con.execute(
+                        "SELECT name FROM sqlite_master WHERE type='table'"
+                    )
+                }
+        self.assertTrue(
+            {
+                "provider_health",
+                "provider_entities",
+                "historical_matches",
+                "screenshot_batches",
+                "screenshot_assets",
+                "extraction_candidates",
+                "review_decisions",
+                "settlement_versions",
+                "prediction_evaluations",
+                "source_catalog",
+                "sentiment_snapshots",
+                "outcome_model_runs",
+            }.issubset(tables)
+        )
+        self.assertEqual(
+            "blocked_by_provider", EvidenceStatus.BLOCKED_BY_PROVIDER.value
+        )
+        self.assertEqual(
+            "verified_user_capture", EvidenceStatus.VERIFIED_USER_CAPTURE.value
+        )
+
+    def test_schema_creates_core_tables(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            db_path = Path(tmp) / "worldcup.sqlite"
+            initialize_database(db_path)
+            with closing(sqlite3.connect(db_path)) as con:
+                tables = {row[0] for row in con.execute("SELECT name FROM sqlite_master WHERE type='table'")}
+            self.assertTrue({"teams", "players", "matches", "team_match_stats", "manual_odds", "predictions", "sources"}.issubset(tables))
+
+    def test_upsert_team_and_match_roundtrip(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            repo = Repository(Path(tmp) / "worldcup.sqlite")
+            repo.initialize()
+            spain_id = repo.upsert_team("Spain", "ESP")
+            japan_id = repo.upsert_team("Japan", "JPN")
+            match_id = repo.upsert_match(
+                competition="FIFA World Cup 2026",
+                stage="Group",
+                kickoff_utc=datetime(2026, 6, 18, 19, 0, tzinfo=timezone.utc),
+                team_a_id=spain_id,
+                team_b_id=japan_id,
+                status="scheduled",
+                venue="Toronto",
+            )
+            match = repo.get_match(match_id)
+            self.assertEqual("Spain vs Japan", match.label)
+            self.assertEqual("Toronto", match.venue)
+
+    def test_list_matches_hides_legacy_alias_duplicates_and_keeps_evidence_rich_row(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            repo = Repository(Path(tmp) / "worldcup.sqlite")
+            repo.initialize()
+            usa_id = repo.upsert_team("USA")
+            united_states_id = repo.upsert_team("United States")
+            paraguay_id = repo.upsert_team("Paraguay")
+            evidence_match_id = repo.upsert_match(
+                "FIFA World Cup 2026", "Group",
+                datetime(2026, 6, 12, 0, tzinfo=timezone.utc),
+                usa_id, paraguay_id, "scheduled",
+            )
+            empty_duplicate_id = repo.upsert_match(
+                "FIFA World Cup 2026", "Group",
+                datetime(2026, 6, 12, 12, tzinfo=timezone.utc),
+                united_states_id, paraguay_id, "finished",
+            )
+            with repo.session() as con:
+                con.execute(
+                    "INSERT INTO match_results(match_id, goals_a, goals_b, source_type, recorded_at_utc) VALUES(?, 4, 1, 'manual', ?)",
+                    (evidence_match_id, datetime(2026, 6, 20, tzinfo=timezone.utc).isoformat()),
+                )
+                con.execute(
+                    "INSERT INTO team_match_stats(match_id, team_id, xg, shots, source_id) VALUES(?, ?, 1.42, 16, 'deep')",
+                    (evidence_match_id, usa_id),
+                )
+                con.execute(
+                    "INSERT INTO team_match_stats(match_id, team_id, xg, shots, source_id) VALUES(?, ?, 0.54, 9, 'deep')",
+                    (evidence_match_id, paraguay_id),
+                )
+
+            matches = repo.list_matches()
+            labels = [match.label for match in matches]
+
+            self.assertIn("USA vs Paraguay", labels)
+            self.assertNotIn("United States vs Paraguay", labels)
+            self.assertEqual(1, labels.count("USA vs Paraguay"))
+            self.assertEqual(evidence_match_id, matches[0].id)
+            self.assertNotEqual(empty_duplicate_id, matches[0].id)
+
+
+if __name__ == "__main__":
+    unittest.main()
