@@ -634,6 +634,26 @@ class Repository:
             ).fetchall()
         return self._attach_extended_observations([dict(row) for row in rows])
 
+    def list_deep_team_metric_observations_before(self, as_of_utc: datetime) -> list[dict]:
+        """All team-level deep-stat observations strictly before ``as_of_utc``.
+
+        Returns one row per (match, team, metric) with columns
+        ``kickoff_utc, team_name, metric, value_number``. Consumed by
+        team_profile.build_team_profile to compute per-team aggregates.
+        """
+        with self.session() as con:
+            rows = con.execute(
+                "SELECT m.kickoff_utc, o.subject_name AS team_name, o.metric, o.value_number "
+                "FROM observations o JOIN matches m ON m.id = o.match_id "
+                "WHERE o.subject_type = 'team' "
+                "AND o.evidence_status IN ('verified', 'verified_user_json', 'verified_user_capture') "
+                "AND o.value_number IS NOT NULL "
+                "AND m.kickoff_utc < ? "
+                "ORDER BY m.kickoff_utc",
+                (as_of_utc.isoformat(),),
+            ).fetchall()
+        return [dict(row) for row in rows]
+
     def list_deep_volume_rows_before(self, as_of_utc: datetime) -> list[dict]:
         with self.session() as con:
             rows = con.execute(

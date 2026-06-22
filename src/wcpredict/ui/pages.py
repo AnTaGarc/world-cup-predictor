@@ -617,6 +617,26 @@ def _match_analysis_bundle_cached(
         team_a, team_b, deep_rows_before, match.kickoff_utc,
         team_strengths=strength_context,
     )
+
+    # Layer on top: a richer factor derived from the full deep-stat profile
+    # (offense / defense / goalkeeper dimensions). The simple xg_form above
+    # only uses ~9 metrics; this brings in the remaining 60+ but keeps the
+    # multiplier bounded so it complements rather than replaces the base.
+    from wcpredict.team_profile import build_team_profile
+    from wcpredict.team_volume_markets import derive_xg_factors_from_profile
+    from wcpredict.advanced_form import XgFormAdjustment
+    deep_obs_for_profile = repo.list_deep_team_metric_observations_before(match.kickoff_utc)
+    profile_a_xg = build_team_profile(team_a, deep_obs_for_profile, match.kickoff_utc)
+    profile_b_xg = build_team_profile(team_b, deep_obs_for_profile, match.kickoff_utc)
+    if profile_a_xg.sample_weight > 0 or profile_b_xg.sample_weight > 0:
+        pf_a, pf_b, pf_note = derive_xg_factors_from_profile(profile_a_xg, profile_b_xg)
+        xg_form = XgFormAdjustment(
+            factor_a=xg_form.factor_a * pf_a,
+            factor_b=xg_form.factor_b * pf_b,
+            sample_a=xg_form.sample_a + int(profile_a_xg.sample_weight),
+            sample_b=xg_form.sample_b + int(profile_b_xg.sample_weight),
+            explanation=xg_form.explanation + " " + pf_note,
+        )
     host_factor_a = _host_factor(team_a)
     host_factor_b = _host_factor(team_b)
     historical_rows = repo.list_historical_rows_before(match.kickoff_utc)
@@ -1263,18 +1283,6 @@ def render_prediction_lab() -> None:
             st.caption(f"ML entrenado con {ml_model_meta['sample_size']} partidos · corte {ml_model_meta['training_cutoff_utc']} · validación temporal hasta {ml_model_meta['validation_cutoff_utc']}.")
         else:
             callout("Modelo ML no activado: ejecuta scripts/import_open_history.py para crear el artefacto calibrado.")
-        st.subheader("Ledger de forma")
-        st.caption("Todos los partidos finalizados antes del encuentro, con recencia, tipo y fuerza rival. Ningún partido futuro entra en el cálculo.")
-        form_rows = []
-        for team_name in (team_a, team_b):
-            for item in explain_team_form(team_name, results, match.kickoff_utc.date()):
-                form_rows.append(
-                    {"Equipo": team_name, "Fecha": item.played_on.isoformat(), "Rival": item.opponent, "Marcador": f"{item.goals_for}-{item.goals_against}", "Tipo": item.match_type, "Peso recencia": item.recency_weight, "Peso tipo": item.type_weight, "Ajuste rival": item.opponent_factor, "Peso total": item.total_weight, "Contribución": item.weighted_goal_difference, "Explicación": item.explanation}
-                )
-        if form_rows:
-            st.dataframe(pd.DataFrame(form_rows), width="stretch", hide_index=True)
-        else:
-            empty_state("Sin historial", "No hay partidos finalizados de estas selecciones en la base anterior al kickoff. El modelo conserva una base neutral de baja confianza.", icon="📋")
         st.subheader("Mercados modelados")
         frame = pd.DataFrame(prediction_rows(predictions)).rename(
             columns={"Market": "Mercado", "Selection": "Selección", "Line": "Línea", "Probability": "Prob.", "Low": "Mín.", "High": "Máx.", "Confidence": "Confianza", "Sample": "Muestra", "Origin": "Origen", "Explanation": "Explicación"}
@@ -1311,6 +1319,44 @@ def render_prediction_lab() -> None:
                 {"Mercado": localize_metric(metric), "Línea": line, "Modelo": localize_model(estimate.model_family), "Esperado": estimate.expected_total, "Probabilidad de más": estimate.over_probability, "Rango bajo": estimate.low_probability, "Rango alto": estimate.high_probability, "Confianza": estimate.confidence, "Muestra": estimate.sample_size, "Explicación": estimate.explanation}
             )
         st.dataframe(pd.DataFrame(volume_rows), width="stretch", hide_index=True)
+
+        # Per-team predictions derived from the full deep-stat profile (all 70+
+        # offensive/defensive/goalkeeper/style metrics, recency-weighted and
+        # shrunk toward tournament means). This gives over/under per team for
+        # corners, yellow cards, shots, etc. — markets the global "total" view
+        # cannot resolve at the team level.
+        from wcpredict.team_profile import build_team_profile
+        from wcpredict.team_volume_markets import predict_team_volume_markets
+        deep_obs = repo.list_deep_team_metric_observations_before(match.kickoff_utc)
+        profile_a = build_team_profile(team_a, deep_obs, match.kickoff_utc)
+        profile_b = build_team_profile(team_b, deep_obs, match.kickoff_utc)
+        team_lines = predict_team_volume_markets(profile_a, profile_b)
+        if team_lines:
+            st.subheader("Mercados por equipo (deep stats)")
+            st.caption(
+                "Predicciones individuales por selección: mezcla del histórico propio (45%), "
+                "del rival (30%) y la media del torneo (25%), regularizadas hacia la media."
+            )
+            team_market_rows = [
+                {
+                    "Mercado": row.label,
+                    "Equipo": row.team_name,
+                    "Línea": row.line,
+                    "Esperado": round(row.expected, 2),
+                    "Prob. más": row.over_probability,
+                    "Confianza": row.confidence,
+                    "Muestra": round(row.sample_size, 1),
+                }
+                for row in team_lines
+            ]
+            st.dataframe(
+                pd.DataFrame(team_market_rows),
+                width="stretch",
+                hide_index=True,
+                column_config={
+                    "Prob. más": st.column_config.ProgressColumn(format="%.1f%%", min_value=0, max_value=1),
+                },
+            )
         if st.button("Guardar snapshot de predicciones", width="stretch"):
             now = datetime.now(timezone.utc)
             for row in predictions:
