@@ -119,7 +119,8 @@ def crest_html(team_name: str | None, *, size: int = 20, alt: str | None = None)
     return (
         f'<img src="{uri}" alt="{alt_text}" '
         f'width="{size}" height="{size}" '
-        f'style="vertical-align:middle;border-radius:3px;object-fit:contain;display:inline-block;" />'
+        f'style="vertical-align:middle;border-radius:3px;object-fit:contain;'
+        f'display:inline-block;image-rendering:auto;image-rendering:-webkit-optimize-contrast;" />'
     )
 
 

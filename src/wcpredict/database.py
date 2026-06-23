@@ -421,6 +421,18 @@ CREATE TABLE IF NOT EXISTS knockout_bracket (
 
 CREATE INDEX IF NOT EXISTS idx_knockout_bracket_stage
 ON knockout_bracket(competition, stage);
+
+-- Hot-path indexes (Streamlit dashboard re-runs these on every interaction)
+CREATE INDEX IF NOT EXISTS idx_matches_competition_kickoff
+ON matches(competition, kickoff_utc);
+CREATE INDEX IF NOT EXISTS idx_observations_match
+ON observations(match_id);
+CREATE INDEX IF NOT EXISTS idx_observations_subject
+ON observations(subject_type, subject_name);
+CREATE INDEX IF NOT EXISTS idx_team_match_stats_match
+ON team_match_stats(match_id);
+CREATE INDEX IF NOT EXISTS idx_player_match_stats_player
+ON player_match_stats(player_id);
 """
 
 

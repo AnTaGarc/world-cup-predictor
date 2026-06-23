@@ -31,6 +31,9 @@ data/*.bak
 data/*.sqlite-journal
 data/*.sqlite-wal
 data/*.sqlite-shm
+data/worldcup.sqlite.before-*
+data/worldcup.sqlite.pre-*
+data/models/*.tmp
 
 # Per-run logs inside data/
 data/*.log
