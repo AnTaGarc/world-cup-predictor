@@ -554,20 +554,68 @@ def _prediction_index(predictions: list[MarketPrediction]) -> dict[tuple[str, st
     return {(prediction.market_name, prediction.selection_name): prediction for prediction in predictions}
 
 
+def _build_saved_odds_index(saved_odds: list[dict]) -> dict[tuple[str, str, float | None], float]:
+    """Latest decimal_odds per (market_name, selection_name, line).
+
+    Multiple entries with different captured_at_utc may exist; we keep the
+    most recent one for each market/selection/line triple.
+    """
+    index: dict[tuple[str, str, float | None], tuple[str, float]] = {}
+    for row in saved_odds:
+        market = str(row.get("market_name") or "")
+        selection = str(row.get("selection_name") or "")
+        line_raw = row.get("line")
+        line = float(line_raw) if line_raw is not None else None
+        try:
+            decimal = float(row.get("decimal_odds") or 0.0)
+        except (TypeError, ValueError):
+            continue
+        if decimal <= 1.0:
+            continue
+        captured = str(row.get("captured_at_utc") or "")
+        key = (market, selection, line)
+        existing = index.get(key)
+        if existing is None or captured > existing[0]:
+            index[key] = (captured, decimal)
+    return {key: value[1] for key, value in index.items()}
+
+
+def _edge_pill(edge: float) -> str:
+    """Render the BET / SKIP / FADE pill for a given edge (e.g. 0.07 → BET)."""
+    if edge >= 0.05:
+        return "<span class='pill pill-green'>BET</span>"
+    if edge <= -0.05:
+        return "<span class='pill pill-red'>FADE</span>"
+    return "<span class='pill pill-neutral'>SKIP</span>"
+
+
+def _edge_class(edge: float) -> str:
+    if edge >= 0.05:
+        return "edge-pos"
+    if edge <= -0.05:
+        return "edge-neg"
+    return "edge-neu"
+
+
 def _render_market_visual_panel(
     team_a: str,
     team_b: str,
     predictions: list[MarketPrediction],
     volume_predictions: dict[str, float],
+    saved_odds: list[dict] | None = None,
 ) -> None:
     """Visual top-of-tab summary for "Mercados y EV".
 
-    Three sections, all read-only:
+    Three sections:
       * Top-3 most likely exact scores as cards.
-      * Main markets (1X2, O/U 2.5, BTTS) with model % and fair odds.
+      * Main markets (1X2, O/U 2.5, BTTS) with model %, fair odds and —
+        when the user has saved odds — Tu cuota / Edge / Pick (BET/SKIP/FADE).
       * Heuristic secondary markets (corners, cards, shots) with a
-        suggested line and a LEAN over/under hint.
+        suggested line and a LEAN over/under hint, plus edge when there
+        are saved odds for that line.
     """
+    odds_index = _build_saved_odds_index(saved_odds or [])
+    has_odds = bool(odds_index)
     score_cards: list[tuple[str, str, float]] = []
     main_exact = next((row for row in predictions if row.market_name == "Exact Score"), None)
     if main_exact is not None:
@@ -598,29 +646,50 @@ def _render_market_visual_panel(
     def _fair_odds(p: float) -> str:
         return f"{1.0 / p:.2f}" if p and p > 0.01 else "—"
 
-    main_rows: list[tuple[str, str, float]] = []
+    # (market_label, market_name_canonical, selection_label, selection_canonical, line, probability)
+    main_rows: list[tuple[str, str, str, str, float | None, float]] = []
     for row in predictions:
         if row.market_name == "1X2":
-            sel = localize_selection(row.selection_name)
-            main_rows.append(("1X2", sel, row.probability))
+            main_rows.append(("1X2", "1X2", localize_selection(row.selection_name),
+                              row.selection_name, None, row.probability))
         elif row.market_name == "Over/Under 2.5":
-            main_rows.append(("Total 2.5 goles", localize_selection(row.selection_name), row.probability))
+            main_rows.append(("Total 2.5 goles", "Over/Under 2.5",
+                              localize_selection(row.selection_name),
+                              row.selection_name, 2.5, row.probability))
         elif row.market_name == "Both Teams To Score":
             sel = "Sí" if row.selection_name == "Yes" else "No"
-            main_rows.append(("Ambos marcan", sel, row.probability))
+            main_rows.append(("Ambos marcan", "Both Teams To Score", sel,
+                              row.selection_name, None, row.probability))
 
     if main_rows:
-        body = "".join(
-            f"<tr><td class='market-name'>{mkt}<div class='market-sub'>{sel}</div></td>"
-            f"<td class='num'>{prob:.1%}</td>"
-            f"<td class='num'>{_fair_odds(prob)}</td></tr>"
-            for mkt, sel, prob in main_rows
+        rows_html = []
+        for mkt, mkt_canon, sel, sel_canon, line, prob in main_rows:
+            cells = (
+                f"<td class='market-name'>{mkt}<div class='market-sub'>{sel}</div></td>"
+                f"<td class='num'>{prob:.1%}</td>"
+                f"<td class='num'>{_fair_odds(prob)}</td>"
+            )
+            if has_odds:
+                user_odds = odds_index.get((mkt_canon, sel_canon, line))
+                if user_odds:
+                    edge = prob * user_odds - 1.0
+                    cells += (
+                        f"<td class='num'>{user_odds:.2f}</td>"
+                        f"<td class='num {_edge_class(edge)}'>{edge * 100:+.1f}%</td>"
+                        f"<td class='center'>{_edge_pill(edge)}</td>"
+                    )
+                else:
+                    cells += "<td class='num'>—</td><td class='num'>—</td><td class='center'>—</td>"
+            rows_html.append(f"<tr>{cells}</tr>")
+        header = (
+            "<th>Mercado</th><th class='num'>Modelo</th><th class='num'>Cuota justa</th>"
+            + ("<th class='num'>Tu cuota</th><th class='num'>Edge</th><th class='center'>Pick</th>" if has_odds else "")
         )
         st.markdown(
             '<div class="eyebrow">Mercados principales · Modelo</div>'
             "<table class='mk-table'>"
-            "<thead><tr><th>Mercado</th><th class='num'>Modelo</th><th class='num'>Cuota justa</th></tr></thead>"
-            f"<tbody>{body}</tbody></table>",
+            f"<thead><tr>{header}</tr></thead>"
+            f"<tbody>{''.join(rows_html)}</tbody></table>",
             unsafe_allow_html=True,
         )
 
@@ -1768,8 +1837,9 @@ def render_prediction_lab() -> None:
                 st.warning(f"No se pudo generar la explicación opcional: {copilot.reason}")
 
     with tab_odds:
+        saved_odds_for_match = repo.list_manual_odds(match.id)
         _render_market_visual_panel(
-            team_a, team_b, predictions, bundle.volume_predictions
+            team_a, team_b, predictions, bundle.volume_predictions, saved_odds_for_match,
         )
         st.markdown("---")
         st.markdown("**Introducir cuotas manualmente para calcular EV**")
