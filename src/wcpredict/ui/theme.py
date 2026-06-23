@@ -367,6 +367,95 @@ div[data-testid="stDataEditor"] tbody tr:hover {
 .prob-fill.draw { background: var(--prob-draw); }
 .prob-fill.loss { background: var(--prob-loss); }
 
+/* ---- Exact-score cards (Mercados y EV) ---- */
+.score-cards {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin: 6px 0 14px;
+}
+.score-card {
+  position: relative;
+  padding: 14px 12px 12px;
+  border-radius: var(--r-md);
+  border: 1px solid var(--line);
+  background: linear-gradient(155deg, var(--panel) 0%, var(--panel-2) 100%);
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+.score-card.rank-1 {
+  border-color: var(--accent);
+  background: linear-gradient(155deg, var(--status-blue-fill) 0%, var(--panel) 100%);
+}
+.score-card .rank-tag {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.score-card.rank-1 .rank-tag { color: var(--status-blue-ink); }
+.score-card .score-value {
+  font-size: 28px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+.score-card .score-prob {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--accent);
+  font-variant-numeric: tabular-nums;
+}
+@media (max-width: 640px) {
+  .score-cards { gap: 8px; }
+  .score-card { padding: 10px 6px 8px; }
+  .score-card .score-value { font-size: 22px; }
+  .score-card .score-prob { font-size: 14px; }
+}
+
+/* ---- Mercados table (Mercados y EV) ---- */
+.mk-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  margin: 4px 0 14px;
+  font-size: 13px;
+}
+.mk-table th {
+  text-align: left;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+  padding: 6px 10px;
+  border-bottom: 1px solid var(--line);
+  background: transparent;
+}
+.mk-table td {
+  padding: 9px 10px;
+  border-bottom: 1px solid var(--line);
+  vertical-align: middle;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+.mk-table tr:last-child td { border-bottom: none; }
+.mk-table td.num { text-align: right; }
+.mk-table td.center { text-align: center; }
+.mk-table .market-name { font-weight: 600; }
+.mk-table .market-sub { font-size: 11px; color: var(--muted); font-weight: 400; }
+.mk-table .edge-pos { color: var(--success); font-weight: 700; }
+.mk-table .edge-neg { color: var(--danger);  font-weight: 700; }
+.mk-table .edge-neu { color: var(--muted);   font-weight: 600; }
+@media (max-width: 640px) {
+  .mk-table th, .mk-table td { padding: 7px 6px; font-size: 12px; }
+}
+
 /* ---- Match row (used in dashboard table) ---- */
 .match-team {
   display: inline-flex;

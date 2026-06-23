@@ -554,6 +554,110 @@ def _prediction_index(predictions: list[MarketPrediction]) -> dict[tuple[str, st
     return {(prediction.market_name, prediction.selection_name): prediction for prediction in predictions}
 
 
+def _render_market_visual_panel(
+    team_a: str,
+    team_b: str,
+    predictions: list[MarketPrediction],
+    volume_predictions: dict[str, float],
+) -> None:
+    """Visual top-of-tab summary for "Mercados y EV".
+
+    Three sections, all read-only:
+      * Top-3 most likely exact scores as cards.
+      * Main markets (1X2, O/U 2.5, BTTS) with model % and fair odds.
+      * Heuristic secondary markets (corners, cards, shots) with a
+        suggested line and a LEAN over/under hint.
+    """
+    score_cards: list[tuple[str, str, float]] = []
+    main_exact = next((row for row in predictions if row.market_name == "Exact Score"), None)
+    if main_exact is not None:
+        score_cards.append(("MÁS PROBABLE", main_exact.selection_name, main_exact.probability))
+    alt_scores = [row for row in predictions if row.market_name == "Exact Score (alt)"]
+    for idx, row in enumerate(alt_scores[:2], start=2):
+        label = f"#{idx}"
+        # selection like "2-1 (#2)" → strip the rank suffix for the card.
+        score_text = row.selection_name.split(" ")[0]
+        score_cards.append((label, score_text, row.probability))
+
+    if score_cards:
+        cards_html = "".join(
+            f'<div class="score-card{" rank-1" if i == 0 else ""}">'
+            f'<span class="rank-tag">{label}</span>'
+            f'<span class="score-value">{score.replace("-", " - ")}</span>'
+            f'<span class="score-prob">{prob:.1%}</span>'
+            "</div>"
+            for i, (label, score, prob) in enumerate(score_cards)
+        )
+        st.markdown(
+            '<div class="eyebrow">Marcadores exactos más probables</div>'
+            f'<div class="score-cards">{cards_html}</div>',
+            unsafe_allow_html=True,
+        )
+        st.caption("Probabilidades Dixon-Coles. Úsalo como contexto, no como apuesta directa.")
+
+    def _fair_odds(p: float) -> str:
+        return f"{1.0 / p:.2f}" if p and p > 0.01 else "—"
+
+    main_rows: list[tuple[str, str, float]] = []
+    for row in predictions:
+        if row.market_name == "1X2":
+            sel = localize_selection(row.selection_name)
+            main_rows.append(("1X2", sel, row.probability))
+        elif row.market_name == "Over/Under 2.5":
+            main_rows.append(("Total 2.5 goles", localize_selection(row.selection_name), row.probability))
+        elif row.market_name == "Both Teams To Score":
+            sel = "Sí" if row.selection_name == "Yes" else "No"
+            main_rows.append(("Ambos marcan", sel, row.probability))
+
+    if main_rows:
+        body = "".join(
+            f"<tr><td class='market-name'>{mkt}<div class='market-sub'>{sel}</div></td>"
+            f"<td class='num'>{prob:.1%}</td>"
+            f"<td class='num'>{_fair_odds(prob)}</td></tr>"
+            for mkt, sel, prob in main_rows
+        )
+        st.markdown(
+            '<div class="eyebrow">Mercados principales · Modelo</div>'
+            "<table class='mk-table'>"
+            "<thead><tr><th>Mercado</th><th class='num'>Modelo</th><th class='num'>Cuota justa</th></tr></thead>"
+            f"<tbody>{body}</tbody></table>",
+            unsafe_allow_html=True,
+        )
+
+    secondary = [
+        ("Córners totales", "corners", 9.5),
+        ("Tarjetas totales", "cards", 4.5),
+        ("Tiros totales", "shots", 22.5),
+        ("Tiros a puerta totales", "shots_on_target", 8.5),
+    ]
+    sec_rows: list[str] = []
+    for label, key, line in secondary:
+        est = volume_predictions.get(key)
+        if est is None:
+            continue
+        gap = est - line
+        if gap >= 0.5:
+            lean_html = f"<span class='pill pill-green'>OVER {line}</span>"
+        elif gap <= -0.5:
+            lean_html = f"<span class='pill pill-amber'>UNDER {line}</span>"
+        else:
+            lean_html = "<span class='pill pill-neutral'>PUSH</span>"
+        sec_rows.append(
+            f"<tr><td class='market-name'>{label}</td>"
+            f"<td class='num'>{est:.1f}</td>"
+            f"<td class='num'>{line}</td>"
+            f"<td class='center'>{lean_html}</td></tr>"
+        )
+    if sec_rows:
+        st.markdown(
+            '<div class="eyebrow">Mercados secundarios · Heurístico</div>'
+            "<table class='mk-table'>"
+            "<thead><tr><th>Mercado</th><th class='num'>Estimación</th><th class='num'>Línea</th><th class='center'>Lean</th></tr></thead>"
+            f"<tbody>{''.join(sec_rows)}</tbody></table>",
+            unsafe_allow_html=True,
+        )
+
+
 def _database_summary() -> dict[str, int | bool]:
     """Counters shown in the Resumen hero. Filtered to the 2026 World Cup so
     the historical backfill (~4k matches, ~150 teams from past tournaments)
@@ -1664,6 +1768,11 @@ def render_prediction_lab() -> None:
                 st.warning(f"No se pudo generar la explicación opcional: {copilot.reason}")
 
     with tab_odds:
+        _render_market_visual_panel(
+            team_a, team_b, predictions, bundle.volume_predictions
+        )
+        st.markdown("---")
+        st.markdown("**Introducir cuotas manualmente para calcular EV**")
         st.caption("Rellena únicamente las cuotas que quieras comparar. La app no envía apuestas ni accede a tu cuenta.")
         uploaded_odds = st.file_uploader("Importar cuotas CSV", type=["csv"], key=f"odds_csv_{match.id}")
         if uploaded_odds is not None:
