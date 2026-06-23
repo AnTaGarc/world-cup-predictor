@@ -10,8 +10,11 @@ class SourceCatalogTests(unittest.TestCase):
         by_id = {row.provider_id: row for row in catalog}
         self.assertEqual(by_id["reviewed_capture"].bank, 0)
         self.assertEqual(by_id["martj42"].cost_tier, "free")
-        self.assertEqual(by_id["x_api"].bank, 3)
-        self.assertEqual(by_id["x_api"].cost_tier, "pay_per_use")
+        # The catalog only declares free/community sources; no paid APIs
+        # should remain after the cleanup of dead provider entries.
+        for row in catalog:
+            self.assertNotEqual(row.cost_tier, "pay_per_use")
+            self.assertFalse(row.requires_credentials)
 
     def test_current_world_cup_datasets_are_primary_operational_with_community_provenance(self):
         by_id = {row.provider_id: row for row in default_source_catalog()}
@@ -46,15 +49,17 @@ class SourceCatalogTests(unittest.TestCase):
         self.assertEqual(conflict.status, "conflicting")
         self.assertIsNone(conflict.selected)
 
-    def test_router_skips_stale_and_unbudgeted_paid_source(self):
+    def test_router_skips_stale_sources(self):
         now = datetime(2026, 6, 19, tzinfo=timezone.utc)
+        # kaggle_mirror is free but classified domain "world_cup_2026"; a
+        # match domain check (e.g. "sentiment") for a non-listed provider
+        # should fall through as not_found.
         rows = [
-            {"provider_id": "x_api", "value": 0.2, "observed_at_utc": now.isoformat()},
-            {"provider_id": "sofascore_hybrid", "value": 0.1, "observed_at_utc": (now - timedelta(days=3)).isoformat()},
+            {"provider_id": "kaggle_mirror", "value": 1, "observed_at_utc": (now - timedelta(days=365)).isoformat()},
         ]
-        result = route_observations("sentiment", rows, now=now, paid_budget_usd=0)
+        result = route_observations("historical_results", rows, now=now)
         self.assertEqual(result.status, "not_found")
-        self.assertIn("x_api:budget", result.skipped)
+        self.assertIn("kaggle_mirror:stale", result.skipped)
 
 
 if __name__ == "__main__":

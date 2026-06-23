@@ -36,18 +36,12 @@ def default_source_catalog() -> list[SourceDefinition]:
         SourceDefinition("openfootball", "OpenFootball internationals", 1, 0.91, "free", "low", ("historical_results",), 24 * 30),
         SourceDefinition("statsbomb_open", "StatsBomb Open Data", 1, 0.95, "free", "medium", ("events", "player_stats"), 24 * 30),
         SourceDefinition("transfermarkt_dataset", "Transfermarkt datasets", 1, 0.88, "free", "medium", ("entities", "squads", "valuations"), 24 * 14, notes="Usar el dataset publicado y revisar términos de procedencia"),
-        SourceDefinition("open_meteo", "Open-Meteo", 1, 0.94, "free", "low", ("weather",), 3),
         SourceDefinition("xgabora", "Datos históricos de partidos de clubes", 1, 0.88, "free", "medium", ("club_history", "historical_odds"), 24 * 30),
         SourceDefinition("swaptr_wc2026_matches", "Partidos diarios del Mundial 2026", 1, 0.86, "free", "low", ("world_cup_2026", "fixtures", "results", "postmatch_stats"), 36, notes="Fuente comunitaria diaria; contrastar conflictos con FIFA o captura revisada"),
         SourceDefinition("swaptr_wc2026_teams", "Selecciones diarias del Mundial 2026", 1, 0.84, "free", "low", ("world_cup_2026", "team_form", "postmatch_stats"), 36, notes="Fuente comunitaria diaria; conserva versión y hash"),
         SourceDefinition("swaptr_wc2026_players", "Jugadores diarios del Mundial 2026", 1, 0.84, "free", "medium", ("world_cup_2026", "player_stats"), 36, notes="Fuente comunitaria diaria; alta importancia predictiva, autoridad subordinada a evidencia revisada"),
-        SourceDefinition("api_football", "API-Football", 2, 0.90, "freemium", "low", ("fixtures", "lineups", "postmatch_stats", "player_stats"), 2, True),
-        SourceDefinition("football_data_org", "football-data.org", 2, 0.88, "freemium", "low", ("fixtures", "results"), 3, True),
-        SourceDefinition("odds_api", "The Odds API", 2, 0.91, "pay_per_use", "low", ("odds",), 1, True),
-        SourceDefinition("sofascore_hybrid", "SofaScore híbrido", 3, 0.82, "free_unofficial", "high", ("fixtures", "lineups", "postmatch_stats", "player_stats"), 6, notes="Automatización frágil; captura revisada como respaldo"),
         SourceDefinition("soccerdata", "Adaptadores de soccerdata", 3, 0.78, "free_unofficial", "high", ("club_history", "player_stats", "ratings"), 24),
         SourceDefinition("kaggle_mirror", "Conjuntos comunitarios de Kaggle", 3, 0.65, "free", "medium", ("historical_results", "world_cup_2026"), 24 * 90, notes="Verificar autor, fecha, licencia y fuente original"),
-        SourceDefinition("x_api", "X API", 3, 0.58, "pay_per_use", "high", ("sentiment",), 2, True, "Señal experimental; nunca sustituye datos deportivos"),
     ]
 
 

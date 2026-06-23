@@ -30,13 +30,10 @@ from wcpredict.refresh import refresh_match
 from wcpredict.repository import Repository
 from wcpredict.schedule import seed_schedule
 from wcpredict.services import MarketPrediction, predict_match_markets
-from wcpredict.sofascore import import_sofascore_event
-from wcpredict.sentiment import normalize_sentiment_snapshot, x_collection_gate
 from wcpredict.source_catalog import default_source_catalog
 from wcpredict.daily_refresh import DEFAULT_PROVIDERS, DatasetDownload, ensure_current_world_cup_data
 from wcpredict.world_cup_data import fetch_kaggle_world_cup_dataset, import_world_cup_download
 from wcpredict.prediction_report import build_prediction_report
-from wcpredict.ai_copilot import explain_context
 from wcpredict.advanced_form import (
     build_goalkeeper_baseline,
     build_volume_rate_observations,
@@ -1819,22 +1816,6 @@ def render_prediction_lab() -> None:
             + (["Algún banco diario no pudo actualizarse"] if daily_result.failed else []),
         )
         st.markdown(report)
-        if st.button("Generar explicación contextual opcional con OpenAI", key=f"ai_context_{match.id}"):
-            copilot = explain_context(
-                {
-                    "match": match.label,
-                    "probabilities": {localize_selection(row.selection_name): row.probability for row in primary},
-                    "form": form_notes,
-                    "players": player_notes,
-                    "missing_data": ["daily_provider_failure"] if daily_result.failed else [],
-                }
-            )
-            if copilot.status == "ready":
-                st.info(copilot.narrative)
-            elif copilot.status == "disabled":
-                st.caption("OpenAI no configurado. El informe determinista sigue disponible sin coste de API.")
-            else:
-                st.warning(f"No se pudo generar la explicación opcional: {copilot.reason}")
 
     with tab_odds:
         saved_odds_for_match = repo.list_manual_odds(match.id)
@@ -2227,30 +2208,6 @@ def render_prediction_lab() -> None:
             if cached.lineups:
                 st.subheader("Jugadores")
                 st.dataframe(_visible_frame(cached.lineups), width="stretch", hide_index=True)
-        st.divider()
-        st.subheader("Importador experimental de SofaScore")
-        st.caption("Pega una URL pública de partido. Se muestra una vista previa; no usa cookies, sesión ni credenciales del navegador.")
-        sofa_url = st.text_input("URL de SofaScore", key=f"sofa_{match.id}")
-        preview_key = f"sofa_preview_{match.id}"
-        if st.button("Obtener vista previa", disabled=not bool(sofa_url), width="stretch"):
-            try:
-                imported = import_sofascore_event(sofa_url)
-            except Exception as exc:
-                st.error(f"SofaScore no pudo importarse: {type(exc).__name__}. La caché local sigue intacta.")
-            else:
-                st.session_state[preview_key] = imported
-        imported = st.session_state.get(preview_key)
-        if imported is not None:
-            if imported.status == "incomplete":
-                st.warning("Importación parcial: " + ", ".join(imported.missing))
-            st.write(f"**{imported.team_a} vs {imported.team_b}** · evento {imported.event_id}")
-            if imported.statistics:
-                st.dataframe(_visible_frame(imported.statistics), width="stretch", hide_index=True)
-            if imported.players:
-                st.dataframe(_visible_frame(imported.players), width="stretch", hide_index=True)
-            if st.button("Persistir vista previa con procedencia", width="stretch"):
-                repo.import_sofascore_preview(match.id, imported, datetime.now(timezone.utc))
-                st.success("Datos de SofaScore persistidos; revisa Calidad de datos para corregirlos o completarlos.")
 
     with tab_saved:
         saved_predictions = repo.list_predictions(match.id)
@@ -2802,56 +2759,24 @@ def render_player_intelligence() -> None:
                 )
             st.cache_data.clear(); st.cache_resource.clear()
             st.rerun()
-    performance_tab, sentiment_tab = st.tabs(["Rendimiento y estilos", "Sentimiento prepartido"])
-    with performance_tab:
-        minimum_minutes = st.slider("Minutos mínimos", 0, 900, 60, 30)
-        rows = _player_intelligence_rows_cached(_db_signature(), int(minimum_minutes))
-        if not rows:
-            empty_state("Sin estadísticas verificadas", "Las capturas postpartido revisadas alimentarán esta vista.", icon="👤")
-        else:
-            frame = pd.DataFrame(rows)
-            ranking_tabs = st.tabs(["Impacto", "Goles", "Asistencias", "Tiros"])
-            ranking_specs = [
-                ("impact", "Impacto relativo", "impact", "Impacto", None, None),
-                ("goals_per90", "Goles / 90", "goals", "Goles", "goals_per90", "Goles/90"),
-                ("assists_per90", "Asistencias / 90", "assists", "Asistencias", "assists_per90", "Asist./90"),
-                ("shots_per90", "Tiros / 90", "shots", "Tiros", "shots_per90", "Tiros/90"),
-            ]
-            for panel, (metric, title, total_col, total_label, rate_col, rate_label) in zip(ranking_tabs, ranking_specs):
-                with panel:
-                    _render_player_panel(
-                        frame, metric, title, total_col, total_label, rate_col, rate_label,
-                    )
-            if "passes_per90" not in frame:
-                callout("Pases: sin cobertura en el banco diario actual. Se conserva como dato desconocido y no como 0; aparecerá cuando una fuente revisada lo aporte.")
-            st.caption("Impacto estandariza solo métricas realmente disponibles. Todas las clasificaciones muestran minutos y partidos para contextualizar la muestra.")
-    with sentiment_tab:
-        callout("Señal experimental: se muestra como contexto y queda excluida del modelo y de la calibración.", tone="amber")
-        gate = x_collection_gate(os.getenv("X_API_BEARER_TOKEN"), float(os.getenv("X_API_BUDGET_USD", "0") or 0))
-        st.write(f"Estado del conector X: **{localize_status(gate.status)}** — {gate.detail}")
-        st.caption("La aplicación no inicia streaming ni gasta créditos sin clave y presupuesto positivo.")
-        matches = _list_matches()
-        labels, by_label = _match_labels(matches)
-        selected = by_label[st.selectbox("Partido", labels, key="sentiment_match")]
-        existing = repo.list_sentiment_snapshots(selected.id)
-        if existing:
-            st.dataframe(_visible_frame(existing), width="stretch", hide_index=True)
-        with st.expander("Registrar snapshot prepartido"):
-            query = st.text_input("Consulta utilizada", f'"{selected.team_a.name}" OR "{selected.team_b.name}"')
-            language = st.text_input("Idioma", "es")
-            hours = st.number_input("Ventana anterior (horas)", min_value=1, max_value=168, value=24)
-            c1, c2, c3 = st.columns(3)
-            positive = c1.number_input("Positivos", min_value=0, value=0)
-            neutral = c2.number_input("Neutros", min_value=0, value=0)
-            negative = c3.number_input("Negativos", min_value=0, value=0)
-            estimated_cost = st.number_input("Coste estimado (USD)", min_value=0.0, value=0.0, step=0.01)
-            if st.button("Guardar snapshot experimental"):
-                end = min(datetime.now(timezone.utc), selected.kickoff_utc)
-                start = end - pd.Timedelta(hours=int(hours))
-                snapshot = normalize_sentiment_snapshot(
-                    match_id=selected.id, provider_id="x_api", window_start_utc=start.to_pydatetime() if hasattr(start, "to_pydatetime") else start,
-                    window_end_utc=end, positive=int(positive), neutral=int(neutral), negative=int(negative),
-                    query=query, language=language, estimated_cost_usd=float(estimated_cost),
+    minimum_minutes = st.slider("Minutos mínimos", 0, 900, 60, 30)
+    rows = _player_intelligence_rows_cached(_db_signature(), int(minimum_minutes))
+    if not rows:
+        empty_state("Sin estadísticas verificadas", "Las capturas postpartido revisadas alimentarán esta vista.", icon="👤")
+    else:
+        frame = pd.DataFrame(rows)
+        ranking_tabs = st.tabs(["Impacto", "Goles", "Asistencias", "Tiros"])
+        ranking_specs = [
+            ("impact", "Impacto relativo", "impact", "Impacto", None, None),
+            ("goals_per90", "Goles / 90", "goals", "Goles", "goals_per90", "Goles/90"),
+            ("assists_per90", "Asistencias / 90", "assists", "Asistencias", "assists_per90", "Asist./90"),
+            ("shots_per90", "Tiros / 90", "shots", "Tiros", "shots_per90", "Tiros/90"),
+        ]
+        for panel, (metric, title, total_col, total_label, rate_col, rate_label) in zip(ranking_tabs, ranking_specs):
+            with panel:
+                _render_player_panel(
+                    frame, metric, title, total_col, total_label, rate_col, rate_label,
                 )
-                repo.save_sentiment_snapshot(snapshot, datetime.now(timezone.utc))
-                st.success("Snapshot guardado como evidencia experimental; no modifica las probabilidades.")
+        if "passes_per90" not in frame:
+            callout("Pases: sin cobertura en el banco diario actual. Se conserva como dato desconocido y no como 0; aparecerá cuando una fuente revisada lo aporte.")
+        st.caption("Impacto estandariza solo métricas realmente disponibles. Todas las clasificaciones muestran minutos y partidos para contextualizar la muestra.")
