@@ -1303,11 +1303,27 @@ def render_prediction_lab() -> None:
 
     cache_key = f"refresh_{match.id}"
     cached = _cached_bundle(match)
-    button_col, note_col = st.columns([1, 2.2])
-    with button_col:
-        refresh_clicked = st.button("Actualizar datos", type="primary", width="stretch")
-    with note_col:
-        st.caption("Consulta acotada: un partido, máximo 14 llamadas y 0 créditos de cuotas. Conserva la caché si falla.")
+    # The "Actualizar datos" button uses a Python script that lives in the
+    # user's local ~/.codex/skills/ directory. It isn't shipped in the repo
+    # and therefore doesn't exist on Streamlit Cloud — clicking it there
+    # only produced a red "El recolector local no está instalado" error.
+    # We hide the button entirely in environments without the script.
+    from wcpredict.refresh import default_collector_script
+    collector_available = default_collector_script().exists()
+    if collector_available:
+        button_col, note_col = st.columns([1, 2.2])
+        with button_col:
+            refresh_clicked = st.button("Actualizar datos", type="primary", width="stretch")
+        with note_col:
+            st.caption("Consulta acotada: un partido, máximo 14 llamadas y 0 créditos de cuotas. Conserva la caché si falla.")
+    else:
+        refresh_clicked = False
+        st.caption(
+            "ℹ️ El recolector por partido solo está disponible en la versión local. "
+            "En la nube los datos se actualizan automáticamente desde Kaggle "
+            "(usa el botón **Actualizar datos de jugadores** en la pestaña Jugadores) "
+            "y los JSON revisados se importan con `scripts/import_deep_match_json.py`."
+        )
     if refresh_clicked:
         with st.spinner("Recopilando y normalizando datos del partido…"):
             result = refresh_match(team_a, team_b, match.kickoff_utc, SPORTS_DATA_DIR)
