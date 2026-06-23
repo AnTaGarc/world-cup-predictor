@@ -18,12 +18,7 @@ CSS = """
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;760&display=swap');
 
-/* ---- Hide Streamlit chrome (host badge, hamburger menu, deploy bar) ---- */
-#MainMenu {visibility: hidden !important;}
-footer {visibility: hidden !important;}
-header [data-testid="stToolbar"] {visibility: hidden !important;}
-[data-testid="stDecoration"] {display: none !important;}
-[data-testid="stStatusWidget"] {display: none !important;}
+/* ---- Hide Streamlit-cloud branding only (without touching tab arrows) ---- */
 .viewerBadge_container__1QSob,
 [data-testid="stHeader"] [class*="viewerBadge"],
 a[href*="streamlit.io/cloud"],
