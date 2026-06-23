@@ -33,6 +33,33 @@ COMPETITION = "FIFA World Cup 2026"
 STAGES = ("Round of 32", "Round of 16", "Quarter-final", "Semi-final",
           "Third-place play-off", "Final")
 
+# Defensive schema: re-applied each time we touch the table so existing
+# deployments that were initialised before this module shipped still work
+# without forcing a database wipe.
+_KNOCKOUT_SCHEMA = """
+CREATE TABLE IF NOT EXISTS knockout_bracket (
+    id INTEGER PRIMARY KEY,
+    competition TEXT NOT NULL,
+    stage TEXT NOT NULL,
+    slot_id TEXT NOT NULL,
+    kickoff_utc TEXT NOT NULL,
+    venue TEXT,
+    home_source TEXT NOT NULL,
+    away_source TEXT NOT NULL,
+    home_team_id INTEGER REFERENCES teams(id),
+    away_team_id INTEGER REFERENCES teams(id),
+    match_id INTEGER REFERENCES matches(id),
+    resolved_at_utc TEXT,
+    UNIQUE(competition, slot_id)
+);
+CREATE INDEX IF NOT EXISTS idx_knockout_bracket_stage
+ON knockout_bracket(competition, stage);
+"""
+
+
+def _ensure_schema(con: sqlite3.Connection) -> None:
+    con.executescript(_KNOCKOUT_SCHEMA)
+
 
 @dataclass(frozen=True)
 class BracketSlot:
@@ -57,6 +84,7 @@ def seed_knockout_bracket(repo: Repository, path: Path) -> int:
     """Insert (or no-op) the 32 knockout slots from the seed CSV."""
     rows = load_bracket_csv(path)
     with sqlite3.connect(repo.path, timeout=30) as con:
+        _ensure_schema(con)
         for row in rows:
             con.execute(
                 "INSERT INTO knockout_bracket(competition, stage, slot_id, kickoff_utc, "
@@ -75,6 +103,7 @@ def seed_knockout_bracket(repo: Repository, path: Path) -> int:
 def list_bracket_slots(repo: Repository) -> list[BracketSlot]:
     with sqlite3.connect(repo.path, timeout=30) as con:
         con.row_factory = sqlite3.Row
+        _ensure_schema(con)
         rows = con.execute(
             "SELECT * FROM knockout_bracket WHERE competition=? ORDER BY kickoff_utc, slot_id",
             (COMPETITION,),
@@ -242,6 +271,7 @@ def resolve_knockout_bracket(repo: Repository, now: datetime | None = None) -> d
 
     with sqlite3.connect(repo.path, timeout=30) as con:
         con.row_factory = sqlite3.Row
+        _ensure_schema(con)
         # Iterate stages in order so winners are known before resolving the next round.
         for stage in STAGES:
             for slot in [s for s in slots if s.stage == stage]:
