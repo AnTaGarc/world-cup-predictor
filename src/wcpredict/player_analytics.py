@@ -106,8 +106,10 @@ def build_player_profiles(rows: list[dict[str, Any]], min_minutes: int = 60) -> 
         # Position can come from any row; keep the first non-empty value.
         if "position" not in target and row.get("position"):
             target["position"] = row.get("position")
-        if "save_percentage" not in target and row.get("save_percentage") is not None:
-            target["save_percentage"] = row.get("save_percentage")
+        # NOTE: save_percentage is intentionally NOT propagated here. It's
+        # applied later (with a 180-min eligibility threshold) so we don't
+        # credit a goalkeeper for a "100%" reading when the rival never put
+        # a shot on him.
         for metric in COUNTING:
             value = row.get(metric)
             if value is None:
@@ -130,7 +132,18 @@ def build_player_profiles(rows: list[dict[str, Any]], min_minutes: int = 60) -> 
         tackles = float(row.get("tackles_won") or 0)
         intercep = float(row.get("interceptions") or 0)
         profile["defensive_actions_per90"] = (tackles + intercep) * 90 / minutes
-        profile["save_percentage"] = float(row.get("save_percentage") or 0)
+        # Save percentage is only meaningful when the keeper actually faced
+        # shots. swaptr reports 100% when shots_against = 0, which is a data
+        # artefact (e.g. Saudi Arabia didn't put a single shot on Unai Simón
+        # → save% 100, but he didn't "save" anything). We require at least
+        # 2 full matches (180+ minutes) before trusting the save% — below
+        # that threshold the metric is treated as missing and the keeper
+        # ranks on whatever else we have (currently nothing → position-mean
+        # via shrinkage, so they land mid-table).
+        raw_save_pct = row.get("save_percentage")
+        if raw_save_pct is not None and minutes >= 180:
+            profile["save_percentage"] = float(raw_save_pct)
+        # else: leave key absent → shrinkage will pull it to the position mean
         profiles.append(profile)
     if not profiles:
         return []

@@ -526,7 +526,11 @@ div[data-testid="stDataEditor"] tbody tr:hover {
   .match-team { font-size: 0.82rem; gap: 6px; }
   .match-team img { width: 16px !important; height: 16px !important; }
 
-  /* Player ranking → card layout on phones */
+  /* Player ranking → card layout on phones.
+     Identify columns by class instead of nth-child because Impacto tab adds
+     a Posición column that shifts the numeric indices. Each cell is placed
+     into a 2-column grid (name+pos+team on the left, big number on the
+     right) and the redundant ones (minutes/matches/rate) are hidden. */
   .player-table-wrap { border-radius: 12px; }
   .player-table { display: block; }
   .player-table thead { display: none; }
@@ -536,7 +540,8 @@ div[data-testid="stDataEditor"] tbody tr:hover {
     border-bottom: 1px solid var(--line);
     display: grid;
     grid-template-columns: 1fr auto;
-    gap: 4px 12px;
+    grid-template-rows: auto auto auto;
+    gap: 2px 12px;
     align-items: center;
   }
   .player-table tbody tr:last-child { border-bottom: none; }
@@ -545,31 +550,42 @@ div[data-testid="stDataEditor"] tbody tr:hover {
     border: none;
     text-align: left;
   }
+  /* Name on top-left */
   .player-table .pt-name {
     font-size: 1rem;
     font-weight: 700;
-    grid-column: 1 / 2;
+    grid-column: 1;
     grid-row: 1;
   }
-  .player-table .pt-team {
-    grid-column: 1 / 2;
+  /* Position label (impact tab only) as small grey chip below the name */
+  .player-table .pt-pos {
+    grid-column: 1;
     grid-row: 2;
+    color: var(--muted);
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    font-weight: 600;
+  }
+  /* Team + crest below */
+  .player-table .pt-team {
+    grid-column: 1;
+    grid-row: 3;
     color: var(--muted);
     font-size: 0.85rem;
   }
   .player-table .pt-team img { width: 18px; height: 18px; }
+  /* Big number on the right, spanning full height */
   .player-table .pt-strong {
     grid-column: 2;
-    grid-row: 1 / 3;
+    grid-row: 1 / -1;
     font-size: 1.6rem;
     line-height: 1;
     text-align: right;
     align-self: center;
   }
-  /* Hide minutes, partidos, rate column to keep cards clean */
-  .player-table tbody td:nth-child(3),
-  .player-table tbody td:nth-child(4),
-  .player-table tbody td:nth-child(6) { display: none; }
+  /* Hide the secondary numeric cells (minutes, matches, rate per 90). */
+  .player-table .pt-num:not(.pt-strong) { display: none; }
 
   /* Buttons larger touch targets */
   .stButton button { min-height: 44px; font-size: 0.95rem; }
