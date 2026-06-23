@@ -39,9 +39,20 @@ st.sidebar.markdown(
     unsafe_allow_html=True,
 )
 
+PAGE_OPTIONS = ["📊 Resumen", "🎯 Predicción y valor", "👤 Jugadores", "📐 Calibración", "🗄️ Calidad de datos"]
+
+# Allow other views (dashboard match links) to deep-link into the prediction
+# lab via ?page=lab&match_id=N. Set the default index of the radio so the
+# sidebar reflects the deep-link target.
+_default_index = 0
+_qp_page = st.query_params.get("page")
+if _qp_page == "lab":
+    _default_index = 1  # Predicción y valor
+
 page = st.sidebar.radio(
     "Vista",
-    ["📊 Resumen", "🎯 Predicción y valor", "👤 Jugadores", "📐 Calibración", "🗄️ Calidad de datos"],
+    PAGE_OPTIONS,
+    index=_default_index,
     label_visibility="collapsed",
 )
 # Strip emoji prefix for page matching

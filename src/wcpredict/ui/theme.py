@@ -546,14 +546,40 @@ div[data-testid="stDataEditor"] tbody tr:hover {
   border-bottom: 1px dashed var(--line);
 }
 
+/* Keep bracket horizontal on mobile (swipe-style) instead of collapsing.
+   Tighter card width + visible scrollbar hint so it's discoverable. */
 @media (max-width: 900px) {
   .bk-board {
-    grid-template-columns: 1fr;
-    gap: 18px;
+    grid-template-columns: repeat(5, 180px) 180px;
+    overflow-x: auto;
+    padding-bottom: 6px;
+    scroll-snap-type: x mandatory;
   }
-  .bk-column { min-width: 0; }
-  .bk-card-head { font-size: 11px; padding: 7px 12px; }
-  .bk-team { font-size: 14px; padding: 9px 12px; }
+  .bk-column { min-width: 180px; scroll-snap-align: start; }
+  .bk-card-head { font-size: 10px; padding: 6px 10px; }
+  .bk-team { font-size: 13px; padding: 8px 10px; }
+  .bk-board::-webkit-scrollbar { height: 6px; }
+  .bk-board::-webkit-scrollbar-thumb {
+    background: var(--line); border-radius: 999px;
+  }
+}
+
+/* ---- Dashboard match links (clickable rows) ---- */
+.match-link {
+  color: inherit !important;
+  text-decoration: none !important;
+  display: inline-block;
+  width: 100%;
+}
+.match-row { transition: background 120ms ease; }
+.match-row:hover { background: var(--panel-2); }
+
+/* Mobile horizontal scroll for the upcoming-matches table */
+@media (max-width: 900px) {
+  .match-table-wrap::-webkit-scrollbar { height: 6px; }
+  .match-table-wrap::-webkit-scrollbar-thumb {
+    background: var(--line); border-radius: 999px;
+  }
 }
 
 /* ---- Mercados table (Mercados y EV) ---- */

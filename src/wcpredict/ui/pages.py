@@ -1447,16 +1447,17 @@ def render_dashboard() -> None:
                 bundle.updated_at_utc.astimezone().strftime("%d/%m %H:%M")
                 if bundle else "—"
             )
+            href = f"?page=lab&match_id={match.id}"
             rows_html.append(
-                "<tr>"
+                f"<tr class='match-row' onclick=\"window.location.search='page=lab&match_id={match.id}'\" style='cursor:pointer;'>"
                 f'<td style="padding:10px 12px;color:var(--muted);white-space:nowrap;">'
-                f'{match.kickoff_utc.astimezone().strftime("%d/%m · %H:%M")}</td>'
+                f'<a href="{href}" class="match-link">{match.kickoff_utc.astimezone().strftime("%d/%m · %H:%M")}</a></td>'
                 f'<td style="padding:10px 12px;color:var(--ink);font-weight:600;">'
-                f'<span class="match-team">{crest_html(match.team_a.name, size=20)}'
+                f'<a href="{href}" class="match-link"><span class="match-team">{crest_html(match.team_a.name, size=20)}'
                 f'<span>{match.team_a.name}</span></span> '
                 f'<span style="color:var(--muted);font-weight:500;margin:0 6px;">vs</span> '
                 f'<span class="match-team">{crest_html(match.team_b.name, size=20)}'
-                f'<span>{match.team_b.name}</span></span></td>'
+                f'<span>{match.team_b.name}</span></span></a></td>'
                 f'<td style="padding:10px 12px;color:var(--muted);">{match.venue or "—"}</td>'
                 f'<td style="padding:10px 12px;">{status_pill(coverage_label, coverage_tone)}</td>'
                 f'<td style="padding:10px 12px;color:var(--muted);white-space:nowrap;'
@@ -1464,8 +1465,8 @@ def render_dashboard() -> None:
                 "</tr>"
             )
         st.markdown(
-            '<div class="soft-panel" style="padding:0;overflow:hidden;">'
-            '<table style="width:100%;border-collapse:collapse;font-size:14px;">'
+            '<div class="soft-panel match-table-wrap" style="padding:0;overflow-x:auto;">'
+            '<table style="width:100%;min-width:640px;border-collapse:collapse;font-size:14px;">'
             '<thead><tr style="background:var(--panel-2);">'
             '<th style="text-align:left;padding:10px 12px;color:var(--muted);font-size:12px;'
             'font-weight:700;text-transform:uppercase;letter-spacing:.04em;">Hora local</th>'
@@ -1600,11 +1601,25 @@ def render_prediction_lab() -> None:
         "Czechia vs South Africa", "Switzerland vs Bosnia and Herzegovina",
         "Canada vs Qatar", "Mexico vs South Korea",
     }
-    default_index = next(
-        (index for index, label in enumerate(labels) if by_label[label].label in calibration_labels),
-        0,
-    )
-    selected_label = st.selectbox("Partido", labels, index=default_index, label_visibility="collapsed")
+    # Preselection from the dashboard's match links (?match_id=X).
+    requested_match_id = st.query_params.get("match_id")
+    try:
+        requested_match_id = int(requested_match_id) if requested_match_id else None
+    except ValueError:
+        requested_match_id = None
+    preselect_index = None
+    if requested_match_id is not None:
+        preselect_index = next(
+            (index for index, label in enumerate(labels)
+             if by_label[label].id == requested_match_id),
+            None,
+        )
+    if preselect_index is None:
+        preselect_index = next(
+            (index for index, label in enumerate(labels) if by_label[label].label in calibration_labels),
+            0,
+        )
+    selected_label = st.selectbox("Partido", labels, index=preselect_index, label_visibility="collapsed")
     match = by_label[selected_label]
     team_a, team_b = match.team_a.name, match.team_b.name
     crest_a = crest_html(team_a, size=44)
