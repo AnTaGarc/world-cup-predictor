@@ -337,8 +337,12 @@ def _active_corrections() -> ModelCorrections | None:
 @st.cache_resource(show_spinner=False)
 def _player_intelligence_rows_cached(db_sig: tuple[int, int], minimum_minutes: int):
     repo = _repo()
+    # Always load with min_minutes=0 so absolute-count rankings (goals,
+    # assists, shots) can include short-time impact players (e.g. Undav with
+    # 3 goals in 58'). The slider only filters the Impacto ranking, where
+    # per-90 stability matters.
     profiles = build_player_profiles(
-        repo.list_player_performance_rows(), min_minutes=minimum_minutes
+        repo.list_player_performance_rows(), min_minutes=0
     )
     clustered = cluster_player_styles(profiles[:120], requested_clusters=4)
     styles = {
@@ -363,6 +367,7 @@ def _render_player_panel(
     total_label: str,
     rate_col: str | None,
     rate_label: str | None,
+    minimum_minutes: int = 0,
 ) -> None:
     """Render one ranking panel inside the Jugadores tab.
 
@@ -370,6 +375,12 @@ def _render_player_panel(
     inside this panel only re-run THIS panel's body on interaction, not the
     whole player-intelligence view (which had to rebuild every other tab's
     HTML on every keystroke — the source of the lag the user reported).
+
+    The ``minimum_minutes`` slider only applies to the Impacto ranking,
+    where per-90 percentile needs a minutes floor to stay stable. Absolute
+    counters (goals/assists/shots) always show anyone with the relevant
+    counter > 0 so short-impact players (e.g. Undav 3 goles / 58 min)
+    don't disappear from the goal-scorers list.
     """
     if metric not in frame:
         st.info(f"La fuente actual no publica datos suficientes para {title.lower()}.")
@@ -382,6 +393,8 @@ def _render_player_panel(
             "El slider de minutos solo filtra la vista; la puntuación es estable."
         )
     subset = frame[frame[metric].notna()]
+    if metric == "impact" and minimum_minutes > 0 and "minutes" in subset:
+        subset = subset[subset["minutes"] >= minimum_minutes]
     if rate_col and total_col in subset:
         subset = subset[subset[total_col] > 0]
     if rate_col:
@@ -2939,8 +2952,11 @@ def render_player_intelligence() -> None:
                 )
             st.cache_data.clear(); st.cache_resource.clear()
             st.rerun()
-    minimum_minutes = st.slider("Minutos mínimos", 0, 900, 60, 30)
-    rows = _player_intelligence_rows_cached(_db_signature(), int(minimum_minutes))
+    minimum_minutes = st.slider(
+        "Minutos mínimos (solo afecta a Impacto)", 0, 900, 60, 30,
+        help="Los rankings de Goles/Asistencias/Tiros siempre muestran a quien tenga al menos uno, sin importar minutos.",
+    )
+    rows = _player_intelligence_rows_cached(_db_signature(), 0)
     if not rows:
         empty_state("Sin estadísticas verificadas", "Las capturas postpartido revisadas alimentarán esta vista.", icon="👤")
     else:
@@ -2956,6 +2972,7 @@ def render_player_intelligence() -> None:
             with panel:
                 _render_player_panel(
                     frame, metric, title, total_col, total_label, rate_col, rate_label,
+                    minimum_minutes=int(minimum_minutes),
                 )
         if "passes_per90" not in frame:
             callout("Pases: sin cobertura en el banco diario actual. Se conserva como dato desconocido y no como 0; aparecerá cuando una fuente revisada lo aporte.")
