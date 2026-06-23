@@ -33,7 +33,13 @@ from wcpredict.ratings import MatchResult, build_team_ratings, expected_goals_fo
 # log-loss close to optimum (0.6717 vs 0.6688 at 1.60). Re-evaluate after
 # the round of 16 once we have more samples.
 DEFAULT_BASE_GOALS_PER_TEAM = 1.55
-DEFAULT_DIXON_COLES_RHO = -0.10
+# Diagnostic on 40 WC 2026 matches showed the model was underestimating
+# draws by -10.8pp (predicted 21.7%, real 32.5%) and overestimating away
+# wins by +10.3pp. Dixon-Coles rho controls how much extra mass goes to
+# low-scoring draws (0-0, 1-1) vs independent Poisson; making it more
+# negative inflates draw probability. -0.16 brings predicted draws into
+# the high-20s range, closer to the observed 32.5%.
+DEFAULT_DIXON_COLES_RHO = -0.16
 DEFAULT_NB_DISPERSION = 0.08
 
 

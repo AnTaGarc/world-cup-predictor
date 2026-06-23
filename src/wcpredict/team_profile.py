@@ -143,22 +143,25 @@ def _recency_weight(played_at_utc: datetime, as_of_utc: datetime, half_life_days
 def _competition_weight(competition: str) -> float:
     """Importance multiplier per match type.
 
-    A friendly tells you much less about a team's true level than a World Cup
-    knockout match, but with the same recency weight both currently contribute
-    equally. We apply a multiplicative tier:
+    The ongoing tournament gets the strongest boost because each match is
+    the most direct evidence we have of current form against the same field
+    we're predicting. The diagnostic on 12 sample teams showed Mundial 2026
+    matches were contributing only 4-15% of the profile weight before this
+    boost; doubling them brings top teams' WC weight to ~15-25%, which is
+    much more in line with what the user (and football intuition) expects.
 
-      * 1.00 — World Cup, AFCON, Copa América, Asian Cup, Euro (top-tier
-               international tournaments)
-      * 0.85 — World Cup qualifiers, Nations League, Euro qualifiers
-               (competitive but lower stakes per match)
-      * 0.50 — International friendlies (often rotation-heavy, low intensity)
-      * 0.70 — fallback for any competition we don't recognise
+      * 2.00 — Current World Cup 2026 ("FIFA World Cup 2026" exactly)
+      * 1.00 — Other top tournaments (past World Cups, AFCON, Copa América,
+               Asian Cup, Euro, Gold Cup, OFC Nations Cup)
+      * 0.85 — Qualifiers, Nations League, Euro Qualifiers
+      * 0.50 — International friendlies
+      * 0.70 — Unknown competition (fallback)
     """
     if not competition:
         return 0.70
     c = competition.lower()
-    # Friendlies first because the keyword can also appear inside qualifier
-    # names like "qualification - friendly stage" theoretically.
+    if "world cup 2026" in c:
+        return 2.00
     if "friendly" in c or "amistos" in c:
         return 0.50
     if "qualif" in c or "qualific" in c or "nations league" in c or "eliminator" in c:
