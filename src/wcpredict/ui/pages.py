@@ -1510,43 +1510,81 @@ def render_dashboard() -> None:
     _render_bracket_section(repo)
 
 
+BRACKET_STAGE_THEME = {
+    "Round of 32":          {"label": "R32", "tone": "blue",   "title": "ROUND OF 32"},
+    "Round of 16":          {"label": "R16", "tone": "teal",   "title": "ROUND OF 16"},
+    "Quarter-final":        {"label": "QF",  "tone": "green",  "title": "QUARTER-FINALS"},
+    "Semi-final":           {"label": "SF",  "tone": "orange", "title": "SEMI-FINALS"},
+    "Final":                {"label": "F",   "tone": "gold",   "title": "FINAL"},
+    "Third-place play-off": {"label": "3rd", "tone": "grey",   "title": "3RD PLACE"},
+}
+BRACKET_ORDER = ("Round of 32", "Round of 16", "Quarter-final",
+                 "Semi-final", "Final", "Third-place play-off")
+
+
+def _bracket_card_html(slot: dict, theme: dict) -> str:
+    """Tournament-style card: coloured stripe header + two team rows + VS."""
+    kickoff_date = slot["kickoff_utc"][:10]
+    venue = slot.get("venue") or ""
+    venue_html = f"<span class='bk-venue'>📍 {venue}</span>" if venue else ""
+
+    def team_cell(name: str, pending: bool) -> str:
+        if pending:
+            return (
+                f"<div class='bk-team bk-pending'>"
+                f"<span class='bk-flag-placeholder'>?</span>"
+                f"<span class='bk-name'>{name}</span></div>"
+            )
+        return f"<div class='bk-team'>{team_with_crest_html(name, size=20)}</div>"
+
+    return (
+        f"<div class='bk-card bk-{theme['tone']}'>"
+        f"<div class='bk-card-head'>"
+        f"<span class='bk-slot'>{slot['slot_id']}</span>"
+        f"<span class='bk-date'>{kickoff_date}</span>"
+        f"</div>"
+        f"<div class='bk-card-meta'>{venue_html}</div>"
+        f"{team_cell(slot['home'], slot['home_pending'])}"
+        f"<div class='bk-vs'>VS</div>"
+        f"{team_cell(slot['away'], slot['away_pending'])}"
+        f"</div>"
+    )
+
+
 def _render_bracket_section(repo: Repository) -> None:
-    """Show the WC2026 knockout bracket. Slots with pending teams keep the
-    source token ("1A", "W:R32-1"); resolved slots show the actual names."""
+    """Tournament-style bracket: cards in stage columns, colour-coded per
+    round, with crest + name + VS. Pending slots show the source token."""
     slots = bracket_view(repo)
     if not slots:
         return
     st.subheader("Bracket eliminatorio")
     section_note(
-        "Los enfrentamientos se rellenan automáticamente cuando se cierran los grupos "
-        "y, después, según se resuelven cada ronda. Los partidos con equipos confirmados "
-        "ya están en el laboratorio de predicción con su modelo de avance (90' + prórroga + penaltis)."
+        "Cada cruce se rellena solo en cuanto se cierran sus dependencias "
+        "(grupos para R32, ganador del cruce previo para las rondas siguientes). "
+        "Los partidos ya confirmados aparecen en el laboratorio con su modelo "
+        "de avance (90' + prórroga + penaltis)."
     )
     by_stage: dict[str, list[dict]] = {}
     for slot in slots:
         by_stage.setdefault(slot["stage"], []).append(slot)
-    stages_order = ["Round of 32", "Round of 16", "Quarter-final",
-                    "Semi-final", "Third-place play-off", "Final"]
-    cols = st.columns(min(len(stages_order), 6))
-    for col, stage in zip(cols, stages_order):
+
+    columns_html = []
+    for stage in BRACKET_ORDER:
         items = by_stage.get(stage, [])
         if not items:
             continue
-        with col:
-            st.markdown(f"**{stage}**")
-            rows_html = []
-            for slot in items:
-                kickoff = slot["kickoff_utc"][:10]
-                home_cls = "pending" if slot["home_pending"] else "resolved"
-                away_cls = "pending" if slot["away_pending"] else "resolved"
-                rows_html.append(
-                    f"<div class='bracket-row'>"
-                    f"<div class='bracket-date'>{kickoff} · {slot['slot_id']}</div>"
-                    f"<div class='bracket-team {home_cls}'>{slot['home']}</div>"
-                    f"<div class='bracket-team {away_cls}'>{slot['away']}</div>"
-                    "</div>"
-                )
-            st.markdown("".join(rows_html), unsafe_allow_html=True)
+        theme = BRACKET_STAGE_THEME[stage]
+        cards = "".join(_bracket_card_html(slot, theme) for slot in items)
+        columns_html.append(
+            f"<div class='bk-column bk-col-{theme['tone']}'>"
+            f"<div class='bk-col-title'>{theme['title']}</div>"
+            f"{cards}"
+            "</div>"
+        )
+    st.markdown(
+        f"<div class='bk-board'>{''.join(columns_html)}</div>",
+        unsafe_allow_html=True,
+    )
 
 
 def render_prediction_lab() -> None:

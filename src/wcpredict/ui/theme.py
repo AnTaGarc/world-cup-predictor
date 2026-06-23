@@ -424,19 +424,137 @@ div[data-testid="stDataEditor"] tbody tr:hover {
   .score-card .score-prob { font-size: 14px; }
 }
 
-/* ---- Bracket (dashboard) ---- */
-.bracket-row {
-  border: 1px solid var(--line);
-  border-radius: var(--r-sm);
-  padding: 6px 8px;
-  margin-bottom: 8px;
-  background: var(--panel);
-  font-size: 12px;
+/* ---- Bracket (dashboard, tournament style) ---- */
+.bk-board {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(190px, 1fr)) minmax(190px, 1fr);
+  gap: 16px;
+  padding: 8px 0 4px;
+  overflow-x: auto;
 }
-.bracket-date { color: var(--muted); font-size: 10px; font-weight: 600; letter-spacing: 0.04em; margin-bottom: 4px; }
-.bracket-team { padding: 2px 0; font-weight: 600; }
-.bracket-team.pending { color: var(--muted); font-style: italic; font-weight: 500; }
-.bracket-team.resolved { color: var(--ink); }
+.bk-column {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 190px;
+}
+.bk-col-title {
+  font-weight: 800;
+  font-size: 13px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  text-align: center;
+  padding: 8px 6px;
+  border-radius: var(--r-sm);
+  background: var(--panel-2);
+  color: var(--ink);
+}
+.bk-col-blue   .bk-col-title { background: #e6f0ff; color: #1d4ed8; }
+.bk-col-teal   .bk-col-title { background: #d8f4f0; color: #0d8a76; }
+.bk-col-green  .bk-col-title { background: #dcf5e0; color: #15803d; }
+.bk-col-orange .bk-col-title { background: #ffe9d6; color: #c2410c; }
+.bk-col-gold   .bk-col-title { background: #fff1c2; color: #a16207; }
+.bk-col-grey   .bk-col-title { background: #e8ecf2; color: #475569; }
+
+.bk-card {
+  background: var(--panel);
+  border: 1.5px solid var(--line);
+  border-radius: 10px;
+  padding: 0;
+  box-shadow: 0 1px 3px rgba(16, 35, 63, 0.06);
+  overflow: hidden;
+  transition: transform 120ms ease, box-shadow 120ms ease;
+}
+.bk-card:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 10px rgba(16, 35, 63, 0.10);
+}
+.bk-card-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 10px;
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  color: #fff;
+}
+.bk-blue   .bk-card-head { background: linear-gradient(135deg, #3b82f6, #1d4ed8); }
+.bk-teal   .bk-card-head { background: linear-gradient(135deg, #14b8a6, #0d8a76); }
+.bk-green  .bk-card-head { background: linear-gradient(135deg, #22c55e, #15803d); }
+.bk-orange .bk-card-head { background: linear-gradient(135deg, #fb923c, #c2410c); }
+.bk-gold   .bk-card-head { background: linear-gradient(135deg, #facc15, #a16207); }
+.bk-grey   .bk-card-head { background: linear-gradient(135deg, #94a3b8, #475569); }
+.bk-blue   { border-color: #93c5fd; }
+.bk-teal   { border-color: #5eead4; }
+.bk-green  { border-color: #86efac; }
+.bk-orange { border-color: #fdba74; }
+.bk-gold   { border-color: #fde68a; }
+.bk-grey   { border-color: #cbd5e1; }
+
+.bk-slot { letter-spacing: 0.10em; }
+.bk-date { opacity: 0.95; }
+
+.bk-card-meta {
+  padding: 4px 10px 0;
+  font-size: 10.5px;
+  color: var(--muted);
+  min-height: 14px;
+}
+.bk-venue { font-weight: 600; }
+
+.bk-team {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--ink);
+}
+.bk-team .bk-name { color: var(--ink); }
+.bk-team img { border-radius: 3px; }
+
+.bk-pending {
+  color: var(--muted);
+  font-weight: 500;
+  font-style: italic;
+}
+.bk-flag-placeholder {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  background: var(--panel-2);
+  border-radius: 3px;
+  color: var(--muted);
+  font-style: normal;
+  font-weight: 800;
+  font-size: 11px;
+}
+
+.bk-vs {
+  text-align: center;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+  color: var(--muted);
+  padding: 2px 0;
+  margin: 0 10px;
+  border-top: 1px dashed var(--line);
+  border-bottom: 1px dashed var(--line);
+}
+
+@media (max-width: 900px) {
+  .bk-board {
+    grid-template-columns: 1fr;
+    gap: 18px;
+  }
+  .bk-column { min-width: 0; }
+  .bk-card-head { font-size: 11px; padding: 7px 12px; }
+  .bk-team { font-size: 14px; padding: 9px 12px; }
+}
 
 /* ---- Mercados table (Mercados y EV) ---- */
 .mk-table {
