@@ -29,6 +29,12 @@ from wcpredict.ratings import build_team_ratings, explain_team_form
 from wcpredict.refresh import refresh_match
 from wcpredict.repository import Repository
 from wcpredict.schedule import seed_schedule
+from wcpredict.knockout_bracket import (
+    bracket_view,
+    resolve_knockout_bracket,
+    seed_knockout_bracket,
+)
+from wcpredict.knockout_model import predict_knockout_match
 from wcpredict.services import MarketPrediction, predict_match_markets
 from wcpredict.source_catalog import default_source_catalog
 from wcpredict.daily_refresh import DEFAULT_PROVIDERS, DatasetDownload, ensure_current_world_cup_data
@@ -90,6 +96,7 @@ ROOT = Path(__file__).resolve().parents[3]
 DATA_DIR = ROOT / "data"
 DATABASE_PATH = DATA_DIR / "worldcup.sqlite"
 SCHEDULE_PATH = DATA_DIR / "fixtures" / "world_cup_2026_schedule.csv"
+KNOCKOUT_PATH = DATA_DIR / "fixtures" / "world_cup_2026_knockouts.csv"
 WORKSPACE_ROOT = ROOT.parent
 SPORTS_DATA_DIR = WORKSPACE_ROOT / "sports-data"
 SPORTS_DB_PATH = SPORTS_DATA_DIR / "sports.db"
@@ -117,6 +124,15 @@ def _repo() -> Repository:
     repo.initialize()
     if SCHEDULE_PATH.exists():
         seed_schedule(repo, SCHEDULE_PATH)
+    if KNOCKOUT_PATH.exists():
+        seed_knockout_bracket(repo, KNOCKOUT_PATH)
+        # Best-effort resolution on cold start; safe to call when no group is
+        # finished yet (returns 0 resolved). Re-runs each time the data tab
+        # finalises a match so brackets bubble up automatically.
+        try:
+            resolve_knockout_bracket(repo)
+        except Exception:
+            pass
     if OPEN_SCHEDULE_PATH.exists() and not repo.has_current_world_cup_matches("martj42_local_schedule"):
         content = OPEN_SCHEDULE_PATH.read_bytes()
         import_world_cup_download(
@@ -549,6 +565,66 @@ def _player_context(repo: Repository, match) -> tuple[list[dict], list[str]]:
 
 def _prediction_index(predictions: list[MarketPrediction]) -> dict[tuple[str, str], MarketPrediction]:
     return {(prediction.market_name, prediction.selection_name): prediction for prediction in predictions}
+
+
+KNOCKOUT_STAGES = (
+    "Round of 32", "Round of 16", "Quarter-final", "Semi-final",
+    "Third-place play-off", "Final",
+)
+
+
+def _is_knockout_stage(stage: str | None) -> bool:
+    if not stage:
+        return False
+    return any(stage.startswith(s) for s in KNOCKOUT_STAGES)
+
+
+def _render_knockout_advance_section(match, bundle, team_a: str, team_b: str) -> None:
+    """For knockout matches, surface the 'who advances?' breakdown using the
+    regulation xG already computed by the unified pipeline. Skipped silently
+    for group-stage games."""
+    if not _is_knockout_stage(getattr(match, "stage", None)):
+        return
+    expected_xg = bundle.expected_xg
+    if not expected_xg or len(expected_xg) != 2:
+        return
+    xa, xb = float(expected_xg[0]), float(expected_xg[1])
+    if xa <= 0 or xb <= 0:
+        return
+    pred = predict_knockout_match(
+        xa, xb,
+        dispersion=0.08,    # matches DEFAULT_NB_DISPERSION in services.py
+        rho=-0.16,          # matches DEFAULT_DIXON_COLES_RHO
+    )
+    st.subheader("Avance al siguiente cruce")
+    section_note(
+        "Modelo de eliminatoria: matriz Dixon-Coles de 90' + matriz de prórroga "
+        "con xG escalado al tiempo extra + penaltis (~50/50 con ajuste por portero "
+        "cuando hay dato). Las tres vías son excluyentes y suman 100%."
+    )
+    advance_html = (
+        probability_bar(team_with_crest_html(team_a, size=18), pred.home_advances, "win")
+        + probability_bar(team_with_crest_html(team_b, size=18), pred.away_advances, "loss")
+    )
+    st.markdown(advance_html, unsafe_allow_html=True)
+    method_rows = [
+        {"Vía": f"{team_a} en 90'", "Probabilidad (%)": pred.home_wins_90 * 100},
+        {"Vía": f"{team_b} en 90'", "Probabilidad (%)": pred.away_wins_90 * 100},
+        {"Vía": f"{team_a} en prórroga", "Probabilidad (%)": pred.home_wins_et * 100},
+        {"Vía": f"{team_b} en prórroga", "Probabilidad (%)": pred.away_wins_et * 100},
+        {"Vía": f"{team_a} en penaltis", "Probabilidad (%)": pred.home_wins_penalties * 100},
+        {"Vía": f"{team_b} en penaltis", "Probabilidad (%)": pred.away_wins_penalties * 100},
+    ]
+    st.dataframe(
+        pd.DataFrame(method_rows), width="stretch", hide_index=True,
+        column_config={
+            "Probabilidad (%)": st.column_config.ProgressColumn(format="%.1f%%", min_value=0, max_value=100),
+        },
+    )
+    st.caption(
+        f"Empate al 90': {pred.p_draw_90:.1%} · Empate tras prórroga: {pred.p_draw_after_et:.1%}. "
+        "El 1X2 de arriba sigue refiriéndose al resultado al 90', el avance se decide aquí."
+    )
 
 
 def _build_saved_odds_index(saved_odds: list[dict]) -> dict[tuple[str, str, float | None], float]:
@@ -1431,6 +1507,47 @@ def render_dashboard() -> None:
             tone="blue",
         )
 
+    _render_bracket_section(repo)
+
+
+def _render_bracket_section(repo: Repository) -> None:
+    """Show the WC2026 knockout bracket. Slots with pending teams keep the
+    source token ("1A", "W:R32-1"); resolved slots show the actual names."""
+    slots = bracket_view(repo)
+    if not slots:
+        return
+    st.subheader("Bracket eliminatorio")
+    section_note(
+        "Los enfrentamientos se rellenan automáticamente cuando se cierran los grupos "
+        "y, después, según se resuelven cada ronda. Los partidos con equipos confirmados "
+        "ya están en el laboratorio de predicción con su modelo de avance (90' + prórroga + penaltis)."
+    )
+    by_stage: dict[str, list[dict]] = {}
+    for slot in slots:
+        by_stage.setdefault(slot["stage"], []).append(slot)
+    stages_order = ["Round of 32", "Round of 16", "Quarter-final",
+                    "Semi-final", "Third-place play-off", "Final"]
+    cols = st.columns(min(len(stages_order), 6))
+    for col, stage in zip(cols, stages_order):
+        items = by_stage.get(stage, [])
+        if not items:
+            continue
+        with col:
+            st.markdown(f"**{stage}**")
+            rows_html = []
+            for slot in items:
+                kickoff = slot["kickoff_utc"][:10]
+                home_cls = "pending" if slot["home_pending"] else "resolved"
+                away_cls = "pending" if slot["away_pending"] else "resolved"
+                rows_html.append(
+                    f"<div class='bracket-row'>"
+                    f"<div class='bracket-date'>{kickoff} · {slot['slot_id']}</div>"
+                    f"<div class='bracket-team {home_cls}'>{slot['home']}</div>"
+                    f"<div class='bracket-team {away_cls}'>{slot['away']}</div>"
+                    "</div>"
+                )
+            st.markdown("".join(rows_html), unsafe_allow_html=True)
+
 
 def render_prediction_lab() -> None:
     repo = _repo()
@@ -1671,6 +1788,9 @@ def render_prediction_lab() -> None:
             st.caption(f"ML cronológico entrenado con {ml_model_meta['sample_size']} partidos · corte {ml_model_meta['training_cutoff_utc']} · validación temporal hasta {ml_model_meta['validation_cutoff_utc']}.")
         else:
             callout("Modelo ML no activado: ejecuta scripts/import_open_history.py para crear el artefacto calibrado.")
+
+        _render_knockout_advance_section(match, bundle, team_a, team_b)
+
         st.subheader("Mercados modelados")
         frame = pd.DataFrame(prediction_rows(predictions)).rename(
             columns={"Market": "Mercado", "Selection": "Selección", "Line": "Línea", "Probability": "Prob.", "Low": "Mín.", "High": "Máx.", "Confidence": "Confianza", "Sample": "Muestra", "Origin": "Origen", "Explanation": "Explicación"}
@@ -2534,6 +2654,13 @@ def render_backtesting() -> None:
         )
         if rows:
             repo.save_manual_observations(match.id, rows, recorded_at)
+        # Re-resolve the knockout bracket: a finished group game may now
+        # complete a group → fill R32 slots; a finished knockout game lets
+        # its winner bubble up into the next round's slot.
+        try:
+            resolve_knockout_bracket(repo, recorded_at)
+        except Exception:
+            pass
         st.success("Partido cerrado. Predicciones compatibles evaluadas y forma disponible para partidos posteriores.")
     predictions = repo.list_predictions(match.id)
     backtests = repo.list_backtests(match.id)

@@ -402,6 +402,25 @@ ON dataset_snapshots(provider_id, checked_at_utc DESC);
 
 CREATE INDEX IF NOT EXISTS idx_dataset_refresh_checks_provider_checked
 ON dataset_refresh_checks(provider_id, checked_at_utc DESC);
+
+CREATE TABLE IF NOT EXISTS knockout_bracket (
+    id INTEGER PRIMARY KEY,
+    competition TEXT NOT NULL,
+    stage TEXT NOT NULL,
+    slot_id TEXT NOT NULL,
+    kickoff_utc TEXT NOT NULL,
+    venue TEXT,
+    home_source TEXT NOT NULL,
+    away_source TEXT NOT NULL,
+    home_team_id INTEGER REFERENCES teams(id),
+    away_team_id INTEGER REFERENCES teams(id),
+    match_id INTEGER REFERENCES matches(id),
+    resolved_at_utc TEXT,
+    UNIQUE(competition, slot_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_knockout_bracket_stage
+ON knockout_bracket(competition, stage);
 """
 
 
@@ -411,6 +430,14 @@ _OPTIONAL_COLUMNS = {
     "team_match_stats": [
         ("saves", "INTEGER"),
         ("goals_conceded", "INTEGER"),
+    ],
+    # Knockout extras: ET aggregate goals + penalty shoot-out tally. NULL
+    # means the match either ended in regulation or hasn't been played yet.
+    "match_results": [
+        ("extra_time_team_a_goals", "INTEGER"),
+        ("extra_time_team_b_goals", "INTEGER"),
+        ("penalty_team_a", "INTEGER"),
+        ("penalty_team_b", "INTEGER"),
     ],
 }
 

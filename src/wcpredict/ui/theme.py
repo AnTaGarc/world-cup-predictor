@@ -424,6 +424,20 @@ div[data-testid="stDataEditor"] tbody tr:hover {
   .score-card .score-prob { font-size: 14px; }
 }
 
+/* ---- Bracket (dashboard) ---- */
+.bracket-row {
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  padding: 6px 8px;
+  margin-bottom: 8px;
+  background: var(--panel);
+  font-size: 12px;
+}
+.bracket-date { color: var(--muted); font-size: 10px; font-weight: 600; letter-spacing: 0.04em; margin-bottom: 4px; }
+.bracket-team { padding: 2px 0; font-weight: 600; }
+.bracket-team.pending { color: var(--muted); font-style: italic; font-weight: 500; }
+.bracket-team.resolved { color: var(--ink); }
+
 /* ---- Mercados table (Mercados y EV) ---- */
 .mk-table {
   width: 100%;
