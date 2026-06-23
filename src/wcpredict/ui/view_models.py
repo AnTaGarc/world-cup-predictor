@@ -78,40 +78,53 @@ def model_comparison_rows(
     score_probabilities: dict[str, float],
     ml_probabilities: dict[str, float],
     unified_probabilities: dict[str, float] | None = None,
+    deep_ml_probabilities: dict[str, float] | None = None,
 ) -> list[dict]:
+    """Build the comparison rows for the Diagnóstico de señales panel.
+
+    Includes the three signals that go into the final 1X2 ensemble:
+      * Matriz de marcadores — NB-Dixon-Coles score matrix → 1X2
+      * ML cronológico — Elo-features classifier (~50k matches)
+      * ML deep stats — HistGBM with xG/possession/shots features (~3k matches)
+    Plus the unified output that combines them all.
+    """
     labels = (("home", team_a), ("draw", "Empate"), ("away", team_b))
 
-    def normalized(values: dict[str, float]) -> dict[str, float]:
+    def normalized(values: dict[str, float] | None) -> dict[str, float] | None:
+        if values is None:
+            return None
         total = sum(max(0.0, float(values.get(key, 0.0))) for key, _ in labels) or 1.0
         return {key: max(0.0, float(values.get(key, 0.0))) * 100.0 / total for key, _ in labels}
 
-    score = normalized(score_probabilities)
-    ml = normalized(ml_probabilities)
-    unified = normalized(unified_probabilities or score_probabilities)
-    return [
-        {
+    score = normalized(score_probabilities) or {}
+    ml = normalized(ml_probabilities) or {}
+    deep = normalized(deep_ml_probabilities)
+    unified = normalized(unified_probabilities or score_probabilities) or {}
+    out = []
+    for key, label in labels:
+        row: dict = {
             "Resultado": label,
-            "Modelo unificado 1X2 (%)": unified[key],
-            "ML cronológico (%)": ml[key],
-            "Matriz de marcadores (%)": score[key],
-            "Diferencia (pp)": round(ml[key] - score[key], 1),
+            "Modelo unificado 1X2 (%)": unified.get(key, 0.0),
+            "ML cronológico (%)": ml.get(key, 0.0),
         }
-        for key, label in labels
-    ]
+        if deep is not None:
+            row["ML deep stats (%)"] = deep.get(key, 0.0)
+        row["Matriz de marcadores (%)"] = score.get(key, 0.0)
+        row["Diferencia (pp)"] = round(ml.get(key, 0.0) - score.get(key, 0.0), 1)
+        out.append(row)
+    return out
 
 
 def model_disagreement_note(rows: list[dict]) -> str:
-    diagnostic_gap = max((abs(float(row["Diferencia (pp)"])) for row in rows), default=0.0)
+    diagnostic_gap = max((abs(float(row.get("Diferencia (pp)", 0.0))) for row in rows), default=0.0)
+    has_deep = any("ML deep stats (%)" in row for row in rows)
+    deep_part = " + clasificador deep (HistGBM con xG/posesión/tiros/defensa)" if has_deep else ""
     return (
-        f"La mayor diferencia diagnostica es de {diagnostic_gap:.1f} puntos. El modelo unificado es el modelo operativo: "
-        "combina ML cronologico, matriz de marcadores, forma profunda, fuerza rival, localia y jugadores cuando hay datos. "
-        "La matriz de marcadores y el ML cronologico se muestran solo para explicar por que pueden discrepar."
-    )
-    maximum = max((abs(float(row["Diferencia (pp)"])) for row in rows), default=0.0)
-    return (
-        f"La mayor diferencia diagnostica es de {maximum:.1f} puntos. El modelo unificado es el modelo operativo: "
-        "y combina goles esperados, forma profunda y jugadores; el ML cronológico es un contraste "
-        "basado en Elo, resultados y forma reciente. No usan las mismas señales y todavía no se promedian."
+        f"La mayor diferencia diagnóstica entre ML cronológico y matriz de marcadores es {diagnostic_gap:.1f} pp. "
+        f"El **modelo unificado** es el **modelo operativo**: combina matriz de marcadores (xG + perfil profundo + Dixon-Coles), "
+        f"ML cronológico (Elo + forma reciente, ~50k partidos){deep_part}, ajuste por localía y por jugadores. "
+        "Pesos adaptativos: cuanta más muestra de stats profundas para ambos equipos, más peso al deep "
+        "(0% si <5 partidos, hasta 35% si ≥15). Las columnas individuales se muestran solo para entender la discrepancia."
     )
 
 

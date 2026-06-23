@@ -692,6 +692,8 @@ class MatchAnalysisBundle:
     backtests: list = field(default_factory=list)
     volume_predictions: dict = field(default_factory=dict)
     team_volume_predictions: dict = field(default_factory=dict)
+    deep_ml_probabilities: dict | None = None
+    deep_outcome_weight: float = 0.0
     expected_xg: tuple = field(default_factory=tuple)
     goalkeeper_baselines: dict = field(default_factory=dict)
     corrections: object = None
@@ -942,6 +944,8 @@ def _match_analysis_bundle_cached(
         expected_xg=expected_xg,
         goalkeeper_baselines=goalkeeper_baselines,
         corrections=corrections,
+        deep_ml_probabilities=deep_ml_probabilities,
+        deep_outcome_weight=deep_weight,
     )
 
 
@@ -1437,6 +1441,8 @@ def render_prediction_lab() -> None:
     tab_predictions, tab_odds, tab_players, tab_data, tab_saved = st.tabs(
         ["Modelo", "Mercados y EV", "Jugadores", "Datos / SofaScore", "Guardado"]
     )
+    deep_ml_probabilities = bundle.deep_ml_probabilities
+    deep_weight = bundle.deep_outcome_weight
     with tab_predictions:
         _render_post_match_audit(bundle, team_a, team_b)
         with st.expander("Cómo se elige el modelo de cada mercado"):
@@ -1454,31 +1460,41 @@ def render_prediction_lab() -> None:
                 "away": next(row.probability for row in primary if row.selection_name == team_b),
             }
             
-            # New diagnostic view with 3 columns
+            # Diagnostic with up to 4 columns: unified / ML / ML deep / matrix
             comparison_rows = model_comparison_rows(
-                team_a, team_b, score_probabilities, ml_probabilities, unified_probabilities
+                team_a, team_b, score_probabilities, ml_probabilities,
+                unified_probabilities,
+                deep_ml_probabilities=deep_ml_probabilities,
             )
             st.subheader("Diagnóstico de señales")
             st.caption("La columna 'Modelo Unificado' es la que se usa para las predicciones y el EV. Las otras sirven para entender la discrepancia.")
+            col_cfg = {
+                "Modelo unificado 1X2 (%)": st.column_config.ProgressColumn(format="%.1f%%", min_value=0, max_value=100),
+                "ML cronológico (%)": st.column_config.ProgressColumn(format="%.1f%%", min_value=0, max_value=100),
+                "Matriz de marcadores (%)": st.column_config.ProgressColumn(format="%.1f%%", min_value=0, max_value=100),
+                "Diferencia (pp)": st.column_config.NumberColumn(format="%+.1f"),
+            }
+            if deep_ml_probabilities is not None:
+                col_cfg["ML deep stats (%)"] = st.column_config.ProgressColumn(format="%.1f%%", min_value=0, max_value=100)
             st.dataframe(
                 pd.DataFrame(comparison_rows),
                 width="stretch",
                 hide_index=True,
-                column_config={
-                    "Modelo unificado 1X2 (%)": st.column_config.ProgressColumn(format="%.1f%%", min_value=0, max_value=100),
-                    "ML cronológico (%)": st.column_config.ProgressColumn(format="%.1f%%", min_value=0, max_value=100),
-                    "Matriz de marcadores (%)": st.column_config.ProgressColumn(format="%.1f%%", min_value=0, max_value=100),
-                    "Diferencia (pp)": st.column_config.NumberColumn(format="%+.1f"),
-                },
+                column_config=col_cfg,
             )
             callout(model_disagreement_note(comparison_rows))
-            st.caption(
-                "ML cronológico: diferencia Elo "
-                f"{ml_features['rating_diff']:.3f}; "
-                "forma reciente y diferencia de goles de los cinco últimos partidos, incluyendo resultados locales ya cerrados del Mundial. "
-                "La estadística profunda ajusta el modelo de marcadores."
-            )
-            st.caption(f"ML entrenado con {ml_model_meta['sample_size']} partidos · corte {ml_model_meta['training_cutoff_utc']} · validación temporal hasta {ml_model_meta['validation_cutoff_utc']}.")
+            ml_parts = [
+                f"ML cronológico: diferencia Elo {ml_features['rating_diff']:.3f}, forma y diferencia de goles de los 5 últimos partidos.",
+            ]
+            if deep_ml_probabilities is not None:
+                ml_parts.append(
+                    f"ML deep stats activo con peso {deep_weight*100:.0f}% en el ensemble "
+                    "(HistGBM entrenado con 2938 partidos sobre xG, posesión, tiros, defensa)."
+                )
+            else:
+                ml_parts.append("ML deep stats inactivo (alguno de los dos equipos tiene <3 partidos profundos previos).")
+            st.caption(" ".join(ml_parts))
+            st.caption(f"ML cronológico entrenado con {ml_model_meta['sample_size']} partidos · corte {ml_model_meta['training_cutoff_utc']} · validación temporal hasta {ml_model_meta['validation_cutoff_utc']}.")
         else:
             callout("Modelo ML no activado: ejecuta scripts/import_open_history.py para crear el artefacto calibrado.")
         st.subheader("Mercados modelados")
