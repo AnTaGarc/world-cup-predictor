@@ -1814,6 +1814,15 @@ class Repository:
                 "SELECT m.id, m.kickoff_utc, m.venue, ta.name AS team_a, tb.name AS team_b "
                 "FROM matches m JOIN teams ta ON ta.id=m.team_a_id JOIN teams tb ON tb.id=m.team_b_id"
             ).fetchall()
+            # When the schedule is already seeded (CSV → 72 group fixtures),
+            # never insert new fixtures from upstream feeds; only update the
+            # ones we already have. Prevents swaptr knockout/duplicate
+            # publications from inflating the match table in production.
+            seed_locked = bool(
+                con.execute(
+                    "SELECT 1 FROM matches WHERE competition='FIFA World Cup 2026' LIMIT 1"
+                ).fetchone()
+            )
             teams = con.execute("SELECT id, name FROM teams").fetchall()
             for index, row in enumerate(rows):
                 if not _known_fixture_team(row.get("team_a")) or not _known_fixture_team(row.get("team_b")):
@@ -1857,6 +1866,11 @@ class Repository:
                             "UPDATE matches SET stage=COALESCE(?, stage), status=?, venue=COALESCE(?, venue) WHERE id=?",
                             (row.get("stage"), match_status, row.get("venue"), int(scheduled_match["id"])),
                         )
+                    elif scheduled_match is None and seed_locked:
+                        # Seed schedule is the source of truth; ignore extra
+                        # fixtures published by the daily feed (knockout
+                        # brackets, alt placeholders, etc.).
+                        pass
                     else:
                         con.execute(
                             "INSERT INTO matches(competition, stage, kickoff_utc, team_a_id, team_b_id, status, venue, neutral_site) "
