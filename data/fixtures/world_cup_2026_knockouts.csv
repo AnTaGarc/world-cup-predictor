@@ -1,33 +1,33 @@
 stage,slot_id,kickoff_utc,venue,home_source,away_source
-Round of 32,R32-1,2026-06-27T20:00:00+00:00,Toronto Stadium,1A,2B
-Round of 32,R32-2,2026-06-27T23:00:00+00:00,Vancouver Stadium,1C,2F
-Round of 32,R32-3,2026-06-28T17:00:00+00:00,Boston Stadium,1B,2A
-Round of 32,R32-4,2026-06-28T20:00:00+00:00,New York Stadium,1F,2C
-Round of 32,R32-5,2026-06-28T23:00:00+00:00,Atlanta Stadium,1D,2E
-Round of 32,R32-6,2026-06-29T17:00:00+00:00,Dallas Stadium,1E,2D
-Round of 32,R32-7,2026-06-29T20:00:00+00:00,Mexico City Stadium,1G,2H
-Round of 32,R32-8,2026-06-29T23:00:00+00:00,Guadalajara Stadium,1H,2G
-Round of 32,R32-9,2026-06-30T17:00:00+00:00,Monterrey Stadium,1I,2J
-Round of 32,R32-10,2026-06-30T20:00:00+00:00,Houston Stadium,1K,2L
-Round of 32,R32-11,2026-06-30T23:00:00+00:00,Kansas City Stadium,1J,2I
-Round of 32,R32-12,2026-07-01T17:00:00+00:00,Miami Stadium,1L,2K
-Round of 32,R32-13,2026-07-01T20:00:00+00:00,Philadelphia Stadium,3A,3B
-Round of 32,R32-14,2026-07-01T23:00:00+00:00,San Francisco Stadium,3C,3D
-Round of 32,R32-15,2026-07-02T20:00:00+00:00,Seattle Stadium,3E,3F
-Round of 32,R32-16,2026-07-02T23:00:00+00:00,Los Angeles Stadium,3G,3H
-Round of 16,R16-1,2026-07-04T17:00:00+00:00,Philadelphia Stadium,W:R32-1,W:R32-3
-Round of 16,R16-2,2026-07-04T20:00:00+00:00,New York Stadium,W:R32-2,W:R32-4
-Round of 16,R16-3,2026-07-04T23:00:00+00:00,Los Angeles Stadium,W:R32-5,W:R32-7
-Round of 16,R16-4,2026-07-05T17:00:00+00:00,Atlanta Stadium,W:R32-6,W:R32-8
-Round of 16,R16-5,2026-07-05T20:00:00+00:00,Dallas Stadium,W:R32-9,W:R32-11
-Round of 16,R16-6,2026-07-05T23:00:00+00:00,Boston Stadium,W:R32-10,W:R32-12
-Round of 16,R16-7,2026-07-06T20:00:00+00:00,Miami Stadium,W:R32-13,W:R32-15
-Round of 16,R16-8,2026-07-06T23:00:00+00:00,Toronto Stadium,W:R32-14,W:R32-16
-Quarter-final,QF-1,2026-07-09T20:00:00+00:00,Boston Stadium,W:R16-1,W:R16-2
-Quarter-final,QF-2,2026-07-09T23:00:00+00:00,Los Angeles Stadium,W:R16-3,W:R16-4
-Quarter-final,QF-3,2026-07-10T20:00:00+00:00,Dallas Stadium,W:R16-5,W:R16-6
-Quarter-final,QF-4,2026-07-10T23:00:00+00:00,Miami Stadium,W:R16-7,W:R16-8
-Semi-final,SF-1,2026-07-14T20:00:00+00:00,Dallas Stadium,W:QF-1,W:QF-2
-Semi-final,SF-2,2026-07-15T20:00:00+00:00,Atlanta Stadium,W:QF-3,W:QF-4
-Third-place play-off,3RD-1,2026-07-18T20:00:00+00:00,Miami Stadium,L:SF-1,L:SF-2
-Final,F-1,2026-07-19T19:00:00+00:00,New York Stadium,W:SF-1,W:SF-2
+Round of 32,M73,2026-06-28T17:00:00+00:00,Philadelphia Stadium,2A,2B
+Round of 32,M74,2026-06-28T20:00:00+00:00,Atlanta Stadium,1E,3{ABCDF}
+Round of 32,M75,2026-06-28T23:00:00+00:00,Vancouver Stadium,1F,2C
+Round of 32,M76,2026-06-29T17:00:00+00:00,Boston Stadium,1C,2F
+Round of 32,M77,2026-06-29T20:00:00+00:00,Monterrey Stadium,1I,3{CDFGH}
+Round of 32,M78,2026-06-29T23:00:00+00:00,Dallas Stadium,2E,2I
+Round of 32,M79,2026-06-30T17:00:00+00:00,Toronto Stadium,1A,3{CEFHI}
+Round of 32,M80,2026-06-30T20:00:00+00:00,Miami Stadium,1L,3{EHIJK}
+Round of 32,M81,2026-06-30T23:00:00+00:00,Houston Stadium,1D,3{BEFIJ}
+Round of 32,M82,2026-07-01T17:00:00+00:00,Mexico City Stadium,1G,3{AEHIJ}
+Round of 32,M83,2026-07-01T20:00:00+00:00,Los Angeles Stadium,2K,2L
+Round of 32,M84,2026-07-01T23:00:00+00:00,Guadalajara Stadium,1H,2J
+Round of 32,M85,2026-07-02T17:00:00+00:00,New York Stadium,1B,3{EFGIJ}
+Round of 32,M86,2026-07-02T20:00:00+00:00,Kansas City Stadium,1J,2H
+Round of 32,M87,2026-07-02T23:00:00+00:00,Seattle Stadium,1K,3{DEIJL}
+Round of 32,M88,2026-07-03T20:00:00+00:00,San Francisco Stadium,2D,2G
+Round of 16,M89,2026-07-04T17:00:00+00:00,Philadelphia Stadium,W:M74,W:M77
+Round of 16,M90,2026-07-04T20:00:00+00:00,New York Stadium,W:M73,W:M75
+Round of 16,M91,2026-07-04T23:00:00+00:00,Los Angeles Stadium,W:M76,W:M78
+Round of 16,M92,2026-07-05T17:00:00+00:00,Atlanta Stadium,W:M79,W:M80
+Round of 16,M93,2026-07-05T20:00:00+00:00,Dallas Stadium,W:M83,W:M84
+Round of 16,M94,2026-07-05T23:00:00+00:00,Boston Stadium,W:M81,W:M82
+Round of 16,M95,2026-07-06T20:00:00+00:00,Miami Stadium,W:M86,W:M88
+Round of 16,M96,2026-07-06T23:00:00+00:00,Toronto Stadium,W:M85,W:M87
+Quarter-final,M97,2026-07-09T20:00:00+00:00,Boston Stadium,W:M89,W:M90
+Quarter-final,M98,2026-07-09T23:00:00+00:00,Los Angeles Stadium,W:M93,W:M94
+Quarter-final,M99,2026-07-10T20:00:00+00:00,Dallas Stadium,W:M91,W:M92
+Quarter-final,M100,2026-07-10T23:00:00+00:00,Miami Stadium,W:M95,W:M96
+Semi-final,SF1,2026-07-14T20:00:00+00:00,Dallas Stadium,W:M97,W:M98
+Semi-final,SF2,2026-07-15T20:00:00+00:00,Atlanta Stadium,W:M99,W:M100
+Third-place play-off,3RD,2026-07-18T20:00:00+00:00,Miami Stadium,L:SF1,L:SF2
+Final,F,2026-07-19T19:00:00+00:00,New York Stadium,W:SF1,W:SF2

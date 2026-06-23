@@ -65,22 +65,35 @@ class KnockoutBracketTests(unittest.TestCase):
         self.assertEqual(0, summary["resolved"])
         self.assertEqual(0, summary["matches_created"])
 
-    def test_resolution_fills_r32_slot_when_two_groups_finish(self):
+    def test_resolution_fills_seconds_only_slot_when_two_groups_finish(self):
         with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as tmp:
             repo = Repository(Path(tmp) / "app.sqlite")
             repo.initialize()
             seed_knockout_bracket(repo, KNOCKOUT_CSV)
-            # Slot R32-1 wants 1A vs 2B. Seed both groups.
+            # M73 wants 2A vs 2B. Seed both groups.
             _seed_group(repo, "A", ["Mexico", "South Africa", "Spain", "Korea Republic"])
             _seed_group(repo, "B", ["Canada", "Bosnia and Herzegovina", "Germany", "Japan"])
             summary = resolve_knockout_bracket(repo)
-            # At least the R32-1 slot should be resolved (1A=Mexico, 2B=Bosnia).
             self.assertGreaterEqual(summary["resolved"], 1)
             self.assertGreaterEqual(summary["matches_created"], 1)
             view = bracket_view(repo)
-            r32_1 = next(slot for slot in view if slot["slot_id"] == "R32-1")
-            self.assertFalse(r32_1["home_pending"])
-            self.assertFalse(r32_1["away_pending"])
+            m73 = next(slot for slot in view if slot["slot_id"] == "M73")
+            self.assertFalse(m73["home_pending"])
+            self.assertFalse(m73["away_pending"])
+
+    def test_third_place_slots_stay_pending_until_all_groups_finished(self):
+        with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as tmp:
+            repo = Repository(Path(tmp) / "app.sqlite")
+            repo.initialize()
+            seed_knockout_bracket(repo, KNOCKOUT_CSV)
+            _seed_group(repo, "A", ["Mexico", "South Africa", "Spain", "Korea Republic"])
+            resolve_knockout_bracket(repo)
+            view = bracket_view(repo)
+            m79 = next(slot for slot in view if slot["slot_id"] == "M79")
+            # 1A could be resolved but the 3{CEFHI} side requires all 12 groups.
+            self.assertTrue(m79["away_pending"])
+            # Pretty label should mention the third's source groups.
+            self.assertIn("3.º de", m79["away"])
 
     def test_resolution_is_idempotent(self):
         with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as tmp:
@@ -92,6 +105,43 @@ class KnockoutBracketTests(unittest.TestCase):
             resolve_knockout_bracket(repo)
             again = resolve_knockout_bracket(repo)
         self.assertEqual(0, again["matches_created"])
+
+
+class AnnexCAssignmentTests(unittest.TestCase):
+    """Verify the bipartite assignment of the 8 best 3rd-placed teams to the
+    eight specific slots that take a third (M74/M77/M79/M80/M81/M82/M85/M87)."""
+
+    def test_assignment_returns_empty_until_all_twelve_groups_finish(self):
+        with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as tmp:
+            repo = Repository(Path(tmp) / "app.sqlite")
+            repo.initialize()
+            seed_knockout_bracket(repo, KNOCKOUT_CSV)
+            for letter in "ABCD":
+                _seed_group(repo, letter, [f"{letter}1", f"{letter}2", f"{letter}3", f"{letter}4"])
+            summary = resolve_knockout_bracket(repo)
+            view = bracket_view(repo)
+            # No slot needing a third should have its third side resolved yet.
+            for slot_id in ("M74", "M77", "M79", "M80", "M81", "M82", "M85", "M87"):
+                slot = next(s for s in view if s["slot_id"] == slot_id)
+                self.assertTrue(slot["away_pending"],
+                                f"{slot_id} third resolved with only 4 groups finished")
+
+    def test_assignment_completes_when_all_twelve_groups_finish(self):
+        with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as tmp:
+            repo = Repository(Path(tmp) / "app.sqlite")
+            repo.initialize()
+            seed_knockout_bracket(repo, KNOCKOUT_CSV)
+            for letter in "ABCDEFGHIJKL":
+                _seed_group(repo, letter, [f"{letter}1", f"{letter}2", f"{letter}3", f"{letter}4"])
+            resolve_knockout_bracket(repo)
+            view = bracket_view(repo)
+            # All 16 R32 slots should be filled (both sides resolved).
+            for slot_id in (f"M{n}" for n in range(73, 89)):
+                slot = next(s for s in view if s["slot_id"] == slot_id)
+                self.assertFalse(slot["home_pending"],
+                                 f"{slot_id} home unresolved after all groups finished")
+                self.assertFalse(slot["away_pending"],
+                                 f"{slot_id} away unresolved after all groups finished")
 
 
 class KnockoutModelTests(unittest.TestCase):

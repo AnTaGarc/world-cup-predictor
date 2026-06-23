@@ -81,10 +81,24 @@ def load_bracket_csv(path: Path) -> list[dict[str, str]]:
 
 
 def seed_knockout_bracket(repo: Repository, path: Path) -> int:
-    """Insert (or no-op) the 32 knockout slots from the seed CSV."""
+    """Insert (or update) the knockout slots from the seed CSV.
+
+    Slots not present in the CSV but stored in the DB are cleared as long
+    as they have no resolved teams or attached match yet (defensive cleanup
+    for legacy seed schemas)."""
     rows = load_bracket_csv(path)
+    current_ids = {row["slot_id"] for row in rows}
     with sqlite3.connect(repo.path, timeout=30) as con:
         _ensure_schema(con)
+        # Drop legacy slots from earlier seed versions (e.g. R32-1..R32-16),
+        # but only when they have not yet been resolved/linked to a match —
+        # never throw away history.
+        con.execute(
+            "DELETE FROM knockout_bracket WHERE competition=? AND slot_id NOT IN "
+            f"({','.join('?' * len(current_ids))}) "
+            "AND home_team_id IS NULL AND away_team_id IS NULL AND match_id IS NULL",
+            (COMPETITION, *current_ids),
+        )
         for row in rows:
             con.execute(
                 "INSERT INTO knockout_bracket(competition, stage, slot_id, kickoff_utc, "
@@ -188,8 +202,73 @@ def _third_place_ranking(con: sqlite3.Connection) -> list[tuple[int, str, str]]:
 # ---- Slot resolution ---------------------------------------------------------
 
 
+def _parse_third_allowed(source: str) -> set[str] | None:
+    """Parse the FIFA-style third-place token like ``3{ABCDF}`` and return
+    the set of allowed source groups (uppercase). Returns ``None`` for any
+    token that is not in that format."""
+    s = source.strip()
+    if s.startswith("3{") and s.endswith("}"):
+        return {ch.upper() for ch in s[2:-1] if ch.isalpha()}
+    return None
+
+
+def _assign_thirds_annex_c(
+    con: sqlite3.Connection, slots: list[BracketSlot]
+) -> dict[str, int]:
+    """Bipartite assignment of the 8 qualified third-placed teams to the 8
+    slots that need one. Each slot has an allowed-groups set baked into its
+    source token (FIFA Annex C is equivalent to a backtracking search that
+    respects the allowed sets and the "no two teams from the same group"
+    constraint — already implicit because each allowed set excludes the
+    rival's own group).
+
+    Returns ``{slot_id: team_id}`` for slots that could be assigned, or an
+    empty dict if any prerequisite is missing (not enough qualified thirds,
+    no valid matching, etc).
+    """
+    third_slots: list[tuple[str, set[str]]] = []
+    for slot in slots:
+        for source in (slot.home_source, slot.away_source):
+            allowed = _parse_third_allowed(source)
+            if allowed is not None:
+                third_slots.append((slot.slot_id, allowed))
+                break
+    if not third_slots:
+        return {}
+    qualified = _third_place_ranking(con)
+    if len(qualified) < 8:
+        return {}
+    # Top-8 by ranking are the qualifiers.
+    qualified = qualified[:8]
+    by_group: dict[str, tuple[int, str]] = {letter: (tid, name) for tid, name, letter in qualified}
+    qualified_groups = list(by_group.keys())
+
+    assignment: dict[str, int] = {}
+
+    def backtrack(idx: int, used: set[str]) -> bool:
+        if idx == len(third_slots):
+            return True
+        slot_id, allowed = third_slots[idx]
+        for group in qualified_groups:
+            if group in used or group not in allowed:
+                continue
+            assignment[slot_id] = int(by_group[group][0])
+            used.add(group)
+            if backtrack(idx + 1, used):
+                return True
+            used.discard(group)
+            del assignment[slot_id]
+        return False
+
+    return assignment if backtrack(0, set()) else {}
+
+
 def _resolve_source(
-    con: sqlite3.Connection, source: str, slots_by_id: dict[str, BracketSlot]
+    con: sqlite3.Connection,
+    source: str,
+    slots_by_id: dict[str, BracketSlot],
+    third_assignment: dict[str, int] | None = None,
+    slot_id: str | None = None,
 ) -> int | None:
     """Translate a `home_source` / `away_source` token into a concrete team_id."""
     source = source.strip()
@@ -201,14 +280,11 @@ def _resolve_source(
         if len(standings) >= position:
             return int(standings[position - 1][0])
         return None
-    # Third-place special: "3rd1" .. "3rd8" or "3A".."3H" (we use 3X with X
-    # being any letter — picks the best 3rd-placed teams in order).
-    if source.startswith("3") and len(source) == 2 and source[1].isalpha():
-        ranking = _third_place_ranking(con)
-        # Map A→0, B→1 ... H→7 → pick that index from the ranking.
-        idx = ord(source[1].upper()) - ord("A")
-        if 0 <= idx < len(ranking):
-            return int(ranking[idx][0])
+    # Third-place from a restricted set: "3{ABCDF}" — resolved via the
+    # Annex-C bipartite assignment computed once per resolution pass.
+    if _parse_third_allowed(source) is not None:
+        if third_assignment and slot_id is not None:
+            return third_assignment.get(slot_id)
         return None
     # Knockout winner / loser: "W:R32-1" or "L:SF-1".
     if ":" in source:
@@ -272,11 +348,18 @@ def resolve_knockout_bracket(repo: Repository, now: datetime | None = None) -> d
     with sqlite3.connect(repo.path, timeout=30) as con:
         con.row_factory = sqlite3.Row
         _ensure_schema(con)
+        # Compute the Annex-C assignment once per pass (requires all 12 groups
+        # finished). Empty dict means "not ready" and 3{...} sources stay unresolved.
+        third_assignment = _assign_thirds_annex_c(con, slots)
         # Iterate stages in order so winners are known before resolving the next round.
         for stage in STAGES:
             for slot in [s for s in slots if s.stage == stage]:
-                home_id = slot.home_team_id or _resolve_source(con, slot.home_source, slots_by_id)
-                away_id = slot.away_team_id or _resolve_source(con, slot.away_source, slots_by_id)
+                home_id = slot.home_team_id or _resolve_source(
+                    con, slot.home_source, slots_by_id, third_assignment, slot.slot_id,
+                )
+                away_id = slot.away_team_id or _resolve_source(
+                    con, slot.away_source, slots_by_id, third_assignment, slot.slot_id,
+                )
                 if home_id is None or away_id is None:
                     continue
                 if (home_id, away_id) == (slot.home_team_id, slot.away_team_id) and slot.match_id is not None:
@@ -337,6 +420,16 @@ def bracket_view(repo: Repository) -> list[dict]:
         con.row_factory = sqlite3.Row
         teams = {int(r["id"]): r["name"]
                  for r in con.execute("SELECT id, name FROM teams")}
+    def pretty_source(source: str) -> str:
+        allowed = _parse_third_allowed(source)
+        if allowed is not None:
+            return f"3.º de {'/'.join(sorted(allowed))}"
+        if ":" in source:
+            kind, ref = source.split(":", 1)
+            label = "Gan." if kind.upper() == "W" else "Per."
+            return f"{label} {ref}"
+        return source
+
     view = []
     for slot in slots:
         view.append({
@@ -344,8 +437,8 @@ def bracket_view(repo: Repository) -> list[dict]:
             "slot_id": slot.slot_id,
             "kickoff_utc": slot.kickoff_utc,
             "venue": slot.venue or "",
-            "home": teams.get(slot.home_team_id) if slot.home_team_id else slot.home_source,
-            "away": teams.get(slot.away_team_id) if slot.away_team_id else slot.away_source,
+            "home": teams.get(slot.home_team_id) if slot.home_team_id else pretty_source(slot.home_source),
+            "away": teams.get(slot.away_team_id) if slot.away_team_id else pretty_source(slot.away_source),
             "home_pending": slot.home_team_id is None,
             "away_pending": slot.away_team_id is None,
             "match_id": slot.match_id,
