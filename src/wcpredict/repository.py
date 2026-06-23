@@ -1826,6 +1826,15 @@ class Repository:
                 scheduled_match = _match_by_teams_near_date(
                     scheduled, str(row["team_a"]), str(row["team_b"]), str(row.get("played_at") or "")
                 )
+                # Try the reversed pair before inserting a duplicate. Some
+                # upstream feeds swap home/away vs our seeded schedule
+                # (this used to leak ~14 extra fixtures per refresh in cloud).
+                reversed_seed = False
+                if scheduled_match is None:
+                    scheduled_match = _match_by_teams_near_date(
+                        scheduled, str(row["team_b"]), str(row["team_a"]), str(row.get("played_at") or "")
+                    )
+                    reversed_seed = scheduled_match is not None
                 kickoff = (
                     str(scheduled_match["kickoff_utc"])
                     if scheduled_match is not None
@@ -1841,18 +1850,26 @@ class Repository:
                             teams = [*teams, existing]
                         team_ids.append(int(existing["id"]))
                     match_status = "finished" if row.get("goals_a") is not None and row.get("goals_b") is not None else (row.get("status") or "scheduled")
-                    con.execute(
-                        "INSERT INTO matches(competition, stage, kickoff_utc, team_a_id, team_b_id, status, venue, neutral_site) "
-                        "VALUES('FIFA World Cup 2026', ?, ?, ?, ?, ?, ?, 1) "
-                        "ON CONFLICT(competition, kickoff_utc, team_a_id, team_b_id) DO UPDATE SET "
-                        "stage=excluded.stage, status=excluded.status, venue=COALESCE(excluded.venue, matches.venue)",
-                        (row.get("stage") or "FIFA World Cup 2026", kickoff, team_ids[0], team_ids[1], match_status, row.get("venue")),
-                    )
-                    if scheduled_match is None:
-                        scheduled = con.execute(
-                            "SELECT m.id, m.kickoff_utc, m.venue, ta.name AS team_a, tb.name AS team_b "
-                            "FROM matches m JOIN teams ta ON ta.id=m.team_a_id JOIN teams tb ON tb.id=m.team_b_id"
-                        ).fetchall()
+                    if reversed_seed:
+                        # The seed already holds this pair with reversed home/away.
+                        # Keep the seed's id and just update status/stage/venue.
+                        con.execute(
+                            "UPDATE matches SET stage=COALESCE(?, stage), status=?, venue=COALESCE(?, venue) WHERE id=?",
+                            (row.get("stage"), match_status, row.get("venue"), int(scheduled_match["id"])),
+                        )
+                    else:
+                        con.execute(
+                            "INSERT INTO matches(competition, stage, kickoff_utc, team_a_id, team_b_id, status, venue, neutral_site) "
+                            "VALUES('FIFA World Cup 2026', ?, ?, ?, ?, ?, ?, 1) "
+                            "ON CONFLICT(competition, kickoff_utc, team_a_id, team_b_id) DO UPDATE SET "
+                            "stage=excluded.stage, status=excluded.status, venue=COALESCE(excluded.venue, matches.venue)",
+                            (row.get("stage") or "FIFA World Cup 2026", kickoff, team_ids[0], team_ids[1], match_status, row.get("venue")),
+                        )
+                        if scheduled_match is None:
+                            scheduled = con.execute(
+                                "SELECT m.id, m.kickoff_utc, m.venue, ta.name AS team_a, tb.name AS team_b "
+                                "FROM matches m JOIN teams ta ON ta.id=m.team_a_id JOIN teams tb ON tb.id=m.team_b_id"
+                            ).fetchall()
                 if row.get("goals_a") is None or row.get("goals_b") is None:
                     continue
                 scheduled_match = _match_by_teams_near_date(
