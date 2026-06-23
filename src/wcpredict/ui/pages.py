@@ -1398,7 +1398,11 @@ def render_prediction_lab() -> None:
     top_left, top_right = st.columns([1.55, 1])
     with top_left:
         st.subheader("Probabilidad 1X2")
-        section_note("Este valor integra el historial (80%) y la matriz de goles (20%).")
+        section_note(
+            "Modelo unificado: matriz de marcadores (xG ajustado + Dixon-Coles) + "
+            "ML cronológico (Elo, ~50k partidos) + ML deep stats (HistGBM con xG/posesión/tiros/defensa). "
+            "Pesos adaptativos según la muestra deep disponible para cada equipo."
+        )
         home_p = next((row.probability for row in primary if row.selection_name == team_a), 0)
         draw_p = next((row.probability for row in primary if row.selection_name == "Draw"), 0)
         away_p = next((row.probability for row in primary if row.selection_name == team_b), 0)
