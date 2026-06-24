@@ -11,7 +11,6 @@ import these helpers, never inline CSS.
 """
 
 import streamlit as st
-import streamlit.components.v1 as components
 
 
 CSS = """
@@ -862,7 +861,8 @@ div[data-testid="stDataEditor"] tbody tr:hover {
 _PWA_HEAD = """
 <script>
 (function() {
-  // Hop from the components iframe to the real Streamlit page document.
+  // st.html injects into the app document directly; keep a parent fallback for
+  // older embeddings that still wrap custom HTML.
   var doc;
   try { doc = window.parent.document; } catch (e) { doc = document; }
 
@@ -933,7 +933,7 @@ _PWA_HEAD = """
 def apply_theme() -> None:
     """Inject the design system. Call once at app start."""
     st.markdown(CSS, unsafe_allow_html=True)
-    components.html(_PWA_HEAD, height=0)
+    st.html(_PWA_HEAD, unsafe_allow_javascript=True)
 
 
 def hero(kicker: str, title: str, meta: str, crests_html: str = "") -> None:

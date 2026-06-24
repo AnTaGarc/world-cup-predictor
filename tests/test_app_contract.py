@@ -41,7 +41,8 @@ class AppContractTests(unittest.TestCase):
 
     def test_player_rankings_default_to_a_sample_available_during_group_stage(self):
         source = (Path(__file__).parents[1] / "src" / "wcpredict" / "ui" / "pages.py").read_text(encoding="utf-8")
-        self.assertIn('st.slider("Minutos mínimos", 0, 900, 60, 30)', source)
+        self.assertIn('"Minutos mínimos (solo afecta a Impacto)", 0, 900, 60, 30', source)
+        self.assertIn("minimum_minutes > 0", source)
         self.assertIn("cluster_player_styles(profiles[:120]", source)
 
 
@@ -146,6 +147,11 @@ class AppContractTests(unittest.TestCase):
         self.assertIn("fonts.googleapis.com/css2?family=Inter", theme.CSS)
         # Tabular figures applied to numerical surfaces.
         self.assertIn('"tnum"', theme.CSS)
+
+    def test_pwa_head_uses_current_streamlit_html_api(self):
+        source = (Path(__file__).parents[1] / "src" / "wcpredict" / "ui" / "theme.py").read_text(encoding="utf-8")
+        self.assertNotIn("streamlit.components.v1", source)
+        self.assertIn("st.html(_PWA_HEAD, unsafe_allow_javascript=True)", source)
 
     def test_dashboard_uses_redesigned_visuals(self):
         source = (Path(__file__).parents[1] / "src" / "wcpredict" / "ui" / "pages.py").read_text(encoding="utf-8")

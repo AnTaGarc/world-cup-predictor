@@ -6,6 +6,7 @@ from pathlib import Path
 
 from wcpredict.knockout_bracket import (
     COMPETITION,
+    _group_standings,
     bracket_view,
     list_bracket_slots,
     resolve_knockout_bracket,
@@ -105,6 +106,39 @@ class KnockoutBracketTests(unittest.TestCase):
             resolve_knockout_bracket(repo)
             again = resolve_knockout_bracket(repo)
         self.assertEqual(0, again["matches_created"])
+
+    def test_group_standings_use_head_to_head_before_goal_difference(self):
+        with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as tmp:
+            repo = Repository(Path(tmp) / "app.sqlite")
+            repo.initialize()
+            ids = {name: repo.upsert_team(name) for name in ("Alpha", "Beta", "Gamma", "Delta")}
+            fixtures = [
+                ("Alpha", "Beta", 1, 0),
+                ("Alpha", "Gamma", 0, 3),
+                ("Alpha", "Delta", 1, 0),
+                ("Beta", "Gamma", 5, 0),
+                ("Beta", "Delta", 1, 0),
+                ("Gamma", "Delta", 0, 0),
+            ]
+            with sqlite3.connect(repo.path) as con:
+                con.row_factory = sqlite3.Row
+                for idx, (a, b, ga, gb) in enumerate(fixtures, start=1):
+                    con.execute(
+                        "INSERT INTO matches(competition, stage, kickoff_utc, team_a_id, team_b_id, status, venue, neutral_site) "
+                        "VALUES(?, 'Group stage - Group A', ?, ?, ?, 'finished', NULL, 1)",
+                        (COMPETITION, f"2026-06-{idx:02d}T18:00:00+00:00", ids[a], ids[b]),
+                    )
+                    mid = con.execute("SELECT last_insert_rowid()").fetchone()[0]
+                    con.execute(
+                        "INSERT INTO match_results(match_id, goals_a, goals_b, source_type, recorded_at_utc) "
+                        "VALUES(?, ?, ?, 'manual', ?)",
+                        (mid, ga, gb, datetime.now(timezone.utc).isoformat()),
+                    )
+                con.commit()
+
+                standings = _group_standings(con, "A")
+
+        self.assertEqual(["Alpha", "Beta"], [row[1] for row in standings[:2]])
 
 
 class AnnexCAssignmentTests(unittest.TestCase):

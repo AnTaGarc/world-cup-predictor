@@ -64,6 +64,31 @@ class ScheduleTests(unittest.TestCase):
         self.assertEqual(1, len(matching))
         self.assertEqual(datetime(2026, 6, 18, 16, tzinfo=timezone.utc), matching[0].kickoff_utc)
 
+    def test_seed_schedule_does_not_reopen_a_settled_fixture(self):
+        path = Path(__file__).resolve().parents[1] / "data" / "fixtures" / "world_cup_2026_schedule.csv"
+        tmp = tempfile.mkdtemp()
+        try:
+            repo = Repository(Path(tmp) / "worldcup.sqlite")
+            repo.initialize()
+            seed_schedule(repo, path)
+            match = next(m for m in repo.list_matches() if m.label == "Mexico vs South Africa")
+            repo.settle_match(
+                match.id,
+                2,
+                0,
+                [],
+                datetime(2026, 6, 12, tzinfo=timezone.utc),
+                source_type="verified_user_capture",
+            )
+
+            seed_schedule(repo, path)
+
+            reseeded = repo.get_match(match.id)
+            del repo
+        finally:
+            shutil.rmtree(tmp, ignore_errors=True)
+        self.assertEqual("finished", reseeded.status)
+
 
 if __name__ == "__main__":
     unittest.main()

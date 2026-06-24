@@ -140,9 +140,11 @@ def list_bracket_slots(repo: Repository) -> list[BracketSlot]:
 def _group_standings(con: sqlite3.Connection, group_letter: str) -> list[tuple[int, str]]:
     """Return (team_id, team_name) ordered by group position (1st, 2nd, 3rd, 4th).
 
-    Standings use FIFA rules: points, then goal difference, goals for, head-to-head
-    is approximated by goal difference fallback since H2H is rare to tie-break
-    before having full data. Returns empty if the group still has unfinished matches.
+    Standings use the FIFA ordering available from local data: points, then
+    head-to-head points / goal difference / goals for among tied teams, then
+    total goal difference and goals for. Discipline and FIFA ranking are not
+    stored locally, so remaining ties are deterministic by team name/id.
+    Returns empty if the group still has unfinished matches.
     """
     rows = con.execute(
         "SELECT m.id, m.team_a_id, m.team_b_id, m.status, "
@@ -159,8 +161,10 @@ def _group_standings(con: sqlite3.Connection, group_letter: str) -> list[tuple[i
     if any(r["status"] != "finished" or r["goals_a"] is None for r in rows):
         return []
     stats: dict[int, dict] = {}
+    games: list[tuple[int, int, int, int]] = []
     for r in rows:
         ga, gb = int(r["goals_a"]), int(r["goals_b"])
+        games.append((int(r["team_a_id"]), int(r["team_b_id"]), ga, gb))
         for tid, name, gf, gag in ((r["team_a_id"], r["ta"], ga, gb),
                                     (r["team_b_id"], r["tb"], gb, ga)):
             s = stats.setdefault(int(tid), {"name": name, "pts": 0, "gd": 0, "gf": 0})
@@ -170,8 +174,61 @@ def _group_standings(con: sqlite3.Connection, group_letter: str) -> list[tuple[i
                 s["pts"] += 3
             elif gf == gag:
                 s["pts"] += 1
-    ranked = sorted(stats.items(), key=lambda kv: (-kv[1]["pts"], -kv[1]["gd"], -kv[1]["gf"]))
-    return [(tid, s["name"]) for tid, s in ranked]
+
+    def total_key(tid: int) -> tuple[int, int, str, int]:
+        s = stats[tid]
+        return (-int(s["gd"]), -int(s["gf"]), str(s["name"]), tid)
+
+    def h2h_table(tids: list[int]) -> dict[int, dict[str, int]]:
+        tied = set(tids)
+        table = {tid: {"pts": 0, "gd": 0, "gf": 0} for tid in tids}
+        for home_id, away_id, home_goals, away_goals in games:
+            if home_id not in tied or away_id not in tied:
+                continue
+            for tid, gf, ga in (
+                (home_id, home_goals, away_goals),
+                (away_id, away_goals, home_goals),
+            ):
+                table[tid]["gf"] += gf
+                table[tid]["gd"] += gf - ga
+            if home_goals > away_goals:
+                table[home_id]["pts"] += 3
+            elif away_goals > home_goals:
+                table[away_id]["pts"] += 3
+            else:
+                table[home_id]["pts"] += 1
+                table[away_id]["pts"] += 1
+        return table
+
+    def rank_tied(tids: list[int]) -> list[int]:
+        if len(tids) <= 1:
+            return tids
+        table = h2h_table(tids)
+        buckets: dict[tuple[int, int, int], list[int]] = {}
+        for tid in tids:
+            h = table[tid]
+            buckets.setdefault((int(h["pts"]), int(h["gd"]), int(h["gf"])), []).append(tid)
+        ordered: list[int] = []
+        for _, bucket in sorted(buckets.items(), key=lambda item: (-item[0][0], -item[0][1], -item[0][2])):
+            if len(bucket) == 1:
+                ordered.extend(bucket)
+            elif len(bucket) < len(tids):
+                ordered.extend(rank_tied(bucket))
+            else:
+                ordered.extend(sorted(bucket, key=total_key))
+        return ordered
+
+    by_points: dict[int, list[int]] = {}
+    for tid, s in stats.items():
+        by_points.setdefault(int(s["pts"]), []).append(tid)
+    ranked_ids: list[int] = []
+    for points in sorted(by_points, reverse=True):
+        tied = by_points[points]
+        if len(tied) == 1:
+            ranked_ids.extend(tied)
+        else:
+            ranked_ids.extend(rank_tied(tied))
+    return [(tid, stats[tid]["name"]) for tid in ranked_ids]
 
 
 def _third_place_ranking(con: sqlite3.Connection) -> list[tuple[int, str, str]]:

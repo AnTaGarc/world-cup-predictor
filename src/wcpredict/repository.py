@@ -335,7 +335,11 @@ class Repository:
                 "INSERT INTO matches(competition, stage, kickoff_utc, team_a_id, team_b_id, status, venue, neutral_site) "
                 "VALUES(?, ?, ?, ?, ?, ?, ?, ?) "
                 "ON CONFLICT(competition, kickoff_utc, team_a_id, team_b_id) DO UPDATE SET "
-                "stage=excluded.stage, status=excluded.status, venue=excluded.venue, neutral_site=excluded.neutral_site",
+                "stage=excluded.stage, "
+                "status=CASE "
+                "WHEN matches.status='finished' OR EXISTS(SELECT 1 FROM match_results r WHERE r.match_id=matches.id) THEN 'finished' "
+                "ELSE excluded.status END, "
+                "venue=excluded.venue, neutral_site=excluded.neutral_site",
                 (competition, stage, kickoff, team_a_id, team_b_id, status, venue, int(neutral_site)),
             )
             row = con.execute(
