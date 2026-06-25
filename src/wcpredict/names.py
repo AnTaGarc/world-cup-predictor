@@ -7,6 +7,7 @@ _ALIASES = {
     "alemania": "Germany", "arabia saudi": "Saudi Arabia", "argelia": "Algeria",
     "belgica": "Belgium", "bosnia": "Bosnia and Herzegovina", "brasil": "Brazil",
     "bosnia herzegovina": "Bosnia and Herzegovina",
+    "bosnia y herzegovina": "Bosnia and Herzegovina",
     "bosnia and herzegovina": "Bosnia and Herzegovina",
     "bosnia herz": "Bosnia and Herzegovina",
     "bosnia and herz": "Bosnia and Herzegovina",

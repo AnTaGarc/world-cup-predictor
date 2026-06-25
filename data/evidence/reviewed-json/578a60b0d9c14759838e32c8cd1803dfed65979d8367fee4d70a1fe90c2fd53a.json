@@ -1,0 +1,305 @@
+{
+  "numero_de_partidos": 1,
+  "partidos": [
+    {
+      "id": "suiza_canada",
+      "nombre": "Suiza vs Canadá",
+      "equipos": {
+        "izquierda_verde": "Suiza",
+        "derecha_azul": "Canadá"
+      },
+      "estadisticas": {
+        "resumen_del_partido": {
+          "posesion_de_balon_pct": {
+            "Suiza": 55,
+            "Canadá": 45
+          },
+          "distancia_recorrida_km": {
+            "Suiza": null,
+            "Canadá": null,
+            "estado_dato": "No mostrado en la captura"
+          },
+          "goles_esperados_xg": {
+            "Suiza": 1.11,
+            "Canadá": 1.66
+          },
+          "ocasiones_claras": {
+            "Suiza": 3,
+            "Canadá": 3
+          },
+          "tiros_totales": {
+            "Suiza": 6,
+            "Canadá": 13
+          },
+          "paradas": {
+            "Suiza": 6,
+            "Canadá": 2
+          },
+          "numero_de_sprints": {
+            "Suiza": null,
+            "Canadá": null,
+            "estado_dato": "No mostrado en la captura"
+          },
+          "saques_de_esquina": {
+            "Suiza": 2,
+            "Canadá": 7
+          },
+          "faltas": {
+            "Suiza": 19,
+            "Canadá": 13
+          },
+          "pases": {
+            "Suiza": 443,
+            "Canadá": 339
+          },
+          "entradas": {
+            "Suiza": 16,
+            "Canadá": 9
+          },
+          "tiros_libres": {
+            "Suiza": 13,
+            "Canadá": 19
+          },
+          "tarjetas_amarillas": {
+            "Suiza": 1,
+            "Canadá": 2
+          },
+          "tarjetas_rojas": {
+            "Suiza": null,
+            "Canadá": null,
+            "estado_dato": "No mostrado en la captura"
+          }
+        },
+        "tiros": {
+          "tiros_totales": {
+            "Suiza": 6,
+            "Canadá": 13
+          },
+          "tiros_a_puerta": {
+            "Suiza": 4,
+            "Canadá": 7
+          },
+          "tiros_al_palo": {
+            "Suiza": 0,
+            "Canadá": 0
+          },
+          "tiros_fuera": {
+            "Suiza": 1,
+            "Canadá": 3
+          },
+          "tiros_bloqueados": {
+            "Suiza": 1,
+            "Canadá": 3
+          },
+          "tiros_dentro_del_area_penal": {
+            "Suiza": 5,
+            "Canadá": 12
+          },
+          "tiros_fuera_del_area": {
+            "Suiza": 1,
+            "Canadá": 1
+          }
+        },
+        "ataque": {
+          "ocasiones_claras_realizadas": {
+            "Suiza": 1,
+            "Canadá": 1
+          },
+          "ocasiones_claras_falladas": {
+            "Suiza": 2,
+            "Canadá": 2
+          },
+          "pases_en_profundidad": {
+            "Suiza": 1,
+            "Canadá": 1
+          },
+          "toques_dentro_del_area": {
+            "Suiza": 14,
+            "Canadá": 23
+          },
+          "faltas_recibidas_en_el_tercio_final": {
+            "Suiza": 2,
+            "Canadá": 3
+          },
+          "fueras_de_juego": {
+            "Suiza": 1,
+            "Canadá": 3
+          }
+        },
+        "mapa_de_ataques": {
+          "equipo_mostrado": "Suiza",
+          "direccion_de_ataque": "izquierda_a_derecha",
+          "tipo_de_dato": "mapa_de_intensidad_sin_valores_numericos"
+        },
+        "mapa_de_pases": {
+          "equipo_mostrado": "Suiza",
+          "descripcion": "Distribución porcentual de los pases según la zona del campo.",
+          "direccion_de_ataque": "izquierda_a_derecha",
+          "distribucion_por_zonas_del_campo_pct": {
+            "tercio_defensivo": 38,
+            "tercio_central": 43,
+            "tercio_ofensivo": 19
+          }
+        },
+        "duelos": {
+          "duelos_ganados_pct_del_total": {
+            "Suiza": 51,
+            "Canadá": 49
+          },
+          "perdidas": {
+            "Suiza": 7,
+            "Canadá": 11
+          },
+          "duelos_en_el_suelo": {
+            "Suiza": {
+              "ganados": 35,
+              "total_mostrado": 71,
+              "porcentaje": 49
+            },
+            "Canadá": {
+              "ganados": 36,
+              "total_mostrado": 71,
+              "porcentaje": 51
+            }
+          },
+          "duelos_aereos": {
+            "Suiza": {
+              "ganados": 16,
+              "total_mostrado": 29,
+              "porcentaje": 55
+            },
+            "Canadá": {
+              "ganados": 13,
+              "total_mostrado": 29,
+              "porcentaje": 45
+            }
+          },
+          "regates": {
+            "Suiza": {
+              "completados": 6,
+              "intentados": 8,
+              "porcentaje": 75
+            },
+            "Canadá": {
+              "completados": 8,
+              "intentados": 13,
+              "porcentaje": 62
+            }
+          }
+        },
+        "pases": {
+          "pases_precisos": {
+            "Suiza": 369,
+            "Canadá": 271
+          },
+          "saques_de_banda": {
+            "Suiza": 25,
+            "Canadá": 27
+          },
+          "pases_al_ultimo_tercio": {
+            "Suiza": 48,
+            "Canadá": 60
+          },
+          "pases_en_el_ultimo_tercio": {
+            "Suiza": {
+              "completados": 38,
+              "intentados": 76,
+              "porcentaje": 50
+            },
+            "Canadá": {
+              "completados": 71,
+              "intentados": 105,
+              "porcentaje": 68
+            }
+          },
+          "pases_largos": {
+            "Suiza": {
+              "completados": 17,
+              "intentados": 45,
+              "porcentaje": 38
+            },
+            "Canadá": {
+              "completados": 20,
+              "intentados": 43,
+              "porcentaje": 47
+            }
+          },
+          "centros": {
+            "Suiza": {
+              "completados": 1,
+              "intentados": 6,
+              "porcentaje": 17
+            },
+            "Canadá": {
+              "completados": 6,
+              "intentados": 26,
+              "porcentaje": 23
+            }
+          }
+        },
+        "defensa": {
+          "entradas_ganadas_pct": {
+            "Suiza": 44,
+            "Canadá": 56
+          },
+          "tackles_totales": {
+            "Suiza": 16,
+            "Canadá": 9
+          },
+          "intercepciones": {
+            "Suiza": 4,
+            "Canadá": 13
+          },
+          "recuperaciones": {
+            "Suiza": 35,
+            "Canadá": 40
+          },
+          "despejes": {
+            "Suiza": 44,
+            "Canadá": 19
+          },
+          "errores_que_llevan_a_disparo": {
+            "Suiza": null,
+            "Canadá": null,
+            "estado_dato": "No mostrado en la captura"
+          },
+          "errores_que_llevan_a_gol": {
+            "Suiza": 0,
+            "Canadá": 2
+          }
+        },
+        "porteria": {
+          "paradas": {
+            "Suiza": 6,
+            "Canadá": 2
+          },
+          "goles_evitados": {
+            "Suiza": 1.76,
+            "Canadá": -0.83
+          },
+          "grandes_paradas": {
+            "Suiza": 2,
+            "Canadá": 0
+          },
+          "despejes_por_alto": {
+            "Suiza": 1,
+            "Canadá": 0
+          },
+          "con_los_punos": {
+            "Suiza": 2,
+            "Canadá": 0
+          },
+          "saques_de_puerta": {
+            "Suiza": 13,
+            "Canadá": 5
+          }
+        }
+      },
+      "fuentes": [
+        "Captura de pantalla 2026-06-25 073209.png",
+        "Captura de pantalla 2026-06-25 073224.png",
+        "Captura de pantalla 2026-06-25 073247.png"
+      ]
+    }
+  ]
+}

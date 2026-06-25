@@ -528,6 +528,20 @@ div[data-testid="stDataEditor"] tbody tr:hover {
   overflow: hidden;
   transition: transform 120ms ease, box-shadow 120ms ease;
 }
+.bk-card-link {
+  color: inherit !important;
+  text-decoration: none !important;
+  display: block;
+}
+.bk-card-link:visited,
+.bk-card-link:hover,
+.bk-card-link:focus,
+.bk-card-link:active,
+.bk-card-link *,
+.bk-card-link:hover * {
+  color: inherit;
+  text-decoration: none !important;
+}
 .bk-card:hover {
   transform: translateY(-1px);
   box-shadow: 0 4px 10px rgba(16, 35, 63, 0.10);

@@ -1,0 +1,304 @@
+{
+  "numero_de_partidos": 1,
+  "partidos": [
+    {
+      "id": "escocia_brasil",
+      "nombre": "Escocia vs Brasil",
+      "equipos": {
+        "izquierda_verde": "Escocia",
+        "derecha_azul": "Brasil"
+      },
+      "estadisticas": {
+        "resumen_del_partido": {
+          "posesion_de_balon_pct": {
+            "Escocia": 46,
+            "Brasil": 54
+          },
+          "distancia_recorrida_km": {
+            "Escocia": null,
+            "Brasil": null,
+            "estado_dato": "No mostrado en la captura"
+          },
+          "goles_esperados_xg": {
+            "Escocia": 1.04,
+            "Brasil": 4.33
+          },
+          "ocasiones_claras": {
+            "Escocia": 1,
+            "Brasil": 6
+          },
+          "tiros_totales": {
+            "Escocia": 14,
+            "Brasil": 21
+          },
+          "paradas": {
+            "Escocia": 5,
+            "Brasil": 5
+          },
+          "numero_de_sprints": {
+            "Escocia": null,
+            "Brasil": null,
+            "estado_dato": "No mostrado en la captura"
+          },
+          "saques_de_esquina": {
+            "Escocia": 7,
+            "Brasil": 6
+          },
+          "faltas": {
+            "Escocia": 10,
+            "Brasil": 11
+          },
+          "pases": {
+            "Escocia": 500,
+            "Brasil": 605
+          },
+          "entradas": {
+            "Escocia": 12,
+            "Brasil": 14
+          },
+          "tiros_libres": {
+            "Escocia": 11,
+            "Brasil": 10
+          },
+          "tarjetas_amarillas": {
+            "Escocia": 1,
+            "Brasil": 2
+          },
+          "tarjetas_rojas": {
+            "Escocia": null,
+            "Brasil": null,
+            "estado_dato": "No mostrado en la captura"
+          }
+        },
+        "tiros": {
+          "tiros_totales": {
+            "Escocia": 14,
+            "Brasil": 21
+          },
+          "tiros_a_puerta": {
+            "Escocia": 5,
+            "Brasil": 9
+          },
+          "tiros_al_palo": {
+            "Escocia": 0,
+            "Brasil": 0
+          },
+          "tiros_fuera": {
+            "Escocia": 6,
+            "Brasil": 7
+          },
+          "tiros_bloqueados": {
+            "Escocia": 3,
+            "Brasil": 5
+          },
+          "tiros_dentro_del_area_penal": {
+            "Escocia": 10,
+            "Brasil": 14
+          },
+          "tiros_fuera_del_area": {
+            "Escocia": 4,
+            "Brasil": 7
+          }
+        },
+        "ataque": {
+          "ocasiones_claras_realizadas": {
+            "Escocia": 0,
+            "Brasil": 3
+          },
+          "ocasiones_claras_falladas": {
+            "Escocia": 1,
+            "Brasil": 3
+          },
+          "pases_en_profundidad": {
+            "Escocia": 0,
+            "Brasil": 3
+          },
+          "toques_dentro_del_area": {
+            "Escocia": 27,
+            "Brasil": 35
+          },
+          "faltas_recibidas_en_el_tercio_final": {
+            "Escocia": 2,
+            "Brasil": 1
+          },
+          "fueras_de_juego": {
+            "Escocia": 0,
+            "Brasil": 1
+          }
+        },
+        "mapa_de_ataques": {
+          "equipo_mostrado": "Escocia",
+          "direccion_de_ataque": "izquierda_a_derecha",
+          "tipo_de_dato": "mapa_de_intensidad_sin_valores_numericos"
+        },
+        "mapa_de_pases": {
+          "equipo_mostrado": "Escocia",
+          "descripcion": "Distribución porcentual de los pases según la zona del campo.",
+          "direccion_de_ataque": "izquierda_a_derecha",
+          "distribucion_por_zonas_del_campo_pct": {
+            "tercio_defensivo": 27,
+            "tercio_central": 49,
+            "tercio_ofensivo": 24
+          }
+        },
+        "duelos": {
+          "duelos_ganados_pct_del_total": {
+            "Escocia": 37,
+            "Brasil": 63
+          },
+          "perdidas": {
+            "Escocia": 8,
+            "Brasil": 6
+          },
+          "duelos_en_el_suelo": {
+            "Escocia": {
+              "ganados": 24,
+              "total_mostrado": 59,
+              "porcentaje": 41
+            },
+            "Brasil": {
+              "ganados": 35,
+              "total_mostrado": 59,
+              "porcentaje": 59
+            }
+          },
+          "duelos_aereos": {
+            "Escocia": {
+              "ganados": 5,
+              "total_mostrado": 19,
+              "porcentaje": 26
+            },
+            "Brasil": {
+              "ganados": 14,
+              "total_mostrado": 19,
+              "porcentaje": 74
+            }
+          },
+          "regates": {
+            "Escocia": {
+              "completados": 2,
+              "intentados": 8,
+              "porcentaje": 25
+            },
+            "Brasil": {
+              "completados": 11,
+              "intentados": 17,
+              "porcentaje": 65
+            }
+          }
+        },
+        "pases": {
+          "pases_precisos": {
+            "Escocia": 450,
+            "Brasil": 564
+          },
+          "saques_de_banda": {
+            "Escocia": 16,
+            "Brasil": 10
+          },
+          "pases_al_ultimo_tercio": {
+            "Escocia": 58,
+            "Brasil": 68
+          },
+          "pases_en_el_ultimo_tercio": {
+            "Escocia": {
+              "completados": 71,
+              "intentados": 93,
+              "porcentaje": 76
+            },
+            "Brasil": {
+              "completados": 110,
+              "intentados": 131,
+              "porcentaje": 84
+            }
+          },
+          "pases_largos": {
+            "Escocia": {
+              "completados": 17,
+              "intentados": 33,
+              "porcentaje": 52
+            },
+            "Brasil": {
+              "completados": 12,
+              "intentados": 27,
+              "porcentaje": 44
+            }
+          },
+          "centros": {
+            "Escocia": {
+              "completados": 9,
+              "intentados": 23,
+              "porcentaje": 39
+            },
+            "Brasil": {
+              "completados": 2,
+              "intentados": 12,
+              "porcentaje": 17
+            }
+          }
+        },
+        "defensa": {
+          "entradas_ganadas_pct": {
+            "Escocia": 67,
+            "Brasil": 43
+          },
+          "tackles_totales": {
+            "Escocia": 12,
+            "Brasil": 14
+          },
+          "intercepciones": {
+            "Escocia": 2,
+            "Brasil": 13
+          },
+          "recuperaciones": {
+            "Escocia": 33,
+            "Brasil": 48
+          },
+          "despejes": {
+            "Escocia": 13,
+            "Brasil": 24
+          },
+          "errores_que_llevan_a_disparo": {
+            "Escocia": 0,
+            "Brasil": 2
+          },
+          "errores_que_llevan_a_gol": {
+            "Escocia": 2,
+            "Brasil": 0
+          }
+        },
+        "porteria": {
+          "paradas": {
+            "Escocia": 5,
+            "Brasil": 5
+          },
+          "goles_evitados": {
+            "Escocia": 1.8,
+            "Brasil": 1.23
+          },
+          "grandes_paradas": {
+            "Escocia": 2,
+            "Brasil": 1
+          },
+          "despejes_por_alto": {
+            "Escocia": 1,
+            "Brasil": 0
+          },
+          "con_los_punos": {
+            "Escocia": 0,
+            "Brasil": 2
+          },
+          "saques_de_puerta": {
+            "Escocia": 11,
+            "Brasil": 4
+          }
+        }
+      },
+      "fuentes": [
+        "Captura de pantalla 2026-06-25 073719.png",
+        "Captura de pantalla 2026-06-25 073741.png",
+        "Captura de pantalla 2026-06-25 073802.png"
+      ]
+    }
+  ]
+}

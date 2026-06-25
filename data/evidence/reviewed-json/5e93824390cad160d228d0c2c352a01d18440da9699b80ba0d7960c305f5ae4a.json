@@ -1,0 +1,308 @@
+{
+  "numero_de_partidos": 1,
+  "partidos": [
+    {
+      "id": "chequia_mexico",
+      "nombre": "Chequia vs México",
+      "equipos": {
+        "izquierda_verde": "Chequia",
+        "derecha_azul": "México"
+      },
+      "estadisticas": {
+        "resumen_del_partido": {
+          "posesion_de_balon_pct": {
+            "Chequia": 52,
+            "México": 48
+          },
+          "distancia_recorrida_km": {
+            "Chequia": null,
+            "México": null,
+            "estado_dato": "No mostrado en la captura"
+          },
+          "goles_esperados_xg": {
+            "Chequia": 0.53,
+            "México": 1.74
+          },
+          "ocasiones_claras": {
+            "Chequia": 0,
+            "México": 5
+          },
+          "tiros_totales": {
+            "Chequia": 13,
+            "México": 11
+          },
+          "paradas": {
+            "Chequia": 2,
+            "México": 1
+          },
+          "numero_de_sprints": {
+            "Chequia": null,
+            "México": null,
+            "estado_dato": "No mostrado en la captura"
+          },
+          "saques_de_esquina": {
+            "Chequia": 5,
+            "México": 1
+          },
+          "faltas": {
+            "Chequia": 9,
+            "México": 13
+          },
+          "pases": {
+            "Chequia": 398,
+            "México": 386
+          },
+          "entradas": {
+            "Chequia": 12,
+            "México": 12
+          },
+          "tiros_libres": {
+            "Chequia": 13,
+            "México": 9
+          },
+          "tarjetas_amarillas": {
+            "Chequia": 0,
+            "México": 1
+          },
+          "tarjetas_rojas": {
+            "Chequia": null,
+            "México": null,
+            "estado_dato": "No mostrado en la captura"
+          }
+        },
+        "tiros": {
+          "tiros_totales": {
+            "Chequia": 13,
+            "México": 11
+          },
+          "tiros_a_puerta": {
+            "Chequia": 1,
+            "México": 5
+          },
+          "tiros_al_palo": {
+            "Chequia": 0,
+            "México": 0
+          },
+          "tiros_fuera": {
+            "Chequia": 8,
+            "México": 4
+          },
+          "tiros_bloqueados": {
+            "Chequia": 4,
+            "México": 2
+          },
+          "tiros_dentro_del_area_penal": {
+            "Chequia": 6,
+            "México": 9
+          },
+          "tiros_fuera_del_area": {
+            "Chequia": 7,
+            "México": 2
+          }
+        },
+        "ataque": {
+          "ocasiones_claras_realizadas": {
+            "Chequia": 0,
+            "México": 3
+          },
+          "ocasiones_claras_falladas": {
+            "Chequia": 0,
+            "México": 2
+          },
+          "pases_en_profundidad": {
+            "Chequia": null,
+            "México": null,
+            "estado_dato": "No mostrado en la captura"
+          },
+          "toques_dentro_del_area": {
+            "Chequia": 14,
+            "México": 15
+          },
+          "faltas_recibidas_en_el_tercio_final": {
+            "Chequia": 2,
+            "México": 2
+          },
+          "fueras_de_juego": {
+            "Chequia": 1,
+            "México": 0
+          }
+        },
+        "mapa_de_ataques": {
+          "equipo_mostrado": "Chequia",
+          "direccion_de_ataque": "izquierda_a_derecha",
+          "tipo_de_dato": "mapa_de_intensidad_sin_valores_numericos"
+        },
+        "mapa_de_pases": {
+          "equipo_mostrado": "Chequia",
+          "descripcion": "Distribución porcentual de los pases según la zona del campo.",
+          "direccion_de_ataque": "izquierda_a_derecha",
+          "distribucion_por_zonas_del_campo_pct": {
+            "tercio_defensivo": 29,
+            "tercio_central": 45,
+            "tercio_ofensivo": 26
+          }
+        },
+        "duelos": {
+          "duelos_ganados_pct_del_total": {
+            "Chequia": 55,
+            "México": 45
+          },
+          "perdidas": {
+            "Chequia": 5,
+            "México": 10
+          },
+          "duelos_en_el_suelo": {
+            "Chequia": {
+              "ganados": 29,
+              "total_mostrado": 54,
+              "porcentaje": 54
+            },
+            "México": {
+              "ganados": 25,
+              "total_mostrado": 54,
+              "porcentaje": 46
+            }
+          },
+          "duelos_aereos": {
+            "Chequia": {
+              "ganados": 13,
+              "total_mostrado": 22,
+              "porcentaje": 59
+            },
+            "México": {
+              "ganados": 9,
+              "total_mostrado": 22,
+              "porcentaje": 41
+            }
+          },
+          "regates": {
+            "Chequia": {
+              "completados": 5,
+              "intentados": 12,
+              "porcentaje": 42
+            },
+            "México": {
+              "completados": 4,
+              "intentados": 6,
+              "porcentaje": 67
+            }
+          }
+        },
+        "pases": {
+          "pases_precisos": {
+            "Chequia": 333,
+            "México": 330
+          },
+          "saques_de_banda": {
+            "Chequia": 20,
+            "México": 20
+          },
+          "pases_al_ultimo_tercio": {
+            "Chequia": 43,
+            "México": 47
+          },
+          "pases_en_el_ultimo_tercio": {
+            "Chequia": {
+              "completados": 45,
+              "intentados": 74,
+              "porcentaje": 61
+            },
+            "México": {
+              "completados": 84,
+              "intentados": 111,
+              "porcentaje": 76
+            }
+          },
+          "pases_largos": {
+            "Chequia": {
+              "completados": 20,
+              "intentados": 53,
+              "porcentaje": 38
+            },
+            "México": {
+              "completados": 34,
+              "intentados": 55,
+              "porcentaje": 62
+            }
+          },
+          "centros": {
+            "Chequia": {
+              "completados": 5,
+              "intentados": 26,
+              "porcentaje": 19
+            },
+            "México": {
+              "completados": 1,
+              "intentados": 12,
+              "porcentaje": 8
+            }
+          }
+        },
+        "defensa": {
+          "entradas_ganadas_pct": {
+            "Chequia": 58,
+            "México": 67
+          },
+          "tackles_totales": {
+            "Chequia": 12,
+            "México": 12
+          },
+          "intercepciones": {
+            "Chequia": 5,
+            "México": 7
+          },
+          "recuperaciones": {
+            "Chequia": 40,
+            "México": 38
+          },
+          "despejes": {
+            "Chequia": 20,
+            "México": 30
+          },
+          "errores_que_llevan_a_disparo": {
+            "Chequia": 0,
+            "México": 1
+          },
+          "errores_que_llevan_a_gol": {
+            "Chequia": 1,
+            "México": 0
+          }
+        },
+        "porteria": {
+          "paradas": {
+            "Chequia": 2,
+            "México": 1
+          },
+          "goles_evitados": {
+            "Chequia": -0.65,
+            "México": 0.13
+          },
+          "grandes_paradas": {
+            "Chequia": null,
+            "México": null,
+            "estado_dato": "No mostrado en la captura"
+          },
+          "despejes_por_alto": {
+            "Chequia": null,
+            "México": null,
+            "estado_dato": "No mostrado en la captura"
+          },
+          "con_los_punos": {
+            "Chequia": null,
+            "México": null,
+            "estado_dato": "No mostrado en la captura"
+          },
+          "saques_de_puerta": {
+            "Chequia": 11,
+            "México": 11
+          }
+        }
+      },
+      "fuentes": [
+        "Captura de pantalla 2026-06-25 074012.png",
+        "Captura de pantalla 2026-06-25 074031.png",
+        "Captura de pantalla 2026-06-25 074049.png"
+      ]
+    }
+  ]
+}

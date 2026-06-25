@@ -13,6 +13,7 @@ import streamlit as st
 
 from wcpredict.backtesting import brier_score, calibration_bands, summarize_by_market_family, calibration_drift
 from wcpredict.collector_store import CollectorEventBundle, CollectorStore
+from wcpredict.group_context import draw_incentive_for_match
 from wcpredict.market_catalog import default_market_rows, normalize_market_rows
 from wcpredict.models import MarketFamily
 from wcpredict.odds import compare_odds_to_probability
@@ -106,7 +107,7 @@ DEEP_OUTCOME_MODEL_PATH = DATA_DIR / "models" / "outcome_ml_deep.joblib"
 OPEN_SCHEDULE_PATH = DATA_DIR / "open" / "martj42-results.csv"
 DAILY_PROVIDERS = (*DEFAULT_PROVIDERS, "martj42_world_schedule")
 HOST_TEAMS = {"USA", "Canada", "Mexico"}
-PREDICTION_ENGINE_VERSION = "2026-06-25-lazy-aux-score-grid-0-5-v3"
+PREDICTION_ENGINE_VERSION = "2026-06-25-draw-incentive-v1"
 
 
 def _host_factor(team_name: str) -> float:
@@ -592,6 +593,30 @@ def _player_context(repo: Repository, match) -> tuple[list[dict], list[str]]:
         row for row in repo.list_current_world_cup_players()
         if any(same_team(str(row.get("team_name") or ""), team) for team in (team_a, team_b))
     ]
+    by_player_team = {
+        (
+            str(row.get("player_name") or ""),
+            canonical_team_name(str(row.get("team_name") or "")),
+        ): row
+        for row in selected
+    }
+    for row in repo.list_deep_goalkeeper_player_profiles((team_a, team_b)):
+        key = (
+            str(row.get("player_name") or ""),
+            canonical_team_name(str(row.get("team_name") or "")),
+        )
+        existing = by_player_team.get(key)
+        if existing is None:
+            enriched = {**row, "provider_id": "reviewed_deep_goalkeeper_stats"}
+            selected.append(enriched)
+            by_player_team[key] = enriched
+            continue
+        for metric in ("save_percentage", "saves", "goals_conceded"):
+            if row.get(metric) is not None:
+                if metric == "save_percentage" and existing.get("bank_save_percentage") is None:
+                    existing["bank_save_percentage"] = existing.get("save_percentage")
+                existing[metric] = row.get(metric)
+                existing["goalkeeper_stats_source"] = "deep"
     context = []
     for row in selected:
         games = max(1, int(row.get("games") or 0))
@@ -1059,6 +1084,7 @@ class MatchVolumeBundle:
     volume_predictions: dict = field(default_factory=dict)
     team_volume_predictions: dict = field(default_factory=dict)
     volume_market_rows: list[dict] = field(default_factory=list)
+    team_volume_stat_rows: list[dict] = field(default_factory=list)
 
 
 @dataclass
@@ -1226,6 +1252,11 @@ def _match_analysis_bundle_cached(
                 corrections = None
         except Exception:
             corrections = None
+    draw_context = draw_incentive_for_match(
+        match,
+        _matches_cached(db_sig),
+        local_results,
+    )
     predictions = predict_match_markets(
         team_a, team_b, results, match.kickoff_utc.date(), calibration_summary,
         player_context=current_players or None,
@@ -1238,6 +1269,8 @@ def _match_analysis_bundle_cached(
         host_factor_b=host_factor_b,
         corrections=corrections,
         precomputed_ratings=ratings_for_match,
+        draw_incentive=draw_context.logit_boost,
+        draw_incentive_note=draw_context.explanation,
     )
     score_only_predictions = predict_match_markets(
         team_a, team_b, results, match.kickoff_utc.date(), calibration_summary,
@@ -1247,6 +1280,8 @@ def _match_analysis_bundle_cached(
         host_factor_b=host_factor_b,
         corrections=corrections,
         precomputed_ratings=ratings_for_match,
+        draw_incentive=draw_context.logit_boost,
+        draw_incentive_note=draw_context.explanation,
     )
     primary = [row for row in predictions if row.market_name == "1X2"]
     exact_score = next(row for row in predictions if row.market_name == "Exact Score")
@@ -1284,6 +1319,69 @@ def _match_analysis_bundle_cached(
         deep_ml_probabilities=deep_ml_probabilities,
         deep_outcome_weight=deep_weight,
     )
+
+
+@st.cache_resource(show_spinner=False)
+def _team_volume_stat_rows_cached(
+    match_id: int,
+    db_sig: tuple[int, int],
+    engine_version: str,
+) -> list[dict]:
+    repo = _repo()
+    match = next(item for item in _matches_cached(db_sig) if item.id == match_id)
+    team_a, team_b = match.team_a.name, match.team_b.name
+    historical_rows = repo.list_historical_rows_before(match.kickoff_utc)
+    historical_results = _historical_rows_to_results(historical_rows)
+    collector_results = _store_cached().list_finished_results(match.kickoff_utc)
+    local_results = repo.list_match_results_before(match.kickoff_utc)
+    keyed_results = {
+        (row.played_on, row.team_a, row.team_b): row
+        for row in historical_results + collector_results + local_results
+    }
+    ratings_for_match = build_team_ratings(
+        list(keyed_results.values()), as_of=match.kickoff_utc.date()
+    )
+    opponent_strengths = {
+        name: (rating.attack + rating.defense) / 2
+        for name, rating in ratings_for_match.items()
+    }
+    from wcpredict.team_profile import build_team_profiles
+    from wcpredict.team_volume_markets import MARKET_CATALOG, predict_team_volume_markets
+
+    team_profiles = build_team_profiles(
+        (team_a, team_b),
+        repo.list_deep_team_metric_observations_before(match.kickoff_utc),
+        match.kickoff_utc,
+        opponent_strengths=opponent_strengths,
+    )
+    team_lines = predict_team_volume_markets(team_profiles[team_a], team_profiles[team_b])
+    team_volume_stat_rows: list[dict] = []
+    if not team_lines:
+        return team_volume_stat_rows
+    expected_by_team_metric: dict[tuple[str, str], dict] = {}
+    for row in team_lines:
+        key = (row.team_name, row.market)
+        if key in expected_by_team_metric:
+            continue
+        expected_by_team_metric[key] = {
+            "expected": row.expected,
+            "confidence": row.confidence,
+            "sample": row.sample_size,
+        }
+    for market_id in MARKET_CATALOG.keys():
+        label = MARKET_CATALOG[market_id]["label"]
+        a = expected_by_team_metric.get((team_a, market_id))
+        b = expected_by_team_metric.get((team_b, market_id))
+        if not a and not b:
+            continue
+        team_volume_stat_rows.append({
+            "Estadística": label,
+            team_a: round(a["expected"], 2) if a else None,
+            team_b: round(b["expected"], 2) if b else None,
+            "Confianza": (a or b)["confidence"],
+            "Muestra": round((a or b)["sample"], 1),
+        })
+    return team_volume_stat_rows
 
 
 @st.cache_resource(show_spinner=False)
@@ -1343,6 +1441,7 @@ def _match_volume_context_cached(
         volume_predictions=volume_predictions,
         team_volume_predictions=team_volume_predictions,
         volume_market_rows=volume_market_rows,
+        team_volume_stat_rows=_team_volume_stat_rows_cached(match_id, db_sig, engine_version),
     )
 
 
@@ -1369,57 +1468,6 @@ def _match_auxiliary_context_cached(
     backtests = repo.list_backtests(match.id)
     volume = _match_volume_context_cached(match_id, db_sig, engine_version)
 
-    historical_rows = repo.list_historical_rows_before(match.kickoff_utc)
-    historical_results = _historical_rows_to_results(historical_rows)
-    collector_results = _store_cached().list_finished_results(match.kickoff_utc)
-    local_results = repo.list_match_results_before(match.kickoff_utc)
-    keyed_results = {
-        (row.played_on, row.team_a, row.team_b): row
-        for row in historical_results + collector_results + local_results
-    }
-    ratings_for_match = build_team_ratings(
-        list(keyed_results.values()), as_of=match.kickoff_utc.date()
-    )
-    opponent_strengths = {
-        name: (rating.attack + rating.defense) / 2
-        for name, rating in ratings_for_match.items()
-    }
-    from wcpredict.team_profile import build_team_profiles
-    from wcpredict.team_volume_markets import MARKET_CATALOG, predict_team_volume_markets
-
-    team_profiles = build_team_profiles(
-        (team_a, team_b),
-        repo.list_deep_team_metric_observations_before(match.kickoff_utc),
-        match.kickoff_utc,
-        opponent_strengths=opponent_strengths,
-    )
-    team_lines = predict_team_volume_markets(team_profiles[team_a], team_profiles[team_b])
-    team_volume_stat_rows: list[dict] = []
-    if team_lines:
-        expected_by_team_metric: dict[tuple[str, str], dict] = {}
-        for row in team_lines:
-            key = (row.team_name, row.market)
-            if key in expected_by_team_metric:
-                continue
-            expected_by_team_metric[key] = {
-                "expected": row.expected,
-                "confidence": row.confidence,
-                "sample": row.sample_size,
-            }
-        for market_id in MARKET_CATALOG.keys():
-            label = MARKET_CATALOG[market_id]["label"]
-            a = expected_by_team_metric.get((team_a, market_id))
-            b = expected_by_team_metric.get((team_b, market_id))
-            if not a and not b:
-                continue
-            team_volume_stat_rows.append({
-                "Estadística": label,
-                team_a: round(a["expected"], 2) if a else None,
-                team_b: round(b["expected"], 2) if b else None,
-                "Confianza": (a or b)["confidence"],
-                "Muestra": round((a or b)["sample"], 1),
-            })
-
     goalkeeper_rows = repo.list_deep_goalkeeper_rows_before(match.kickoff_utc)
     goalkeeper_baselines = {
         team_a: build_goalkeeper_baseline(team_a, goalkeeper_rows, match.kickoff_utc),
@@ -1432,7 +1480,7 @@ def _match_auxiliary_context_cached(
         volume_predictions=volume.volume_predictions,
         team_volume_predictions=volume.team_volume_predictions,
         volume_market_rows=volume.volume_market_rows,
-        team_volume_stat_rows=team_volume_stat_rows,
+        team_volume_stat_rows=volume.team_volume_stat_rows,
         goalkeeper_baselines=goalkeeper_baselines,
     )
 
@@ -1818,6 +1866,10 @@ def _bracket_card_html(slot: dict, theme: dict) -> str:
     kickoff_date = slot["kickoff_utc"][:10]
     venue = slot.get("venue") or ""
     venue_html = f"<span class='bk-venue'>📍 {venue}</span>" if venue else ""
+    match_id = slot.get("match_id")
+    href = f"?page=lab&match_id={int(match_id)}" if match_id else ""
+    open_tag = f"<a class='bk-card-link' href='{href}'>" if href else ""
+    close_tag = "</a>" if href else ""
 
     def team_cell(name: str, pending: bool) -> str:
         if pending:
@@ -1829,7 +1881,7 @@ def _bracket_card_html(slot: dict, theme: dict) -> str:
         return f"<div class='bk-team'>{team_with_crest_html(name, size=20)}</div>"
 
     return (
-        f"<div class='bk-card bk-{theme['tone']}'>"
+        f"{open_tag}<div class='bk-card bk-{theme['tone']}'>"
         f"<div class='bk-card-head'>"
         f"<span class='bk-slot'>{slot['slot_id']}</span>"
         f"<span class='bk-date'>{kickoff_date}</span>"
@@ -1838,7 +1890,7 @@ def _bracket_card_html(slot: dict, theme: dict) -> str:
         f"{team_cell(slot['home'], slot['home_pending'])}"
         f"<div class='bk-vs'>VS</div>"
         f"{team_cell(slot['away'], slot['away_pending'])}"
-        f"</div>"
+        f"</div>{close_tag}"
     )
 
 
@@ -2376,7 +2428,8 @@ def render_prediction_lab() -> None:
                         save_pct = row.get("save_percentage")
                         base.update({
                             "Save %": round(float(save_pct), 1) if save_pct is not None else None,
-                            "Atajadas": row.get("tackles_won") or 0,
+                            "Paradas": int(row.get("saves") or 0),
+                            "GC": int(row.get("goals_conceded") or 0),
                             "Intercepciones": row.get("interceptions") or 0,
                             "Pases": int(row.get("passes") or 0),
                             "Amarillas": int(row.get("yellow_cards") or 0),
@@ -2481,7 +2534,9 @@ def render_prediction_lab() -> None:
                     )
                 if family in GOALKEEPER_MARKETS:
                     baseline = auxiliary.goalkeeper_baselines.get(team_name)
-                    bank_save_pct = (float(player_row.get("save_percentage") or 0)) / 100.0
+                    bank_save_pct = (
+                        float(player_row.get("bank_save_percentage") or player_row.get("save_percentage") or 0)
+                    ) / 100.0
                     save_override = None
                     if baseline and baseline.save_rate is not None and baseline.sample_matches >= 1:
                         # Sample-weighted blend: with 1 deep match the blend is

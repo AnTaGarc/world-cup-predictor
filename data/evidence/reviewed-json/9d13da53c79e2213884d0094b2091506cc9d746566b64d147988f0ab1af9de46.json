@@ -1,0 +1,307 @@
+{
+  "numero_de_partidos": 1,
+  "partidos": [
+    {
+      "id": "sudafrica_corea_del_sur",
+      "nombre": "Sudáfrica vs Corea del Sur",
+      "equipos": {
+        "izquierda_verde": "Sudáfrica",
+        "derecha_azul": "Corea del Sur"
+      },
+      "estadisticas": {
+        "resumen_del_partido": {
+          "posesion_de_balon_pct": {
+            "Sudáfrica": 32,
+            "Corea del Sur": 68
+          },
+          "distancia_recorrida_km": {
+            "Sudáfrica": null,
+            "Corea del Sur": null,
+            "estado_dato": "No mostrado en la captura"
+          },
+          "goles_esperados_xg": {
+            "Sudáfrica": 1.1,
+            "Corea del Sur": 1.0
+          },
+          "ocasiones_claras": {
+            "Sudáfrica": 1,
+            "Corea del Sur": 1
+          },
+          "tiros_totales": {
+            "Sudáfrica": 13,
+            "Corea del Sur": 8
+          },
+          "paradas": {
+            "Sudáfrica": 2,
+            "Corea del Sur": 3
+          },
+          "numero_de_sprints": {
+            "Sudáfrica": null,
+            "Corea del Sur": null,
+            "estado_dato": "No mostrado en la captura"
+          },
+          "saques_de_esquina": {
+            "Sudáfrica": 4,
+            "Corea del Sur": 6
+          },
+          "faltas": {
+            "Sudáfrica": 7,
+            "Corea del Sur": 9
+          },
+          "pases": {
+            "Sudáfrica": 338,
+            "Corea del Sur": 720
+          },
+          "entradas": {
+            "Sudáfrica": 11,
+            "Corea del Sur": 12
+          },
+          "tiros_libres": {
+            "Sudáfrica": 9,
+            "Corea del Sur": 7
+          },
+          "tarjetas_amarillas": {
+            "Sudáfrica": 1,
+            "Corea del Sur": 1
+          },
+          "tarjetas_rojas": {
+            "Sudáfrica": null,
+            "Corea del Sur": null,
+            "estado_dato": "No mostrado en la captura"
+          }
+        },
+        "tiros": {
+          "tiros_totales": {
+            "Sudáfrica": 13,
+            "Corea del Sur": 8
+          },
+          "tiros_a_puerta": {
+            "Sudáfrica": 4,
+            "Corea del Sur": 3
+          },
+          "tiros_al_palo": {
+            "Sudáfrica": 0,
+            "Corea del Sur": 0
+          },
+          "tiros_fuera": {
+            "Sudáfrica": 5,
+            "Corea del Sur": 4
+          },
+          "tiros_bloqueados": {
+            "Sudáfrica": 4,
+            "Corea del Sur": 1
+          },
+          "tiros_dentro_del_area_penal": {
+            "Sudáfrica": 5,
+            "Corea del Sur": 5
+          },
+          "tiros_fuera_del_area": {
+            "Sudáfrica": 8,
+            "Corea del Sur": 3
+          }
+        },
+        "ataque": {
+          "ocasiones_claras_realizadas": {
+            "Sudáfrica": 0,
+            "Corea del Sur": 0,
+            "origen_dato": "Derivado como ocasiones claras menos ocasiones claras falladas"
+          },
+          "ocasiones_claras_falladas": {
+            "Sudáfrica": 1,
+            "Corea del Sur": 1
+          },
+          "pases_en_profundidad": {
+            "Sudáfrica": 1,
+            "Corea del Sur": 1
+          },
+          "toques_dentro_del_area": {
+            "Sudáfrica": 12,
+            "Corea del Sur": 20
+          },
+          "faltas_recibidas_en_el_tercio_final": {
+            "Sudáfrica": 2,
+            "Corea del Sur": 1
+          },
+          "fueras_de_juego": {
+            "Sudáfrica": 3,
+            "Corea del Sur": 0
+          }
+        },
+        "mapa_de_ataques": {
+          "equipo_mostrado": "Sudáfrica",
+          "direccion_de_ataque": "izquierda_a_derecha",
+          "tipo_de_dato": "mapa_de_intensidad_sin_valores_numericos"
+        },
+        "mapa_de_pases": {
+          "equipo_mostrado": "Sudáfrica",
+          "descripcion": "Distribución porcentual de los pases según la zona del campo.",
+          "direccion_de_ataque": "izquierda_a_derecha",
+          "distribucion_por_zonas_del_campo_pct": {
+            "tercio_defensivo": 34,
+            "tercio_central": 44,
+            "tercio_ofensivo": 22
+          }
+        },
+        "duelos": {
+          "duelos_ganados_pct_del_total": {
+            "Sudáfrica": 48,
+            "Corea del Sur": 52
+          },
+          "perdidas": {
+            "Sudáfrica": 5,
+            "Corea del Sur": 5
+          },
+          "duelos_en_el_suelo": {
+            "Sudáfrica": {
+              "ganados": 27,
+              "total_mostrado": 53,
+              "porcentaje": 51
+            },
+            "Corea del Sur": {
+              "ganados": 26,
+              "total_mostrado": 53,
+              "porcentaje": 49
+            }
+          },
+          "duelos_aereos": {
+            "Sudáfrica": {
+              "ganados": 16,
+              "total_mostrado": 36,
+              "porcentaje": 44
+            },
+            "Corea del Sur": {
+              "ganados": 20,
+              "total_mostrado": 36,
+              "porcentaje": 56
+            }
+          },
+          "regates": {
+            "Sudáfrica": {
+              "completados": 7,
+              "intentados": 14,
+              "porcentaje": 50
+            },
+            "Corea del Sur": {
+              "completados": 7,
+              "intentados": 13,
+              "porcentaje": 54
+            }
+          }
+        },
+        "pases": {
+          "pases_precisos": {
+            "Sudáfrica": 277,
+            "Corea del Sur": 643
+          },
+          "saques_de_banda": {
+            "Sudáfrica": 8,
+            "Corea del Sur": 24
+          },
+          "pases_al_ultimo_tercio": {
+            "Sudáfrica": 39,
+            "Corea del Sur": 81
+          },
+          "pases_en_el_ultimo_tercio": {
+            "Sudáfrica": {
+              "completados": 37,
+              "intentados": 67,
+              "porcentaje": 55
+            },
+            "Corea del Sur": {
+              "completados": 161,
+              "intentados": 202,
+              "porcentaje": 80
+            }
+          },
+          "pases_largos": {
+            "Sudáfrica": {
+              "completados": 19,
+              "intentados": 55,
+              "porcentaje": 35
+            },
+            "Corea del Sur": {
+              "completados": 31,
+              "intentados": 55,
+              "porcentaje": 56
+            }
+          },
+          "centros": {
+            "Sudáfrica": {
+              "completados": 1,
+              "intentados": 8,
+              "porcentaje": 13
+            },
+            "Corea del Sur": {
+              "completados": 7,
+              "intentados": 33,
+              "porcentaje": 21
+            }
+          }
+        },
+        "defensa": {
+          "entradas_ganadas_pct": {
+            "Sudáfrica": 55,
+            "Corea del Sur": 75
+          },
+          "tackles_totales": {
+            "Sudáfrica": 11,
+            "Corea del Sur": 12
+          },
+          "intercepciones": {
+            "Sudáfrica": 15,
+            "Corea del Sur": 4
+          },
+          "recuperaciones": {
+            "Sudáfrica": 48,
+            "Corea del Sur": 42
+          },
+          "despejes": {
+            "Sudáfrica": 42,
+            "Corea del Sur": 15
+          },
+          "errores_que_llevan_a_disparo": {
+            "Sudáfrica": 0,
+            "Corea del Sur": 1
+          },
+          "errores_que_llevan_a_gol": {
+            "Sudáfrica": null,
+            "Corea del Sur": null,
+            "estado_dato": "No mostrado en la captura"
+          }
+        },
+        "porteria": {
+          "paradas": {
+            "Sudáfrica": 2,
+            "Corea del Sur": 3
+          },
+          "goles_evitados": {
+            "Sudáfrica": 1.42,
+            "Corea del Sur": -0.61
+          },
+          "grandes_paradas": {
+            "Sudáfrica": null,
+            "Corea del Sur": null,
+            "estado_dato": "No mostrado en la captura"
+          },
+          "despejes_por_alto": {
+            "Sudáfrica": 0,
+            "Corea del Sur": 1
+          },
+          "con_los_punos": {
+            "Sudáfrica": 1,
+            "Corea del Sur": 0
+          },
+          "saques_de_puerta": {
+            "Sudáfrica": 12,
+            "Corea del Sur": 5
+          }
+        }
+      },
+      "fuentes": [
+        "Captura de pantalla 2026-06-25 074236.png",
+        "Captura de pantalla 2026-06-25 074252.png",
+        "Captura de pantalla 2026-06-25 074305.png"
+      ]
+    }
+  ]
+}

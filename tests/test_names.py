@@ -14,6 +14,10 @@ class TeamNameTests(unittest.TestCase):
             "Bosnia and Herzegovina",
             canonical_team_name("Bosnia & Herzegovina"),
         )
+        self.assertEqual(
+            "Bosnia and Herzegovina",
+            canonical_team_name("Bosnia y Herzegovina"),
+        )
 
     def test_matching_ignores_accents_and_provider_aliases(self):
         self.assertTrue(same_team("México", "Mexico"))

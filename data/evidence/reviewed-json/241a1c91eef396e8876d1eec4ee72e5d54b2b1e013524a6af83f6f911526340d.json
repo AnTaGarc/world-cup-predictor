@@ -1,0 +1,306 @@
+{
+  "numero_de_partidos": 1,
+  "partidos": [
+    {
+      "id": "marruecos_haiti",
+      "nombre": "Marruecos vs Haití",
+      "equipos": {
+        "izquierda_verde": "Marruecos",
+        "derecha_azul": "Haití"
+      },
+      "estadisticas": {
+        "resumen_del_partido": {
+          "posesion_de_balon_pct": {
+            "Marruecos": 69,
+            "Haití": 31
+          },
+          "distancia_recorrida_km": {
+            "Marruecos": null,
+            "Haití": null,
+            "estado_dato": "No mostrado en la captura"
+          },
+          "goles_esperados_xg": {
+            "Marruecos": 3.76,
+            "Haití": 0.67
+          },
+          "ocasiones_claras": {
+            "Marruecos": 5,
+            "Haití": 1
+          },
+          "tiros_totales": {
+            "Marruecos": 22,
+            "Haití": 9
+          },
+          "paradas": {
+            "Marruecos": 1,
+            "Haití": 8
+          },
+          "numero_de_sprints": {
+            "Marruecos": null,
+            "Haití": null,
+            "estado_dato": "No mostrado en la captura"
+          },
+          "saques_de_esquina": {
+            "Marruecos": 9,
+            "Haití": 1
+          },
+          "faltas": {
+            "Marruecos": 10,
+            "Haití": 18
+          },
+          "pases": {
+            "Marruecos": 541,
+            "Haití": 247
+          },
+          "entradas": {
+            "Marruecos": 20,
+            "Haití": 25
+          },
+          "tiros_libres": {
+            "Marruecos": 18,
+            "Haití": 10
+          },
+          "tarjetas_amarillas": {
+            "Marruecos": 0,
+            "Haití": 3
+          },
+          "tarjetas_rojas": {
+            "Marruecos": null,
+            "Haití": null,
+            "estado_dato": "No mostrado en la captura"
+          }
+        },
+        "tiros": {
+          "tiros_totales": {
+            "Marruecos": 22,
+            "Haití": 9
+          },
+          "tiros_a_puerta": {
+            "Marruecos": 11,
+            "Haití": 2
+          },
+          "tiros_al_palo": {
+            "Marruecos": 0,
+            "Haití": 0
+          },
+          "tiros_fuera": {
+            "Marruecos": 6,
+            "Haití": 4
+          },
+          "tiros_bloqueados": {
+            "Marruecos": 5,
+            "Haití": 3
+          },
+          "tiros_dentro_del_area_penal": {
+            "Marruecos": 15,
+            "Haití": 4
+          },
+          "tiros_fuera_del_area": {
+            "Marruecos": 7,
+            "Haití": 5
+          }
+        },
+        "ataque": {
+          "ocasiones_claras_realizadas": {
+            "Marruecos": 3,
+            "Haití": 0
+          },
+          "ocasiones_claras_falladas": {
+            "Marruecos": 2,
+            "Haití": 1
+          },
+          "pases_en_profundidad": {
+            "Marruecos": null,
+            "Haití": null,
+            "estado_dato": "No mostrado en la captura"
+          },
+          "toques_dentro_del_area": {
+            "Marruecos": 45,
+            "Haití": 9
+          },
+          "faltas_recibidas_en_el_tercio_final": {
+            "Marruecos": 3,
+            "Haití": 3
+          },
+          "fueras_de_juego": {
+            "Marruecos": 5,
+            "Haití": 0
+          }
+        },
+        "mapa_de_ataques": {
+          "equipo_mostrado": "Marruecos",
+          "direccion_de_ataque": "izquierda_a_derecha",
+          "tipo_de_dato": "mapa_de_intensidad_sin_valores_numericos"
+        },
+        "mapa_de_pases": {
+          "equipo_mostrado": "Marruecos",
+          "descripcion": "Distribución porcentual de los pases según la zona del campo.",
+          "direccion_de_ataque": "izquierda_a_derecha",
+          "distribucion_por_zonas_del_campo_pct": {
+            "tercio_defensivo": 20,
+            "tercio_central": 45,
+            "tercio_ofensivo": 35
+          }
+        },
+        "duelos": {
+          "duelos_ganados_pct_del_total": {
+            "Marruecos": 54,
+            "Haití": 46
+          },
+          "perdidas": {
+            "Marruecos": 12,
+            "Haití": 11
+          },
+          "duelos_en_el_suelo": {
+            "Marruecos": {
+              "ganados": 54,
+              "total_mostrado": 100,
+              "porcentaje": 54
+            },
+            "Haití": {
+              "ganados": 46,
+              "total_mostrado": 100,
+              "porcentaje": 46
+            }
+          },
+          "duelos_aereos": {
+            "Marruecos": {
+              "ganados": 12,
+              "total_mostrado": 22,
+              "porcentaje": 55
+            },
+            "Haití": {
+              "ganados": 10,
+              "total_mostrado": 22,
+              "porcentaje": 45
+            }
+          },
+          "regates": {
+            "Marruecos": {
+              "completados": 16,
+              "intentados": 29,
+              "porcentaje": 55
+            },
+            "Haití": {
+              "completados": 11,
+              "intentados": 20,
+              "porcentaje": 55
+            }
+          }
+        },
+        "pases": {
+          "pases_precisos": {
+            "Marruecos": 477,
+            "Haití": 198
+          },
+          "saques_de_banda": {
+            "Marruecos": 25,
+            "Haití": 15
+          },
+          "pases_al_ultimo_tercio": {
+            "Marruecos": 43,
+            "Haití": 24
+          },
+          "pases_en_el_ultimo_tercio": {
+            "Marruecos": {
+              "completados": 120,
+              "intentados": 159,
+              "porcentaje": 75
+            },
+            "Haití": {
+              "completados": 20,
+              "intentados": 39,
+              "porcentaje": 51
+            }
+          },
+          "pases_largos": {
+            "Marruecos": {
+              "completados": 17,
+              "intentados": 34,
+              "porcentaje": 50
+            },
+            "Haití": {
+              "completados": 21,
+              "intentados": 44,
+              "porcentaje": 48
+            }
+          },
+          "centros": {
+            "Marruecos": {
+              "completados": 7,
+              "intentados": 22,
+              "porcentaje": 32
+            },
+            "Haití": {
+              "completados": 2,
+              "intentados": 3,
+              "porcentaje": 67
+            }
+          }
+        },
+        "defensa": {
+          "entradas_ganadas_pct": {
+            "Marruecos": 40,
+            "Haití": 48
+          },
+          "tackles_totales": {
+            "Marruecos": 20,
+            "Haití": 25
+          },
+          "intercepciones": {
+            "Marruecos": 8,
+            "Haití": 16
+          },
+          "recuperaciones": {
+            "Marruecos": 41,
+            "Haití": 35
+          },
+          "despejes": {
+            "Marruecos": 14,
+            "Haití": 26
+          },
+          "errores_que_llevan_a_disparo": {
+            "Marruecos": 0,
+            "Haití": 1
+          },
+          "errores_que_llevan_a_gol": {
+            "Marruecos": 0,
+            "Haití": 1
+          }
+        },
+        "porteria": {
+          "paradas": {
+            "Marruecos": 1,
+            "Haití": 8
+          },
+          "goles_evitados": {
+            "Marruecos": -1.51,
+            "Haití": -0.18
+          },
+          "grandes_paradas": {
+            "Marruecos": 1,
+            "Haití": 1
+          },
+          "despejes_por_alto": {
+            "Marruecos": 0,
+            "Haití": 1
+          },
+          "con_los_punos": {
+            "Marruecos": null,
+            "Haití": null,
+            "estado_dato": "No mostrado en la captura"
+          },
+          "saques_de_puerta": {
+            "Marruecos": 3,
+            "Haití": 8
+          }
+        }
+      },
+      "fuentes": [
+        "Captura de pantalla 2026-06-25 073439.png",
+        "Captura de pantalla 2026-06-25 073459.png",
+        "Captura de pantalla 2026-06-25 073523.png"
+      ]
+    }
+  ]
+}

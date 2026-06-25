@@ -67,6 +67,45 @@ class ServiceTests(unittest.TestCase):
         self.assertIn("1-1", top_three)
         self.assertLess(exact_score.probability, home.probability)
 
+    def test_exact_score_top_three_reserves_high_tail_for_clear_favorites(self):
+        today = date(2026, 6, 19)
+        predictions = predict_match_markets(
+            "Brazil", "Haiti", [], today,
+            outcome_probabilities={"home": 0.90, "draw": 0.05, "away": 0.05},
+        )
+
+        exact_score = next(row for row in predictions if row.market_name == "Exact Score")
+        alt_scores = [row.selection_name.split(" ")[0] for row in predictions if row.market_name == "Exact Score (alt)"]
+        top_three = [exact_score.selection_name, *alt_scores[:2]]
+
+        self.assertTrue(
+            any(
+                int(score.split("-")[0]) > int(score.split("-")[1])
+                and sum(int(value) for value in score.split("-")) >= 4
+                for score in top_three
+            )
+        )
+
+    def test_draw_incentive_lifts_draw_without_breaking_normalization(self):
+        today = date(2026, 6, 19)
+        baseline = predict_match_markets(
+            "Alpha", "Bravo", [], today,
+            outcome_probabilities={"home": 0.46, "draw": 0.25, "away": 0.29},
+        )
+        adjusted = predict_match_markets(
+            "Alpha", "Bravo", [], today,
+            outcome_probabilities={"home": 0.46, "draw": 0.25, "away": 0.29},
+            draw_incentive=0.22,
+            draw_incentive_note="Empate clasifica a ambos equipos.",
+        )
+
+        base_draw = next(row for row in baseline if row.market_name == "1X2" and row.selection_name == "Draw")
+        adjusted_draw = next(row for row in adjusted if row.market_name == "1X2" and row.selection_name == "Draw")
+
+        self.assertGreater(adjusted_draw.probability, base_draw.probability)
+        self.assertAlmostEqual(sum(row.probability for row in adjusted if row.market_name == "1X2"), 1.0, places=6)
+        self.assertIn("Empate clasifica", adjusted_draw.explanation)
+
     def test_unified_1x2_applies_host_and_deep_process_to_outcome_model(self):
         today = date(2026, 6, 19)
         baseline = predict_match_markets(

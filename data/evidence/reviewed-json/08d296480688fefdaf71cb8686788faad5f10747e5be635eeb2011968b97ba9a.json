@@ -1,0 +1,308 @@
+{
+  "numero_de_partidos": 1,
+  "partidos": [
+    {
+      "id": "bosnia_herzegovina_qatar",
+      "nombre": "Bosnia y Herzegovina vs Qatar",
+      "equipos": {
+        "izquierda_verde": "Bosnia y Herzegovina",
+        "derecha_azul": "Qatar"
+      },
+      "estadisticas": {
+        "resumen_del_partido": {
+          "posesion_de_balon_pct": {
+            "Bosnia y Herzegovina": 54,
+            "Qatar": 46
+          },
+          "distancia_recorrida_km": {
+            "Bosnia y Herzegovina": null,
+            "Qatar": null,
+            "estado_dato": "No mostrado en la captura"
+          },
+          "goles_esperados_xg": {
+            "Bosnia y Herzegovina": 0.68,
+            "Qatar": 0.77
+          },
+          "ocasiones_claras": {
+            "Bosnia y Herzegovina": 1,
+            "Qatar": 3
+          },
+          "tiros_totales": {
+            "Bosnia y Herzegovina": 14,
+            "Qatar": 9
+          },
+          "paradas": {
+            "Bosnia y Herzegovina": 2,
+            "Qatar": 3
+          },
+          "numero_de_sprints": {
+            "Bosnia y Herzegovina": null,
+            "Qatar": null,
+            "estado_dato": "No mostrado en la captura"
+          },
+          "saques_de_esquina": {
+            "Bosnia y Herzegovina": 5,
+            "Qatar": 5
+          },
+          "faltas": {
+            "Bosnia y Herzegovina": 9,
+            "Qatar": 14
+          },
+          "pases": {
+            "Bosnia y Herzegovina": 515,
+            "Qatar": 434
+          },
+          "entradas": {
+            "Bosnia y Herzegovina": 10,
+            "Qatar": 13
+          },
+          "tiros_libres": {
+            "Bosnia y Herzegovina": 14,
+            "Qatar": 9
+          },
+          "tarjetas_amarillas": {
+            "Bosnia y Herzegovina": 1,
+            "Qatar": 1
+          },
+          "tarjetas_rojas": {
+            "Bosnia y Herzegovina": null,
+            "Qatar": null,
+            "estado_dato": "No mostrado en la captura"
+          }
+        },
+        "tiros": {
+          "tiros_totales": {
+            "Bosnia y Herzegovina": 14,
+            "Qatar": 9
+          },
+          "tiros_a_puerta": {
+            "Bosnia y Herzegovina": 5,
+            "Qatar": 3
+          },
+          "tiros_al_palo": {
+            "Bosnia y Herzegovina": 1,
+            "Qatar": 1
+          },
+          "tiros_fuera": {
+            "Bosnia y Herzegovina": 4,
+            "Qatar": 6
+          },
+          "tiros_bloqueados": {
+            "Bosnia y Herzegovina": 5,
+            "Qatar": 0
+          },
+          "tiros_dentro_del_area_penal": {
+            "Bosnia y Herzegovina": 4,
+            "Qatar": 5
+          },
+          "tiros_fuera_del_area": {
+            "Bosnia y Herzegovina": 10,
+            "Qatar": 4
+          }
+        },
+        "ataque": {
+          "ocasiones_claras_realizadas": {
+            "Bosnia y Herzegovina": 0,
+            "Qatar": 1
+          },
+          "ocasiones_claras_falladas": {
+            "Bosnia y Herzegovina": 1,
+            "Qatar": 2
+          },
+          "pases_en_profundidad": {
+            "Bosnia y Herzegovina": 2,
+            "Qatar": 0
+          },
+          "toques_dentro_del_area": {
+            "Bosnia y Herzegovina": 20,
+            "Qatar": 16
+          },
+          "faltas_recibidas_en_el_tercio_final": {
+            "Bosnia y Herzegovina": 4,
+            "Qatar": 1
+          },
+          "fueras_de_juego": {
+            "Bosnia y Herzegovina": 1,
+            "Qatar": 3
+          }
+        },
+        "mapa_de_ataques": {
+          "equipo_mostrado": "Bosnia y Herzegovina",
+          "direccion_de_ataque": "izquierda_a_derecha",
+          "tipo_de_dato": "mapa_de_intensidad_sin_valores_numericos"
+        },
+        "mapa_de_pases": {
+          "equipo_mostrado": "Bosnia y Herzegovina",
+          "descripcion": "Distribución porcentual de los pases según la zona del campo.",
+          "direccion_de_ataque": "izquierda_a_derecha",
+          "distribucion_por_zonas_del_campo_pct": {
+            "tercio_defensivo": 25,
+            "tercio_central": 47,
+            "tercio_ofensivo": 28
+          }
+        },
+        "duelos": {
+          "duelos_ganados_pct_del_total": {
+            "Bosnia y Herzegovina": 60,
+            "Qatar": 40
+          },
+          "perdidas": {
+            "Bosnia y Herzegovina": 8,
+            "Qatar": 6
+          },
+          "duelos_en_el_suelo": {
+            "Bosnia y Herzegovina": {
+              "ganados": 32,
+              "total_mostrado": 56,
+              "porcentaje": 57
+            },
+            "Qatar": {
+              "ganados": 24,
+              "total_mostrado": 56,
+              "porcentaje": 43
+            }
+          },
+          "duelos_aereos": {
+            "Bosnia y Herzegovina": {
+              "ganados": 10,
+              "total_mostrado": 14,
+              "porcentaje": 71
+            },
+            "Qatar": {
+              "ganados": 4,
+              "total_mostrado": 14,
+              "porcentaje": 29
+            }
+          },
+          "regates": {
+            "Bosnia y Herzegovina": {
+              "completados": 8,
+              "intentados": 13,
+              "porcentaje": 62
+            },
+            "Qatar": {
+              "completados": 3,
+              "intentados": 7,
+              "porcentaje": 43
+            }
+          }
+        },
+        "pases": {
+          "pases_precisos": {
+            "Bosnia y Herzegovina": 452,
+            "Qatar": 371
+          },
+          "saques_de_banda": {
+            "Bosnia y Herzegovina": 12,
+            "Qatar": 18
+          },
+          "pases_al_ultimo_tercio": {
+            "Bosnia y Herzegovina": 45,
+            "Qatar": 47
+          },
+          "pases_en_el_ultimo_tercio": {
+            "Bosnia y Herzegovina": {
+              "completados": 69,
+              "intentados": 98,
+              "porcentaje": 70
+            },
+            "Qatar": {
+              "completados": 75,
+              "intentados": 105,
+              "porcentaje": 71
+            }
+          },
+          "pases_largos": {
+            "Bosnia y Herzegovina": {
+              "completados": 30,
+              "intentados": 50,
+              "porcentaje": 60
+            },
+            "Qatar": {
+              "completados": 16,
+              "intentados": 52,
+              "porcentaje": 31
+            }
+          },
+          "centros": {
+            "Bosnia y Herzegovina": {
+              "completados": 3,
+              "intentados": 22,
+              "porcentaje": 14
+            },
+            "Qatar": {
+              "completados": 5,
+              "intentados": 17,
+              "porcentaje": 29
+            }
+          }
+        },
+        "defensa": {
+          "entradas_ganadas_pct": {
+            "Bosnia y Herzegovina": 90,
+            "Qatar": 38
+          },
+          "tackles_totales": {
+            "Bosnia y Herzegovina": 10,
+            "Qatar": 13
+          },
+          "intercepciones": {
+            "Bosnia y Herzegovina": 4,
+            "Qatar": 4
+          },
+          "recuperaciones": {
+            "Bosnia y Herzegovina": 40,
+            "Qatar": 34
+          },
+          "despejes": {
+            "Bosnia y Herzegovina": 22,
+            "Qatar": 24
+          },
+          "errores_que_llevan_a_disparo": {
+            "Bosnia y Herzegovina": null,
+            "Qatar": null,
+            "estado_dato": "No mostrado en la captura"
+          },
+          "errores_que_llevan_a_gol": {
+            "Bosnia y Herzegovina": null,
+            "Qatar": null,
+            "estado_dato": "No mostrado en la captura"
+          }
+        },
+        "porteria": {
+          "paradas": {
+            "Bosnia y Herzegovina": 2,
+            "Qatar": 3
+          },
+          "goles_evitados": {
+            "Bosnia y Herzegovina": 0.14,
+            "Qatar": -2.04
+          },
+          "grandes_paradas": {
+            "Bosnia y Herzegovina": 0,
+            "Qatar": 2
+          },
+          "despejes_por_alto": {
+            "Bosnia y Herzegovina": null,
+            "Qatar": null,
+            "estado_dato": "No mostrado en la captura"
+          },
+          "con_los_punos": {
+            "Bosnia y Herzegovina": null,
+            "Qatar": null,
+            "estado_dato": "No mostrado en la captura"
+          },
+          "saques_de_puerta": {
+            "Bosnia y Herzegovina": 8,
+            "Qatar": 9
+          }
+        }
+      },
+      "fuentes": [
+        "Captura de pantalla 2026-06-25 072822.png",
+        "Captura de pantalla 2026-06-25 072837.png",
+        "Captura de pantalla 2026-06-25 072852.png"
+      ]
+    }
+  ]
+}

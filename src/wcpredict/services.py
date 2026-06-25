@@ -41,6 +41,12 @@ DEFAULT_BASE_GOALS_PER_TEAM = 1.55
 # the high-20s range, closer to the observed 32.5%.
 DEFAULT_DIXON_COLES_RHO = -0.16
 DEFAULT_NB_DISPERSION = 0.08
+# Used only to diversify the displayed exact-score candidates in high-total,
+# clear-favorite matches. It does not feed the 1X2, O/U, BTTS or EV markets.
+EXACT_SCORE_HIGH_TAIL_DISPERSION = 0.18
+EXACT_SCORE_HIGH_TAIL_TOTAL_THRESHOLD = 2.60
+EXACT_SCORE_HIGH_TAIL_FAVORITE_THRESHOLD = 0.58
+EXACT_SCORE_HIGH_TAIL_MIN_GOALS = 4
 # Exact-score reading is noisier than 1X2. Keep the 1X2/EV markets fully
 # aligned with the unified model, but only partially align scorelines so the
 # top-3 preserves the goal-process distribution instead of over-following ML.
@@ -82,6 +88,19 @@ def _tilt_home_away(probabilities: dict[str, float], logit_delta: float) -> dict
             "home": base["home"] * math.exp(logit_delta),
             "draw": base["draw"],
             "away": base["away"] * math.exp(-logit_delta),
+        }
+    )
+
+
+def _boost_draw(probabilities: dict[str, float], logit_delta: float) -> dict[str, float]:
+    base = _normalize_1x2(probabilities)
+    if logit_delta <= 0.0:
+        return base
+    return _normalize_1x2(
+        {
+            "home": base["home"],
+            "draw": base["draw"] * math.exp(logit_delta),
+            "away": base["away"],
         }
     )
 
@@ -152,6 +171,62 @@ def _top_n_aligned_scores(
     ]
 
 
+def _score_outcome(a_goals: int, b_goals: int) -> str:
+    if a_goals > b_goals:
+        return "home"
+    if b_goals > a_goals:
+        return "away"
+    return "draw"
+
+
+def _top_scores_with_high_tail_cover(
+    primary_scores: list[ExactScore],
+    tail_matrix: list[list[float]],
+    target_1x2: dict[str, float],
+    favorite_1x2: dict[str, float],
+    expected_total: float,
+    n: int = 4,
+) -> list[ExactScore]:
+    if len(primary_scores) < 3 or expected_total < EXACT_SCORE_HIGH_TAIL_TOTAL_THRESHOLD:
+        return primary_scores[:n]
+    favorite = max(favorite_1x2, key=favorite_1x2.get)
+    if favorite == "draw" or favorite_1x2[favorite] < EXACT_SCORE_HIGH_TAIL_FAVORITE_THRESHOLD:
+        return primary_scores[:n]
+
+    tail_summary = summarize_score_matrix(tail_matrix, total_line=2.5)
+    tail_source_1x2 = {
+        "home": tail_summary.team_a_win,
+        "draw": tail_summary.draw,
+        "away": tail_summary.team_b_win,
+    }
+    tail_candidates = _top_n_aligned_scores(tail_matrix, tail_source_1x2, target_1x2, n=24)
+    used = {(score.team_a_goals, score.team_b_goals) for score in primary_scores}
+    tail_score = next(
+        (
+            score for score in tail_candidates
+            if (score.team_a_goals, score.team_b_goals) not in used
+            and _score_outcome(score.team_a_goals, score.team_b_goals) == favorite
+            and score.team_a_goals + score.team_b_goals >= EXACT_SCORE_HIGH_TAIL_MIN_GOALS
+        ),
+        None,
+    )
+    if tail_score is None:
+        return primary_scores[:n]
+
+    output = primary_scores[:n]
+    output[2] = tail_score
+    deduped: list[ExactScore] = []
+    seen: set[tuple[int, int]] = set()
+    for score in output + primary_scores:
+        key = (score.team_a_goals, score.team_b_goals)
+        if key not in seen:
+            deduped.append(score)
+            seen.add(key)
+        if len(deduped) == n:
+            break
+    return deduped
+
+
 def _aligned_expected_score(
     matrix: list[list[float]],
     source_1x2: dict[str, float],
@@ -181,6 +256,8 @@ def predict_match_markets(
     host_factor_b: float = 1.0,
     corrections: ModelCorrections | None = None,
     precomputed_ratings: dict | None = None,
+    draw_incentive: float = 0.0,
+    draw_incentive_note: str = "",
 ) -> list[MarketPrediction]:
     ratings = precomputed_ratings or build_team_ratings(results, as_of=as_of)
     xg_a, xg_b = expected_goals_for_match(
@@ -233,6 +310,7 @@ def predict_match_markets(
     unified_note = ""
     final_matrix = matrix
     scoreline_matrix = matrix
+    scoreline_target_1x2 = score_1x2
     if outcome_probabilities is not None:
         ml_1x2 = _normalize_1x2(outcome_probabilities)
         process_delta = 0.0
@@ -280,10 +358,43 @@ def predict_match_markets(
             )
             for key in ("home", "draw", "away")
         })
+        scoreline_target_1x2 = scoreline_1x2
         scoreline_matrix = _score_matrix_aligned_to_1x2(matrix, score_1x2, scoreline_1x2)
 
+    if draw_incentive > 0.0:
+        unified_1x2 = _boost_draw(unified_1x2, draw_incentive)
+        unified_note += (
+            " Incentivo contextual al empate aplicado por estado de grupo"
+            f" (+{draw_incentive:.2f} logit)."
+            + (f" {draw_incentive_note}" if draw_incentive_note else "")
+        )
+        final_matrix = _score_matrix_aligned_to_1x2(matrix, score_1x2, unified_1x2)
+        scoreline_target_1x2 = _normalize_1x2({
+            key: (
+                SCORELINE_OUTCOME_ALIGNMENT_WEIGHT * unified_1x2[key]
+                + (1.0 - SCORELINE_OUTCOME_ALIGNMENT_WEIGHT) * score_1x2[key]
+            )
+            for key in ("home", "draw", "away")
+        })
+        scoreline_matrix = _score_matrix_aligned_to_1x2(matrix, score_1x2, scoreline_target_1x2)
+
     summary = summarize_score_matrix(final_matrix, total_line=2.5)
-    exact_score = most_probable_score(scoreline_matrix)
+    primary_top_scores = top_n_scores(scoreline_matrix, n=4)
+    tail_matrix = score_matrix_negative_binomial(
+        xg_a, xg_b,
+        dispersion=EXACT_SCORE_HIGH_TAIL_DISPERSION,
+        max_goals=10,
+        rho=DEFAULT_DIXON_COLES_RHO,
+    )
+    aligned_top = _top_scores_with_high_tail_cover(
+        primary_top_scores,
+        tail_matrix,
+        scoreline_target_1x2,
+        unified_1x2,
+        xg_a + xg_b,
+        n=4,
+    )
+    exact_score = aligned_top[0]
 
     team_a_key = canonical_team_name(team_a)
     team_b_key = canonical_team_name(team_b)
@@ -342,7 +453,6 @@ def predict_match_markets(
     # Top alternative scorelines and expected score: provide context next to the
     # mode-based "Exact Score" so the UI can show 2-1/3-1 alternatives instead of
     # the single low-bias mode.
-    aligned_top = top_n_scores(scoreline_matrix, n=4)
     expected_a, expected_b = expected_score(scoreline_matrix)
     for rank, alt in enumerate(aligned_top[1:4], start=2):
         rows.append(

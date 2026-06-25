@@ -18,6 +18,13 @@ from wcpredict.names import canonical_team_name, same_team
 from wcpredict.deep_match_import import DeepImportResult, DeepMatchCollection, flatten_team_metrics
 
 
+def _is_goalkeeper_position(position: str | None) -> bool:
+    if not position:
+        return False
+    normalized = str(position).strip().upper()
+    return any(token in normalized for token in ("GK", "GOALKEEPER", "PORTERO", "POR"))
+
+
 def _match_by_teams_near_date(scheduled, team_a: str, team_b: str, played_at: str):
     """Find an existing scheduled match by team pair within ±1 day of played_at.
 
@@ -77,6 +84,7 @@ class Repository:
 
     def initialize(self) -> None:
         initialize_database(self.path)
+        self.backfill_goalkeeper_player_stats_from_deep_team_stats()
 
     def connect(self) -> sqlite3.Connection:
         con = sqlite3.connect(self.path, timeout=30)
@@ -93,6 +101,115 @@ class Repository:
             con.commit()
         finally:
             con.close()
+
+    def backfill_goalkeeper_player_stats_from_deep_team_stats(self) -> int:
+        """Idempotently attach reviewed team-level GK stats to the likely keeper.
+
+        Preferred source is the imported lineup. If that is missing, fall back
+        to the current player bank only when a team has exactly one goalkeeper
+        with minutes. That covers the common group-stage case without guessing
+        between multiple keepers.
+        """
+        written = 0
+        with self.session() as con:
+            rows = [
+                dict(row)
+                for row in con.execute(
+                    "SELECT m.id AS match_id, s.team_id, t.name AS team_name, "
+                    "s.saves, s.source_id, opp.shots_on_target AS opponent_sot, "
+                    "m.team_a_id, m.team_b_id, ta.name AS team_a, tb.name AS team_b, "
+                    "r.goals_a, r.goals_b "
+                    "FROM team_match_stats s "
+                    "JOIN matches m ON m.id=s.match_id "
+                    "JOIN teams t ON t.id=s.team_id "
+                    "JOIN teams ta ON ta.id=m.team_a_id "
+                    "JOIN teams tb ON tb.id=m.team_b_id "
+                    "LEFT JOIN team_match_stats opp ON opp.match_id=s.match_id AND opp.team_id<>s.team_id "
+                    "LEFT JOIN match_results r ON r.match_id=m.id "
+                    "WHERE s.saves IS NOT NULL"
+                ).fetchall()
+            ]
+            lineups_by_match: dict[int, list[dict]] = {}
+            for row in con.execute(
+                "SELECT match_id, team_name, player_name, lineup_status, position "
+                "FROM imported_lineups"
+            ).fetchall():
+                lineups_by_match.setdefault(int(row["match_id"]), []).append(dict(row))
+            bank_goalkeepers_by_team: dict[str, list[dict]] = {}
+            for row in con.execute(
+                "SELECT team_name, player_name, position, games, starts, minutes "
+                "FROM current_wc_player_stats WHERE COALESCE(minutes, 0) > 0"
+            ).fetchall():
+                player = dict(row)
+                if not _is_goalkeeper_position(player.get("position")):
+                    continue
+                key = canonical_team_name(str(player.get("team_name") or ""))
+                bank_goalkeepers_by_team.setdefault(key, []).append(player)
+
+            def selected_goalkeeper(match_id: int, team_name: str) -> dict | None:
+                candidates = [
+                    row for row in lineups_by_match.get(match_id, [])
+                    if same_team(str(row.get("team_name") or ""), team_name)
+                    and _is_goalkeeper_position(row.get("position"))
+                ]
+                starters = [
+                    row for row in candidates
+                    if str(row.get("lineup_status") or "").lower() == "starter"
+                ]
+                if starters or candidates:
+                    return (starters or candidates)[0]
+                bank_candidates = bank_goalkeepers_by_team.get(canonical_team_name(team_name), [])
+                return bank_candidates[0] if len(bank_candidates) == 1 else None
+
+            for row in rows:
+                goalkeeper = selected_goalkeeper(int(row["match_id"]), str(row["team_name"]))
+                if goalkeeper is None:
+                    continue
+                goals_conceded = None
+                if row["goals_a"] is not None and row["goals_b"] is not None:
+                    goals_conceded = int(row["goals_b"]) if int(row["team_id"]) == int(row["team_a_id"]) else int(row["goals_a"])
+                elif row["opponent_sot"] is not None:
+                    goals_conceded = max(0, int(round(float(row["opponent_sot"]) - float(row["saves"]))))
+                save_percentage = None
+                if goals_conceded is not None:
+                    faced_on_target = float(row["saves"]) + float(goals_conceded)
+                    if faced_on_target > 0:
+                        save_percentage = 100.0 * float(row["saves"]) / faced_on_target
+                con.execute(
+                    "INSERT INTO players(name, team_id, position) VALUES(?, ?, ?) "
+                    "ON CONFLICT(name, team_id) DO UPDATE SET "
+                    "position=COALESCE(excluded.position, players.position)",
+                    (str(goalkeeper["player_name"]), int(row["team_id"]), goalkeeper.get("position") or "GK"),
+                )
+                player = con.execute(
+                    "SELECT id FROM players WHERE name=? AND team_id=?",
+                    (str(goalkeeper["player_name"]), int(row["team_id"])),
+                ).fetchone()
+                if player is None:
+                    continue
+                before = con.total_changes
+                con.execute(
+                    "INSERT INTO player_match_stats("
+                    "match_id, player_id, minutes, saves, goals_conceded, save_percentage, source_id, manual_edit"
+                    ") VALUES(?, ?, 90, ?, ?, ?, ?, 0) "
+                    "ON CONFLICT(match_id, player_id) DO UPDATE SET "
+                    "minutes=CASE WHEN player_match_stats.manual_edit=0 THEN COALESCE(player_match_stats.minutes, excluded.minutes) ELSE player_match_stats.minutes END, "
+                    "saves=CASE WHEN player_match_stats.manual_edit=0 THEN COALESCE(excluded.saves, player_match_stats.saves) ELSE player_match_stats.saves END, "
+                    "goals_conceded=CASE WHEN player_match_stats.manual_edit=0 THEN COALESCE(excluded.goals_conceded, player_match_stats.goals_conceded) ELSE player_match_stats.goals_conceded END, "
+                    "save_percentage=CASE WHEN player_match_stats.manual_edit=0 THEN COALESCE(excluded.save_percentage, player_match_stats.save_percentage) ELSE player_match_stats.save_percentage END, "
+                    "source_id=CASE WHEN player_match_stats.manual_edit=0 THEN excluded.source_id ELSE player_match_stats.source_id END",
+                    (
+                        int(row["match_id"]),
+                        int(player["id"]),
+                        int(round(float(row["saves"]))),
+                        goals_conceded,
+                        save_percentage,
+                        row.get("source_id") or "deep-team-stats",
+                    ),
+                )
+                if con.total_changes > before:
+                    written += 1
+        return written
 
     def upsert_team(self, name: str, fifa_code: str | None = None) -> int:
         canonical_name = canonical_team_name(name)
@@ -572,6 +689,109 @@ class Repository:
                         "saves=CASE WHEN team_match_stats.manual_edit=0 THEN COALESCE(excluded.saves, team_match_stats.saves) ELSE team_match_stats.saves END, "
                         "source_id=CASE WHEN team_match_stats.manual_edit=0 THEN excluded.source_id ELSE team_match_stats.source_id END",
                         (match.id, team_id, *payload, source_id),
+                    )
+                result_row = con.execute(
+                    "SELECT goals_a, goals_b FROM match_results WHERE match_id=?",
+                    (match.id,),
+                ).fetchone()
+                lineups = [
+                    dict(row)
+                    for row in con.execute(
+                        "SELECT team_name, player_name, lineup_status, position "
+                        "FROM imported_lineups WHERE match_id=?",
+                        (match.id,),
+                    ).fetchall()
+                ]
+                bank_goalkeepers_by_team: dict[str, list[dict]] = {}
+                for row in con.execute(
+                    "SELECT team_name, player_name, position, games, starts, minutes "
+                    "FROM current_wc_player_stats WHERE COALESCE(minutes, 0) > 0"
+                ).fetchall():
+                    player = dict(row)
+                    if not _is_goalkeeper_position(player.get("position")):
+                        continue
+                    key = canonical_team_name(str(player.get("team_name") or ""))
+                    bank_goalkeepers_by_team.setdefault(key, []).append(player)
+
+                def selected_goalkeeper(team_name: str) -> dict | None:
+                    candidates = [
+                        row for row in lineups
+                        if same_team(str(row.get("team_name") or ""), team_name)
+                        and _is_goalkeeper_position(row.get("position"))
+                    ]
+                    starters = [
+                        row for row in candidates
+                        if str(row.get("lineup_status") or "").lower() == "starter"
+                    ]
+                    if starters or candidates:
+                        return (starters or candidates)[0]
+                    bank_candidates = bank_goalkeepers_by_team.get(canonical_team_name(team_name), [])
+                    return bank_candidates[0] if len(bank_candidates) == 1 else None
+
+                goals_conceded_by_team: dict[str, int | None] = {
+                    match.team_a.name: None,
+                    match.team_b.name: None,
+                }
+                if result_row is not None:
+                    goals_conceded_by_team = {
+                        match.team_a.name: int(result_row["goals_b"]),
+                        match.team_b.name: int(result_row["goals_a"]),
+                    }
+                team_name_by_id = {match.team_a.id: match.team_a.name, match.team_b.id: match.team_b.name}
+                opponent_id_by_team = {match.team_a.id: match.team_b.id, match.team_b.id: match.team_a.id}
+                for team_id, values in primary_values.items():
+                    saves = values.get("saves")
+                    if saves is None:
+                        continue
+                    team_name = team_name_by_id[team_id]
+                    goalkeeper = selected_goalkeeper(team_name)
+                    if goalkeeper is None:
+                        continue
+                    goals_conceded = goals_conceded_by_team.get(team_name)
+                    if goals_conceded is None:
+                        opponent_values = primary_values.get(opponent_id_by_team[team_id], {})
+                        opponent_sot = opponent_values.get("shots_on_target")
+                        if opponent_sot is not None:
+                            goals_conceded = max(0, int(round(float(opponent_sot) - float(saves))))
+                    save_percentage = None
+                    if goals_conceded is not None:
+                        faced_on_target = float(saves) + float(goals_conceded)
+                        if faced_on_target > 0:
+                            save_percentage = 100.0 * float(saves) / faced_on_target
+                    con.execute(
+                        "INSERT INTO players(name, team_id, position) VALUES(?, ?, ?) "
+                        "ON CONFLICT(name, team_id) DO UPDATE SET "
+                        "position=COALESCE(excluded.position, players.position)",
+                        (
+                            str(goalkeeper["player_name"]),
+                            team_id,
+                            goalkeeper.get("position") or "GK",
+                        ),
+                    )
+                    player_row = con.execute(
+                        "SELECT id FROM players WHERE name=? AND team_id=?",
+                        (str(goalkeeper["player_name"]), team_id),
+                    ).fetchone()
+                    if player_row is None:
+                        continue
+                    con.execute(
+                        "INSERT INTO player_match_stats("
+                        "match_id, player_id, minutes, saves, goals_conceded, save_percentage, source_id, manual_edit"
+                        ") VALUES(?, ?, 90, ?, ?, ?, ?, 0) "
+                        "ON CONFLICT(match_id, player_id) DO UPDATE SET "
+                        "minutes=CASE WHEN player_match_stats.manual_edit=0 THEN COALESCE(player_match_stats.minutes, excluded.minutes) ELSE player_match_stats.minutes END, "
+                        "saves=CASE WHEN player_match_stats.manual_edit=0 THEN COALESCE(excluded.saves, player_match_stats.saves) ELSE player_match_stats.saves END, "
+                        "goals_conceded=CASE WHEN player_match_stats.manual_edit=0 THEN COALESCE(excluded.goals_conceded, player_match_stats.goals_conceded) ELSE player_match_stats.goals_conceded END, "
+                        "save_percentage=CASE WHEN player_match_stats.manual_edit=0 THEN COALESCE(excluded.save_percentage, player_match_stats.save_percentage) ELSE player_match_stats.save_percentage END, "
+                        "source_id=CASE WHEN player_match_stats.manual_edit=0 THEN excluded.source_id ELSE player_match_stats.source_id END",
+                        (
+                            match.id,
+                            int(player_row["id"]),
+                            int(round(float(saves))),
+                            goals_conceded,
+                            save_percentage,
+                            source_id,
+                        ),
                     )
                 con.execute(
                     "INSERT INTO import_runs(match_id, source_event_id, status, imported_at_utc, missing_critical_json, missing_optional_json) "
@@ -1798,6 +2018,35 @@ class Repository:
             rows = con.execute(query, params).fetchall()
         return [dict(row) for row in rows]
 
+    def list_deep_goalkeeper_player_profiles(self, team_names: tuple[str, ...] | None = None) -> list[dict]:
+        """Aggregate goalkeeper rows created from reviewed deep-match stats.
+
+        The daily player feed often omits keepers. These rows let the player
+        prediction tab still price saves / goals conceded when the match had a
+        reviewed lineup and deep goalkeeper stats.
+        """
+        params: list = []
+        query = (
+            "SELECT p.name AS player_name, t.name AS team_name, p.position, "
+            "COUNT(*) AS games, COUNT(*) AS starts, SUM(COALESCE(ps.minutes, 90)) AS minutes, "
+            "SUM(COALESCE(ps.passes, 0)) AS passes, SUM(COALESCE(ps.yellow_cards, 0)) AS yellow_cards, "
+            "SUM(COALESCE(ps.saves, 0)) AS saves, SUM(COALESCE(ps.goals_conceded, 0)) AS goals_conceded, "
+            "CASE WHEN SUM(COALESCE(ps.saves, 0) + COALESCE(ps.goals_conceded, 0)) > 0 "
+            "THEN 100.0 * SUM(COALESCE(ps.saves, 0)) / SUM(COALESCE(ps.saves, 0) + COALESCE(ps.goals_conceded, 0)) "
+            "ELSE AVG(ps.save_percentage) END AS save_percentage "
+            "FROM player_match_stats ps "
+            "JOIN players p ON p.id=ps.player_id "
+            "JOIN teams t ON t.id=p.team_id "
+            "WHERE ps.saves IS NOT NULL "
+        )
+        if team_names:
+            query += "AND (" + " OR ".join("t.name=?" for _ in team_names) + ") "
+            params.extend(team_names)
+        query += "GROUP BY p.id, p.name, t.name, p.position ORDER BY t.name, minutes DESC, p.name"
+        with self.session() as con:
+            rows = con.execute(query, tuple(params)).fetchall()
+        return [dict(row) for row in rows]
+
     def replace_current_world_cup_teams(
         self, provider_id: str, rows: list[dict], imported_at_utc: datetime
     ) -> None:
@@ -1964,7 +2213,8 @@ class Repository:
                 dict(row)
                 for row in con.execute(
                     "SELECT p.name AS player_name, t.name AS team_name, p.position, "
-                    "ps.minutes, ps.goals, ps.assists, ps.shots, ps.shots_on_target, ps.passes, ps.yellow_cards "
+                    "ps.minutes, ps.goals, ps.assists, ps.shots, ps.shots_on_target, "
+                    "ps.passes, ps.yellow_cards, ps.saves, ps.goals_conceded, ps.save_percentage "
                     "FROM player_match_stats ps JOIN players p ON p.id=ps.player_id JOIN teams t ON t.id=p.team_id"
                 ).fetchall()
             ]

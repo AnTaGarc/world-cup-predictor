@@ -121,9 +121,25 @@ class DeepMatchPersistenceTests(unittest.TestCase):
             czechia = repo.upsert_team("Czechia")
             iceland = repo.upsert_team("Iceland")
             past_kickoff = datetime(2026, 6, 18, 18, tzinfo=timezone.utc)
-            repo.upsert_match(
+            match_id = repo.upsert_match(
                 "FIFA World Cup 2026", "Group", past_kickoff, spain, czechia, "finished",
             )
+            with repo.session() as con:
+                con.execute(
+                    "INSERT INTO match_results(match_id, goals_a, goals_b, source_type, recorded_at_utc) "
+                    "VALUES(?, 1, 0, 'test', ?)",
+                    (match_id, past_kickoff.isoformat()),
+                )
+                con.execute(
+                    "INSERT INTO imported_lineups(match_id, team_name, player_name, lineup_status, position, source_id, observed_at_utc) "
+                    "VALUES(?, 'Spain', 'Unai Simon', 'starter', 'GK', 'test-lineup', ?)",
+                    (match_id, past_kickoff.isoformat()),
+                )
+                con.execute(
+                    "INSERT INTO imported_lineups(match_id, team_name, player_name, lineup_status, position, source_id, observed_at_utc) "
+                    "VALUES(?, 'Czechia', 'Jindrich Stanek', 'starter', 'GK', 'test-lineup', ?)",
+                    (match_id, past_kickoff.isoformat()),
+                )
             future_kickoff = datetime(2026, 6, 25, 18, tzinfo=timezone.utc)
             repo.upsert_match(
                 "FIFA World Cup 2026", "Group", future_kickoff, spain, iceland, "scheduled",
@@ -152,15 +168,73 @@ class DeepMatchPersistenceTests(unittest.TestCase):
                     "SELECT t.name, s.saves FROM team_match_stats s "
                     "JOIN teams t ON t.id=s.team_id ORDER BY t.name"
                 ).fetchall()
+                player_rows = con.execute(
+                    "SELECT p.name, t.name AS team_name, ps.saves, ps.goals_conceded, ps.save_percentage "
+                    "FROM player_match_stats ps "
+                    "JOIN players p ON p.id=ps.player_id "
+                    "JOIN teams t ON t.id=p.team_id "
+                    "ORDER BY t.name"
+                ).fetchall()
 
             from wcpredict.advanced_form import build_goalkeeper_baseline
             gk_rows = repo.list_deep_goalkeeper_rows_before(future_kickoff)
             baseline = build_goalkeeper_baseline("Spain", gk_rows, future_kickoff)
+            profiles = repo.list_deep_goalkeeper_player_profiles(("Spain", "Czechia"))
 
         self.assertEqual([("Czechia", 4), ("Spain", 3)], [(r["name"], r["saves"]) for r in row])
+        self.assertEqual(
+            [("Jindrich Stanek", "Czechia", 4, 1), ("Unai Simon", "Spain", 3, 0)],
+            [(r["name"], r["team_name"], r["saves"], r["goals_conceded"]) for r in player_rows],
+        )
+        self.assertAlmostEqual(80.0, player_rows[0]["save_percentage"], places=3)
+        self.assertEqual({"Jindrich Stanek", "Unai Simon"}, {r["player_name"] for r in profiles})
         self.assertEqual(1, baseline.sample_matches)
         # Spain made 3 saves vs Czechia's 3 SOT → save_rate = 1.0.
         self.assertAlmostEqual(1.0, baseline.save_rate, places=3)
+
+    def test_deep_goalkeeper_stats_use_single_bank_keeper_when_lineup_missing(self):
+        with tempfile.TemporaryDirectory() as directory:
+            repo = Repository(Path(directory) / "app.sqlite")
+            repo.initialize()
+            czechia = repo.upsert_team("Czechia")
+            south_africa = repo.upsert_team("South Africa")
+            kickoff = datetime(2026, 6, 18, 16, tzinfo=timezone.utc)
+            repo.upsert_match(
+                "FIFA World Cup 2026", "Group", kickoff, czechia, south_africa, "finished",
+            )
+            repo.replace_current_world_cup_players(
+                "test-bank",
+                [{
+                    "player_name": "Matej Kovar",
+                    "team_name": "Czechia",
+                    "position": "GK",
+                    "games": 2,
+                    "starts": 2,
+                    "minutes": 180,
+                    "save_percentage": 70.0,
+                }],
+                datetime.now(timezone.utc),
+            )
+            payload = {"numero_de_partidos": 1, "partidos": [{
+                "id": "czechia_south_africa", "nombre": "Czechia vs South Africa",
+                "equipos": {"izquierda_verde": "Czechia", "derecha_azul": "South Africa"},
+                "estadisticas": {
+                    "tiros": {"tiros_a_puerta": {"Czechia": 3, "South Africa": 4}},
+                    "porteria": {"paradas": {"Czechia": 3, "South Africa": 2}},
+                },
+                "fuentes": ["captura.png"],
+            }]}
+            path = Path(directory) / "stats.json"
+            path.write_text(json.dumps(payload), encoding="utf-8")
+            repo.import_deep_match_collection(load_deep_match_file(path), datetime.now(timezone.utc))
+
+            profiles = repo.list_deep_goalkeeper_player_profiles(("Czechia",))
+
+        self.assertEqual(1, len(profiles))
+        self.assertEqual("Matej Kovar", profiles[0]["player_name"])
+        self.assertEqual(3, profiles[0]["saves"])
+        self.assertEqual(1, profiles[0]["goals_conceded"])
+        self.assertAlmostEqual(75.0, profiles[0]["save_percentage"], places=3)
 
     def test_deep_xg_rows_attach_extended_observations_when_present(self):
         with tempfile.TemporaryDirectory() as directory:

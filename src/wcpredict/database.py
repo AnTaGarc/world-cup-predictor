@@ -445,6 +445,11 @@ _OPTIONAL_COLUMNS = {
         ("saves", "INTEGER"),
         ("goals_conceded", "INTEGER"),
     ],
+    "player_match_stats": [
+        ("saves", "INTEGER"),
+        ("goals_conceded", "INTEGER"),
+        ("save_percentage", "REAL"),
+    ],
     # Knockout extras: ET aggregate goals + penalty shoot-out tally. NULL
     # means the match either ended in regulation or hasn't been played yet.
     "match_results": [
