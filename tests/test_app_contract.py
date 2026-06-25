@@ -35,7 +35,8 @@ class AppContractTests(unittest.TestCase):
     def test_model_and_player_views_have_clear_comparisons(self):
         source = (Path(__file__).parents[1] / "src" / "wcpredict" / "ui" / "pages.py").read_text(encoding="utf-8")
         self.assertIn("model_comparison_rows", source)
-        self.assertIn("Evidencia de modelo disponible", source)
+        self.assertNotIn("Evidencia de modelo disponible", source)
+        self.assertNotIn("modelo operativo", source)
         self.assertIn('["Impacto", "Goles", "Asistencias", "Tiros"]', source)
 
     def test_market_panel_renders_exact_score_grid(self):
@@ -170,7 +171,7 @@ class AppContractTests(unittest.TestCase):
 
     def test_knockout_prediction_header_prioritizes_advancement(self):
         source = (Path(__file__).parents[1] / "src" / "wcpredict" / "ui" / "pages.py").read_text(encoding="utf-8")
-        self.assertIn("knockout_prediction = _knockout_prediction_for_match(match, bundle)", source)
+        self.assertIn("knockout_prediction = _knockout_prediction_for_match(match, bundle, repo)", source)
         self.assertIn('st.subheader("Probabilidad de clasificación")', source)
         self.assertIn('st.metric("Clasifica"', source)
         self.assertIn('st.subheader("Probabilidad 1X2")', source)
@@ -262,8 +263,22 @@ class AppContractTests(unittest.TestCase):
         next_def_after = source.index("\ndef ", dashboard_index + 1)
         dashboard_section = source[dashboard_index:next_def_after]
         self.assertIn("crest_html", dashboard_section)
-        self.assertIn('callout(', dashboard_section)
+        self.assertNotIn("Ruta de lectura", dashboard_section)
+        self.assertNotIn("Regla de honestidad", dashboard_section)
         self.assertNotIn('st.info("Si faltan datos', dashboard_section)
+
+    def test_prediction_ui_removes_internal_reader_notes(self):
+        source = (Path(__file__).parents[1] / "src" / "wcpredict" / "ui" / "pages.py").read_text(encoding="utf-8")
+        self.assertNotIn("El recolector por partido solo est", source)
+        self.assertNotIn("Resumen estructurado (team_match_stats)", source)
+        self.assertIn("Asignar tarjetas a jugadores", source)
+        self.assertIn("auto_apply_discipline_suspensions(recorded_at)", source)
+
+    def test_bracket_renders_third_place_before_final(self):
+        source = (Path(__file__).parents[1] / "src" / "wcpredict" / "ui" / "pages.py").read_text(encoding="utf-8")
+        order_start = source.index("BRACKET_ORDER")
+        order_section = source[order_start:source.index(")", order_start)]
+        self.assertLess(order_section.index('"Third-place play-off"'), order_section.index('"Final"'))
 
     def test_player_intelligence_has_manual_refresh_button(self):
         source = (Path(__file__).parents[1] / "src" / "wcpredict" / "ui" / "pages.py").read_text(encoding="utf-8")

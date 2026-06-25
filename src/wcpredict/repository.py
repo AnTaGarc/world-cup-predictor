@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 from pathlib import Path
 from contextlib import contextmanager
 import json
@@ -16,6 +16,7 @@ from wcpredict.review import CandidateDecision, ensure_batch_finalizable, normal
 from wcpredict.source_catalog import SourceDefinition
 from wcpredict.names import canonical_team_name, same_team
 from wcpredict.deep_match_import import DeepImportResult, DeepMatchCollection, flatten_team_metrics
+from wcpredict.discipline import CardRecord, PlayerDisciplineSnapshot, snapshot_suspensions, suspension_events_for_records
 
 
 def _is_goalkeeper_position(position: str | None) -> bool:
@@ -961,6 +962,162 @@ class Repository:
             ).fetchall()]
         return [row for row in rows if any(same_team(row["team_name"], team) for team in teams)]
 
+    def auto_apply_discipline_suspensions(
+        self,
+        created_at_utc: datetime,
+        competition: str = "FIFA World Cup 2026",
+    ) -> int:
+        """Create squad-context suspensions implied by reviewed player cards.
+
+        Runs safely after every match close. If a team's next match has not
+        been resolved yet, no event is created for that trigger; a later run
+        will pick it up once the bracket slot has a concrete team.
+        """
+        with self.session() as con:
+            card_rows = [
+                dict(row)
+                for row in con.execute(
+                    "SELECT m.id AS match_id, m.kickoff_utc, m.stage, "
+                    "t.name AS team_name, p.name AS player_name, "
+                    "COALESCE(ps.yellow_cards, 0) AS yellow_cards, "
+                    "COALESCE(ps.red_cards, 0) AS red_cards "
+                    "FROM player_match_stats ps "
+                    "JOIN players p ON p.id=ps.player_id "
+                    "JOIN teams t ON t.id=p.team_id "
+                    "JOIN matches m ON m.id=ps.match_id "
+                    "WHERE m.competition=? "
+                    "AND (COALESCE(ps.yellow_cards, 0)>0 OR COALESCE(ps.red_cards, 0)>0) "
+                    "ORDER BY m.kickoff_utc, m.id",
+                    (competition,),
+                ).fetchall()
+            ]
+            match_rows = [
+                dict(row)
+                for row in con.execute(
+                    "SELECT m.id, m.kickoff_utc, ta.name AS team_a, tb.name AS team_b "
+                    "FROM matches m "
+                    "JOIN teams ta ON ta.id=m.team_a_id "
+                    "JOIN teams tb ON tb.id=m.team_b_id "
+                    "WHERE m.competition=? ORDER BY m.kickoff_utc, m.id",
+                    (competition,),
+                ).fetchall()
+            ]
+            snapshot_rows = [
+                dict(row)
+                for row in con.execute(
+                    "SELECT player_name, team_name, "
+                    "COALESCE(yellow_cards, 0) AS yellow_cards, COALESCE(red_cards, 0) AS red_cards "
+                    "FROM current_wc_player_stats "
+                    "WHERE COALESCE(yellow_cards, 0)>0 OR COALESCE(red_cards, 0)>0"
+                ).fetchall()
+            ]
+            existing_auto_events = {
+                (
+                    str(row["team_name"]),
+                    str(row["player_name"] or ""),
+                    str(row["event_type"]),
+                )
+                for row in con.execute(
+                    "SELECT team_name, player_name, event_type FROM squad_context_events "
+                    "WHERE source_id LIKE 'auto-discipline-current-%'"
+                ).fetchall()
+            }
+            matches_by_team: dict[str, list[dict]] = {}
+            for match in match_rows:
+                for team_key in ("team_a", "team_b"):
+                    matches_by_team.setdefault(str(match[team_key]), []).append(match)
+
+            next_match_by_team_and_trigger: dict[str, dict[int, int]] = {}
+            for row in card_rows:
+                team_name = str(row["team_name"])
+                kickoff = datetime.fromisoformat(str(row["kickoff_utc"]).replace("Z", "+00:00"))
+                next_match = next(
+                    (
+                        match for match in matches_by_team.get(team_name, [])
+                        if datetime.fromisoformat(str(match["kickoff_utc"]).replace("Z", "+00:00")) > kickoff
+                    ),
+                    None,
+                )
+                if next_match is not None:
+                    next_match_by_team_and_trigger.setdefault(team_name, {})[int(row["match_id"])] = int(next_match["id"])
+            next_unplayed_by_team: dict[str, int] = {}
+            now_iso = created_at_utc.isoformat()
+            for team_name, team_matches in matches_by_team.items():
+                next_match = next(
+                    (
+                        match for match in team_matches
+                        if str(match["kickoff_utc"]) >= now_iso
+                    ),
+                    None,
+                )
+                if next_match is not None:
+                    next_unplayed_by_team[team_name] = int(next_match["id"])
+
+        records = [
+            CardRecord(
+                match_id=int(row["match_id"]),
+                kickoff_utc=datetime.fromisoformat(str(row["kickoff_utc"]).replace("Z", "+00:00")),
+                stage=str(row["stage"]),
+                team_name=str(row["team_name"]),
+                player_name=str(row["player_name"]),
+                yellow_cards=int(row["yellow_cards"] or 0),
+                red_cards=int(row["red_cards"] or 0),
+            )
+            for row in card_rows
+        ]
+        snapshots = [
+            PlayerDisciplineSnapshot(
+                team_name=str(row["team_name"]),
+                player_name=str(row["player_name"]),
+                yellow_cards=int(row["yellow_cards"] or 0),
+                red_cards=int(row["red_cards"] or 0),
+            )
+            for row in snapshot_rows
+            if (
+                str(row["team_name"]),
+                str(row["player_name"]),
+                "suspension_red" if int(row["red_cards"] or 0) > 0 else "suspension_yellows",
+            )
+            not in existing_auto_events
+        ]
+        suspensions = suspension_events_for_records(records, next_match_by_team_and_trigger)
+        suspensions.extend(snapshot_suspensions(snapshots, next_unplayed_by_team))
+        written = 0
+        for suspension in suspensions:
+            next_match = next(
+                (match for match in match_rows if int(match["id"]) == suspension.affected_match_id),
+                None,
+            )
+            if next_match is None:
+                continue
+            kickoff = datetime.fromisoformat(str(next_match["kickoff_utc"]).replace("Z", "+00:00"))
+            source_kind = (
+                "banco acumulado de estadísticas de jugadores"
+                if suspension.trigger_match_id == 0
+                else "tarjetas asignadas a jugadores"
+            )
+            event_id = self.save_squad_context_event(
+                {
+                    "team_name": suspension.team_name,
+                    "player_name": suspension.player_name,
+                    "event_type": suspension.event_type,
+                    "starts_at_utc": created_at_utc.isoformat(),
+                    "ends_at_utc": (kickoff + timedelta(hours=8)).isoformat(),
+                    "affected_match_id": suspension.affected_match_id,
+                    "source_id": (
+                        f"auto-discipline-{'current' if suspension.trigger_match_id == 0 else suspension.trigger_match_id}-"
+                        f"{canonical_team_name(suspension.player_name)}-{suspension.event_type}"
+                    ),
+                    "evidence_status": "reviewed",
+                    "notes": suspension.reason
+                    + f" Generada automáticamente desde {source_kind}; revisar si FIFA amplía una roja.",
+                },
+                created_at_utc,
+            )
+            if event_id:
+                written += 1
+        return written
+
     def add_manual_odds(
         self,
         match_id: int,
@@ -1203,6 +1360,84 @@ class Repository:
                         observed,
                     ),
                 )
+
+    def save_player_card_observations(
+        self,
+        match_id: int,
+        rows: list[dict],
+        observed_at_utc: datetime,
+    ) -> None:
+        """Persist reviewed card assignments from team-level deep stats.
+
+        The deep import gives reliable team totals. This method records the
+        analyst's player assignment without changing those team totals.
+        """
+        if not rows:
+            return
+        source_id = f"cards-{match_id}"
+        observed = observed_at_utc.isoformat()
+        with self.session() as con:
+            con.execute(
+                "INSERT INTO sources(id, source_type, source_name, source_url, retrieved_at_utc, status, notes) "
+                "VALUES(?, 'manual', 'reviewed player cards', NULL, ?, 'verified', 'Cards assigned from reviewed deep-match totals') "
+                "ON CONFLICT(id) DO UPDATE SET retrieved_at_utc=excluded.retrieved_at_utc, status='verified'",
+                (source_id, observed),
+            )
+            team_ids = {
+                str(row["name"]): int(row["id"])
+                for row in con.execute("SELECT id, name FROM teams").fetchall()
+            }
+            for row in rows:
+                team_name = str(row.get("team_name") or "").strip()
+                player_name = str(row.get("player_name") or "").strip()
+                metric = str(row.get("metric") or "").strip()
+                count = int(row.get("count") or 0)
+                if not team_name or not player_name or metric not in {"yellow_cards", "red_cards"} or count <= 0:
+                    continue
+                team_id = team_ids.get(team_name)
+                if team_id is None:
+                    team = con.execute("SELECT id, name FROM teams").fetchall()
+                    for candidate in team:
+                        if same_team(str(candidate["name"]), team_name):
+                            team_id = int(candidate["id"])
+                            break
+                if team_id is None:
+                    continue
+                context = json.dumps({"team_name": team_name, "card_type": metric}, sort_keys=True)
+                con.execute(
+                    "INSERT INTO observations(match_id, subject_type, subject_name, metric, value_number, value_text, unit, context_json, source_id, evidence_status, sample_size, observed_at_utc) "
+                    "VALUES(?, 'player', ?, ?, ?, NULL, 'cards', ?, ?, 'manual', 1, ?) "
+                    "ON CONFLICT(match_id, subject_type, subject_name, metric, context_json, source_id) DO UPDATE SET "
+                    "value_number=excluded.value_number, unit='cards', observed_at_utc=excluded.observed_at_utc, evidence_status='manual'",
+                    (match_id, player_name, metric, count, context, source_id, observed),
+                )
+                con.execute(
+                    "INSERT INTO players(name, team_id, position) VALUES(?, ?, NULL) "
+                    "ON CONFLICT(name, team_id) DO NOTHING",
+                    (player_name, team_id),
+                )
+                player = con.execute(
+                    "SELECT id FROM players WHERE name=? AND team_id=?",
+                    (player_name, team_id),
+                ).fetchone()
+                if player is None:
+                    continue
+                if metric == "yellow_cards":
+                    con.execute(
+                        "INSERT INTO player_match_stats(match_id, player_id, yellow_cards, source_id, manual_edit) "
+                        "VALUES(?, ?, ?, ?, 1) "
+                        "ON CONFLICT(match_id, player_id) DO UPDATE SET "
+                        "yellow_cards=excluded.yellow_cards, source_id=excluded.source_id, manual_edit=1",
+                        (match_id, int(player["id"]), count, source_id),
+                    )
+                else:
+                    con.execute(
+                        "INSERT INTO player_match_stats(match_id, player_id, red_cards, source_id, manual_edit) "
+                        "VALUES(?, ?, ?, ?, 1) "
+                        "ON CONFLICT(match_id, player_id) DO UPDATE SET "
+                        "red_cards=excluded.red_cards, source_id=excluded.source_id, manual_edit=1",
+                        (match_id, int(player["id"]), count, source_id),
+                    )
 
     def import_sofascore_preview(
         self,
@@ -1502,6 +1737,82 @@ class Repository:
                 "ORDER BY entity_type, provider_id",
                 (provider,),
             ).fetchall()
+        return [dict(row) for row in rows]
+
+    def list_transfermarkt_player_ids(self) -> dict[tuple[str, str], str]:
+        with self.session() as con:
+            rows = con.execute(
+                "SELECT p.name AS player_name, t.name AS team_name, pe.provider_id "
+                "FROM provider_entities pe "
+                "JOIN players p ON p.id=pe.canonical_id "
+                "JOIN teams t ON t.id=p.team_id "
+                "WHERE pe.provider='transfermarkt' AND pe.entity_type='player'"
+            ).fetchall()
+        return {
+            (str(row["player_name"]), canonical_team_name(str(row["team_name"]))): str(row["provider_id"])
+            for row in rows
+        }
+
+    def save_penalty_attempts(self, attempts: list[dict]) -> int:
+        if not attempts:
+            return 0
+        written = 0
+        with self.session() as con:
+            for row in attempts:
+                before = con.total_changes
+                con.execute(
+                    "INSERT INTO penalty_attempts("
+                    "player_name, team_name, transfermarkt_player_id, attempted_on, competition, "
+                    "phase, outcome, goalkeeper_name, opponent_team, minute, match_label, "
+                    "source_provider, source_url, source_row_key, fetched_at_utc, raw_json"
+                    ") VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) "
+                    "ON CONFLICT(source_provider, source_row_key) DO UPDATE SET "
+                    "player_name=excluded.player_name, team_name=excluded.team_name, "
+                    "transfermarkt_player_id=excluded.transfermarkt_player_id, attempted_on=excluded.attempted_on, "
+                    "competition=excluded.competition, phase=excluded.phase, outcome=excluded.outcome, "
+                    "goalkeeper_name=excluded.goalkeeper_name, opponent_team=excluded.opponent_team, "
+                    "minute=excluded.minute, match_label=excluded.match_label, source_url=excluded.source_url, "
+                    "fetched_at_utc=excluded.fetched_at_utc, raw_json=excluded.raw_json",
+                    (
+                        row["player_name"],
+                        row.get("team_name"),
+                        row.get("transfermarkt_player_id"),
+                        row.get("attempted_on"),
+                        row.get("competition"),
+                        row.get("phase") or "regular",
+                        row["outcome"],
+                        row.get("goalkeeper_name"),
+                        row.get("opponent_team"),
+                        row.get("minute"),
+                        row.get("match_label"),
+                        row.get("source_provider") or "transfermarkt",
+                        row["source_url"],
+                        row["source_row_key"],
+                        row["fetched_at_utc"],
+                        json.dumps(row.get("raw") or {}, ensure_ascii=False, sort_keys=True),
+                    ),
+                )
+                if con.total_changes > before:
+                    written += 1
+        return written
+
+    def list_penalty_attempts(
+        self, team_name: str | None = None, player_name: str | None = None
+    ) -> list[dict]:
+        query = "SELECT * FROM penalty_attempts"
+        clauses = []
+        params: list = []
+        if team_name:
+            clauses.append("team_name=?")
+            params.append(canonical_team_name(team_name))
+        if player_name:
+            clauses.append("player_name=?")
+            params.append(player_name)
+        if clauses:
+            query += " WHERE " + " AND ".join(clauses)
+        query += " ORDER BY attempted_on DESC, id DESC"
+        with self.session() as con:
+            rows = con.execute(query, tuple(params)).fetchall()
         return [dict(row) for row in rows]
 
     def create_screenshot_batch(

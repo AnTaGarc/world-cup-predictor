@@ -27,7 +27,7 @@ from wcpredict.player_markets import (
     is_goalkeeper,
 )
 from wcpredict.player_analytics import build_player_profiles, cluster_player_styles
-from wcpredict.ratings import MatchResult, build_team_ratings, explain_team_form
+from wcpredict.ratings import MatchResult, build_team_ratings
 from wcpredict.refresh import refresh_match
 from wcpredict.repository import Repository
 from wcpredict.schedule import seed_schedule
@@ -37,11 +37,11 @@ from wcpredict.knockout_bracket import (
     seed_knockout_bracket,
 )
 from wcpredict.knockout_model import predict_knockout_match
+from wcpredict.penalty_history_model import build_penalty_match_context
 from wcpredict.services import MarketPrediction, predict_match_markets
 from wcpredict.source_catalog import default_source_catalog
 from wcpredict.daily_refresh import DEFAULT_PROVIDERS, DatasetDownload, ensure_current_world_cup_data
 from wcpredict.world_cup_data import fetch_kaggle_world_cup_dataset, import_world_cup_download
-from wcpredict.prediction_report import build_prediction_report
 from wcpredict.advanced_form import (
     build_goalkeeper_baseline,
     build_volume_rate_observations,
@@ -85,7 +85,6 @@ from wcpredict.ui.view_models import (
     dataset_freshness_rows,
     ev_rows,
     model_comparison_rows,
-    model_disagreement_note,
     model_policy_rows,
     postmatch_queue_message,
     prediction_rows,
@@ -650,7 +649,11 @@ def _is_knockout_stage(stage: str | None) -> bool:
     return any(stage.startswith(s) for s in KNOCKOUT_STAGES)
 
 
-def _knockout_prediction_for_match(match, bundle):
+def _penalty_attempts_for_match(repo: Repository, team_a: str, team_b: str) -> list[dict]:
+    return repo.list_penalty_attempts(team_a) + repo.list_penalty_attempts(team_b)
+
+
+def _knockout_prediction_for_match(match, bundle, repo: Repository | None = None):
     if not _is_knockout_stage(getattr(match, "stage", None)):
         return None
     expected_xg = bundle.expected_xg
@@ -659,18 +662,28 @@ def _knockout_prediction_for_match(match, bundle):
     xa, xb = float(expected_xg[0]), float(expected_xg[1])
     if xa <= 0 or xb <= 0:
         return None
+    penalty_context = None
+    if repo is not None:
+        penalty_context = build_penalty_match_context(
+            match.team_a.name,
+            match.team_b.name,
+            _penalty_attempts_for_match(repo, match.team_a.name, match.team_b.name),
+        )
     return predict_knockout_match(
         xa, xb,
         dispersion=0.08,    # matches DEFAULT_NB_DISPERSION in services.py
         rho=-0.16,          # matches DEFAULT_DIXON_COLES_RHO
+        home_penalty_win_probability=(
+            penalty_context.team_a_shootout_win_probability if penalty_context else None
+        ),
     )
 
 
-def _render_knockout_advance_section(match, bundle, team_a: str, team_b: str) -> None:
+def _render_knockout_advance_section(match, bundle, team_a: str, team_b: str, repo: Repository) -> None:
     """For knockout matches, surface the 'who advances?' breakdown using the
     regulation xG already computed by the unified pipeline. Skipped silently
     for group-stage games."""
-    pred = _knockout_prediction_for_match(match, bundle)
+    pred = _knockout_prediction_for_match(match, bundle, repo)
     if pred is None:
         return
     st.subheader("Desglose de clasificación")
@@ -702,6 +715,10 @@ def _render_knockout_advance_section(match, bundle, team_a: str, team_b: str) ->
         f"Empate al 90': {pred.p_draw_90:.1%} · Empate tras prórroga: {pred.p_draw_after_et:.1%}. "
         "En eliminatorias el empate solo es una vía hacia prórroga/penaltis, no un resultado final."
     )
+    penalty_context = build_penalty_match_context(
+        team_a, team_b, _penalty_attempts_for_match(repo, team_a, team_b),
+    )
+    st.caption(penalty_context.explanation)
 
 
 def _build_saved_odds_index(saved_odds: list[dict]) -> dict[tuple[str, str, float | None], float]:
@@ -1833,25 +1850,6 @@ def render_dashboard() -> None:
             icon="📅",
         )
 
-    st.write("")
-    left, right = st.columns([1.4, 1])
-    with left:
-        st.subheader("Ruta de lectura")
-        st.markdown(
-            "1. **Actualiza el partido** y revisa qué datos existen.  \n"
-            "2. **Lee probabilidades y rango**, no solo el punto central.  \n"
-            "3. **Introduce tus cuotas** para comparar precio justo y EV.  \n"
-            "4. **Guarda el snapshot** antes del partido y evalúalo después."
-        )
-    with right:
-        st.subheader("Regla de honestidad")
-        callout(
-            "Si faltan datos de equipo, jugador o alineación, el mercado baja de "
-            "confianza o queda como <strong>no estimable</strong>. La ausencia de "
-            "un registro nunca se interpreta como 0.",
-            tone="blue",
-        )
-
     _render_bracket_section(repo)
 
 
@@ -1864,7 +1862,7 @@ BRACKET_STAGE_THEME = {
     "Third-place play-off": {"label": "3rd", "tone": "grey",   "title": "3RD PLACE"},
 }
 BRACKET_ORDER = ("Round of 32", "Round of 16", "Quarter-final",
-                 "Semi-final", "Final", "Third-place play-off")
+                 "Semi-final", "Third-place play-off", "Final")
 
 
 def _bracket_card_html(slot: dict, theme: dict) -> str:
@@ -1911,12 +1909,6 @@ def _render_bracket_section(repo: Repository) -> None:
     if not slots:
         return
     st.subheader("Bracket eliminatorio")
-    section_note(
-        "Cada cruce se rellena solo en cuanto se cierran sus dependencias "
-        "(grupos para R32, ganador del cruce previo para las rondas siguientes). "
-        "Los partidos ya confirmados aparecen en el laboratorio con su modelo "
-        "de avance (90' + prórroga + penaltis)."
-    )
     by_stage: dict[str, list[dict]] = {}
     for slot in slots:
         by_stage.setdefault(slot["stage"], []).append(slot)
@@ -2015,12 +2007,6 @@ def render_prediction_lab() -> None:
             st.caption("Consulta acotada: un partido, máximo 14 llamadas y 0 créditos de cuotas. Conserva la caché si falla.")
     else:
         refresh_clicked = False
-        st.caption(
-            "ℹ️ El recolector por partido solo está disponible en la versión local. "
-            "En la nube los datos se actualizan automáticamente desde Kaggle "
-            "(usa el botón **Actualizar datos de jugadores** en la pestaña Jugadores) "
-            "y los JSON revisados se importan con `scripts/import_deep_match_json.py`."
-        )
     if refresh_clicked:
         with st.spinner("Recopilando y normalizando datos del partido…"):
             result = refresh_match(team_a, team_b, match.kickoff_utc, SPORTS_DATA_DIR)
@@ -2066,14 +2052,7 @@ def render_prediction_lab() -> None:
     deep_count = bundle.deep_count
     if cached:
         _render_bundle(cached, deep_count, len(current_players))
-    elif deep_count or current_players or prior_deep_samples:
-        callout(
-            f"Evidencia de modelo disponible: {prior_deep_samples} partidos profundos previos relacionados, "
-            f"{deep_count} estadísticas revisadas de este partido y {len(current_players)} jugadores del banco diario. "
-            "Falta solo la caché automática del collector para este evento concreto.",
-            tone="green",
-        )
-    else:
+    elif not (deep_count or current_players or prior_deep_samples):
         callout(
             "No hay evidencia previa ni caché automática suficiente para modelar este partido con confianza.",
             tone="red", title="Sin datos",
@@ -2088,7 +2067,7 @@ def render_prediction_lab() -> None:
     ml_model_meta = bundle.ml_model_meta
     if bundle.corrections is not None and corrections_active(bundle.corrections):
         callout(describe_corrections(bundle.corrections), tone="blue", title="Corrección automática activa")
-    knockout_prediction = _knockout_prediction_for_match(match, bundle)
+    knockout_prediction = _knockout_prediction_for_match(match, bundle, repo)
     is_knockout = knockout_prediction is not None
     top_left, top_right = st.columns([1.55, 1])
     with top_left:
@@ -2191,39 +2170,25 @@ def render_prediction_lab() -> None:
                 unified_probabilities,
                 deep_ml_probabilities=deep_ml_probabilities,
             )
-            st.subheader("Diagnóstico de señales")
-            st.caption("La columna 'Modelo Unificado' es la que se usa para las predicciones y el EV. Las otras sirven para entender la discrepancia.")
-            col_cfg = {
-                "Modelo unificado 1X2 (%)": st.column_config.ProgressColumn(format="%.1f%%", min_value=0, max_value=100),
-                "ML cronológico (%)": st.column_config.ProgressColumn(format="%.1f%%", min_value=0, max_value=100),
-                "Matriz de marcadores (%)": st.column_config.ProgressColumn(format="%.1f%%", min_value=0, max_value=100),
-                "Diferencia (pp)": st.column_config.NumberColumn(format="%+.1f"),
-            }
-            if deep_ml_probabilities is not None:
-                col_cfg["ML deep stats (%)"] = st.column_config.ProgressColumn(format="%.1f%%", min_value=0, max_value=100)
-            st.dataframe(
-                pd.DataFrame(comparison_rows),
-                width="stretch",
-                hide_index=True,
-                column_config=col_cfg,
-            )
-            callout(model_disagreement_note(comparison_rows))
-            ml_parts = [
-                f"ML cronológico: diferencia Elo {ml_features['rating_diff']:.3f}, forma y diferencia de goles de los 5 últimos partidos.",
-            ]
-            if deep_ml_probabilities is not None:
-                ml_parts.append(
-                    f"ML deep stats activo con peso {deep_weight*100:.0f}% en el ensemble "
-                    "(HistGBM entrenado con 2938 partidos sobre xG, posesión, tiros, defensa)."
+            with st.expander("Diagnóstico de señales"):
+                col_cfg = {
+                    "Modelo unificado 1X2 (%)": st.column_config.ProgressColumn(format="%.1f%%", min_value=0, max_value=100),
+                    "ML cronológico (%)": st.column_config.ProgressColumn(format="%.1f%%", min_value=0, max_value=100),
+                    "Matriz de marcadores (%)": st.column_config.ProgressColumn(format="%.1f%%", min_value=0, max_value=100),
+                    "Diferencia (pp)": st.column_config.NumberColumn(format="%+.1f"),
+                }
+                if deep_ml_probabilities is not None:
+                    col_cfg["ML deep stats (%)"] = st.column_config.ProgressColumn(format="%.1f%%", min_value=0, max_value=100)
+                st.dataframe(
+                    pd.DataFrame(comparison_rows),
+                    width="stretch",
+                    hide_index=True,
+                    column_config=col_cfg,
                 )
-            else:
-                ml_parts.append("ML deep stats inactivo (alguno de los dos equipos tiene <3 partidos profundos previos).")
-            st.caption(" ".join(ml_parts))
-            st.caption(f"ML cronológico entrenado con {ml_model_meta['sample_size']} partidos · corte {ml_model_meta['training_cutoff_utc']} · validación temporal hasta {ml_model_meta['validation_cutoff_utc']}.")
         else:
             callout("Modelo ML no activado: ejecuta scripts/import_open_history.py para crear el artefacto calibrado.")
 
-        _render_knockout_advance_section(match, bundle, team_a, team_b)
+        _render_knockout_advance_section(match, bundle, team_a, team_b, repo)
 
         st.subheader("Mercados modelados")
         frame = pd.DataFrame(prediction_rows(predictions)).rename(
@@ -2248,41 +2213,6 @@ def render_prediction_lab() -> None:
             for row in persisted_predictions:
                 repo.add_prediction(match.id, row.market_family.value, row.market_name, row.selection_name, row.line, row.probability, row.confidence.value, now, row.explanation)
             st.success(f"Snapshot guardado: {len(persisted_predictions)} mercados.")
-
-        st.subheader("Informe estructurado")
-        form_notes = []
-        for team_name in (team_a, team_b):
-            ledger = explain_team_form(team_name, results, match.kickoff_utc.date())[-5:]
-            form_notes.extend(f"{team_name}: {item.explanation}" for item in ledger)
-        player_notes = [
-            f"{row['player_name']} ({row['team_name']}): {row.get('minutes') or 0} min, "
-            f"{row.get('goals') or 0} goles, {row.get('assists') or 0} asistencias"
-            for row in sorted(
-                current_players,
-                key=lambda item: int(item.get("minutes") or 0),
-                reverse=True,
-            )[:12]
-        ]
-        freshness = _freshness_rows_now()
-        report = build_prediction_report(
-            team_a=team_a,
-            team_b=team_b,
-            probabilities={localize_selection(row.selection_name): row.probability for row in primary},
-            form_notes=form_notes,
-            player_notes=player_notes,
-            context_notes=[
-                f"Sede: {match.venue or 'por confirmar'}",
-                "Campo neutral" if match.neutral_site else "Ventaja de localía aplicable",
-            ] + squad_notes,
-            sources=[
-                {"label": row["Proveedor"], "status": row["Estado"], "updated_at": row["Datos actualizados"]}
-                for row in freshness
-            ],
-            model={"active": "unified_1x2_blend", "challenger": "score_matrix"},
-            missing_data=([] if current_players else ["Sin estadísticas diarias de jugadores para estas selecciones"])
-            + (["Algún banco diario no pudo actualizarse"] if daily_result.failed else []),
-        )
-        st.markdown(report)
 
     elif section == "Mercados y EV":
         saved_odds_for_match = repo.list_manual_odds(match.id)
@@ -2463,6 +2393,7 @@ def render_prediction_lab() -> None:
                             "Intercepciones": row.get("interceptions") or 0,
                             "Pases": int(row.get("passes") or 0),
                             "Amarillas": int(row.get("yellow_cards") or 0),
+                            "Rojas": int(row.get("red_cards") or 0),
                         })
                     else:
                         base.update({
@@ -2471,6 +2402,7 @@ def render_prediction_lab() -> None:
                             "Tiros": int(row.get("shots") or 0),
                             "SOT": int(row.get("shots_on_target") or 0),
                             "Amarillas": int(row.get("yellow_cards") or 0),
+                            "Rojas": int(row.get("red_cards") or 0),
                             "Pases": int(row.get("passes") or 0),
                             "G/90": per90(row.get("goals"), minutes),
                             "A/90": per90(row.get("assists"), minutes),
@@ -2834,6 +2766,77 @@ def _render_global_bias_panel() -> None:
     st.divider()
 
 
+def _int_stat(value) -> int:
+    if value is None or pd.isna(value):
+        return 0
+    try:
+        return max(0, int(round(float(value))))
+    except (TypeError, ValueError):
+        return 0
+
+
+def _card_totals_by_team(existing_stats: list[dict], team_names: tuple[str, str]) -> dict[str, dict[str, int]]:
+    stats_by_team = {str(row.get("team_name") or ""): row for row in existing_stats}
+    totals: dict[str, dict[str, int]] = {}
+    for team_name in team_names:
+        row = stats_by_team.get(team_name, {})
+        totals[team_name] = {
+            "yellow_cards": _int_stat(row.get("yellow_cards")),
+            "red_cards": _int_stat(row.get("red_cards")),
+        }
+    return totals
+
+
+def _card_player_options(repo: Repository, match, current_players: list[dict]) -> dict[str, list[str]]:
+    team_names = (match.team_a.name, match.team_b.name)
+    options: dict[str, list[str]] = {team_name: [] for team_name in team_names}
+    seen: dict[str, set[str]] = {team_name: set() for team_name in team_names}
+
+    def add(team_name: str, player_name: str | None) -> None:
+        name = str(player_name or "").strip()
+        if not name or name in seen[team_name]:
+            return
+        seen[team_name].add(name)
+        options[team_name].append(name)
+
+    for row in current_players:
+        row_team = str(row.get("team_name") or "")
+        for team_name in team_names:
+            if same_team(row_team, team_name):
+                add(team_name, row.get("player_name"))
+
+    for row in repo.list_imported_lineups(match.id):
+        row_team = str(row.get("team_name") or "")
+        for team_name in team_names:
+            if same_team(row_team, team_name):
+                add(team_name, row.get("player_name"))
+
+    for team_name in team_names:
+        if options[team_name]:
+            continue
+        for row in repo.list_current_world_cup_players(team_name):
+            add(team_name, row.get("player_name"))
+
+    return {team_name: sorted(names) for team_name, names in options.items()}
+
+
+def _aggregate_card_assignments(assignments: list[dict]) -> tuple[list[dict], list[str]]:
+    missing: list[str] = []
+    counts: dict[tuple[str, str, str], int] = {}
+    for row in assignments:
+        player_name = str(row.get("player_name") or "").strip()
+        if not player_name:
+            missing.append(f"{row['team_name']} · {row['label']}")
+            continue
+        key = (str(row["team_name"]), player_name, str(row["metric"]))
+        counts[key] = counts.get(key, 0) + 1
+    rows = [
+        {"team_name": team_name, "player_name": player_name, "metric": metric, "count": count}
+        for (team_name, player_name, metric), count in sorted(counts.items())
+    ]
+    return rows, missing
+
+
 def render_backtesting() -> None:
     hero("Calibración", "¿Predice bien el modelo?", "Brier score, acierto y bandas de probabilidad; no confundir una muestra corta con rentabilidad demostrada.")
     _render_global_bias_panel()
@@ -2914,18 +2917,6 @@ def render_backtesting() -> None:
     )
     existing_stats = repo.list_team_match_stats(match.id)
     deep_observations = repo.list_observations(match.id)
-    if existing_stats:
-        visible_stats = [
-            {
-                "Selección": row["team_name"], "xG": row["xg"], "Tiros": row["shots"],
-                "Tiros a puerta": row["shots_on_target"], "Posesión": row["possession"],
-                "Córners": row["corners"], "Amarillas": row["yellow_cards"],
-                "Rojas": row["red_cards"], "Paradas": row["saves"], "Fuente": row["source_id"],
-            }
-            for row in existing_stats
-        ]
-        with st.expander("Resumen estructurado (team_match_stats)"):
-            st.dataframe(pd.DataFrame(visible_stats), width="stretch", hide_index=True)
     # Show ALL deep observations, grouped by category. The JSON brings 70+
     # metrics per team and only ~8 are mirrored into the structured columns;
     # the rest live as observations and are exposed here so the analyst sees
@@ -2957,7 +2948,7 @@ def render_backtesting() -> None:
         ):
             st.caption(
                 "Todas las métricas presentes en el JSON deep importado, una columna por equipo. "
-                "Las que aparecen en el resumen estructurado se usan ya en el modelo; el resto "
+                "Las métricas estructuradas se usan ya en el modelo; el resto "
                 "alimenta auditoría y futuras extensiones."
             )
             for category in (
@@ -2989,8 +2980,19 @@ def render_backtesting() -> None:
                 st.dataframe(pd.DataFrame(table_rows), width="stretch", hide_index=True)
     st.caption("La tabla siguiente contiene solo campos de equipo ausentes. Puedes añadir filas de jugador u otras métricas; las vacías no se guardan.")
     stats_by_team = {row["team_name"]: row for row in existing_stats}
+    team_names = (match.team_a.name, match.team_b.name)
+    card_totals = _card_totals_by_team(existing_stats, team_names)
+    has_card_totals = any(
+        totals["yellow_cards"] or totals["red_cards"]
+        for totals in card_totals.values()
+    )
+    if has_card_totals:
+        current_players_for_cards, _ = _player_context(repo, match)
+        card_options = _card_player_options(repo, match, current_players_for_cards)
+    else:
+        card_options = {}
     settlement_rows = []
-    for team_name in (match.team_a.name, match.team_b.name):
+    for team_name in team_names:
         for metric in ("shots", "shots_on_target", "corners", "yellow_cards", "possession"):
             if stats_by_team.get(team_name, {}).get(metric) is None:
                 settlement_rows.append({"subject_type": "team", "subject_name": team_name, "metric": metric, "value_number": None, "value_text": "", "unit": "match", "sample_size": 1})
@@ -3010,11 +3012,71 @@ def render_backtesting() -> None:
             hide_index=True, width="stretch", num_rows="dynamic",
             key=f"settlement_{match.id}",
         )
+        card_assignments = []
+        if has_card_totals:
+            st.markdown("**Asignar tarjetas a jugadores**")
+            st.caption("Las cantidades vienen de las estadísticas profundas revisadas; cada selector asigna una tarjeta real.")
+            for team_name in team_names:
+                totals = card_totals[team_name]
+                yellow_total = totals["yellow_cards"]
+                red_total = totals["red_cards"]
+                if not yellow_total and not red_total:
+                    continue
+                st.markdown(f"**{team_name}** · {yellow_total} amarillas · {red_total} rojas")
+                options = ["Selecciona jugador"] + card_options.get(team_name, [])
+                if len(options) == 1:
+                    st.warning(f"No hay jugadores disponibles para {team_name}. Importa plantilla o alineación antes de cerrar las tarjetas.")
+                    for index in range(yellow_total):
+                        card_assignments.append({
+                            "team_name": team_name,
+                            "metric": "yellow_cards",
+                            "label": f"amarilla {index + 1}",
+                            "player_name": "",
+                        })
+                    for index in range(red_total):
+                        card_assignments.append({
+                            "team_name": team_name,
+                            "metric": "red_cards",
+                            "label": f"roja {index + 1}",
+                            "player_name": "",
+                        })
+                    continue
+                for index in range(yellow_total):
+                    selected = st.selectbox(
+                        f"Amarilla {index + 1} · {team_name}",
+                        options,
+                        key=f"card_{match.id}_{canonical_team_name(team_name)}_yellow_{index}",
+                    )
+                    card_assignments.append({
+                        "team_name": team_name,
+                        "metric": "yellow_cards",
+                        "label": f"amarilla {index + 1}",
+                        "player_name": "" if selected == "Selecciona jugador" else selected,
+                    })
+                for index in range(red_total):
+                    selected = st.selectbox(
+                        f"Roja {index + 1} · {team_name}",
+                        options,
+                        key=f"card_{match.id}_{canonical_team_name(team_name)}_red_{index}",
+                    )
+                    card_assignments.append({
+                        "team_name": team_name,
+                        "metric": "red_cards",
+                        "label": f"roja {index + 1}",
+                        "player_name": "" if selected == "Selecciona jugador" else selected,
+                    })
         submit_settlement = st.form_submit_button(
             "Guardar resultado, estadísticas y recalibrar", type="primary", width="stretch"
         )
     if submit_settlement:
         rows = [row for row in settlement_stats.to_dict("records") if pd.notna(row.get("value_number")) or str(row.get("value_text") or "").strip()]
+        card_rows, missing_cards = _aggregate_card_assignments(card_assignments if has_card_totals else [])
+        if missing_cards:
+            st.error("Asigna todas las tarjetas antes de cerrar el partido: " + ", ".join(missing_cards))
+            return
+        if has_card_totals and not card_rows:
+            st.error("Hay tarjetas en las estadísticas profundas, pero no hay jugadores asignables para guardarlas.")
+            return
         recorded_at = datetime.now(timezone.utc)
         repo.settle_match_versioned(
             match.id,
@@ -3025,6 +3087,8 @@ def render_backtesting() -> None:
         )
         if rows:
             repo.save_manual_observations(match.id, rows, recorded_at)
+        if card_rows:
+            repo.save_player_card_observations(match.id, card_rows, recorded_at)
         # Re-resolve the knockout bracket: a finished group game may now
         # complete a group → fill R32 slots; a finished knockout game lets
         # its winner bubble up into the next round's slot.
@@ -3032,6 +3096,12 @@ def render_backtesting() -> None:
             resolve_knockout_bracket(repo, recorded_at)
         except Exception:
             pass
+        try:
+            created_suspensions = repo.auto_apply_discipline_suspensions(recorded_at)
+        except Exception:
+            created_suspensions = 0
+        if created_suspensions:
+            st.info(f"Sanciones automáticas generadas: {created_suspensions}.")
         st.success("Partido cerrado. Predicciones compatibles evaluadas y forma disponible para partidos posteriores.")
     predictions = repo.list_predictions(match.id)
     backtests = repo.list_backtests(match.id)

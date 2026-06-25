@@ -60,6 +60,7 @@ CREATE TABLE IF NOT EXISTS player_match_stats (
     shots INTEGER,
     shots_on_target INTEGER,
     yellow_cards INTEGER,
+    red_cards INTEGER,
     passes INTEGER,
     source_id TEXT,
     manual_edit INTEGER NOT NULL DEFAULT 0,
@@ -178,6 +179,27 @@ CREATE TABLE IF NOT EXISTS provider_entities (
     original_name TEXT,
     metadata_json TEXT NOT NULL DEFAULT '{}',
     PRIMARY KEY(provider, entity_type, provider_id)
+);
+
+CREATE TABLE IF NOT EXISTS penalty_attempts (
+    id INTEGER PRIMARY KEY,
+    player_name TEXT NOT NULL,
+    team_name TEXT,
+    transfermarkt_player_id TEXT,
+    attempted_on TEXT,
+    competition TEXT,
+    phase TEXT NOT NULL,
+    outcome TEXT NOT NULL,
+    goalkeeper_name TEXT,
+    opponent_team TEXT,
+    minute TEXT,
+    match_label TEXT,
+    source_provider TEXT NOT NULL,
+    source_url TEXT NOT NULL,
+    source_row_key TEXT NOT NULL,
+    fetched_at_utc TEXT NOT NULL,
+    raw_json TEXT NOT NULL DEFAULT '{}',
+    UNIQUE(source_provider, source_row_key)
 );
 
 CREATE TABLE IF NOT EXISTS historical_matches (
@@ -435,6 +457,18 @@ CREATE INDEX IF NOT EXISTS idx_team_match_stats_match
 ON team_match_stats(match_id);
 CREATE INDEX IF NOT EXISTS idx_player_match_stats_player
 ON player_match_stats(player_id);
+CREATE INDEX IF NOT EXISTS idx_player_match_stats_match
+ON player_match_stats(match_id);
+CREATE INDEX IF NOT EXISTS idx_current_wc_player_stats_team_cards
+ON current_wc_player_stats(team_name, yellow_cards, red_cards);
+CREATE INDEX IF NOT EXISTS idx_squad_context_active
+ON squad_context_events(evidence_status, affected_match_id, starts_at_utc, ends_at_utc);
+CREATE INDEX IF NOT EXISTS idx_squad_context_source
+ON squad_context_events(source_id);
+CREATE INDEX IF NOT EXISTS idx_penalty_attempts_player
+ON penalty_attempts(player_name, transfermarkt_player_id);
+CREATE INDEX IF NOT EXISTS idx_penalty_attempts_team
+ON penalty_attempts(team_name);
 """
 
 
@@ -449,6 +483,7 @@ _OPTIONAL_COLUMNS = {
         ("saves", "INTEGER"),
         ("goals_conceded", "INTEGER"),
         ("save_percentage", "REAL"),
+        ("red_cards", "INTEGER"),
     ],
     # Knockout extras: ET aggregate goals + penalty shoot-out tally. NULL
     # means the match either ended in regulation or hasn't been played yet.

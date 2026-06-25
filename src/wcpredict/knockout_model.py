@@ -58,6 +58,7 @@ def predict_knockout_match(
     rho: float = 0.0,
     home_gk_rating: float | None = None,
     away_gk_rating: float | None = None,
+    home_penalty_win_probability: float | None = None,
 ) -> KnockoutPrediction:
     """Compute advance probabilities for a single knockout tie.
 
@@ -76,7 +77,11 @@ def predict_knockout_match(
     )
     summary_et = summarize_score_matrix(matrix_et, total_line=0.5)
 
-    p_home_penalty = _penalty_win_probability(home_gk_rating, away_gk_rating)
+    p_home_penalty = (
+        max(0.05, min(0.95, float(home_penalty_win_probability)))
+        if home_penalty_win_probability is not None
+        else _penalty_win_probability(home_gk_rating, away_gk_rating)
+    )
     p_away_penalty = 1.0 - p_home_penalty
 
     home_wins_90 = summary_90.team_a_win
