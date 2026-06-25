@@ -168,6 +168,14 @@ class AppContractTests(unittest.TestCase):
         self.assertIn("text-decoration: none !important", theme)
         self.assertIn(".bk-card-link *", theme)
 
+    def test_knockout_prediction_header_prioritizes_advancement(self):
+        source = (Path(__file__).parents[1] / "src" / "wcpredict" / "ui" / "pages.py").read_text(encoding="utf-8")
+        self.assertIn("knockout_prediction = _knockout_prediction_for_match(match, bundle)", source)
+        self.assertIn('st.subheader("Probabilidad de clasificación")', source)
+        self.assertIn('st.metric("Clasifica"', source)
+        self.assertIn('st.subheader("Probabilidad 1X2")', source)
+        self.assertIn('if is_knockout:', source)
+
     def test_volume_markets_render_without_manual_button(self):
         source = (Path(__file__).parents[1] / "src" / "wcpredict" / "ui" / "pages.py").read_text(encoding="utf-8")
         self.assertNotIn('st.button("Calcular mercados de volumen"', source)

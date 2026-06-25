@@ -650,24 +650,30 @@ def _is_knockout_stage(stage: str | None) -> bool:
     return any(stage.startswith(s) for s in KNOCKOUT_STAGES)
 
 
-def _render_knockout_advance_section(match, bundle, team_a: str, team_b: str) -> None:
-    """For knockout matches, surface the 'who advances?' breakdown using the
-    regulation xG already computed by the unified pipeline. Skipped silently
-    for group-stage games."""
+def _knockout_prediction_for_match(match, bundle):
     if not _is_knockout_stage(getattr(match, "stage", None)):
-        return
+        return None
     expected_xg = bundle.expected_xg
     if not expected_xg or len(expected_xg) != 2:
-        return
+        return None
     xa, xb = float(expected_xg[0]), float(expected_xg[1])
     if xa <= 0 or xb <= 0:
-        return
-    pred = predict_knockout_match(
+        return None
+    return predict_knockout_match(
         xa, xb,
         dispersion=0.08,    # matches DEFAULT_NB_DISPERSION in services.py
         rho=-0.16,          # matches DEFAULT_DIXON_COLES_RHO
     )
-    st.subheader("Avance al siguiente cruce")
+
+
+def _render_knockout_advance_section(match, bundle, team_a: str, team_b: str) -> None:
+    """For knockout matches, surface the 'who advances?' breakdown using the
+    regulation xG already computed by the unified pipeline. Skipped silently
+    for group-stage games."""
+    pred = _knockout_prediction_for_match(match, bundle)
+    if pred is None:
+        return
+    st.subheader("Desglose de clasificación")
     section_note(
         "Modelo de eliminatoria: matriz Dixon-Coles de 90' + matriz de prórroga "
         "con xG escalado al tiempo extra + penaltis (~50/50 con ajuste por portero "
@@ -694,7 +700,7 @@ def _render_knockout_advance_section(match, bundle, team_a: str, team_b: str) ->
     )
     st.caption(
         f"Empate al 90': {pred.p_draw_90:.1%} · Empate tras prórroga: {pred.p_draw_after_et:.1%}. "
-        "El 1X2 de arriba sigue refiriéndose al resultado al 90', el avance se decide aquí."
+        "En eliminatorias el empate solo es una vía hacia prórroga/penaltis, no un resultado final."
     )
 
 
@@ -2082,22 +2088,35 @@ def render_prediction_lab() -> None:
     ml_model_meta = bundle.ml_model_meta
     if bundle.corrections is not None and corrections_active(bundle.corrections):
         callout(describe_corrections(bundle.corrections), tone="blue", title="Corrección automática activa")
+    knockout_prediction = _knockout_prediction_for_match(match, bundle)
+    is_knockout = knockout_prediction is not None
     top_left, top_right = st.columns([1.55, 1])
     with top_left:
-        st.subheader("Probabilidad 1X2")
-        section_note(
-            "Modelo unificado: matriz de marcadores (xG ajustado + Dixon-Coles) + "
-            "ML cronológico (Elo, ~50k partidos) + ML deep stats (HistGBM con xG/posesión/tiros/defensa). "
-            "Pesos adaptativos según la muestra deep disponible para cada equipo."
-        )
         home_p = next((row.probability for row in primary if row.selection_name == team_a), 0)
         draw_p = next((row.probability for row in primary if row.selection_name == "Draw"), 0)
         away_p = next((row.probability for row in primary if row.selection_name == team_b), 0)
-        bars_html = (
-            probability_bar(team_with_crest_html(team_a, size=18), home_p, "win")
-            + probability_bar("Empate", draw_p, "draw")
-            + probability_bar(team_with_crest_html(team_b, size=18), away_p, "loss")
-        )
+        if is_knockout:
+            st.subheader("Probabilidad de clasificación")
+            section_note(
+                "Partido de eliminatoria: la probabilidad principal es avanzar al siguiente cruce. "
+                "Incluye victoria en 90', prórroga y tanda de penaltis; el empate al 90' solo alimenta esas vías."
+            )
+            bars_html = (
+                probability_bar(team_with_crest_html(team_a, size=18), knockout_prediction.home_advances, "win")
+                + probability_bar(team_with_crest_html(team_b, size=18), knockout_prediction.away_advances, "loss")
+            )
+        else:
+            st.subheader("Probabilidad 1X2")
+            section_note(
+                "Modelo unificado: matriz de marcadores (xG ajustado + Dixon-Coles) + "
+                "ML cronológico (Elo, ~50k partidos) + ML deep stats (HistGBM con xG/posesión/tiros/defensa). "
+                "Pesos adaptativos según la muestra deep disponible para cada equipo."
+            )
+            bars_html = (
+                probability_bar(team_with_crest_html(team_a, size=18), home_p, "win")
+                + probability_bar("Empate", draw_p, "draw")
+                + probability_bar(team_with_crest_html(team_b, size=18), away_p, "loss")
+            )
         st.markdown(bars_html, unsafe_allow_html=True)
     with top_right:
         best = max(primary, key=lambda row: row.probability)
@@ -2108,7 +2127,12 @@ def render_prediction_lab() -> None:
             None,
         )
         st.subheader("Lectura inmediata")
-        st.metric("Resultado más probable", localize_selection(best.selection_name), f"{best.probability:.1%}")
+        if is_knockout:
+            advancing_team = team_a if knockout_prediction.home_advances >= knockout_prediction.away_advances else team_b
+            advancing_probability = max(knockout_prediction.home_advances, knockout_prediction.away_advances)
+            st.metric("Clasifica", advancing_team, f"{advancing_probability:.1%}")
+        else:
+            st.metric("Resultado más probable", localize_selection(best.selection_name), f"{best.probability:.1%}")
         st.metric("Marcador más probable (modo)", exact_score.selection_name, f"{exact_score.probability:.1%}")
         if expected_row is not None:
             st.metric(
@@ -2123,7 +2147,13 @@ def render_prediction_lab() -> None:
             )
             st.caption(f"Alternativos más probables: {alt_lines}")
         short_explanation = best.explanation.split("Ajuste de jugadores:", 1)[0].strip()
-        st.caption(short_explanation)
+        if is_knockout:
+            st.caption(
+                f"Resultado a 90': {team_a} {home_p:.1%} · empate {draw_p:.1%} · {team_b} {away_p:.1%}. "
+                "Si hay empate, el modelo continúa con prórroga y penaltis."
+            )
+        else:
+            st.caption(short_explanation)
         with st.expander("Ver cálculo y jugadores usados"):
             st.caption(best.explanation)
         if best.confidence.value == "low":
