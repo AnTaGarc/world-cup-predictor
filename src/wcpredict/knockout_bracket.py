@@ -22,6 +22,7 @@ import csv
 import sqlite3
 from dataclasses import dataclass
 from datetime import datetime, timezone
+from itertools import product
 from pathlib import Path
 from typing import Iterable
 
@@ -262,9 +263,10 @@ def _group_position_clinched(
     """Return a mathematically fixed group position before the group is complete.
 
     Conservative by design. Today we only early-resolve a group winner when
-    points/head-to-head make first place impossible to lose. Runner-up and
-    third-place positions still wait for the group table, because goal
-    difference and third-place cross-group rules can change late.
+    every remaining win/draw/loss combination still leaves the same team top
+    on points or strict head-to-head points. Runner-up and third-place
+    positions still wait for the group table, because goal difference and
+    third-place cross-group rules can change late.
     """
     if position != 1:
         return None
@@ -282,16 +284,14 @@ def _group_position_clinched(
         return None
 
     stats: dict[int, dict] = {}
-    remaining_by_team: dict[int, int] = {}
     finished_games: list[tuple[int, int, int, int]] = []
+    unfinished_games: list[tuple[int, int]] = []
     unfinished = 0
     for r in rows:
         home_id = int(r["team_a_id"])
         away_id = int(r["team_b_id"])
         stats.setdefault(home_id, {"name": r["ta"], "pts": 0})
         stats.setdefault(away_id, {"name": r["tb"], "pts": 0})
-        remaining_by_team.setdefault(home_id, 0)
-        remaining_by_team.setdefault(away_id, 0)
         if r["status"] == "finished" and r["goals_a"] is not None and r["goals_b"] is not None:
             ga = int(r["goals_a"])
             gb = int(r["goals_b"])
@@ -305,57 +305,56 @@ def _group_position_clinched(
                 stats[away_id]["pts"] += 1
         else:
             unfinished += 1
-            remaining_by_team[home_id] += 1
-            remaining_by_team[away_id] += 1
+            unfinished_games.append((home_id, away_id))
     if unfinished == 0:
         standings = _group_standings(con, group_letter)
         return standings[0] if standings else None
 
-    def h2h_points(left: int, right: int) -> tuple[int, int] | None:
-        left_points = right_points = 0
-        played = False
-        for home_id, away_id, ga, gb in finished_games:
-            if {home_id, away_id} != {left, right}:
+    def strictly_first_in_scenario(
+        team_id: int,
+        points: dict[int, int],
+        games: list[tuple[int, int, int, int]],
+    ) -> bool:
+        max_points = max(points.values())
+        tied_top = [tid for tid, pts in points.items() if pts == max_points]
+        if team_id not in tied_top:
+            return False
+        if len(tied_top) == 1:
+            return True
+
+        tied = set(tied_top)
+        h2h_points = {tid: 0 for tid in tied_top}
+        for home_id, away_id, ga, gb in games:
+            if home_id not in tied or away_id not in tied:
                 continue
-            played = True
-            if ga == gb:
-                left_points += 1
-                right_points += 1
+            if ga > gb:
+                h2h_points[home_id] += 3
+            elif gb > ga:
+                h2h_points[away_id] += 3
             else:
-                home_won = ga > gb
-                winner = home_id if home_won else away_id
-                if winner == left:
-                    left_points += 3
-                else:
-                    right_points += 3
-        return (left_points, right_points) if played else None
+                h2h_points[home_id] += 1
+                h2h_points[away_id] += 1
+
+        team_h2h = h2h_points[team_id]
+        return all(team_h2h > pts for tid, pts in h2h_points.items() if tid != team_id)
 
     for team_id, values in stats.items():
-        current_points = int(values["pts"])
-        possible_equal_rivals: list[int] = []
-        clinched = True
-        for other_id, other in stats.items():
-            if other_id == team_id:
-                continue
-            other_max = int(other["pts"]) + 3 * remaining_by_team.get(other_id, 0)
-            if other_max > current_points:
-                clinched = False
+        always_first = True
+        # Score margins are intentionally minimal. This early-resolution path
+        # only trusts points and strict head-to-head points; if a scenario
+        # would require goal difference or goals scored, it remains pending.
+        for outcomes in product(((3, 0, 1, 0), (1, 1, 0, 0), (0, 3, 0, 1)), repeat=len(unfinished_games)):
+            scenario_points = {tid: int(s["pts"]) for tid, s in stats.items()}
+            scenario_games = list(finished_games)
+            for (home_id, away_id), (home_pts, away_pts, ga, gb) in zip(unfinished_games, outcomes):
+                scenario_points[home_id] += home_pts
+                scenario_points[away_id] += away_pts
+                scenario_games.append((home_id, away_id, ga, gb))
+            if not strictly_first_in_scenario(team_id, scenario_points, scenario_games):
+                always_first = False
                 break
-            if other_max == current_points:
-                possible_equal_rivals.append(other_id)
-        if not clinched:
-            continue
-        if not possible_equal_rivals:
+        if always_first:
             return team_id, str(values["name"])
-        # A team can clinch first before playing its last match. Example:
-        # 6 pts after two games, only one rival can still reach 6, and that
-        # rival already lost the head-to-head. Even if the leader loses the
-        # remaining fixture, the two-team tie is already decided.
-        if len(possible_equal_rivals) == 1:
-            rival = possible_equal_rivals[0]
-            points = h2h_points(team_id, rival)
-            if points is not None and points[0] > points[1]:
-                return team_id, str(values["name"])
     return None
 
 
@@ -599,10 +598,6 @@ def bracket_view(repo: Repository) -> list[dict]:
     slots = list_bracket_slots(repo)
     if not slots:
         return []
-    with sqlite3.connect(repo.path, timeout=30) as con:
-        con.row_factory = sqlite3.Row
-        teams = {int(r["id"]): r["name"]
-                 for r in con.execute("SELECT id, name FROM teams")}
     def pretty_source(source: str) -> str:
         allowed = _parse_third_allowed(source)
         if allowed is not None:
@@ -614,16 +609,30 @@ def bracket_view(repo: Repository) -> list[dict]:
         return source
 
     view = []
-    for slot in slots:
-        view.append({
-            "stage": slot.stage,
-            "slot_id": slot.slot_id,
-            "kickoff_utc": slot.kickoff_utc,
-            "venue": slot.venue or "",
-            "home": teams.get(slot.home_team_id) if slot.home_team_id else pretty_source(slot.home_source),
-            "away": teams.get(slot.away_team_id) if slot.away_team_id else pretty_source(slot.away_source),
-            "home_pending": slot.home_team_id is None,
-            "away_pending": slot.away_team_id is None,
-            "match_id": slot.match_id,
-        })
+    with sqlite3.connect(repo.path, timeout=30) as con:
+        con.row_factory = sqlite3.Row
+        slots_by_id = {slot.slot_id: slot for slot in slots}
+        third_assignment = _assign_thirds_annex_c(con, slots)
+        teams = {int(r["id"]): r["name"]
+                 for r in con.execute("SELECT id, name FROM teams")}
+        for slot in slots:
+            home_id = slot.home_team_id or _resolve_source(
+                con, slot.home_source, slots_by_id, third_assignment, slot.slot_id
+            )
+            away_id = slot.away_team_id or _resolve_source(
+                con, slot.away_source, slots_by_id, third_assignment, slot.slot_id
+            )
+            home_name = teams.get(home_id) if home_id else None
+            away_name = teams.get(away_id) if away_id else None
+            view.append({
+                "stage": slot.stage,
+                "slot_id": slot.slot_id,
+                "kickoff_utc": slot.kickoff_utc,
+                "venue": slot.venue or "",
+                "home": home_name or pretty_source(slot.home_source),
+                "away": away_name or pretty_source(slot.away_source),
+                "home_pending": home_name is None,
+                "away_pending": away_name is None,
+                "match_id": slot.match_id,
+            })
     return view

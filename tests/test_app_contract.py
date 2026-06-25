@@ -101,9 +101,15 @@ class AppContractTests(unittest.TestCase):
     def test_prediction_bundle_defers_secondary_volume_and_audit_work(self):
         source = (Path(__file__).parents[1] / "src" / "wcpredict" / "ui" / "pages.py").read_text(encoding="utf-8")
         core_start = source.index("def _match_analysis_bundle_cached")
-        core_end = source.find("def _match_auxiliary_context_cached")
-        if core_end == -1:
-            core_end = source.index("def _render_audit_table")
+        secondary_starts = [
+            index for marker in (
+                "def _match_volume_context_cached",
+                "def _match_auxiliary_context_cached",
+                "def _render_audit_table",
+            )
+            if (index := source.find(marker)) != -1
+        ]
+        core_end = min(secondary_starts)
         core = source[core_start:core_end]
         self.assertIn("class MatchAuxiliaryBundle", source)
         self.assertIn("def _match_auxiliary_context_cached", source)
@@ -150,6 +156,20 @@ class AppContractTests(unittest.TestCase):
         self.assertIn("def _resolve_bracket_after_daily_refresh", source)
         self.assertIn('getattr(daily_result, "updated"', source)
         self.assertIn("_resolve_bracket_after_daily_refresh(repo, daily_result)", source)
+
+    def test_bracket_view_resolves_before_rendering(self):
+        source = (Path(__file__).parents[1] / "src" / "wcpredict" / "ui" / "pages.py").read_text(encoding="utf-8")
+        section = source[source.index("def _render_bracket_section"):source.index("def render_prediction_lab")]
+        self.assertLess(section.index("resolve_knockout_bracket(repo)"), section.index("slots = bracket_view(repo)"))
+
+    def test_volume_markets_render_without_manual_button(self):
+        source = (Path(__file__).parents[1] / "src" / "wcpredict" / "ui" / "pages.py").read_text(encoding="utf-8")
+        self.assertNotIn('st.button("Calcular mercados de volumen"', source)
+        self.assertIn("class MatchVolumeBundle", source)
+        self.assertIn("def _match_volume_context_cached", source)
+        self.assertIn("volume_market_rows: list[dict]", source)
+        self.assertIn("def _render_volume_markets", source)
+        self.assertIn("_render_volume_markets(_match_volume_context(match))", source)
 
     def test_player_intelligence_caches_profiles_and_clusters(self):
         source = (Path(__file__).parents[1] / "src" / "wcpredict" / "ui" / "pages.py").read_text(encoding="utf-8")

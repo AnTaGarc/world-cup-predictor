@@ -1045,6 +1045,7 @@ class MatchAnalysisBundle:
     backtests: list = field(default_factory=list)
     volume_predictions: dict = field(default_factory=dict)
     team_volume_predictions: dict = field(default_factory=dict)
+    volume_market_rows: list[dict] = field(default_factory=list)
     team_volume_stat_rows: list[dict] = field(default_factory=list)
     deep_ml_probabilities: dict | None = None
     deep_outcome_weight: float = 0.0
@@ -1054,12 +1055,20 @@ class MatchAnalysisBundle:
 
 
 @dataclass
+class MatchVolumeBundle:
+    volume_predictions: dict = field(default_factory=dict)
+    team_volume_predictions: dict = field(default_factory=dict)
+    volume_market_rows: list[dict] = field(default_factory=list)
+
+
+@dataclass
 class MatchAuxiliaryBundle:
     match_result: dict | None = None
     team_match_stats: list = field(default_factory=list)
     backtests: list = field(default_factory=list)
     volume_predictions: dict = field(default_factory=dict)
     team_volume_predictions: dict = field(default_factory=dict)
+    volume_market_rows: list[dict] = field(default_factory=list)
     team_volume_stat_rows: list[dict] = field(default_factory=list)
     goalkeeper_baselines: dict = field(default_factory=dict)
 
@@ -1278,6 +1287,74 @@ def _match_analysis_bundle_cached(
 
 
 @st.cache_resource(show_spinner=False)
+def _match_volume_context_cached(
+    match_id: int,
+    db_sig: tuple[int, int],
+    engine_version: str,
+) -> MatchVolumeBundle:
+    repo = _repo()
+    match = next(item for item in _matches_cached(db_sig) if item.id == match_id)
+    team_a, team_b = match.team_a.name, match.team_b.name
+    observations_for_match = repo.list_observations(match.id)
+
+    volume_predictions: dict[str, float] = {}
+    team_volume_predictions: dict[str, dict[str, float]] = {}
+    volume_market_rows: list[dict] = []
+    rate_observations = observations_for_match + build_volume_rate_observations(
+        team_a, team_b, repo.list_deep_volume_rows_before(match.kickoff_utc)
+    )
+    volume_lines = {"corners": 8.5, "cards": 3.5, "shots": 21.5, "shots_on_target": 8.5}
+    for metric, line in volume_lines.items():
+        dispersion_row = next(
+            (row for row in rate_observations if row.get("metric") == f"{metric}_dispersion"),
+            None,
+        )
+        dispersion = (
+            float(dispersion_row["value_number"])
+            if dispersion_row and dispersion_row.get("value_number") is not None
+            else None
+        )
+        estimate = estimate_total_market(
+            team_a, team_b, rate_observations, metric, line, dispersion=dispersion
+        )
+        volume_market_rows.append(
+            {
+                "Mercado": localize_metric(metric),
+                "Línea": line,
+                "Modelo": localize_model(estimate.model_family),
+                "Esperado": estimate.expected_total,
+                "Probabilidad de más": estimate.over_probability,
+                "Rango bajo": estimate.low_probability,
+                "Rango alto": estimate.high_probability,
+                "Confianza": estimate.confidence,
+                "Muestra": estimate.sample_size,
+                "Explicación": estimate.explanation,
+            }
+        )
+        if estimate.expected_total is not None:
+            volume_predictions[metric] = float(estimate.expected_total)
+        if estimate.expected_team_a is not None and estimate.expected_team_b is not None:
+            team_volume_predictions[metric] = {
+                team_a: float(estimate.expected_team_a),
+                team_b: float(estimate.expected_team_b),
+            }
+
+    return MatchVolumeBundle(
+        volume_predictions=volume_predictions,
+        team_volume_predictions=team_volume_predictions,
+        volume_market_rows=volume_market_rows,
+    )
+
+
+def _match_volume_context(match) -> MatchVolumeBundle:
+    return _match_volume_context_cached(
+        match.id,
+        _db_signature(),
+        PREDICTION_ENGINE_VERSION,
+    )
+
+
+@st.cache_resource(show_spinner=False)
 def _match_auxiliary_context_cached(
     match_id: int,
     db_sig: tuple[int, int],
@@ -1290,33 +1367,7 @@ def _match_auxiliary_context_cached(
     match_result = repo.get_match_result(match.id)
     team_match_stats = repo.list_team_match_stats(match.id)
     backtests = repo.list_backtests(match.id)
-    observations_for_match = repo.list_observations(match.id)
-
-    volume_predictions: dict[str, float] = {}
-    team_volume_predictions: dict[str, dict[str, float]] = {}
-    rate_observations = observations_for_match + build_volume_rate_observations(
-        team_a, team_b, repo.list_deep_volume_rows_before(match.kickoff_utc)
-    )
-    for metric in ("corners", "cards", "shots", "shots_on_target"):
-        dispersion_row = next(
-            (row for row in rate_observations if row.get("metric") == f"{metric}_dispersion"),
-            None,
-        )
-        dispersion = (
-            float(dispersion_row["value_number"])
-            if dispersion_row and dispersion_row.get("value_number") is not None
-            else None
-        )
-        estimate = estimate_total_market(
-            team_a, team_b, rate_observations, metric, 0.5, dispersion=dispersion
-        )
-        if estimate.expected_total is not None:
-            volume_predictions[metric] = float(estimate.expected_total)
-        if estimate.expected_team_a is not None and estimate.expected_team_b is not None:
-            team_volume_predictions[metric] = {
-                team_a: float(estimate.expected_team_a),
-                team_b: float(estimate.expected_team_b),
-            }
+    volume = _match_volume_context_cached(match_id, db_sig, engine_version)
 
     historical_rows = repo.list_historical_rows_before(match.kickoff_utc)
     historical_results = _historical_rows_to_results(historical_rows)
@@ -1378,8 +1429,9 @@ def _match_auxiliary_context_cached(
         match_result=dict(match_result) if match_result else None,
         team_match_stats=team_match_stats,
         backtests=backtests,
-        volume_predictions=volume_predictions,
-        team_volume_predictions=team_volume_predictions,
+        volume_predictions=volume.volume_predictions,
+        team_volume_predictions=volume.team_volume_predictions,
+        volume_market_rows=volume.volume_market_rows,
         team_volume_stat_rows=team_volume_stat_rows,
         goalkeeper_baselines=goalkeeper_baselines,
     )
@@ -1391,6 +1443,39 @@ def _match_auxiliary_context(match) -> MatchAuxiliaryBundle:
         _db_signature(),
         PREDICTION_ENGINE_VERSION,
     )
+
+
+def _render_volume_markets(auxiliary: MatchVolumeBundle | MatchAuxiliaryBundle) -> None:
+    st.subheader("Mercados de volumen")
+    if auxiliary.volume_market_rows:
+        st.dataframe(
+            pd.DataFrame(auxiliary.volume_market_rows),
+            width="stretch",
+            hide_index=True,
+            column_config={
+                "Probabilidad de más": st.column_config.ProgressColumn(
+                    format="%.1f%%", min_value=0, max_value=1
+                ),
+                "Rango bajo": st.column_config.NumberColumn(format="%.1f%%"),
+                "Rango alto": st.column_config.NumberColumn(format="%.1f%%"),
+            },
+        )
+    else:
+        st.info("No hay muestra suficiente para estimar mercados de volumen.")
+
+    team_volume_stat_rows = getattr(auxiliary, "team_volume_stat_rows", [])
+    if team_volume_stat_rows:
+        st.subheader("Estadísticas estimadas por equipo")
+        st.caption(
+            "Valor esperado por partido para cada métrica, derivado del perfil "
+            "deep (45% propio + 30% rival + 25% media del torneo). Las líneas "
+            "over/under aparecen en la pestaña Mercados y EV cuando hay cuotas."
+        )
+        st.dataframe(
+            pd.DataFrame(team_volume_stat_rows),
+            width="stretch",
+            hide_index=True,
+        )
 
 
 def _render_audit_table(rows) -> None:
@@ -1760,6 +1845,10 @@ def _bracket_card_html(slot: dict, theme: dict) -> str:
 def _render_bracket_section(repo: Repository) -> None:
     """Tournament-style bracket: cards in stage columns, colour-coded per
     round, with crest + name + VS. Pending slots show the source token."""
+    try:
+        resolve_knockout_bracket(repo)
+    except Exception:
+        pass
     slots = bracket_view(repo)
     if not slots:
         return
@@ -2068,43 +2157,7 @@ def render_prediction_lab() -> None:
                 "Máx.": st.column_config.NumberColumn(format="%.1f%%"),
             },
         )
-        if st.button("Calcular mercados de volumen", key=f"volume_model_{match.id}", width="stretch"):
-            auxiliary = _match_auxiliary_context(match)
-            observations = repo.list_observations(match.id) + build_volume_rate_observations(
-                team_a, team_b, repo.list_deep_volume_rows_before(match.kickoff_utc)
-            )
-            st.subheader("Mercados de volumen")
-            volume_rows = []
-            for metric, line in (("corners", 8.5), ("cards", 3.5), ("shots", 21.5), ("shots_on_target", 8.5)):
-                dispersion_row = next(
-                    (row for row in observations if row.get("metric") == f"{metric}_dispersion"),
-                    None,
-                )
-                dispersion = (
-                    float(dispersion_row["value_number"])
-                    if dispersion_row and dispersion_row.get("value_number") is not None
-                    else None
-                )
-                estimate = estimate_total_market(
-                    team_a, team_b, observations, metric, line, dispersion=dispersion
-                )
-                volume_rows.append(
-                    {"Mercado": localize_metric(metric), "Línea": line, "Modelo": localize_model(estimate.model_family), "Esperado": estimate.expected_total, "Probabilidad de más": estimate.over_probability, "Rango bajo": estimate.low_probability, "Rango alto": estimate.high_probability, "Confianza": estimate.confidence, "Muestra": estimate.sample_size, "Explicación": estimate.explanation}
-                )
-            st.dataframe(pd.DataFrame(volume_rows), width="stretch", hide_index=True)
-
-            if auxiliary.team_volume_stat_rows:
-                st.subheader("Estadísticas estimadas por equipo")
-                st.caption(
-                    "Valor esperado por partido para cada métrica, derivado del perfil "
-                    "deep (45% propio + 30% rival + 25% media del torneo). Las líneas "
-                    "over/under aparecen en la pestaña Mercados y EV cuando hay cuotas."
-                )
-                st.dataframe(
-                    pd.DataFrame(auxiliary.team_volume_stat_rows),
-                    width="stretch",
-                    hide_index=True,
-                )
+        _render_volume_markets(_match_volume_context(match))
         if st.button("Guardar snapshot de predicciones", width="stretch"):
             now = datetime.now(timezone.utc)
             persisted_predictions = [

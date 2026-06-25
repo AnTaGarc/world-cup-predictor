@@ -233,6 +233,56 @@ class KnockoutBracketTests(unittest.TestCase):
             self.assertFalse(m79["home_pending"])
             self.assertTrue(m79["away_pending"])
 
+    def test_group_winner_clinch_accounts_for_remaining_rivals_playing_each_other(self):
+        with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as tmp:
+            repo = Repository(Path(tmp) / "app.sqlite")
+            repo.initialize()
+            seed_knockout_bracket(repo, KNOCKOUT_CSV)
+            _seed_partial_group_schedule(
+                repo,
+                "A",
+                ["Mexico", "South Africa", "Spain", "Korea Republic"],
+                [
+                    ("Mexico", "South Africa", 2, 0),
+                    ("Spain", "Korea Republic", 1, 0),
+                    ("Mexico", "Spain", 1, 0),
+                    ("South Africa", "Korea Republic", 2, 0),
+                ],
+            )
+
+            summary = resolve_knockout_bracket(repo)
+            view = bracket_view(repo)
+            m79 = next(slot for slot in view if slot["slot_id"] == "M79")
+
+            self.assertGreaterEqual(summary["resolved"], 1)
+            self.assertEqual("Mexico", m79["home"])
+            self.assertFalse(m79["home_pending"])
+            self.assertTrue(m79["away_pending"])
+
+    def test_bracket_view_shows_clinched_group_winner_even_before_persisted_resolution(self):
+        with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as tmp:
+            repo = Repository(Path(tmp) / "app.sqlite")
+            repo.initialize()
+            seed_knockout_bracket(repo, KNOCKOUT_CSV)
+            _seed_partial_group_schedule(
+                repo,
+                "A",
+                ["Mexico", "South Africa", "Spain", "Korea Republic"],
+                [
+                    ("Mexico", "South Africa", 2, 0),
+                    ("Spain", "Korea Republic", 1, 0),
+                    ("Mexico", "Spain", 1, 0),
+                    ("South Africa", "Korea Republic", 2, 0),
+                ],
+            )
+
+            view = bracket_view(repo)
+            m79 = next(slot for slot in view if slot["slot_id"] == "M79")
+
+            self.assertEqual("Mexico", m79["home"])
+            self.assertFalse(m79["home_pending"])
+            self.assertTrue(m79["away_pending"])
+
     def test_resolution_is_idempotent(self):
         with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as tmp:
             repo = Repository(Path(tmp) / "app.sqlite")
