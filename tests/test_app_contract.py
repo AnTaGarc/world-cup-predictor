@@ -162,6 +162,12 @@ class AppContractTests(unittest.TestCase):
         section = source[source.index("def _render_bracket_section"):source.index("def render_prediction_lab")]
         self.assertLess(section.index("resolve_knockout_bracket(repo)"), section.index("slots = bracket_view(repo)"))
 
+    def test_bracket_links_do_not_show_browser_underlines(self):
+        theme = (Path(__file__).parents[1] / "src" / "wcpredict" / "ui" / "theme.py").read_text(encoding="utf-8")
+        self.assertIn(".bk-card-link", theme)
+        self.assertIn("text-decoration: none !important", theme)
+        self.assertIn(".bk-card-link *", theme)
+
     def test_volume_markets_render_without_manual_button(self):
         source = (Path(__file__).parents[1] / "src" / "wcpredict" / "ui" / "pages.py").read_text(encoding="utf-8")
         self.assertNotIn('st.button("Calcular mercados de volumen"', source)
