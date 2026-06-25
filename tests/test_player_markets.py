@@ -49,6 +49,15 @@ class PlayerMarketTests(unittest.TestCase):
         estimate = estimate_player_market_probability(assumption, MarketFamily.PLAYER_SHOTS, 2.5, 20)
         self.assertEqual("negative_binomial", estimate.model_family)
 
+    def test_expected_minutes_are_not_discounted_a_second_time_by_starter_probability(self):
+        assumption = PlayerAssumption(
+            player_name="Rotation Forward", team_name="Spain", expected_minutes=30,
+            starter_probability=1 / 3, per90_rate=3.0, opponent_adjustment=1.0,
+            manually_estimated=False,
+        )
+        estimate = estimate_player_market_probability(assumption, MarketFamily.PLAYER_SHOTS, 0.5, 12)
+        self.assertAlmostEqual(0.632, estimate.probability, places=3)
+
     def test_player_assumption_is_derived_from_observed_stats(self):
         derived = derive_player_assumption(
             {
@@ -64,6 +73,19 @@ class PlayerMarketTests(unittest.TestCase):
         self.assertAlmostEqual(4 / 6, derived.assumption.starter_probability)
         self.assertEqual(4, derived.sample_size)
         self.assertFalse(derived.assumption.manually_estimated)
+
+    def test_player_assumption_shrinks_tiny_minute_per90_outliers(self):
+        derived = derive_player_assumption(
+            {
+                "player_name": "Cameo Forward", "team_name": "Spain", "games": 1,
+                "starts": 0, "minutes": 10, "shots": 1,
+            },
+            MarketFamily.PLAYER_SHOTS,
+        )
+
+        self.assertIsNotNone(derived)
+        self.assertLess(derived.assumption.per90_rate, 3.0)
+        self.assertIn("contraido", derived.explanation)
 
     def test_player_assumption_refuses_an_unobserved_metric(self):
         derived = derive_player_assumption(
@@ -135,10 +157,10 @@ class GoalkeeperMarketTests(unittest.TestCase):
         estimate = estimate_player_market_probability(
             derived.assumption, MarketFamily.PLAYER_CLEAN_SHEET, line=0.5, sample_size=derived.sample_size,
         )
-        # per90 = (1 - 0.778) × 3.0 = 0.666. Starter prob with Laplace = 3/4.
-        # expected_conceded = 0.666 × 1.0 × 0.75 = 0.4995.
-        # P(0 goals) = exp(-0.4995) ≈ 0.607.
-        self.assertAlmostEqual(0.607, estimate.probability, places=2)
+        # per90 = (1 - 0.778) x 3.0 = 0.666. The 90 expected minutes already
+        # encode exposure, so starter probability is not applied a second time.
+        # P(0 goals) = exp(-0.666) ~= 0.514.
+        self.assertAlmostEqual(0.514, estimate.probability, places=2)
         self.assertEqual("poisson_zero", estimate.model_family)
         self.assertIn("portería a cero", estimate.explanation)
 

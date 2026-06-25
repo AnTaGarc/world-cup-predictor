@@ -1,0 +1,309 @@
+{
+  "numero_de_partidos": 1,
+  "partidos": [
+    {
+      "id": "inglaterra_ghana",
+      "nombre": "Inglaterra vs Ghana",
+      "equipos": {
+        "izquierda_verde": "Inglaterra",
+        "derecha_azul": "Ghana"
+      },
+      "estadisticas": {
+        "resumen_del_partido": {
+          "posesion_de_balon_pct": {
+            "Inglaterra": 79,
+            "Ghana": 21
+          },
+          "distancia_recorrida_km": {
+            "Inglaterra": null,
+            "Ghana": null,
+            "estado_dato": "No mostrado en la captura"
+          },
+          "goles_esperados_xg": {
+            "Inglaterra": 1.28,
+            "Ghana": 0.29
+          },
+          "ocasiones_claras": {
+            "Inglaterra": 2,
+            "Ghana": 1
+          },
+          "tiros_totales": {
+            "Inglaterra": 19,
+            "Ghana": 2
+          },
+          "paradas": {
+            "Inglaterra": 0,
+            "Ghana": 3
+          },
+          "numero_de_sprints": {
+            "Inglaterra": null,
+            "Ghana": null,
+            "estado_dato": "No mostrado en la captura"
+          },
+          "saques_de_esquina": {
+            "Inglaterra": 9,
+            "Ghana": 2
+          },
+          "faltas": {
+            "Inglaterra": 14,
+            "Ghana": 24
+          },
+          "pases": {
+            "Inglaterra": 633,
+            "Ghana": 173
+          },
+          "entradas": {
+            "Inglaterra": 14,
+            "Ghana": 22
+          },
+          "tiros_libres": {
+            "Inglaterra": 24,
+            "Ghana": 14
+          },
+          "tarjetas_amarillas": {
+            "Inglaterra": 1,
+            "Ghana": 1
+          },
+          "tarjetas_rojas": {
+            "Inglaterra": null,
+            "Ghana": null,
+            "estado_dato": "No mostrado en la captura"
+          }
+        },
+        "tiros": {
+          "tiros_totales": {
+            "Inglaterra": 19,
+            "Ghana": 2
+          },
+          "tiros_a_puerta": {
+            "Inglaterra": 3,
+            "Ghana": 1
+          },
+          "tiros_al_palo": {
+            "Inglaterra": 1,
+            "Ghana": 0
+          },
+          "tiros_fuera": {
+            "Inglaterra": 10,
+            "Ghana": 0
+          },
+          "tiros_bloqueados": {
+            "Inglaterra": 6,
+            "Ghana": 1
+          },
+          "tiros_dentro_del_area_penal": {
+            "Inglaterra": 14,
+            "Ghana": 2
+          },
+          "tiros_fuera_del_area": {
+            "Inglaterra": 5,
+            "Ghana": 0
+          }
+        },
+        "ataque": {
+          "ocasiones_claras_realizadas": {
+            "Inglaterra": 0,
+            "Ghana": 0,
+            "origen_dato": "Derivado como ocasiones claras menos ocasiones claras falladas"
+          },
+          "ocasiones_claras_falladas": {
+            "Inglaterra": 2,
+            "Ghana": 1
+          },
+          "pases_en_profundidad": {
+            "Inglaterra": null,
+            "Ghana": null,
+            "estado_dato": "No mostrado en la captura"
+          },
+          "toques_dentro_del_area": {
+            "Inglaterra": 34,
+            "Ghana": 10
+          },
+          "faltas_recibidas_en_el_tercio_final": {
+            "Inglaterra": 6,
+            "Ghana": 0
+          },
+          "fueras_de_juego": {
+            "Inglaterra": 2,
+            "Ghana": 2
+          }
+        },
+        "mapa_de_ataques": {
+          "equipo_mostrado": "Inglaterra",
+          "direccion_de_ataque": "izquierda_a_derecha",
+          "tipo_de_dato": "mapa_de_intensidad_sin_valores_numericos"
+        },
+        "mapa_de_pases": {
+          "equipo_mostrado": "Inglaterra",
+          "descripcion": "Distribución porcentual de los pases según la zona del campo.",
+          "direccion_de_ataque": "izquierda_a_derecha",
+          "distribucion_por_zonas_del_campo_pct": {
+            "tercio_defensivo": 17,
+            "tercio_central": 41,
+            "tercio_ofensivo": 42
+          }
+        },
+        "duelos": {
+          "duelos_ganados_pct_del_total": {
+            "Inglaterra": 56,
+            "Ghana": 44
+          },
+          "perdidas": {
+            "Inglaterra": 12,
+            "Ghana": 8
+          },
+          "duelos_en_el_suelo": {
+            "Inglaterra": {
+              "ganados": 42,
+              "total_mostrado": 80,
+              "porcentaje": 53
+            },
+            "Ghana": {
+              "ganados": 38,
+              "total_mostrado": 80,
+              "porcentaje": 48
+            }
+          },
+          "duelos_aereos": {
+            "Inglaterra": {
+              "ganados": 17,
+              "total_mostrado": 25,
+              "porcentaje": 68
+            },
+            "Ghana": {
+              "ganados": 8,
+              "total_mostrado": 25,
+              "porcentaje": 32
+            }
+          },
+          "regates": {
+            "Inglaterra": {
+              "completados": 6,
+              "intentados": 16,
+              "porcentaje": 38
+            },
+            "Ghana": {
+              "completados": 3,
+              "intentados": 9,
+              "porcentaje": 33
+            }
+          }
+        },
+        "pases": {
+          "pases_precisos": {
+            "Inglaterra": 586,
+            "Ghana": 128
+          },
+          "saques_de_banda": {
+            "Inglaterra": 22,
+            "Ghana": 9
+          },
+          "pases_al_ultimo_tercio": {
+            "Inglaterra": 88,
+            "Ghana": 40
+          },
+          "pases_en_el_ultimo_tercio": {
+            "Inglaterra": {
+              "completados": 173,
+              "intentados": 204,
+              "porcentaje": 85
+            },
+            "Ghana": {
+              "completados": 22,
+              "intentados": 48,
+              "porcentaje": 46
+            }
+          },
+          "pases_largos": {
+            "Inglaterra": {
+              "completados": 14,
+              "intentados": 27,
+              "porcentaje": 52
+            },
+            "Ghana": {
+              "completados": 24,
+              "intentados": 57,
+              "porcentaje": 42
+            }
+          },
+          "centros": {
+            "Inglaterra": {
+              "completados": 7,
+              "intentados": 30,
+              "porcentaje": 23
+            },
+            "Ghana": {
+              "completados": 0,
+              "intentados": 5,
+              "porcentaje": 0
+            }
+          }
+        },
+        "defensa": {
+          "entradas_ganadas_pct": {
+            "Inglaterra": 50,
+            "Ghana": 77
+          },
+          "tackles_totales": {
+            "Inglaterra": 14,
+            "Ghana": 22
+          },
+          "intercepciones": {
+            "Inglaterra": 1,
+            "Ghana": 8
+          },
+          "recuperaciones": {
+            "Inglaterra": 33,
+            "Ghana": 28
+          },
+          "despejes": {
+            "Inglaterra": 6,
+            "Ghana": 39
+          },
+          "errores_que_llevan_a_disparo": {
+            "Inglaterra": 0,
+            "Ghana": 2
+          },
+          "errores_que_llevan_a_gol": {
+            "Inglaterra": null,
+            "Ghana": null,
+            "estado_dato": "No mostrado en la captura"
+          }
+        },
+        "porteria": {
+          "paradas": {
+            "Inglaterra": 0,
+            "Ghana": 3
+          },
+          "goles_evitados": {
+            "Inglaterra": 0.0,
+            "Ghana": 0.34
+          },
+          "grandes_paradas": {
+            "Inglaterra": null,
+            "Ghana": null,
+            "estado_dato": "No mostrado en la captura"
+          },
+          "despejes_por_alto": {
+            "Inglaterra": null,
+            "Ghana": null,
+            "estado_dato": "No mostrado en la captura"
+          },
+          "con_los_punos": {
+            "Inglaterra": 0,
+            "Ghana": 1
+          },
+          "saques_de_puerta": {
+            "Inglaterra": 1,
+            "Ghana": 12
+          }
+        }
+      },
+      "fuentes": [
+        "Captura de pantalla 2026-06-24 000302.png",
+        "Captura de pantalla 2026-06-24 000316.png",
+        "Captura de pantalla 2026-06-24 000335.png"
+      ]
+    }
+  ]
+}

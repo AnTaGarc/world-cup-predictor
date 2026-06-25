@@ -1,0 +1,308 @@
+{
+  "numero_de_partidos": 1,
+  "partidos": [
+    {
+      "id": "colombia_rd_congo",
+      "nombre": "Colombia vs RD Congo",
+      "equipos": {
+        "izquierda_verde": "Colombia",
+        "derecha_azul": "RD Congo"
+      },
+      "estadisticas": {
+        "resumen_del_partido": {
+          "posesion_de_balon_pct": {
+            "Colombia": 64,
+            "RD Congo": 36
+          },
+          "distancia_recorrida_km": {
+            "Colombia": null,
+            "RD Congo": null,
+            "estado_dato": "No mostrado en la captura"
+          },
+          "goles_esperados_xg": {
+            "Colombia": 0.98,
+            "RD Congo": 0.37
+          },
+          "ocasiones_claras": {
+            "Colombia": 2,
+            "RD Congo": 0
+          },
+          "tiros_totales": {
+            "Colombia": 20,
+            "RD Congo": 7
+          },
+          "paradas": {
+            "Colombia": 1,
+            "RD Congo": 8
+          },
+          "numero_de_sprints": {
+            "Colombia": null,
+            "RD Congo": null,
+            "estado_dato": "No mostrado en la captura"
+          },
+          "saques_de_esquina": {
+            "Colombia": 5,
+            "RD Congo": 4
+          },
+          "faltas": {
+            "Colombia": 12,
+            "RD Congo": 16
+          },
+          "pases": {
+            "Colombia": 541,
+            "RD Congo": 299
+          },
+          "entradas": {
+            "Colombia": 10,
+            "RD Congo": 15
+          },
+          "tiros_libres": {
+            "Colombia": 16,
+            "RD Congo": 12
+          },
+          "tarjetas_amarillas": {
+            "Colombia": 2,
+            "RD Congo": 1
+          },
+          "tarjetas_rojas": {
+            "Colombia": null,
+            "RD Congo": null,
+            "estado_dato": "No mostrado en la captura"
+          }
+        },
+        "tiros": {
+          "tiros_totales": {
+            "Colombia": 20,
+            "RD Congo": 7
+          },
+          "tiros_a_puerta": {
+            "Colombia": 9,
+            "RD Congo": 1
+          },
+          "tiros_al_palo": {
+            "Colombia": 1,
+            "RD Congo": 0
+          },
+          "tiros_fuera": {
+            "Colombia": 5,
+            "RD Congo": 4
+          },
+          "tiros_bloqueados": {
+            "Colombia": 6,
+            "RD Congo": 2
+          },
+          "tiros_dentro_del_area_penal": {
+            "Colombia": 11,
+            "RD Congo": 3
+          },
+          "tiros_fuera_del_area": {
+            "Colombia": 9,
+            "RD Congo": 4
+          }
+        },
+        "ataque": {
+          "ocasiones_claras_realizadas": {
+            "Colombia": 0,
+            "RD Congo": 0,
+            "origen_dato": "Derivado como ocasiones claras menos ocasiones claras falladas"
+          },
+          "ocasiones_claras_falladas": {
+            "Colombia": 2,
+            "RD Congo": 0
+          },
+          "pases_en_profundidad": {
+            "Colombia": null,
+            "RD Congo": null,
+            "estado_dato": "No mostrado en la captura"
+          },
+          "toques_dentro_del_area": {
+            "Colombia": 24,
+            "RD Congo": 10
+          },
+          "faltas_recibidas_en_el_tercio_final": {
+            "Colombia": 1,
+            "RD Congo": 0
+          },
+          "fueras_de_juego": {
+            "Colombia": 7,
+            "RD Congo": 0
+          }
+        },
+        "mapa_de_ataques": {
+          "equipo_mostrado": "Colombia",
+          "direccion_de_ataque": "izquierda_a_derecha",
+          "tipo_de_dato": "mapa_de_intensidad_sin_valores_numericos"
+        },
+        "mapa_de_pases": {
+          "equipo_mostrado": "Colombia",
+          "descripcion": "Distribución porcentual de los pases según la zona del campo.",
+          "direccion_de_ataque": "izquierda_a_derecha",
+          "distribucion_por_zonas_del_campo_pct": {
+            "tercio_defensivo": 21,
+            "tercio_central": 46,
+            "tercio_ofensivo": 33
+          }
+        },
+        "duelos": {
+          "duelos_ganados_pct_del_total": {
+            "Colombia": 57,
+            "RD Congo": 43
+          },
+          "perdidas": {
+            "Colombia": 8,
+            "RD Congo": 8
+          },
+          "duelos_en_el_suelo": {
+            "Colombia": {
+              "ganados": 28,
+              "total_mostrado": 54,
+              "porcentaje": 52
+            },
+            "RD Congo": {
+              "ganados": 26,
+              "total_mostrado": 54,
+              "porcentaje": 48
+            }
+          },
+          "duelos_aereos": {
+            "Colombia": {
+              "ganados": 19,
+              "total_mostrado": 28,
+              "porcentaje": 68
+            },
+            "RD Congo": {
+              "ganados": 9,
+              "total_mostrado": 28,
+              "porcentaje": 32
+            }
+          },
+          "regates": {
+            "Colombia": {
+              "completados": 3,
+              "intentados": 10,
+              "porcentaje": 30
+            },
+            "RD Congo": {
+              "completados": 1,
+              "intentados": 2,
+              "porcentaje": 50
+            }
+          }
+        },
+        "pases": {
+          "pases_precisos": {
+            "Colombia": 473,
+            "RD Congo": 226
+          },
+          "saques_de_banda": {
+            "Colombia": 13,
+            "RD Congo": 20
+          },
+          "pases_al_ultimo_tercio": {
+            "Colombia": 63,
+            "RD Congo": 37
+          },
+          "pases_en_el_ultimo_tercio": {
+            "Colombia": {
+              "completados": 116,
+              "intentados": 158,
+              "porcentaje": 73
+            },
+            "RD Congo": {
+              "completados": 33,
+              "intentados": 68,
+              "porcentaje": 49
+            }
+          },
+          "pases_largos": {
+            "Colombia": {
+              "completados": 40,
+              "intentados": 66,
+              "porcentaje": 61
+            },
+            "RD Congo": {
+              "completados": 14,
+              "intentados": 48,
+              "porcentaje": 29
+            }
+          },
+          "centros": {
+            "Colombia": {
+              "completados": 3,
+              "intentados": 12,
+              "porcentaje": 25
+            },
+            "RD Congo": {
+              "completados": 4,
+              "intentados": 14,
+              "porcentaje": 29
+            }
+          }
+        },
+        "defensa": {
+          "entradas_ganadas_pct": {
+            "Colombia": 60,
+            "RD Congo": 67
+          },
+          "tackles_totales": {
+            "Colombia": 10,
+            "RD Congo": 15
+          },
+          "intercepciones": {
+            "Colombia": 10,
+            "RD Congo": 7
+          },
+          "recuperaciones": {
+            "Colombia": 43,
+            "RD Congo": 37
+          },
+          "despejes": {
+            "Colombia": 18,
+            "RD Congo": 19
+          },
+          "errores_que_llevan_a_disparo": {
+            "Colombia": 0,
+            "RD Congo": 1
+          },
+          "errores_que_llevan_a_gol": {
+            "Colombia": null,
+            "RD Congo": null,
+            "estado_dato": "No mostrado en la captura"
+          }
+        },
+        "porteria": {
+          "paradas": {
+            "Colombia": 1,
+            "RD Congo": 8
+          },
+          "goles_evitados": {
+            "Colombia": 0.08,
+            "RD Congo": 0.39
+          },
+          "grandes_paradas": {
+            "Colombia": 1,
+            "RD Congo": 3
+          },
+          "despejes_por_alto": {
+            "Colombia": null,
+            "RD Congo": null,
+            "estado_dato": "No mostrado en la captura"
+          },
+          "con_los_punos": {
+            "Colombia": 0,
+            "RD Congo": 1
+          },
+          "saques_de_puerta": {
+            "Colombia": 11,
+            "RD Congo": 11
+          }
+        }
+      },
+      "fuentes": [
+        "Captura de pantalla 2026-06-24 115127.png",
+        "Captura de pantalla 2026-06-24 115135.png",
+        "Captura de pantalla 2026-06-24 115148.png"
+      ]
+    }
+  ]
+}

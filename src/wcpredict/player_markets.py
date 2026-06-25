@@ -62,6 +62,28 @@ GOALKEEPER_MARKETS = frozenset({
 DEFAULT_OPPONENT_SOT_PER90 = 4.0
 
 
+PER90_PRIORS = {
+    MarketFamily.PLAYER_GOAL: 0.30,
+    MarketFamily.PLAYER_ASSIST: 0.22,
+    MarketFamily.PLAYER_SHOTS: 1.60,
+    MarketFamily.PLAYER_SHOTS_ON_TARGET: 0.60,
+    MarketFamily.PLAYER_CARDS: 0.18,
+    MarketFamily.PLAYER_PASSES: 34.0,
+}
+
+
+def _shrink_per90_rate(raw_rate: float, minutes: float, market_family: MarketFamily) -> tuple[float, bool]:
+    prior_rate = PER90_PRIORS.get(market_family)
+    exposure_matches = max(0.0, minutes / 90.0)
+    if prior_rate is None or exposure_matches >= 3.0:
+        return raw_rate, False
+    prior_matches = 3.0 - exposure_matches
+    shrunk = (
+        raw_rate * exposure_matches + prior_rate * prior_matches
+    ) / max(1e-9, exposure_matches + prior_matches)
+    return shrunk, True
+
+
 def is_goalkeeper(player_row: dict) -> bool:
     """Best-effort detection of goalkeeper rows in the bank."""
     position = str(player_row.get("position") or "").strip().upper()
@@ -91,8 +113,11 @@ def derive_player_assumption(
         starter_probability = (max(0, int(starts_raw)) + 1) / (games + 2)
 
     # Default flow: per-90 from the raw metric divided by total minutes played.
-    per90_rate = float(player_row[metric]) * 90.0 / minutes
+    raw_per90_rate = float(player_row[metric]) * 90.0 / minutes
+    per90_rate, was_shrunk = _shrink_per90_rate(raw_per90_rate, minutes, market_family)
     explanation_detail = f"{per90_rate:.2f} {metric} por 90"
+    if was_shrunk:
+        explanation_detail += f" contraido desde {raw_per90_rate:.2f} por muestra corta"
 
     # Goalkeeper flow: convert save_percentage into a per-90 rate for the
     # selected market by combining it with the expected SOT-against baseline.
@@ -185,7 +210,6 @@ def estimate_player_market_probability(
         assumption.per90_rate
         * minutes_factor
         * assumption.opponent_adjustment
-        * max(0.0, min(1.0, assumption.starter_probability))
     )
     distribution = "negative_binomial" if assumption.dispersion is not None and assumption.dispersion > 0 else "poisson"
     # Clean sheet is a binary market: probability the GK's team concedes 0
@@ -198,7 +222,7 @@ def estimate_player_market_probability(
             confidence=confidence,
             explanation=(
                 f"P(portería a cero) = exp(-{expected_count:.2f}) = {probability:.2%} "
-                f"con minutos, titularidad y rival ya aplicados."
+                f"con minutos esperados y rival ya aplicados."
             ),
             model_family="poisson_zero",
         )
@@ -208,6 +232,6 @@ def estimate_player_market_probability(
     return PlayerMarketEstimate(
         probability=probability,
         confidence=confidence,
-        explanation=f"Tasa esperada {expected_count:.2f} ajustada por minutos, titularidad y rival; distribución {distribution}.",
+        explanation=f"Tasa esperada {expected_count:.2f} ajustada por minutos esperados y rival; distribución {distribution}.",
         model_family=distribution,
     )

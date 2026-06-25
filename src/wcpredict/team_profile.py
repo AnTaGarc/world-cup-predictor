@@ -174,6 +174,72 @@ def _competition_weight(competition: str) -> float:
     return 0.70
 
 
+@dataclass(frozen=True)
+class _TeamProfileBuildContext:
+    tournament_means: dict[str, float]
+    by_match_metric: dict[tuple[str, str], list[tuple[str, float]]]
+    teams_by_match: dict[str, tuple[str, ...]]
+    rows_by_team: dict[str, tuple[dict, ...]]
+
+
+def _build_profile_context(deep_rows: list[dict]) -> _TeamProfileBuildContext:
+    metric_totals: dict[str, list[float]] = {}
+    by_match_metric: dict[tuple[str, str], list[tuple[str, float]]] = {}
+    teams_by_match: dict[str, set[str]] = {}
+    rows_by_team: dict[str, list[dict]] = {}
+    for row in deep_rows:
+        kickoff_key = str(row.get("kickoff_utc") or "")
+        team_name = str(row.get("team_name") or "")
+        if kickoff_key and team_name:
+            teams_by_match.setdefault(kickoff_key, set()).add(team_name)
+        if team_name:
+            rows_by_team.setdefault(canonical_team_name(team_name), []).append(row)
+
+        metric = str(row.get("metric") or "")
+        value = row.get("value_number")
+        if metric not in METRIC_CATALOG or value is None:
+            continue
+        numeric = float(value)
+        metric_totals.setdefault(metric, []).append(numeric)
+        if kickoff_key:
+            by_match_metric.setdefault((kickoff_key, metric), []).append((team_name, numeric))
+
+    tournament_means = {
+        metric: (sum(values) / len(values)) if values else 0.0
+        for metric, values in metric_totals.items()
+    }
+    return _TeamProfileBuildContext(
+        tournament_means=tournament_means,
+        by_match_metric=by_match_metric,
+        teams_by_match={key: tuple(values) for key, values in teams_by_match.items()},
+        rows_by_team={key: tuple(values) for key, values in rows_by_team.items()},
+    )
+
+
+def build_team_profiles(
+    team_names: list[str] | tuple[str, ...],
+    deep_rows: list[dict],
+    as_of_utc: datetime,
+    *,
+    half_life_days: float = 540.0,
+    shrinkage_prior_matches: float = 2.0,
+    opponent_strengths: dict[str, float] | None = None,
+) -> dict[str, TeamProfile]:
+    context = _build_profile_context(deep_rows)
+    return {
+        team_name: _build_team_profile_from_context(
+            team_name,
+            deep_rows,
+            as_of_utc,
+            context,
+            half_life_days=half_life_days,
+            shrinkage_prior_matches=shrinkage_prior_matches,
+            opponent_strengths=opponent_strengths,
+        )
+        for team_name in team_names
+    }
+
+
 def build_team_profile(
     team_name: str,
     deep_rows: list[dict],
@@ -343,6 +409,103 @@ def build_team_profile(
         sample_weight=total_weight,
         conceded_metrics=conceded,
     )
+
+
+def _build_team_profile_from_context(
+    team_name: str,
+    deep_rows: list[dict],
+    as_of_utc: datetime,
+    context: _TeamProfileBuildContext,
+    *,
+    half_life_days: float,
+    shrinkage_prior_matches: float,
+    opponent_strengths: dict[str, float] | None,
+) -> TeamProfile:
+    if as_of_utc.tzinfo is None:
+        as_of_utc = as_of_utc.replace(tzinfo=timezone.utc)
+
+    normalized_strengths: dict[str, float] = {}
+    if opponent_strengths:
+        for raw_name, value in opponent_strengths.items():
+            normalized_strengths[canonical_team_name(str(raw_name))] = float(value)
+    mean_strength = (
+        sum(normalized_strengths.values()) / len(normalized_strengths)
+        if normalized_strengths else 1.0
+    ) or 1.0
+
+    own_rows = context.rows_by_team.get(canonical_team_name(team_name), ())
+    weighted_sums: dict[str, tuple[float, float]] = {}
+    conceded_sums: dict[str, tuple[float, float]] = {}
+    total_weight = 0.0
+    for row in own_rows:
+        metric = str(row.get("metric") or "")
+        value = row.get("value_number")
+        if metric not in METRIC_CATALOG or value is None:
+            continue
+        played = _parse_dt(row.get("kickoff_utc"))
+        if played is None:
+            continue
+        w = _recency_weight(played, as_of_utc, half_life_days)
+        if w <= 0:
+            continue
+        w *= _competition_weight(str(row.get("competition") or ""))
+        if normalized_strengths:
+            opp = _opponent_for_match(context, str(row.get("kickoff_utc") or ""), team_name)
+            if opp:
+                opp_strength = normalized_strengths.get(
+                    canonical_team_name(opp), mean_strength
+                )
+                ratio = max(0.4, min(2.5, opp_strength / mean_strength))
+                w *= ratio
+        s, ws = weighted_sums.get(metric, (0.0, 0.0))
+        weighted_sums[metric] = (s + float(value) * w, ws + w)
+        total_weight = max(total_weight, ws + w)
+
+        pair = context.by_match_metric.get((str(row.get("kickoff_utc") or ""), metric), [])
+        for other_team, other_value in pair:
+            if _matches_team({"team_name": other_team}, team_name):
+                continue
+            cs, cws = conceded_sums.get(metric, (0.0, 0.0))
+            conceded_sums[metric] = (cs + other_value * w, cws + w)
+            break
+
+    metrics: dict[str, MetricEstimate] = {}
+    conceded: dict[str, MetricEstimate] = {}
+    for metric, (catalog_dim, _) in METRIC_CATALOG.items():
+        tmean = context.tournament_means.get(metric, 0.0)
+        s, w = weighted_sums.get(metric, (0.0, 0.0))
+        if w <= 0 and tmean <= 0:
+            continue
+        own_mean = s / w if w > 0 else tmean
+        prior = shrinkage_prior_matches
+        shrunk = (w * own_mean + prior * tmean) / (w + prior)
+        metrics[metric] = MetricEstimate(
+            metric=metric, dimension=catalog_dim, value=shrunk,
+            sample_size=w, tournament_mean=tmean,
+        )
+        cs, cw = conceded_sums.get(metric, (0.0, 0.0))
+        if cw > 0 or tmean > 0:
+            conceded_mean = cs / cw if cw > 0 else tmean
+            conceded_shrunk = (cw * conceded_mean + prior * tmean) / (cw + prior)
+            conceded[metric] = MetricEstimate(
+                metric=metric, dimension=catalog_dim, value=conceded_shrunk,
+                sample_size=cw, tournament_mean=tmean,
+            )
+
+    return TeamProfile(
+        team_name=team_name,
+        metrics=metrics,
+        sample_weight=total_weight,
+        conceded_metrics=conceded,
+    )
+
+
+def _opponent_for_match(context: _TeamProfileBuildContext, kickoff_key: str, team_name: str) -> str | None:
+    from wcpredict.names import same_team
+    for other_team in context.teams_by_match.get(kickoff_key, ()):
+        if not same_team(other_team, team_name):
+            return other_team
+    return None
 
 
 def _matches_team(row: dict, team_name: str) -> bool:

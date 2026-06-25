@@ -51,7 +51,8 @@ def _replay(matches: list[dict[str, Any]], target: tuple[str, str] | None = None
         }
         goals_a, goals_b = int(match["goals_a"]), int(match["goals_b"])
         result = _outcome(goals_a, goals_b)
-        output.append({**features, "played_at_utc": str(match["played_at_utc"]), "outcome": result})
+        if target is None:
+            output.append({**features, "played_at_utc": str(match["played_at_utc"]), "outcome": result})
         actual_a = 1.0 if result == "home" else 0.5 if result == "draw" else 0.0
         expected_a = 1 / (1 + 10 ** ((ratings[team_b] - ratings[team_a]) / 400))
         delta = 24 * (actual_a - expected_a)

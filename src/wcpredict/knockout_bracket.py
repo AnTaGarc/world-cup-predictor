@@ -256,6 +256,109 @@ def _third_place_ranking(con: sqlite3.Connection) -> list[tuple[int, str, str]]:
     return [(tid, name, letter) for tid, name, letter, _ in thirds[:8]]
 
 
+def _group_position_clinched(
+    con: sqlite3.Connection, group_letter: str, position: int
+) -> tuple[int, str] | None:
+    """Return a mathematically fixed group position before the group is complete.
+
+    Conservative by design. Today we only early-resolve a group winner when
+    points/head-to-head make first place impossible to lose. Runner-up and
+    third-place positions still wait for the group table, because goal
+    difference and third-place cross-group rules can change late.
+    """
+    if position != 1:
+        return None
+    rows = con.execute(
+        "SELECT m.id, m.team_a_id, m.team_b_id, m.status, "
+        "  ta.name AS ta, tb.name AS tb, mr.goals_a, mr.goals_b "
+        "FROM matches m "
+        "JOIN teams ta ON ta.id=m.team_a_id "
+        "JOIN teams tb ON tb.id=m.team_b_id "
+        "LEFT JOIN match_results mr ON mr.match_id=m.id "
+        "WHERE m.competition=? AND m.stage LIKE ?",
+        (COMPETITION, f"Group stage - Group {group_letter}"),
+    ).fetchall()
+    if not rows:
+        return None
+
+    stats: dict[int, dict] = {}
+    remaining_by_team: dict[int, int] = {}
+    finished_games: list[tuple[int, int, int, int]] = []
+    unfinished = 0
+    for r in rows:
+        home_id = int(r["team_a_id"])
+        away_id = int(r["team_b_id"])
+        stats.setdefault(home_id, {"name": r["ta"], "pts": 0})
+        stats.setdefault(away_id, {"name": r["tb"], "pts": 0})
+        remaining_by_team.setdefault(home_id, 0)
+        remaining_by_team.setdefault(away_id, 0)
+        if r["status"] == "finished" and r["goals_a"] is not None and r["goals_b"] is not None:
+            ga = int(r["goals_a"])
+            gb = int(r["goals_b"])
+            finished_games.append((home_id, away_id, ga, gb))
+            if ga > gb:
+                stats[home_id]["pts"] += 3
+            elif gb > ga:
+                stats[away_id]["pts"] += 3
+            else:
+                stats[home_id]["pts"] += 1
+                stats[away_id]["pts"] += 1
+        else:
+            unfinished += 1
+            remaining_by_team[home_id] += 1
+            remaining_by_team[away_id] += 1
+    if unfinished == 0:
+        standings = _group_standings(con, group_letter)
+        return standings[0] if standings else None
+
+    def h2h_points(left: int, right: int) -> tuple[int, int] | None:
+        left_points = right_points = 0
+        played = False
+        for home_id, away_id, ga, gb in finished_games:
+            if {home_id, away_id} != {left, right}:
+                continue
+            played = True
+            if ga == gb:
+                left_points += 1
+                right_points += 1
+            else:
+                home_won = ga > gb
+                winner = home_id if home_won else away_id
+                if winner == left:
+                    left_points += 3
+                else:
+                    right_points += 3
+        return (left_points, right_points) if played else None
+
+    for team_id, values in stats.items():
+        current_points = int(values["pts"])
+        possible_equal_rivals: list[int] = []
+        clinched = True
+        for other_id, other in stats.items():
+            if other_id == team_id:
+                continue
+            other_max = int(other["pts"]) + 3 * remaining_by_team.get(other_id, 0)
+            if other_max > current_points:
+                clinched = False
+                break
+            if other_max == current_points:
+                possible_equal_rivals.append(other_id)
+        if not clinched:
+            continue
+        if not possible_equal_rivals:
+            return team_id, str(values["name"])
+        # A team can clinch first before playing its last match. Example:
+        # 6 pts after two games, only one rival can still reach 6, and that
+        # rival already lost the head-to-head. Even if the leader loses the
+        # remaining fixture, the two-team tie is already decided.
+        if len(possible_equal_rivals) == 1:
+            rival = possible_equal_rivals[0]
+            points = h2h_points(team_id, rival)
+            if points is not None and points[0] > points[1]:
+                return team_id, str(values["name"])
+    return None
+
+
 # ---- Slot resolution ---------------------------------------------------------
 
 
@@ -336,6 +439,9 @@ def _resolve_source(
         standings = _group_standings(con, group_letter)
         if len(standings) >= position:
             return int(standings[position - 1][0])
+        clinched = _group_position_clinched(con, group_letter, position)
+        if clinched is not None:
+            return int(clinched[0])
         return None
     # Third-place from a restricted set: "3{ABCDF}" — resolved via the
     # Annex-C bipartite assignment computed once per resolution pass.
@@ -417,6 +523,25 @@ def resolve_knockout_bracket(repo: Repository, now: datetime | None = None) -> d
                 away_id = slot.away_team_id or _resolve_source(
                     con, slot.away_source, slots_by_id, third_assignment, slot.slot_id,
                 )
+                side_changed = (
+                    home_id != slot.home_team_id
+                    or away_id != slot.away_team_id
+                )
+                if side_changed:
+                    con.execute(
+                        "UPDATE knockout_bracket SET home_team_id=?, away_team_id=?, "
+                        "resolved_at_utc=? WHERE id=?",
+                        (home_id, away_id, now.isoformat(), slot.id),
+                    )
+                    summary["resolved"] += 1
+                    slot = BracketSlot(
+                        id=slot.id, stage=slot.stage, slot_id=slot.slot_id,
+                        kickoff_utc=slot.kickoff_utc, venue=slot.venue,
+                        home_source=slot.home_source, away_source=slot.away_source,
+                        home_team_id=home_id, away_team_id=away_id,
+                        match_id=slot.match_id,
+                    )
+                    slots_by_id[slot.slot_id] = slot
                 if home_id is None or away_id is None:
                     continue
                 if (home_id, away_id) == (slot.home_team_id, slot.away_team_id) and slot.match_id is not None:
@@ -455,7 +580,8 @@ def resolve_knockout_bracket(repo: Repository, now: datetime | None = None) -> d
                     "match_id=?, resolved_at_utc=? WHERE id=?",
                     (home_id, away_id, match_id, now.isoformat(), slot.id),
                 )
-                summary["resolved"] += 1
+                if not side_changed:
+                    summary["resolved"] += 1
                 # Refresh cached slot so downstream sources can see this winner.
                 slots_by_id[slot.slot_id] = BracketSlot(
                     id=slot.id, stage=slot.stage, slot_id=slot.slot_id,

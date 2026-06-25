@@ -26,6 +26,7 @@ def prediction_rows(predictions: list[MarketPrediction]) -> list[dict]:
             "Explanation": prediction.explanation,
         }
         for prediction in predictions
+        if prediction.market_name != "Exact Score Grid"
     ]
 
 

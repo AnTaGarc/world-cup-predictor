@@ -1,3 +1,4 @@
+from functools import lru_cache
 import re
 import unicodedata
 
@@ -50,6 +51,7 @@ _ALIASES = {
 }
 
 
+@lru_cache(maxsize=4096)
 def _key(value: str) -> str:
     decomposed = unicodedata.normalize("NFKD", value)
     ascii_value = "".join(ch for ch in decomposed if not unicodedata.combining(ch))
@@ -57,6 +59,7 @@ def _key(value: str) -> str:
     return words
 
 
+@lru_cache(maxsize=4096)
 def canonical_team_name(value: str) -> str:
     key = _key(value)
     if key in _ALIASES:

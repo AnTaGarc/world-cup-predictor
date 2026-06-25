@@ -1,7 +1,7 @@
 from datetime import date, timedelta
 import unittest
 
-from wcpredict.ratings import MatchResult
+from wcpredict.ratings import MatchResult, build_team_ratings
 from wcpredict.services import predict_match_markets
 from wcpredict.advanced_form import XgFormAdjustment
 
@@ -51,17 +51,21 @@ class ServiceTests(unittest.TestCase):
         self.assertIn("Modelo unificado 1X2", home.explanation)
         self.assertNotIn("Modelo unificado 1X2", exact_score.explanation)
 
-    def test_exact_score_is_reweighted_to_the_unified_1x2_direction(self):
+    def test_exact_score_top_three_uses_tempered_scoreline_matrix(self):
         today = date(2026, 6, 19)
         predictions = predict_match_markets(
             "Brazil", "Haiti", [], today,
             outcome_probabilities={"home": 0.90, "draw": 0.05, "away": 0.05},
         )
 
+        home = next(row for row in predictions if row.market_name == "1X2" and row.selection_name == "Brazil")
         exact_score = next(row for row in predictions if row.market_name == "Exact Score")
-        home_goals, away_goals = [int(value) for value in exact_score.selection_name.split("-")]
+        alt_scores = [row.selection_name.split(" ")[0] for row in predictions if row.market_name == "Exact Score (alt)"]
+        top_three = [exact_score.selection_name, *alt_scores[:2]]
 
-        self.assertGreater(home_goals, away_goals)
+        self.assertGreater(home.probability, 0.75)
+        self.assertIn("1-1", top_three)
+        self.assertLess(exact_score.probability, home.probability)
 
     def test_unified_1x2_applies_host_and_deep_process_to_outcome_model(self):
         today = date(2026, 6, 19)
@@ -155,6 +159,28 @@ class ServiceTests(unittest.TestCase):
             self.assertEqual(left.selection_name, right.selection_name)
             self.assertAlmostEqual(left.probability, right.probability, places=10)
 
+    def test_precomputed_ratings_do_not_change_predictions(self):
+        today = date(2026, 6, 18)
+        results = [
+            MatchResult(today - timedelta(days=20), "Spain", "Japan", 2, 0, "competitive"),
+            MatchResult(today - timedelta(days=10), "Spain", "Canada", 3, 1, "world_cup"),
+            MatchResult(today - timedelta(days=10), "Japan", "Canada", 1, 1, "world_cup"),
+        ]
+        baseline = predict_match_markets("Spain", "Japan", results, as_of=today)
+        optimized = predict_match_markets(
+            "Spain",
+            "Japan",
+            results,
+            as_of=today,
+            precomputed_ratings=build_team_ratings(results, today),
+        )
+        self.assertEqual(
+            [(row.market_name, row.selection_name) for row in baseline],
+            [(row.market_name, row.selection_name) for row in optimized],
+        )
+        for left, right in zip(baseline, optimized):
+            self.assertAlmostEqual(left.probability, right.probability, places=12)
+
     def test_positive_xg_shift_lowers_total_goals_prediction(self):
         from wcpredict.model_corrections import ModelCorrections
         today = date(2026, 6, 20)
@@ -208,6 +234,22 @@ class ServiceTests(unittest.TestCase):
             sum(p.probability for p in corrected if p.market_name == "1X2"),
             1.0, places=6,
         )
+
+    def test_unified_1x2_reweights_goal_markets_from_the_same_score_matrix(self):
+        today = date(2026, 6, 20)
+        baseline = predict_match_markets("Spain", "Japan", [], today)
+        draw_heavy = predict_match_markets(
+            "Spain", "Japan", [], today,
+            outcome_probabilities={"home": 0.05, "draw": 0.90, "away": 0.05},
+        )
+
+        base_over = next(p for p in baseline if p.market_name == "Over/Under 2.5" and p.selection_name == "Over 2.5")
+        draw_over = next(p for p in draw_heavy if p.market_name == "Over/Under 2.5" and p.selection_name == "Over 2.5")
+        base_btts = next(p for p in baseline if p.market_name == "Both Teams To Score" and p.selection_name == "Yes")
+        draw_btts = next(p for p in draw_heavy if p.market_name == "Both Teams To Score" and p.selection_name == "Yes")
+
+        self.assertLess(draw_over.probability, base_over.probability)
+        self.assertNotAlmostEqual(base_btts.probability, draw_btts.probability, places=4)
 
     def test_player_context_changes_probabilities_and_keeps_auditable_explanation(self):
         baseline = predict_match_markets("Canada", "Qatar", [], date(2026, 6, 20))

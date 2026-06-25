@@ -1,0 +1,307 @@
+{
+  "numero_de_partidos": 1,
+  "partidos": [
+    {
+      "id": "noruega_senegal",
+      "nombre": "Noruega vs Senegal",
+      "equipos": {
+        "izquierda_verde": "Noruega",
+        "derecha_azul": "Senegal"
+      },
+      "estadisticas": {
+        "resumen_del_partido": {
+          "posesion_de_balon_pct": {
+            "Noruega": 42,
+            "Senegal": 58
+          },
+          "distancia_recorrida_km": {
+            "Noruega": null,
+            "Senegal": null,
+            "estado_dato": "No mostrado en la captura"
+          },
+          "goles_esperados_xg": {
+            "Noruega": 2.2,
+            "Senegal": 1.72
+          },
+          "ocasiones_claras": {
+            "Noruega": 5,
+            "Senegal": 3
+          },
+          "tiros_totales": {
+            "Noruega": 13,
+            "Senegal": 16
+          },
+          "paradas": {
+            "Noruega": 2,
+            "Senegal": 3
+          },
+          "numero_de_sprints": {
+            "Noruega": null,
+            "Senegal": null,
+            "estado_dato": "No mostrado en la captura"
+          },
+          "saques_de_esquina": {
+            "Noruega": 5,
+            "Senegal": 4
+          },
+          "faltas": {
+            "Noruega": 13,
+            "Senegal": 5
+          },
+          "pases": {
+            "Noruega": 353,
+            "Senegal": 489
+          },
+          "entradas": {
+            "Noruega": 10,
+            "Senegal": 16
+          },
+          "tiros_libres": {
+            "Noruega": 5,
+            "Senegal": 13
+          },
+          "tarjetas_amarillas": {
+            "Noruega": null,
+            "Senegal": null,
+            "estado_dato": "No mostrado en la captura"
+          },
+          "tarjetas_rojas": {
+            "Noruega": null,
+            "Senegal": null,
+            "estado_dato": "No mostrado en la captura"
+          }
+        },
+        "tiros": {
+          "tiros_totales": {
+            "Noruega": 13,
+            "Senegal": 16
+          },
+          "tiros_a_puerta": {
+            "Noruega": 7,
+            "Senegal": 4
+          },
+          "tiros_al_palo": {
+            "Noruega": 1,
+            "Senegal": 0
+          },
+          "tiros_fuera": {
+            "Noruega": 3,
+            "Senegal": 7
+          },
+          "tiros_bloqueados": {
+            "Noruega": 3,
+            "Senegal": 5
+          },
+          "tiros_dentro_del_area_penal": {
+            "Noruega": 11,
+            "Senegal": 10
+          },
+          "tiros_fuera_del_area": {
+            "Noruega": 2,
+            "Senegal": 6
+          }
+        },
+        "ataque": {
+          "ocasiones_claras_realizadas": {
+            "Noruega": 2,
+            "Senegal": 2
+          },
+          "ocasiones_claras_falladas": {
+            "Noruega": 3,
+            "Senegal": 1
+          },
+          "pases_en_profundidad": {
+            "Noruega": 2,
+            "Senegal": 1
+          },
+          "toques_dentro_del_area": {
+            "Noruega": 24,
+            "Senegal": 26
+          },
+          "faltas_recibidas_en_el_tercio_final": {
+            "Noruega": 0,
+            "Senegal": 1
+          },
+          "fueras_de_juego": {
+            "Noruega": 0,
+            "Senegal": 4
+          }
+        },
+        "mapa_de_ataques": {
+          "equipo_mostrado": "Noruega",
+          "direccion_de_ataque": "izquierda_a_derecha",
+          "tipo_de_dato": "mapa_de_intensidad_sin_valores_numericos"
+        },
+        "mapa_de_pases": {
+          "equipo_mostrado": "Noruega",
+          "descripcion": "Distribución porcentual de los pases según la zona del campo.",
+          "direccion_de_ataque": "izquierda_a_derecha",
+          "distribucion_por_zonas_del_campo_pct": {
+            "tercio_defensivo": 32,
+            "tercio_central": 42,
+            "tercio_ofensivo": 26
+          }
+        },
+        "duelos": {
+          "duelos_ganados_pct_del_total": {
+            "Noruega": 40,
+            "Senegal": 60
+          },
+          "perdidas": {
+            "Noruega": 12,
+            "Senegal": 4
+          },
+          "duelos_en_el_suelo": {
+            "Noruega": {
+              "ganados": 18,
+              "total_mostrado": 58,
+              "porcentaje": 31
+            },
+            "Senegal": {
+              "ganados": 40,
+              "total_mostrado": 58,
+              "porcentaje": 69
+            }
+          },
+          "duelos_aereos": {
+            "Noruega": {
+              "ganados": 20,
+              "total_mostrado": 37,
+              "porcentaje": 54
+            },
+            "Senegal": {
+              "ganados": 17,
+              "total_mostrado": 37,
+              "porcentaje": 46
+            }
+          },
+          "regates": {
+            "Noruega": {
+              "completados": 5,
+              "intentados": 9,
+              "porcentaje": 56
+            },
+            "Senegal": {
+              "completados": 11,
+              "intentados": 17,
+              "porcentaje": 65
+            }
+          }
+        },
+        "pases": {
+          "pases_precisos": {
+            "Noruega": 282,
+            "Senegal": 430
+          },
+          "saques_de_banda": {
+            "Noruega": 16,
+            "Senegal": 20
+          },
+          "pases_al_ultimo_tercio": {
+            "Noruega": 45,
+            "Senegal": 64
+          },
+          "pases_en_el_ultimo_tercio": {
+            "Noruega": {
+              "completados": 60,
+              "intentados": 99,
+              "porcentaje": 61
+            },
+            "Senegal": {
+              "completados": 134,
+              "intentados": 166,
+              "porcentaje": 81
+            }
+          },
+          "pases_largos": {
+            "Noruega": {
+              "completados": 25,
+              "intentados": 51,
+              "porcentaje": 49
+            },
+            "Senegal": {
+              "completados": 37,
+              "intentados": 58,
+              "porcentaje": 64
+            }
+          },
+          "centros": {
+            "Noruega": {
+              "completados": 3,
+              "intentados": 10,
+              "porcentaje": 30
+            },
+            "Senegal": {
+              "completados": 8,
+              "intentados": 23,
+              "porcentaje": 35
+            }
+          }
+        },
+        "defensa": {
+          "entradas_ganadas_pct": {
+            "Noruega": 90,
+            "Senegal": 44
+          },
+          "tackles_totales": {
+            "Noruega": 10,
+            "Senegal": 16
+          },
+          "intercepciones": {
+            "Noruega": 8,
+            "Senegal": 10
+          },
+          "recuperaciones": {
+            "Noruega": 44,
+            "Senegal": 42
+          },
+          "despejes": {
+            "Noruega": 26,
+            "Senegal": 18
+          },
+          "errores_que_llevan_a_disparo": {
+            "Noruega": 0,
+            "Senegal": 2
+          },
+          "errores_que_llevan_a_gol": {
+            "Noruega": 0,
+            "Senegal": 2
+          }
+        },
+        "porteria": {
+          "paradas": {
+            "Noruega": 2,
+            "Senegal": 3
+          },
+          "goles_evitados": {
+            "Noruega": -0.65,
+            "Senegal": -1.05
+          },
+          "grandes_paradas": {
+            "Noruega": null,
+            "Senegal": null,
+            "estado_dato": "No mostrado en la captura"
+          },
+          "despejes_por_alto": {
+            "Noruega": 0,
+            "Senegal": 1
+          },
+          "con_los_punos": {
+            "Noruega": null,
+            "Senegal": null,
+            "estado_dato": "No mostrado en la captura"
+          },
+          "saques_de_puerta": {
+            "Noruega": 10,
+            "Senegal": 4
+          }
+        }
+      },
+      "fuentes": [
+        "Captura de pantalla 2026-06-23 105308.png",
+        "Captura de pantalla 2026-06-23 105318.png",
+        "Captura de pantalla 2026-06-23 105329.png"
+      ]
+    }
+  ]
+}

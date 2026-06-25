@@ -49,6 +49,80 @@ def _seed_group(repo: Repository, group: str, teams: list[str]) -> dict[str, int
     return ids
 
 
+def _insert_group_result(
+    repo: Repository,
+    group: str,
+    ids: dict[str, int],
+    team_a: str,
+    team_b: str,
+    goals_a: int,
+    goals_b: int,
+    idx: int,
+) -> None:
+    with sqlite3.connect(repo.path) as con:
+        con.execute(
+            "INSERT INTO matches(competition, stage, kickoff_utc, team_a_id, team_b_id, status, venue, neutral_site) "
+            "VALUES(?, ?, ?, ?, ?, 'finished', NULL, 1)",
+            (
+                COMPETITION,
+                f"Group stage - Group {group}",
+                f"2026-06-{idx:02d}T18:00:00+00:00",
+                ids[team_a],
+                ids[team_b],
+            ),
+        )
+        mid = con.execute("SELECT last_insert_rowid()").fetchone()[0]
+        con.execute(
+            "INSERT INTO match_results(match_id, goals_a, goals_b, source_type, recorded_at_utc) "
+            "VALUES(?, ?, ?, 'manual', ?)",
+            (mid, goals_a, goals_b, datetime.now(timezone.utc).isoformat()),
+        )
+        con.commit()
+
+
+def _seed_partial_group_schedule(
+    repo: Repository,
+    group: str,
+    teams: list[str],
+    finished: list[tuple[str, str, int, int]],
+) -> dict[str, int]:
+    ids = {name: repo.upsert_team(name) for name in teams}
+    fixtures = [
+        (teams[0], teams[1]),
+        (teams[2], teams[3]),
+        (teams[0], teams[2]),
+        (teams[1], teams[3]),
+        (teams[0], teams[3]),
+        (teams[1], teams[2]),
+    ]
+    results = {(a, b): (ga, gb) for a, b, ga, gb in finished}
+    with sqlite3.connect(repo.path) as con:
+        for idx, (a, b) in enumerate(fixtures, start=1):
+            result = results.get((a, b))
+            status = "finished" if result is not None else "scheduled"
+            con.execute(
+                "INSERT INTO matches(competition, stage, kickoff_utc, team_a_id, team_b_id, status, venue, neutral_site) "
+                "VALUES(?, ?, ?, ?, ?, ?, NULL, 1)",
+                (
+                    COMPETITION,
+                    f"Group stage - Group {group}",
+                    f"2026-06-{idx:02d}T18:00:00+00:00",
+                    ids[a],
+                    ids[b],
+                    status,
+                ),
+            )
+            if result is not None:
+                mid = con.execute("SELECT last_insert_rowid()").fetchone()[0]
+                con.execute(
+                    "INSERT INTO match_results(match_id, goals_a, goals_b, source_type, recorded_at_utc) "
+                    "VALUES(?, ?, ?, 'manual', ?)",
+                    (mid, result[0], result[1], datetime.now(timezone.utc).isoformat()),
+                )
+        con.commit()
+    return ids
+
+
 class KnockoutBracketTests(unittest.TestCase):
     def test_seed_inserts_all_thirty_two_slots(self):
         with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as tmp:
@@ -91,10 +165,73 @@ class KnockoutBracketTests(unittest.TestCase):
             resolve_knockout_bracket(repo)
             view = bracket_view(repo)
             m79 = next(slot for slot in view if slot["slot_id"] == "M79")
+            self.assertFalse(m79["home_pending"])
+            self.assertEqual("Mexico", m79["home"])
             # 1A could be resolved but the 3{CEFHI} side requires all 12 groups.
             self.assertTrue(m79["away_pending"])
             # Pretty label should mention the third's source groups.
             self.assertIn("3.º de", m79["away"])
+
+    def test_partial_slot_side_updates_without_waiting_for_third_place_assignment(self):
+        with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as tmp:
+            repo = Repository(Path(tmp) / "app.sqlite")
+            repo.initialize()
+            seed_knockout_bracket(repo, KNOCKOUT_CSV)
+            _seed_group(repo, "A", ["Mexico", "South Africa", "Spain", "Korea Republic"])
+            summary = resolve_knockout_bracket(repo)
+            view = bracket_view(repo)
+            m79 = next(slot for slot in view if slot["slot_id"] == "M79")
+            self.assertGreaterEqual(summary["resolved"], 1)
+            self.assertFalse(m79["home_pending"])
+            self.assertTrue(m79["away_pending"])
+            self.assertIsNone(m79["match_id"])
+
+    def test_mathematically_clinched_group_winner_fills_before_group_is_complete(self):
+        with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as tmp:
+            repo = Repository(Path(tmp) / "app.sqlite")
+            repo.initialize()
+            seed_knockout_bracket(repo, KNOCKOUT_CSV)
+            ids = {
+                name: repo.upsert_team(name)
+                for name in ("Mexico", "South Africa", "Spain", "Korea Republic")
+            }
+            _insert_group_result(repo, "A", ids, "Mexico", "South Africa", 1, 0, 1)
+            _insert_group_result(repo, "A", ids, "Mexico", "Spain", 2, 0, 2)
+            _insert_group_result(repo, "A", ids, "Mexico", "Korea Republic", 2, 1, 3)
+            _insert_group_result(repo, "A", ids, "South Africa", "Spain", 0, 0, 4)
+            _insert_group_result(repo, "A", ids, "South Africa", "Korea Republic", 1, 1, 5)
+            resolve_knockout_bracket(repo)
+            view = bracket_view(repo)
+            m79 = next(slot for slot in view if slot["slot_id"] == "M79")
+            self.assertEqual("Mexico", m79["home"])
+            self.assertFalse(m79["home_pending"])
+            self.assertTrue(m79["away_pending"])
+
+    def test_two_wins_and_head_to_head_can_clinch_group_winner_after_matchday_two(self):
+        with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as tmp:
+            repo = Repository(Path(tmp) / "app.sqlite")
+            repo.initialize()
+            seed_knockout_bracket(repo, KNOCKOUT_CSV)
+            _seed_partial_group_schedule(
+                repo,
+                "A",
+                ["Mexico", "South Africa", "Spain", "Korea Republic"],
+                [
+                    ("Mexico", "South Africa", 2, 0),
+                    ("Spain", "Korea Republic", 1, 1),
+                    ("Mexico", "Spain", 1, 0),
+                    ("South Africa", "Korea Republic", 2, 0),
+                ],
+            )
+
+            summary = resolve_knockout_bracket(repo)
+            view = bracket_view(repo)
+            m79 = next(slot for slot in view if slot["slot_id"] == "M79")
+
+            self.assertGreaterEqual(summary["resolved"], 1)
+            self.assertEqual("Mexico", m79["home"])
+            self.assertFalse(m79["home_pending"])
+            self.assertTrue(m79["away_pending"])
 
     def test_resolution_is_idempotent(self):
         with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as tmp:

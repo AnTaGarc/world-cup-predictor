@@ -1,0 +1,306 @@
+{
+  "numero_de_partidos": 1,
+  "partidos": [
+    {
+      "id": "francia_irak",
+      "nombre": "Francia vs Irak",
+      "equipos": {
+        "izquierda_verde": "Francia",
+        "derecha_azul": "Irak"
+      },
+      "estadisticas": {
+        "resumen_del_partido": {
+          "posesion_de_balon_pct": {
+            "Francia": 56,
+            "Irak": 44
+          },
+          "distancia_recorrida_km": {
+            "Francia": null,
+            "Irak": null,
+            "estado_dato": "No mostrado en la captura"
+          },
+          "goles_esperados_xg": {
+            "Francia": 2.67,
+            "Irak": 0.63
+          },
+          "ocasiones_claras": {
+            "Francia": 5,
+            "Irak": 1
+          },
+          "tiros_totales": {
+            "Francia": 19,
+            "Irak": 4
+          },
+          "paradas": {
+            "Francia": 0,
+            "Irak": 2
+          },
+          "numero_de_sprints": {
+            "Francia": null,
+            "Irak": null,
+            "estado_dato": "No mostrado en la captura"
+          },
+          "saques_de_esquina": {
+            "Francia": 4,
+            "Irak": 2
+          },
+          "faltas": {
+            "Francia": 8,
+            "Irak": 4
+          },
+          "pases": {
+            "Francia": 603,
+            "Irak": 481
+          },
+          "entradas": {
+            "Francia": 14,
+            "Irak": 16
+          },
+          "tiros_libres": {
+            "Francia": 4,
+            "Irak": 8
+          },
+          "tarjetas_amarillas": {
+            "Francia": 0,
+            "Irak": 1
+          },
+          "tarjetas_rojas": {
+            "Francia": null,
+            "Irak": null,
+            "estado_dato": "No mostrado en la captura"
+          }
+        },
+        "tiros": {
+          "tiros_totales": {
+            "Francia": 19,
+            "Irak": 4
+          },
+          "tiros_a_puerta": {
+            "Francia": 5,
+            "Irak": 0
+          },
+          "tiros_al_palo": {
+            "Francia": 1,
+            "Irak": 0
+          },
+          "tiros_fuera": {
+            "Francia": 10,
+            "Irak": 3
+          },
+          "tiros_bloqueados": {
+            "Francia": 4,
+            "Irak": 1
+          },
+          "tiros_dentro_del_area_penal": {
+            "Francia": 12,
+            "Irak": 3
+          },
+          "tiros_fuera_del_area": {
+            "Francia": 7,
+            "Irak": 1
+          }
+        },
+        "ataque": {
+          "ocasiones_claras_realizadas": {
+            "Francia": 2,
+            "Irak": 0
+          },
+          "ocasiones_claras_falladas": {
+            "Francia": 3,
+            "Irak": 1
+          },
+          "pases_en_profundidad": {
+            "Francia": 3,
+            "Irak": 0
+          },
+          "toques_dentro_del_area": {
+            "Francia": 41,
+            "Irak": 7
+          },
+          "faltas_recibidas_en_el_tercio_final": {
+            "Francia": 0,
+            "Irak": 1
+          },
+          "fueras_de_juego": {
+            "Francia": 1,
+            "Irak": 0
+          }
+        },
+        "mapa_de_ataques": {
+          "equipo_mostrado": "Francia",
+          "direccion_de_ataque": "izquierda_a_derecha",
+          "tipo_de_dato": "mapa_de_intensidad_sin_valores_numericos"
+        },
+        "mapa_de_pases": {
+          "equipo_mostrado": "Francia",
+          "descripcion": "Distribución porcentual de los pases según la zona del campo.",
+          "direccion_de_ataque": "izquierda_a_derecha",
+          "distribucion_por_zonas_del_campo_pct": {
+            "tercio_defensivo": 12,
+            "tercio_central": 44,
+            "tercio_ofensivo": 44
+          }
+        },
+        "duelos": {
+          "duelos_ganados_pct_del_total": {
+            "Francia": 51,
+            "Irak": 49
+          },
+          "perdidas": {
+            "Francia": 8,
+            "Irak": 9
+          },
+          "duelos_en_el_suelo": {
+            "Francia": {
+              "ganados": 30,
+              "total_mostrado": 60,
+              "porcentaje": 50
+            },
+            "Irak": {
+              "ganados": 30,
+              "total_mostrado": 60,
+              "porcentaje": 50
+            }
+          },
+          "duelos_aereos": {
+            "Francia": {
+              "ganados": 10,
+              "total_mostrado": 18,
+              "porcentaje": 56
+            },
+            "Irak": {
+              "ganados": 8,
+              "total_mostrado": 18,
+              "porcentaje": 44
+            }
+          },
+          "regates": {
+            "Francia": {
+              "completados": 12,
+              "intentados": 20,
+              "porcentaje": 60
+            },
+            "Irak": {
+              "completados": 6,
+              "intentados": 11,
+              "porcentaje": 55
+            }
+          }
+        },
+        "pases": {
+          "pases_precisos": {
+            "Francia": 540,
+            "Irak": 413
+          },
+          "saques_de_banda": {
+            "Francia": 17,
+            "Irak": 15
+          },
+          "pases_al_ultimo_tercio": {
+            "Francia": 87,
+            "Irak": 32
+          },
+          "pases_en_el_ultimo_tercio": {
+            "Francia": {
+              "completados": 197,
+              "intentados": 243,
+              "porcentaje": 81
+            },
+            "Irak": {
+              "completados": 34,
+              "intentados": 53,
+              "porcentaje": 64
+            }
+          },
+          "pases_largos": {
+            "Francia": {
+              "completados": 17,
+              "intentados": 30,
+              "porcentaje": 57
+            },
+            "Irak": {
+              "completados": 21,
+              "intentados": 51,
+              "porcentaje": 41
+            }
+          },
+          "centros": {
+            "Francia": {
+              "completados": 2,
+              "intentados": 14,
+              "porcentaje": 14
+            },
+            "Irak": {
+              "completados": 4,
+              "intentados": 9,
+              "porcentaje": 44
+            }
+          }
+        },
+        "defensa": {
+          "entradas_ganadas_pct": {
+            "Francia": 64,
+            "Irak": 50
+          },
+          "tackles_totales": {
+            "Francia": 14,
+            "Irak": 16
+          },
+          "intercepciones": {
+            "Francia": 5,
+            "Irak": 10
+          },
+          "recuperaciones": {
+            "Francia": 53,
+            "Irak": 44
+          },
+          "despejes": {
+            "Francia": 9,
+            "Irak": 28
+          },
+          "errores_que_llevan_a_disparo": {
+            "Francia": 0,
+            "Irak": 1
+          },
+          "errores_que_llevan_a_gol": {
+            "Francia": 0,
+            "Irak": 1
+          }
+        },
+        "porteria": {
+          "paradas": {
+            "Francia": 0,
+            "Irak": 2
+          },
+          "goles_evitados": {
+            "Francia": 0.0,
+            "Irak": -0.72
+          },
+          "grandes_paradas": {
+            "Francia": null,
+            "Irak": null,
+            "estado_dato": "No mostrado en la captura"
+          },
+          "despejes_por_alto": {
+            "Francia": null,
+            "Irak": null,
+            "estado_dato": "No mostrado en la captura"
+          },
+          "con_los_punos": {
+            "Francia": 0,
+            "Irak": 2
+          },
+          "saques_de_puerta": {
+            "Francia": 4,
+            "Irak": 14
+          }
+        }
+      },
+      "fuentes": [
+        "Captura de pantalla 2026-06-23 104854.png",
+        "Captura de pantalla 2026-06-23 104902.png",
+        "Captura de pantalla 2026-06-23 104913.png"
+      ]
+    }
+  ]
+}

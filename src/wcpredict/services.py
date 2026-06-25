@@ -41,6 +41,10 @@ DEFAULT_BASE_GOALS_PER_TEAM = 1.55
 # the high-20s range, closer to the observed 32.5%.
 DEFAULT_DIXON_COLES_RHO = -0.16
 DEFAULT_NB_DISPERSION = 0.08
+# Exact-score reading is noisier than 1X2. Keep the 1X2/EV markets fully
+# aligned with the unified model, but only partially align scorelines so the
+# top-3 preserves the goal-process distribution instead of over-following ML.
+SCORELINE_OUTCOME_ALIGNMENT_WEIGHT = 0.25
 
 
 @dataclass(frozen=True)
@@ -106,6 +110,20 @@ def _aligned_score_distribution(
     return adjusted, total_mass
 
 
+def _score_matrix_aligned_to_1x2(
+    matrix: list[list[float]],
+    source_1x2: dict[str, float],
+    target_1x2: dict[str, float],
+) -> list[list[float]]:
+    adjusted, total_mass = _aligned_score_distribution(matrix, source_1x2, target_1x2)
+    if total_mass <= 0:
+        return matrix
+    output = [[0.0 for _ in row] for row in matrix]
+    for value, a_goals, b_goals in adjusted:
+        output[a_goals][b_goals] = value / total_mass
+    return output
+
+
 def _most_probable_score_aligned_to_1x2(
     matrix: list[list[float]],
     source_1x2: dict[str, float],
@@ -162,8 +180,9 @@ def predict_match_markets(
     host_factor_a: float = 1.0,
     host_factor_b: float = 1.0,
     corrections: ModelCorrections | None = None,
+    precomputed_ratings: dict | None = None,
 ) -> list[MarketPrediction]:
-    ratings = build_team_ratings(results, as_of=as_of)
+    ratings = precomputed_ratings or build_team_ratings(results, as_of=as_of)
     xg_a, xg_b = expected_goals_for_match(
         team_a, team_b, ratings, base_goals_per_team=DEFAULT_BASE_GOALS_PER_TEAM
     )
@@ -203,16 +222,17 @@ def predict_match_markets(
         max_goals=10,
         rho=DEFAULT_DIXON_COLES_RHO,
     )
-    summary = summarize_score_matrix(matrix, total_line=2.5)
-    exact_score = most_probable_score(matrix)
+    base_summary = summarize_score_matrix(matrix, total_line=2.5)
     score_1x2 = {
-        "home": summary.team_a_win,
-        "draw": summary.draw,
-        "away": summary.team_b_win,
+        "home": base_summary.team_a_win,
+        "draw": base_summary.draw,
+        "away": base_summary.team_b_win,
     }
 
     unified_1x2 = score_1x2
     unified_note = ""
+    final_matrix = matrix
+    scoreline_matrix = matrix
     if outcome_probabilities is not None:
         ml_1x2 = _normalize_1x2(outcome_probabilities)
         process_delta = 0.0
@@ -240,8 +260,8 @@ def predict_match_markets(
         unified_1x2 = _normalize_1x2(blended)
         unified_note = (
             f" Modelo unificado 1X2: ML cronológico {weight:.0%} + matriz de goles {1.0 - weight:.0%}; "
-            "el ML se ajusta por proceso profundo y localía cuando hay evidencia; el marcador exacto se repondera "
-            "para respetar el 1X2 unificado y los mercados de goles siguen usando la matriz."
+            "el ML se ajusta por proceso profundo y localía cuando hay evidencia; la matriz final se repondera "
+            "para que marcadores, O/U y BTTS respeten el 1X2 unificado."
         )
         if (
             corrections is not None
@@ -252,7 +272,18 @@ def predict_match_markets(
                 " Corrección de calibración 1X2 aplicada en log-prob "
                 f"({corrections.sample_size} partidos)."
             )
-        exact_score = _most_probable_score_aligned_to_1x2(matrix, score_1x2, unified_1x2)
+        final_matrix = _score_matrix_aligned_to_1x2(matrix, score_1x2, unified_1x2)
+        scoreline_1x2 = _normalize_1x2({
+            key: (
+                SCORELINE_OUTCOME_ALIGNMENT_WEIGHT * unified_1x2[key]
+                + (1.0 - SCORELINE_OUTCOME_ALIGNMENT_WEIGHT) * score_1x2[key]
+            )
+            for key in ("home", "draw", "away")
+        })
+        scoreline_matrix = _score_matrix_aligned_to_1x2(matrix, score_1x2, scoreline_1x2)
+
+    summary = summarize_score_matrix(final_matrix, total_line=2.5)
+    exact_score = most_probable_score(scoreline_matrix)
 
     team_a_key = canonical_team_name(team_a)
     team_b_key = canonical_team_name(team_b)
@@ -311,12 +342,8 @@ def predict_match_markets(
     # Top alternative scorelines and expected score: provide context next to the
     # mode-based "Exact Score" so the UI can show 2-1/3-1 alternatives instead of
     # the single low-bias mode.
-    if outcome_probabilities is not None:
-        aligned_top = _top_n_aligned_scores(matrix, score_1x2, unified_1x2, n=4)
-        expected_a, expected_b = _aligned_expected_score(matrix, score_1x2, unified_1x2)
-    else:
-        aligned_top = top_n_scores(matrix, n=4)
-        expected_a, expected_b = expected_score(matrix)
+    aligned_top = top_n_scores(scoreline_matrix, n=4)
+    expected_a, expected_b = expected_score(scoreline_matrix)
     for rank, alt in enumerate(aligned_top[1:4], start=2):
         rows.append(
             prediction(
@@ -334,8 +361,19 @@ def predict_match_markets(
             f"Goles esperados según la distribución conjunta: {team_a} {expected_a:.2f}, {team_b} {expected_b:.2f}.",
         )
     )
+    for a_goals in range(min(5, len(final_matrix) - 1) + 1):
+        for b_goals in range(min(5, len(final_matrix[a_goals]) - 1) + 1):
+            rows.append(
+                prediction(
+                    MarketFamily.GOALS, "Exact Score Grid",
+                    f"{a_goals}-{b_goals}", None,
+                    scoreline_matrix[a_goals][b_goals],
+                    "Probabilidad de marcador exacto dentro de la matriz final.",
+                )
+            )
+
     for line in (1.5, 2.5, 3.5, 4.5):
-        total = summarize_score_matrix(matrix, total_line=line)
+        total = summarize_score_matrix(final_matrix, total_line=line)
         rows.extend(
             [
                 prediction(MarketFamily.GOALS, f"Over/Under {line}", f"Over {line}", line, total.over_total),

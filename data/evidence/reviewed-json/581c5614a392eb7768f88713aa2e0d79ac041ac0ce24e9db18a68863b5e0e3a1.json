@@ -1,0 +1,305 @@
+{
+  "numero_de_partidos": 1,
+  "partidos": [
+    {
+      "id": "portugal_uzbekistan",
+      "nombre": "Portugal vs Uzbekistán",
+      "equipos": {
+        "izquierda_verde": "Portugal",
+        "derecha_azul": "Uzbekistán"
+      },
+      "estadisticas": {
+        "resumen_del_partido": {
+          "posesion_de_balon_pct": {
+            "Portugal": 66,
+            "Uzbekistán": 34
+          },
+          "distancia_recorrida_km": {
+            "Portugal": null,
+            "Uzbekistán": null,
+            "estado_dato": "No mostrado en la captura"
+          },
+          "goles_esperados_xg": {
+            "Portugal": 2.41,
+            "Uzbekistán": 0.25
+          },
+          "ocasiones_claras": {
+            "Portugal": 7,
+            "Uzbekistán": 0
+          },
+          "tiros_totales": {
+            "Portugal": 17,
+            "Uzbekistán": 7
+          },
+          "paradas": {
+            "Portugal": 2,
+            "Uzbekistán": 4
+          },
+          "numero_de_sprints": {
+            "Portugal": null,
+            "Uzbekistán": null,
+            "estado_dato": "No mostrado en la captura"
+          },
+          "saques_de_esquina": {
+            "Portugal": 3,
+            "Uzbekistán": 2
+          },
+          "faltas": {
+            "Portugal": 14,
+            "Uzbekistán": 15
+          },
+          "pases": {
+            "Portugal": 624,
+            "Uzbekistán": 325
+          },
+          "entradas": {
+            "Portugal": 14,
+            "Uzbekistán": 18
+          },
+          "tiros_libres": {
+            "Portugal": 15,
+            "Uzbekistán": 14
+          },
+          "tarjetas_amarillas": {
+            "Portugal": 1,
+            "Uzbekistán": 1
+          },
+          "tarjetas_rojas": {
+            "Portugal": null,
+            "Uzbekistán": null,
+            "estado_dato": "No mostrado en la captura"
+          }
+        },
+        "tiros": {
+          "tiros_totales": {
+            "Portugal": 17,
+            "Uzbekistán": 7
+          },
+          "tiros_a_puerta": {
+            "Portugal": 9,
+            "Uzbekistán": 2
+          },
+          "tiros_al_palo": {
+            "Portugal": 0,
+            "Uzbekistán": 0
+          },
+          "tiros_fuera": {
+            "Portugal": 5,
+            "Uzbekistán": 2
+          },
+          "tiros_bloqueados": {
+            "Portugal": 3,
+            "Uzbekistán": 3
+          },
+          "tiros_dentro_del_area_penal": {
+            "Portugal": 12,
+            "Uzbekistán": 4
+          },
+          "tiros_fuera_del_area": {
+            "Portugal": 5,
+            "Uzbekistán": 3
+          }
+        },
+        "ataque": {
+          "ocasiones_claras_realizadas": {
+            "Portugal": 2,
+            "Uzbekistán": 0
+          },
+          "ocasiones_claras_falladas": {
+            "Portugal": 5,
+            "Uzbekistán": 0
+          },
+          "pases_en_profundidad": {
+            "Portugal": 3,
+            "Uzbekistán": 0
+          },
+          "toques_dentro_del_area": {
+            "Portugal": 36,
+            "Uzbekistán": 6
+          },
+          "faltas_recibidas_en_el_tercio_final": {
+            "Portugal": 8,
+            "Uzbekistán": 2
+          },
+          "fueras_de_juego": {
+            "Portugal": 2,
+            "Uzbekistán": 2
+          }
+        },
+        "mapa_de_ataques": {
+          "equipo_mostrado": "Portugal",
+          "direccion_de_ataque": "izquierda_a_derecha",
+          "tipo_de_dato": "mapa_de_intensidad_sin_valores_numericos"
+        },
+        "mapa_de_pases": {
+          "equipo_mostrado": "Portugal",
+          "descripcion": "Distribución porcentual de los pases según la zona del campo.",
+          "direccion_de_ataque": "izquierda_a_derecha",
+          "distribucion_por_zonas_del_campo_pct": {
+            "tercio_defensivo": 19,
+            "tercio_central": 48,
+            "tercio_ofensivo": 33
+          }
+        },
+        "duelos": {
+          "duelos_ganados_pct_del_total": {
+            "Portugal": 55,
+            "Uzbekistán": 45
+          },
+          "perdidas": {
+            "Portugal": 6,
+            "Uzbekistán": 7
+          },
+          "duelos_en_el_suelo": {
+            "Portugal": {
+              "ganados": 43,
+              "total_mostrado": 82,
+              "porcentaje": 52
+            },
+            "Uzbekistán": {
+              "ganados": 39,
+              "total_mostrado": 82,
+              "porcentaje": 48
+            }
+          },
+          "duelos_aereos": {
+            "Portugal": {
+              "ganados": 11,
+              "total_mostrado": 17,
+              "porcentaje": 65
+            },
+            "Uzbekistán": {
+              "ganados": 6,
+              "total_mostrado": 17,
+              "porcentaje": 35
+            }
+          },
+          "regates": {
+            "Portugal": {
+              "completados": 14,
+              "intentados": 26,
+              "porcentaje": 54
+            },
+            "Uzbekistán": {
+              "completados": 8,
+              "intentados": 15,
+              "porcentaje": 53
+            }
+          }
+        },
+        "pases": {
+          "pases_precisos": {
+            "Portugal": 562,
+            "Uzbekistán": 262
+          },
+          "saques_de_banda": {
+            "Portugal": 20,
+            "Uzbekistán": 16
+          },
+          "pases_al_ultimo_tercio": {
+            "Portugal": 79,
+            "Uzbekistán": 31
+          },
+          "pases_en_el_ultimo_tercio": {
+            "Portugal": {
+              "completados": 138,
+              "intentados": 176,
+              "porcentaje": 78
+            },
+            "Uzbekistán": {
+              "completados": 52,
+              "intentados": 74,
+              "porcentaje": 70
+            }
+          },
+          "pases_largos": {
+            "Portugal": {
+              "completados": 23,
+              "intentados": 42,
+              "porcentaje": 55
+            },
+            "Uzbekistán": {
+              "completados": 9,
+              "intentados": 29,
+              "porcentaje": 31
+            }
+          },
+          "centros": {
+            "Portugal": {
+              "completados": 5,
+              "intentados": 22,
+              "porcentaje": 23
+            },
+            "Uzbekistán": {
+              "completados": 0,
+              "intentados": 8,
+              "porcentaje": 0
+            }
+          }
+        },
+        "defensa": {
+          "entradas_ganadas_pct": {
+            "Portugal": 86,
+            "Uzbekistán": 78
+          },
+          "tackles_totales": {
+            "Portugal": 14,
+            "Uzbekistán": 18
+          },
+          "intercepciones": {
+            "Portugal": 5,
+            "Uzbekistán": 14
+          },
+          "recuperaciones": {
+            "Portugal": 50,
+            "Uzbekistán": 46
+          },
+          "despejes": {
+            "Portugal": 16,
+            "Uzbekistán": 29
+          },
+          "errores_que_llevan_a_disparo": {
+            "Portugal": 0,
+            "Uzbekistán": 3
+          },
+          "errores_que_llevan_a_gol": {
+            "Portugal": null,
+            "Uzbekistán": null,
+            "estado_dato": "No mostrado en la captura"
+          }
+        },
+        "porteria": {
+          "paradas": {
+            "Portugal": 2,
+            "Uzbekistán": 4
+          },
+          "goles_evitados": {
+            "Portugal": 0.11,
+            "Uzbekistán": -1.08
+          },
+          "grandes_paradas": {
+            "Portugal": 0,
+            "Uzbekistán": 2
+          },
+          "despejes_por_alto": {
+            "Portugal": 2,
+            "Uzbekistán": 0
+          },
+          "con_los_punos": {
+            "Portugal": 1,
+            "Uzbekistán": 0
+          },
+          "saques_de_puerta": {
+            "Portugal": 5,
+            "Uzbekistán": 6
+          }
+        }
+      },
+      "fuentes": [
+        "Captura de pantalla 2026-06-23 212903.png",
+        "Captura de pantalla 2026-06-23 212913.png",
+        "Captura de pantalla 2026-06-23 212926.png"
+      ]
+    }
+  ]
+}

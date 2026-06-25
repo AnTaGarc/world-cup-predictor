@@ -1,0 +1,307 @@
+{
+  "numero_de_partidos": 1,
+  "partidos": [
+    {
+      "id": "panama_croacia",
+      "nombre": "Panamá vs Croacia",
+      "equipos": {
+        "izquierda_verde": "Panamá",
+        "derecha_azul": "Croacia"
+      },
+      "estadisticas": {
+        "resumen_del_partido": {
+          "posesion_de_balon_pct": {
+            "Panamá": 42,
+            "Croacia": 58
+          },
+          "distancia_recorrida_km": {
+            "Panamá": null,
+            "Croacia": null,
+            "estado_dato": "No mostrado en la captura"
+          },
+          "goles_esperados_xg": {
+            "Panamá": 0.62,
+            "Croacia": 1.66
+          },
+          "ocasiones_claras": {
+            "Panamá": 1,
+            "Croacia": 3
+          },
+          "tiros_totales": {
+            "Panamá": 8,
+            "Croacia": 6
+          },
+          "paradas": {
+            "Panamá": 1,
+            "Croacia": 1
+          },
+          "numero_de_sprints": {
+            "Panamá": null,
+            "Croacia": null,
+            "estado_dato": "No mostrado en la captura"
+          },
+          "saques_de_esquina": {
+            "Panamá": 7,
+            "Croacia": 2
+          },
+          "faltas": {
+            "Panamá": 19,
+            "Croacia": 12
+          },
+          "pases": {
+            "Panamá": 357,
+            "Croacia": 515
+          },
+          "entradas": {
+            "Panamá": 10,
+            "Croacia": 18
+          },
+          "tiros_libres": {
+            "Panamá": 12,
+            "Croacia": 19
+          },
+          "tarjetas_amarillas": {
+            "Panamá": 1,
+            "Croacia": 1
+          },
+          "tarjetas_rojas": {
+            "Panamá": null,
+            "Croacia": null,
+            "estado_dato": "No mostrado en la captura"
+          }
+        },
+        "tiros": {
+          "tiros_totales": {
+            "Panamá": 8,
+            "Croacia": 6
+          },
+          "tiros_a_puerta": {
+            "Panamá": 1,
+            "Croacia": 2
+          },
+          "tiros_al_palo": {
+            "Panamá": 0,
+            "Croacia": 0
+          },
+          "tiros_fuera": {
+            "Panamá": 5,
+            "Croacia": 3
+          },
+          "tiros_bloqueados": {
+            "Panamá": 2,
+            "Croacia": 1
+          },
+          "tiros_dentro_del_area_penal": {
+            "Panamá": 6,
+            "Croacia": 4
+          },
+          "tiros_fuera_del_area": {
+            "Panamá": 2,
+            "Croacia": 2
+          }
+        },
+        "ataque": {
+          "ocasiones_claras_realizadas": {
+            "Panamá": 0,
+            "Croacia": 1
+          },
+          "ocasiones_claras_falladas": {
+            "Panamá": 1,
+            "Croacia": 2
+          },
+          "pases_en_profundidad": {
+            "Panamá": 0,
+            "Croacia": 1
+          },
+          "toques_dentro_del_area": {
+            "Panamá": 20,
+            "Croacia": 12
+          },
+          "faltas_recibidas_en_el_tercio_final": {
+            "Panamá": 2,
+            "Croacia": 3
+          },
+          "fueras_de_juego": {
+            "Panamá": 1,
+            "Croacia": 2
+          }
+        },
+        "mapa_de_ataques": {
+          "equipo_mostrado": "Panamá",
+          "direccion_de_ataque": "izquierda_a_derecha",
+          "tipo_de_dato": "mapa_de_intensidad_sin_valores_numericos"
+        },
+        "mapa_de_pases": {
+          "equipo_mostrado": "Panamá",
+          "descripcion": "Distribución porcentual de los pases según la zona del campo.",
+          "direccion_de_ataque": "izquierda_a_derecha",
+          "distribucion_por_zonas_del_campo_pct": {
+            "tercio_defensivo": 23,
+            "tercio_central": 49,
+            "tercio_ofensivo": 28
+          }
+        },
+        "duelos": {
+          "duelos_ganados_pct_del_total": {
+            "Panamá": 47,
+            "Croacia": 53
+          },
+          "perdidas": {
+            "Panamá": 10,
+            "Croacia": 10
+          },
+          "duelos_en_el_suelo": {
+            "Panamá": {
+              "ganados": 30,
+              "total_mostrado": 76,
+              "porcentaje": 39
+            },
+            "Croacia": {
+              "ganados": 46,
+              "total_mostrado": 76,
+              "porcentaje": 61
+            }
+          },
+          "duelos_aereos": {
+            "Panamá": {
+              "ganados": 24,
+              "total_mostrado": 38,
+              "porcentaje": 63
+            },
+            "Croacia": {
+              "ganados": 14,
+              "total_mostrado": 38,
+              "porcentaje": 37
+            }
+          },
+          "regates": {
+            "Panamá": {
+              "completados": 9,
+              "intentados": 17,
+              "porcentaje": 53
+            },
+            "Croacia": {
+              "completados": 10,
+              "intentados": 10,
+              "porcentaje": 100
+            }
+          }
+        },
+        "pases": {
+          "pases_precisos": {
+            "Panamá": 278,
+            "Croacia": 432
+          },
+          "saques_de_banda": {
+            "Panamá": 14,
+            "Croacia": 14
+          },
+          "pases_al_ultimo_tercio": {
+            "Panamá": 57,
+            "Croacia": 59
+          },
+          "pases_en_el_ultimo_tercio": {
+            "Panamá": {
+              "completados": 70,
+              "intentados": 111,
+              "porcentaje": 63
+            },
+            "Croacia": {
+              "completados": 79,
+              "intentados": 110,
+              "porcentaje": 72
+            }
+          },
+          "pases_largos": {
+            "Panamá": {
+              "completados": 24,
+              "intentados": 57,
+              "porcentaje": 42
+            },
+            "Croacia": {
+              "completados": 17,
+              "intentados": 51,
+              "porcentaje": 33
+            }
+          },
+          "centros": {
+            "Panamá": {
+              "completados": 6,
+              "intentados": 29,
+              "porcentaje": 21
+            },
+            "Croacia": {
+              "completados": 4,
+              "intentados": 17,
+              "porcentaje": 24
+            }
+          }
+        },
+        "defensa": {
+          "entradas_ganadas_pct": {
+            "Panamá": 50,
+            "Croacia": 39
+          },
+          "tackles_totales": {
+            "Panamá": 10,
+            "Croacia": 18
+          },
+          "intercepciones": {
+            "Panamá": 3,
+            "Croacia": 5
+          },
+          "recuperaciones": {
+            "Panamá": 48,
+            "Croacia": 48
+          },
+          "despejes": {
+            "Panamá": 29,
+            "Croacia": 36
+          },
+          "errores_que_llevan_a_disparo": {
+            "Panamá": 0,
+            "Croacia": 1
+          },
+          "errores_que_llevan_a_gol": {
+            "Panamá": null,
+            "Croacia": null,
+            "estado_dato": "No mostrado en la captura"
+          }
+        },
+        "porteria": {
+          "paradas": {
+            "Panamá": 1,
+            "Croacia": 1
+          },
+          "goles_evitados": {
+            "Panamá": 0.24,
+            "Croacia": 0.03
+          },
+          "grandes_paradas": {
+            "Panamá": 1,
+            "Croacia": 1
+          },
+          "despejes_por_alto": {
+            "Panamá": null,
+            "Croacia": null,
+            "estado_dato": "No mostrado en la captura"
+          },
+          "con_los_punos": {
+            "Panamá": null,
+            "Croacia": null,
+            "estado_dato": "No mostrado en la captura"
+          },
+          "saques_de_puerta": {
+            "Panamá": 6,
+            "Croacia": 8
+          }
+        }
+      },
+      "fuentes": [
+        "Captura de pantalla 2026-06-24 030937.png",
+        "Captura de pantalla 2026-06-24 030945.png",
+        "Captura de pantalla 2026-06-24 030954.png"
+      ]
+    }
+  ]
+}

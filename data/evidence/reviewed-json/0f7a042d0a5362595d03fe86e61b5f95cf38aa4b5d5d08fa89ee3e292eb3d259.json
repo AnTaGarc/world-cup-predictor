@@ -1,0 +1,304 @@
+{
+  "numero_de_partidos": 1,
+  "partidos": [
+    {
+      "id": "jordania_argelia",
+      "nombre": "Jordania vs Argelia",
+      "equipos": {
+        "izquierda_verde": "Jordania",
+        "derecha_azul": "Argelia"
+      },
+      "estadisticas": {
+        "resumen_del_partido": {
+          "posesion_de_balon_pct": {
+            "Jordania": 28,
+            "Argelia": 72
+          },
+          "distancia_recorrida_km": {
+            "Jordania": null,
+            "Argelia": null,
+            "estado_dato": "No mostrado en la captura"
+          },
+          "goles_esperados_xg": {
+            "Jordania": 0.63,
+            "Argelia": 1.89
+          },
+          "ocasiones_claras": {
+            "Jordania": 1,
+            "Argelia": 3
+          },
+          "tiros_totales": {
+            "Jordania": 8,
+            "Argelia": 17
+          },
+          "paradas": {
+            "Jordania": 6,
+            "Argelia": 3
+          },
+          "numero_de_sprints": {
+            "Jordania": null,
+            "Argelia": null,
+            "estado_dato": "No mostrado en la captura"
+          },
+          "saques_de_esquina": {
+            "Jordania": 1,
+            "Argelia": 10
+          },
+          "faltas": {
+            "Jordania": 11,
+            "Argelia": 6
+          },
+          "pases": {
+            "Jordania": 251,
+            "Argelia": 641
+          },
+          "entradas": {
+            "Jordania": 30,
+            "Argelia": 25
+          },
+          "tiros_libres": {
+            "Jordania": 6,
+            "Argelia": 11
+          },
+          "tarjetas_amarillas": {
+            "Jordania": 1,
+            "Argelia": 1
+          },
+          "tarjetas_rojas": {
+            "Jordania": null,
+            "Argelia": null,
+            "estado_dato": "No mostrado en la captura"
+          }
+        },
+        "tiros": {
+          "tiros_totales": {
+            "Jordania": 8,
+            "Argelia": 17
+          },
+          "tiros_a_puerta": {
+            "Jordania": 4,
+            "Argelia": 8
+          },
+          "tiros_al_palo": {
+            "Jordania": 0,
+            "Argelia": 0
+          },
+          "tiros_fuera": {
+            "Jordania": 4,
+            "Argelia": 4
+          },
+          "tiros_bloqueados": {
+            "Jordania": 0,
+            "Argelia": 5
+          },
+          "tiros_dentro_del_area_penal": {
+            "Jordania": 4,
+            "Argelia": 11
+          },
+          "tiros_fuera_del_area": {
+            "Jordania": 4,
+            "Argelia": 6
+          }
+        },
+        "ataque": {
+          "ocasiones_claras_realizadas": {
+            "Jordania": 0,
+            "Argelia": 1
+          },
+          "ocasiones_claras_falladas": {
+            "Jordania": 1,
+            "Argelia": 2
+          },
+          "pases_en_profundidad": {
+            "Jordania": 1,
+            "Argelia": 2
+          },
+          "toques_dentro_del_area": {
+            "Jordania": 13,
+            "Argelia": 30
+          },
+          "faltas_recibidas_en_el_tercio_final": {
+            "Jordania": 2,
+            "Argelia": 4
+          },
+          "fueras_de_juego": {
+            "Jordania": 1,
+            "Argelia": 0
+          }
+        },
+        "mapa_de_ataques": {
+          "equipo_mostrado": "Jordania",
+          "direccion_de_ataque": "izquierda_a_derecha",
+          "tipo_de_dato": "mapa_de_intensidad_sin_valores_numericos"
+        },
+        "mapa_de_pases": {
+          "equipo_mostrado": "Jordania",
+          "descripcion": "Distribución porcentual de los pases según la zona del campo.",
+          "direccion_de_ataque": "izquierda_a_derecha",
+          "distribucion_por_zonas_del_campo_pct": {
+            "tercio_defensivo": 37,
+            "tercio_central": 44,
+            "tercio_ofensivo": 19
+          }
+        },
+        "duelos": {
+          "duelos_ganados_pct_del_total": {
+            "Jordania": 48,
+            "Argelia": 52
+          },
+          "perdidas": {
+            "Jordania": 9,
+            "Argelia": 11
+          },
+          "duelos_en_el_suelo": {
+            "Jordania": {
+              "ganados": 42,
+              "total_mostrado": 91,
+              "porcentaje": 46
+            },
+            "Argelia": {
+              "ganados": 49,
+              "total_mostrado": 91,
+              "porcentaje": 54
+            }
+          },
+          "duelos_aereos": {
+            "Jordania": {
+              "ganados": 18,
+              "total_mostrado": 34,
+              "porcentaje": 53
+            },
+            "Argelia": {
+              "ganados": 16,
+              "total_mostrado": 34,
+              "porcentaje": 47
+            }
+          },
+          "regates": {
+            "Jordania": {
+              "completados": 7,
+              "intentados": 23,
+              "porcentaje": 30
+            },
+            "Argelia": {
+              "completados": 14,
+              "intentados": 33,
+              "porcentaje": 42
+            }
+          }
+        },
+        "pases": {
+          "pases_precisos": {
+            "Jordania": 181,
+            "Argelia": 561
+          },
+          "saques_de_banda": {
+            "Jordania": 28,
+            "Argelia": 23
+          },
+          "pases_al_ultimo_tercio": {
+            "Jordania": 37,
+            "Argelia": 88
+          },
+          "pases_en_el_ultimo_tercio": {
+            "Jordania": {
+              "completados": 35,
+              "intentados": 64,
+              "porcentaje": 55
+            },
+            "Argelia": {
+              "completados": 136,
+              "intentados": 180,
+              "porcentaje": 76
+            }
+          },
+          "pases_largos": {
+            "Jordania": {
+              "completados": 23,
+              "intentados": 53,
+              "porcentaje": 43
+            },
+            "Argelia": {
+              "completados": 19,
+              "intentados": 44,
+              "porcentaje": 43
+            }
+          },
+          "centros": {
+            "Jordania": {
+              "completados": 2,
+              "intentados": 5,
+              "porcentaje": 40
+            },
+            "Argelia": {
+              "completados": 5,
+              "intentados": 21,
+              "porcentaje": 24
+            }
+          }
+        },
+        "defensa": {
+          "entradas_ganadas_pct": {
+            "Jordania": 57,
+            "Argelia": 72
+          },
+          "tackles_totales": {
+            "Jordania": 30,
+            "Argelia": 25
+          },
+          "intercepciones": {
+            "Jordania": 3,
+            "Argelia": 11
+          },
+          "recuperaciones": {
+            "Jordania": 56,
+            "Argelia": 58
+          },
+          "despejes": {
+            "Jordania": 36,
+            "Argelia": 15
+          },
+          "errores_que_llevan_a_disparo": {
+            "Jordania": 1,
+            "Argelia": 0
+          },
+          "errores_que_llevan_a_gol": {
+            "Jordania": 0,
+            "Argelia": 1
+          }
+        },
+        "porteria": {
+          "paradas": {
+            "Jordania": 6,
+            "Argelia": 3
+          },
+          "goles_evitados": {
+            "Jordania": 0.1,
+            "Argelia": -0.38
+          },
+          "grandes_paradas": {
+            "Jordania": 1,
+            "Argelia": 0
+          },
+          "despejes_por_alto": {
+            "Jordania": 0,
+            "Argelia": 1
+          },
+          "con_los_punos": {
+            "Jordania": 3,
+            "Argelia": 0
+          },
+          "saques_de_puerta": {
+            "Jordania": 7,
+            "Argelia": 6
+          }
+        }
+      },
+      "fuentes": [
+        "Captura de pantalla 2026-06-23 105413.png",
+        "Captura de pantalla 2026-06-23 105421.png",
+        "Captura de pantalla 2026-06-23 105432.png"
+      ]
+    }
+  ]
+}

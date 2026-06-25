@@ -657,17 +657,19 @@ class Repository:
                 "FROM observations o "
                 "JOIN matches m ON m.id = o.match_id "
                 "JOIN ( "
-                "    SELECT MAX(id) AS id "
-                "    FROM observations "
-                "    WHERE subject_type = 'team' "
-                "      AND evidence_status IN ('verified', 'verified_user_json', "
-                "                              'verified_user_capture', 'verified_external') "
-                "      AND value_number IS NOT NULL "
-                "    GROUP BY match_id, subject_name, metric "
+                "    SELECT MAX(o2.id) AS id "
+                "    FROM observations o2 "
+                "    JOIN matches m2 ON m2.id = o2.match_id "
+                "    WHERE o2.subject_type = 'team' "
+                "      AND o2.evidence_status IN ('verified', 'verified_user_json', "
+                "                                 'verified_user_capture', 'verified_external') "
+                "      AND o2.value_number IS NOT NULL "
+                "      AND m2.kickoff_utc < ? "
+                "    GROUP BY o2.match_id, o2.subject_name, o2.metric "
                 ") latest ON latest.id = o.id "
                 "WHERE m.kickoff_utc < ? "
                 "ORDER BY m.kickoff_utc",
-                (as_of_utc.isoformat(),),
+                (as_of_utc.isoformat(), as_of_utc.isoformat()),
             ).fetchall()
         return [dict(row) for row in rows]
 

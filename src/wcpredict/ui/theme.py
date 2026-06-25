@@ -423,6 +423,70 @@ div[data-testid="stDataEditor"] tbody tr:hover {
   .score-card .score-prob { font-size: 14px; }
 }
 
+.score-grid-wrap {
+  margin: 6px 0 16px;
+  padding: 10px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--panel);
+  color: var(--ink);
+  box-shadow: var(--shadow-card);
+}
+.score-grid-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+.score-grid-head span {
+  font-weight: 800;
+  font-size: 12px;
+  letter-spacing: 0.02em;
+  color: var(--ink);
+}
+.score-grid-head small {
+  color: var(--muted);
+  font-size: 10.5px;
+}
+.score-grid {
+  display: grid;
+  gap: 3px;
+}
+.score-axis {
+  min-height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.score-cell {
+  aspect-ratio: 1 / 1;
+  min-height: 28px;
+  border-radius: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background:
+    linear-gradient(135deg, rgba(23, 105, 224, calc(var(--heat) * 0.86)), rgba(23, 132, 91, calc(var(--heat) * 0.66))),
+    #ffffff;
+  color: var(--ink);
+  font-size: 10px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  box-shadow: inset 0 0 0 1px rgba(16, 35, 63, 0.09);
+}
+@media (max-width: 640px) {
+  .score-grid-wrap { padding: 8px; }
+  .score-grid { gap: 2px; }
+  .score-axis, .score-cell { min-height: 24px; font-size: 9px; }
+  .score-grid-head { display: block; }
+  .score-grid-head small { display: block; margin-top: 3px; }
+}
+
 /* ---- Bracket (dashboard, tournament style) ---- */
 .bk-board {
   display: grid;

@@ -3,7 +3,13 @@ from datetime import datetime
 import csv
 import io
 
-from wcpredict.market_math import expected_value, fair_odds, implied_probability
+from wcpredict.market_math import (
+    expected_value,
+    expected_value_with_push,
+    fair_odds,
+    fair_odds_with_push,
+    implied_probability,
+)
 from wcpredict.models import MarketFamily
 
 
@@ -67,7 +73,18 @@ def compare_odds_to_probability(
     market_name: str,
     selection_name: str,
     confidence: str,
+    push_probability: float = 0.0,
 ) -> OddsComparison:
+    row_fair_odds = (
+        fair_odds_with_push(probability, push_probability)
+        if push_probability > 0
+        else fair_odds(probability)
+    )
+    row_expected_value = (
+        expected_value_with_push(probability, push_probability, decimal_odds)
+        if push_probability > 0
+        else expected_value(probability, decimal_odds)
+    )
     return OddsComparison(
         market_family=market_family,
         market_name=market_name,
@@ -75,7 +92,7 @@ def compare_odds_to_probability(
         probability=probability,
         decimal_odds=decimal_odds,
         implied_probability=implied_probability(decimal_odds),
-        fair_odds=fair_odds(probability),
-        expected_value=expected_value(probability, decimal_odds),
+        fair_odds=row_fair_odds,
+        expected_value=row_expected_value,
         confidence=confidence,
     )

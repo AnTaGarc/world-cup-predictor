@@ -1,7 +1,7 @@
 from datetime import datetime, timezone
 import unittest
 
-from wcpredict.team_profile import build_team_profile
+from wcpredict.team_profile import build_team_profile, build_team_profiles
 from wcpredict.team_volume_markets import (
     derive_xg_factors_from_profile,
     predict_team_volume_markets,
@@ -81,6 +81,28 @@ class TeamProfileTests(unittest.TestCase):
         spain_corners = next(l.expected for l in lines if l.team_name == "Spain" and l.market == "corners")
         brazil_corners = next(l.expected for l in lines if l.team_name == "Brazil" and l.market == "corners")
         self.assertGreater(spain_corners, brazil_corners)
+
+    def test_batch_profile_builder_matches_individual_profiles(self):
+        deep_rows = [
+            _row("Spain", "resumen_del_partido.goles_esperados_xg", 2.1, "2026-06-21T22:00:00+00:00"),
+            _row("Brazil", "resumen_del_partido.goles_esperados_xg", 1.2, "2026-06-21T22:00:00+00:00"),
+            _row("Spain", "resumen_del_partido.saques_de_esquina", 7, "2026-06-21T22:00:00+00:00"),
+            _row("Brazil", "resumen_del_partido.saques_de_esquina", 4, "2026-06-21T22:00:00+00:00"),
+            _row("France", "resumen_del_partido.goles_esperados_xg", 1.6, "2026-06-20T22:00:00+00:00"),
+            _row("France", "resumen_del_partido.saques_de_esquina", 5, "2026-06-20T22:00:00+00:00"),
+        ]
+        as_of = datetime(2026, 6, 22, tzinfo=timezone.utc)
+        individual = build_team_profile("Spain", deep_rows, as_of)
+        batched = build_team_profiles(["Spain", "Brazil"], deep_rows, as_of)["Spain"]
+        self.assertAlmostEqual(
+            individual.get("resumen_del_partido.goles_esperados_xg"),
+            batched.get("resumen_del_partido.goles_esperados_xg"),
+        )
+        self.assertAlmostEqual(
+            individual.conceded("resumen_del_partido.saques_de_esquina"),
+            batched.conceded("resumen_del_partido.saques_de_esquina"),
+        )
+        self.assertAlmostEqual(individual.sample_weight, batched.sample_weight)
 
     def test_xg_factors_within_bounds(self):
         deep_rows = [

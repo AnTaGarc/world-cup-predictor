@@ -1,6 +1,9 @@
 from pathlib import Path
 import unittest
 
+from wcpredict.models import MarketFamily
+from wcpredict.quality import Confidence
+from wcpredict.services import MarketPrediction
 from wcpredict.ui import pages
 
 
@@ -34,6 +37,32 @@ class AppContractTests(unittest.TestCase):
         self.assertIn("model_comparison_rows", source)
         self.assertIn("Evidencia de modelo disponible", source)
         self.assertIn('["Impacto", "Goles", "Asistencias", "Tiros"]', source)
+
+    def test_market_panel_renders_exact_score_grid(self):
+        source = (Path(__file__).parents[1] / "src" / "wcpredict" / "ui" / "pages.py").read_text(encoding="utf-8")
+        self.assertIn("def _score_grid_html", source)
+        self.assertIn("score-grid", source)
+        self.assertIn("Marcadores posibles", source)
+
+    def test_score_grid_is_compact_and_stays_six_by_six(self):
+        predictions = [
+            MarketPrediction(
+                MarketFamily.GOALS,
+                "Exact Score Grid",
+                f"{a_goals}-{b_goals}",
+                None,
+                0.01,
+                Confidence.LOW,
+                "grid",
+            )
+            for a_goals in range(7)
+            for b_goals in range(7)
+        ]
+        html = pages._score_grid_html("Spain", "Japan", predictions)
+        self.assertEqual(html.count("score-cell"), 36)
+        self.assertIn("Spain 5-0 Japan", html)
+        self.assertNotIn("Spain 6-0 Japan", html)
+        self.assertIn("grid-template-columns:28px", html)
 
     def test_long_model_audit_is_collapsed_from_the_primary_reading_path(self):
         source = (Path(__file__).parents[1] / "src" / "wcpredict" / "ui" / "pages.py").read_text(encoding="utf-8")
@@ -69,6 +98,37 @@ class AppContractTests(unittest.TestCase):
             2,  # only inside the cached bundle builder (one with ML, one without)
         )
 
+    def test_prediction_bundle_defers_secondary_volume_and_audit_work(self):
+        source = (Path(__file__).parents[1] / "src" / "wcpredict" / "ui" / "pages.py").read_text(encoding="utf-8")
+        core_start = source.index("def _match_analysis_bundle_cached")
+        core_end = source.find("def _match_auxiliary_context_cached")
+        if core_end == -1:
+            core_end = source.index("def _render_audit_table")
+        core = source[core_start:core_end]
+        self.assertIn("class MatchAuxiliaryBundle", source)
+        self.assertIn("def _match_auxiliary_context_cached", source)
+        self.assertNotIn("list_deep_volume_rows_before", core)
+        self.assertNotIn("list_deep_goalkeeper_rows_before", core)
+        self.assertNotIn("get_match_result", core)
+
+    def test_prediction_lab_sections_are_lazy_and_cache_versioned(self):
+        source = (Path(__file__).parents[1] / "src" / "wcpredict" / "ui" / "pages.py").read_text(encoding="utf-8")
+        self.assertIn("PREDICTION_ENGINE_VERSION", source)
+        self.assertIn("engine_version: str", source)
+        self.assertIn("PREDICTION_ENGINE_VERSION,", source)
+        self.assertIn("st.segmented_control(", source)
+        self.assertIn('"Vista de análisis"', source)
+        self.assertIn('if section == "Modelo":', source)
+        self.assertIn('elif section == "Mercados y EV":', source)
+        self.assertNotIn('st.tabs(\n        ["Modelo", "Mercados y EV", "Jugadores", "Datos / SofaScore", "Guardado"]', source)
+
+    def test_player_intelligence_rankings_are_lazy(self):
+        source = (Path(__file__).parents[1] / "src" / "wcpredict" / "ui" / "pages.py").read_text(encoding="utf-8")
+        self.assertIn("st.segmented_control(", source)
+        self.assertIn('"Ranking"', source)
+        self.assertIn('ranking_specs = {', source)
+        self.assertNotIn('ranking_tabs = st.tabs(["Impacto", "Goles", "Asistencias", "Tiros"])', source)
+
     def test_dashboard_and_data_quality_reuse_cached_collector_and_match_lists(self):
         source = (Path(__file__).parents[1] / "src" / "wcpredict" / "ui" / "pages.py").read_text(encoding="utf-8")
         self.assertIn(
@@ -84,6 +144,12 @@ class AppContractTests(unittest.TestCase):
         self.assertIn("matches = _list_matches()", source)
         # _cached_bundle should hit the cached path, not a fresh CollectorStore each call.
         self.assertIn("_collector_bundle_cached(", source)
+
+    def test_daily_refresh_reruns_bracket_resolution_only_after_updates(self):
+        source = (Path(__file__).parents[1] / "src" / "wcpredict" / "ui" / "pages.py").read_text(encoding="utf-8")
+        self.assertIn("def _resolve_bracket_after_daily_refresh", source)
+        self.assertIn('getattr(daily_result, "updated"', source)
+        self.assertIn("_resolve_bracket_after_daily_refresh(repo, daily_result)", source)
 
     def test_player_intelligence_caches_profiles_and_clusters(self):
         source = (Path(__file__).parents[1] / "src" / "wcpredict" / "ui" / "pages.py").read_text(encoding="utf-8")
@@ -109,7 +175,7 @@ class AppContractTests(unittest.TestCase):
         source = (Path(__file__).parents[1] / "src" / "wcpredict" / "ui" / "pages.py").read_text(encoding="utf-8")
         self.assertIn("from wcpredict.audit import", source)
         self.assertIn("def _render_post_match_audit", source)
-        self.assertIn("_render_post_match_audit(bundle, team_a, team_b)", source)
+        self.assertIn("_render_post_match_audit(bundle, _match_auxiliary_context(match), team_a, team_b)", source)
         # The bundle must persist post-match data so the audit is cache-friendly.
         self.assertIn("match_result=dict(match_result)", source)
         self.assertIn("team_match_stats=team_match_stats", source)

@@ -1,0 +1,306 @@
+{
+  "numero_de_partidos": 1,
+  "partidos": [
+    {
+      "id": "argentina_austria",
+      "nombre": "Argentina vs Austria",
+      "equipos": {
+        "izquierda_verde": "Argentina",
+        "derecha_azul": "Austria"
+      },
+      "estadisticas": {
+        "resumen_del_partido": {
+          "posesion_de_balon_pct": {
+            "Argentina": 54,
+            "Austria": 46
+          },
+          "distancia_recorrida_km": {
+            "Argentina": 82.3,
+            "Austria": 93.8
+          },
+          "goles_esperados_xg": {
+            "Argentina": 2.36,
+            "Austria": 0.53
+          },
+          "ocasiones_claras": {
+            "Argentina": 3,
+            "Austria": 1
+          },
+          "tiros_totales": {
+            "Argentina": 12,
+            "Austria": 6
+          },
+          "paradas": {
+            "Argentina": 1,
+            "Austria": 2
+          },
+          "numero_de_sprints": {
+            "Argentina": 68,
+            "Austria": 65
+          },
+          "saques_de_esquina": {
+            "Argentina": 1,
+            "Austria": 3
+          },
+          "faltas": {
+            "Argentina": 13,
+            "Austria": 13
+          },
+          "pases": {
+            "Argentina": 554,
+            "Austria": 468
+          },
+          "entradas": {
+            "Argentina": 21,
+            "Austria": 12
+          },
+          "tiros_libres": {
+            "Argentina": 12,
+            "Austria": 13
+          },
+          "tarjetas_amarillas": {
+            "Argentina": 2,
+            "Austria": 2
+          },
+          "tarjetas_rojas": {
+            "Argentina": null,
+            "Austria": null,
+            "estado_dato": "No mostrado en la captura"
+          }
+        },
+        "tiros": {
+          "tiros_totales": {
+            "Argentina": 12,
+            "Austria": 6
+          },
+          "tiros_a_puerta": {
+            "Argentina": 5,
+            "Austria": 1
+          },
+          "tiros_al_palo": {
+            "Argentina": 0,
+            "Austria": 0
+          },
+          "tiros_fuera": {
+            "Argentina": 4,
+            "Austria": 5
+          },
+          "tiros_bloqueados": {
+            "Argentina": 3,
+            "Austria": 0
+          },
+          "tiros_dentro_del_area_penal": {
+            "Argentina": 10,
+            "Austria": 4
+          },
+          "tiros_fuera_del_area": {
+            "Argentina": 2,
+            "Austria": 2
+          }
+        },
+        "ataque": {
+          "ocasiones_claras_realizadas": {
+            "Argentina": 0,
+            "Austria": 0,
+            "origen_dato": "Derivado como ocasiones claras menos ocasiones claras falladas"
+          },
+          "ocasiones_claras_falladas": {
+            "Argentina": 3,
+            "Austria": 1
+          },
+          "pases_en_profundidad": {
+            "Argentina": 2,
+            "Austria": 0
+          },
+          "toques_dentro_del_area": {
+            "Argentina": 19,
+            "Austria": 18
+          },
+          "faltas_recibidas_en_el_tercio_final": {
+            "Argentina": 4,
+            "Austria": 4
+          },
+          "fueras_de_juego": {
+            "Argentina": 2,
+            "Austria": 0
+          }
+        },
+        "mapa_de_ataques": {
+          "equipo_mostrado": "Argentina",
+          "direccion_de_ataque": "izquierda_a_derecha",
+          "tipo_de_dato": "mapa_de_intensidad_sin_valores_numericos"
+        },
+        "mapa_de_pases": {
+          "equipo_mostrado": "Argentina",
+          "descripcion": "Distribución porcentual de los pases según la zona del campo.",
+          "direccion_de_ataque": "izquierda_a_derecha",
+          "distribucion_por_zonas_del_campo_pct": {
+            "tercio_defensivo": 33,
+            "tercio_central": 48,
+            "tercio_ofensivo": 19
+          }
+        },
+        "duelos": {
+          "duelos_ganados_pct_del_total": {
+            "Argentina": 52,
+            "Austria": 48
+          },
+          "perdidas": {
+            "Argentina": 7,
+            "Austria": 11
+          },
+          "duelos_en_el_suelo": {
+            "Argentina": {
+              "ganados": 39,
+              "total_mostrado": 69,
+              "porcentaje": 57
+            },
+            "Austria": {
+              "ganados": 30,
+              "total_mostrado": 69,
+              "porcentaje": 43
+            }
+          },
+          "duelos_aereos": {
+            "Argentina": {
+              "ganados": 11,
+              "total_mostrado": 27,
+              "porcentaje": 41
+            },
+            "Austria": {
+              "ganados": 16,
+              "total_mostrado": 27,
+              "porcentaje": 59
+            }
+          },
+          "regates": {
+            "Argentina": {
+              "completados": 6,
+              "intentados": 11,
+              "porcentaje": 55
+            },
+            "Austria": {
+              "completados": 6,
+              "intentados": 16,
+              "porcentaje": 38
+            }
+          }
+        },
+        "pases": {
+          "pases_precisos": {
+            "Argentina": 494,
+            "Austria": 401
+          },
+          "saques_de_banda": {
+            "Argentina": 12,
+            "Austria": 20
+          },
+          "pases_al_ultimo_tercio": {
+            "Argentina": 40,
+            "Austria": 58
+          },
+          "pases_en_el_ultimo_tercio": {
+            "Argentina": {
+              "completados": 75,
+              "intentados": 97,
+              "porcentaje": 77
+            },
+            "Austria": {
+              "completados": 110,
+              "intentados": 154,
+              "porcentaje": 71
+            }
+          },
+          "pases_largos": {
+            "Argentina": {
+              "completados": 12,
+              "intentados": 27,
+              "porcentaje": 44
+            },
+            "Austria": {
+              "completados": 11,
+              "intentados": 21,
+              "porcentaje": 52
+            }
+          },
+          "centros": {
+            "Argentina": {
+              "completados": 1,
+              "intentados": 4,
+              "porcentaje": 25
+            },
+            "Austria": {
+              "completados": 3,
+              "intentados": 17,
+              "porcentaje": 18
+            }
+          }
+        },
+        "defensa": {
+          "entradas_ganadas_pct": {
+            "Argentina": 52,
+            "Austria": 58
+          },
+          "tackles_totales": {
+            "Argentina": 21,
+            "Austria": 12
+          },
+          "intercepciones": {
+            "Argentina": 8,
+            "Austria": 9
+          },
+          "recuperaciones": {
+            "Argentina": 42,
+            "Austria": 27
+          },
+          "despejes": {
+            "Argentina": 35,
+            "Austria": 15
+          },
+          "errores_que_llevan_a_disparo": {
+            "Argentina": 0,
+            "Austria": 1
+          },
+          "errores_que_llevan_a_gol": {
+            "Argentina": null,
+            "Austria": null,
+            "estado_dato": "No mostrado en la captura"
+          }
+        },
+        "porteria": {
+          "paradas": {
+            "Argentina": 1,
+            "Austria": 2
+          },
+          "goles_evitados": {
+            "Argentina": 0.05,
+            "Austria": -0.49
+          },
+          "grandes_paradas": {
+            "Argentina": null,
+            "Austria": null,
+            "estado_dato": "No mostrado en la captura"
+          },
+          "despejes_por_alto": {
+            "Argentina": 2,
+            "Austria": 0
+          },
+          "con_los_punos": {
+            "Argentina": null,
+            "Austria": null,
+            "estado_dato": "No mostrado en la captura"
+          },
+          "saques_de_puerta": {
+            "Argentina": 6,
+            "Austria": 4
+          }
+        }
+      },
+      "fuentes": [
+        "Captura de pantalla 2026-06-23 104718.png",
+        "Captura de pantalla 2026-06-23 104727.png",
+        "Captura de pantalla 2026-06-23 104737.png"
+      ]
+    }
+  ]
+}
