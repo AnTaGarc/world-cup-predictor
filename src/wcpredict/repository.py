@@ -976,13 +976,22 @@ class Repository:
         created_at_utc: datetime,
         competition: str = "FIFA World Cup 2026",
     ) -> int:
-        """Create squad-context suspensions implied by reviewed player cards.
+        """Create squad-context suspensions from the daily player-stats bank.
+
+        Source of truth is ``current_wc_player_stats``: swaptr publishes the
+        cumulative yellow/red totals for every player with minutes, so we no
+        longer need per-match manual entries (which used to double-count when
+        a player appeared in both tables). The per-match cards loop is kept
+        as a defensive fallback for non-swaptr scenarios (older imports).
 
         Runs safely after every match close. If a team's next match has not
         been resolved yet, no event is created for that trigger; a later run
         will pick it up once the bracket slot has a concrete team.
         """
         with self.session() as con:
+            # Defensive fallback: per-match card rows from manual/legacy imports.
+            # The daily bank below is the primary source; this only catches
+            # players present in player_match_stats but not in the daily feed.
             card_rows = [
                 dict(row)
                 for row in con.execute(
@@ -996,6 +1005,11 @@ class Repository:
                     "JOIN matches m ON m.id=ps.match_id "
                     "WHERE m.competition=? "
                     "AND (COALESCE(ps.yellow_cards, 0)>0 OR COALESCE(ps.red_cards, 0)>0) "
+                    "AND NOT EXISTS ("
+                    "  SELECT 1 FROM current_wc_player_stats daily "
+                    "  WHERE daily.player_name = p.name AND daily.team_name = t.name "
+                    "    AND (COALESCE(daily.yellow_cards, 0) > 0 OR COALESCE(daily.red_cards, 0) > 0)"
+                    ") "
                     "ORDER BY m.kickoff_utc, m.id",
                     (competition,),
                 ).fetchall()
@@ -1182,6 +1196,59 @@ class Repository:
                 (match_id,),
             ).fetchall()
         return [dict(row) for row in rows]
+
+    def save_prediction_snapshot(
+        self,
+        match_id: int,
+        payload: dict,
+        data_as_of_utc: datetime,
+        model_version: str,
+        generated_at_utc: datetime | None = None,
+    ) -> int | None:
+        """Persist a frozen pre-kickoff snapshot of the model output.
+
+        Idempotent on ``(match_id, model_version, data_as_of_utc)``: re-running
+        the same ``predict_match_markets`` against the same DB state will not
+        create duplicates. Used by Fase 1 backtest to compare baseline vs new
+        models on identical inputs.
+        """
+        generated = (generated_at_utc or datetime.now(timezone.utc)).isoformat()
+        with self.session() as con:
+            cur = con.execute(
+                "INSERT INTO prediction_snapshots(match_id, generated_at_utc, data_as_of_utc, model_version, payload_json) "
+                "VALUES(?, ?, ?, ?, ?) "
+                "ON CONFLICT(match_id, model_version, data_as_of_utc) DO NOTHING",
+                (
+                    int(match_id),
+                    generated,
+                    data_as_of_utc.isoformat(),
+                    str(model_version),
+                    json.dumps(payload, ensure_ascii=False, sort_keys=True, default=str),
+                ),
+            )
+            return int(cur.lastrowid) if cur.lastrowid else None
+
+    def list_prediction_snapshots(
+        self,
+        match_id: int,
+        *,
+        model_version: str | None = None,
+    ) -> list[dict]:
+        sql = "SELECT * FROM prediction_snapshots WHERE match_id=?"
+        params: tuple = (int(match_id),)
+        if model_version is not None:
+            sql += " AND model_version=?"
+            params = (*params, str(model_version))
+        sql += " ORDER BY generated_at_utc DESC"
+        with self.session() as con:
+            rows = con.execute(sql, params).fetchall()
+        return [dict(row) for row in rows]
+
+    def latest_prediction_snapshot(
+        self, match_id: int, model_version: str
+    ) -> dict | None:
+        snapshots = self.list_prediction_snapshots(match_id, model_version=model_version)
+        return snapshots[0] if snapshots else None
 
     def add_backtest(
         self,
@@ -2520,6 +2587,22 @@ class Repository:
         return [dict(row) for row in rows]
 
     def list_player_performance_rows(self) -> list[dict]:
+        """Per-player rows for the analytics layer.
+
+        IMPORTANT: avoid double-counting tournament stats. ``current_wc_player_stats``
+        already holds the *cumulative* WC2026 totals coming from the daily feed; if
+        ``player_match_stats`` ALSO has per-match rows for the same player, summing
+        both would inflate goals/assists/cards (the bug Diego Gómez exposed:
+        daily=1 + manual=1 → 2 amarillas).
+
+        Strategy:
+          * For each ``(player_name, team_name)`` present in ``current_wc_player_stats``
+            we keep ONLY the daily row.
+          * ``player_match_stats`` rows are kept only for players not in daily (so
+            historical bench imports without daily coverage still feed the analytics).
+          * Observation pivots are kept as-is (they cover captures with no matching
+            structured row).
+        """
         with self.session() as con:
             daily = [
                 dict(row)
@@ -2545,6 +2628,15 @@ class Repository:
                     "WHERE subject_type='player' AND evidence_status IN ('verified', 'verified_user_capture') AND value_number IS NOT NULL"
                 ).fetchall()
             ]
+        daily_keys = {
+            (str(row.get("player_name") or "").strip(), str(row.get("team_name") or "").strip())
+            for row in daily
+        }
+        structured_filtered = [
+            row for row in structured
+            if (str(row.get("player_name") or "").strip(), str(row.get("team_name") or "").strip())
+            not in daily_keys
+        ]
         pivoted: dict[tuple[int, str], dict] = {}
         supported = {"minutes", "goals", "assists", "shots", "shots_on_target", "passes", "yellow_cards"}
         for row in observation_rows:
@@ -2560,4 +2652,4 @@ class Repository:
                 {"player_name": row["player_name"], "team_name": context.get("team_name") or "Captura revisada"},
             )
             target[row["metric"]] = row["value_number"]
-        return daily + structured + list(pivoted.values())
+        return daily + structured_filtered + list(pivoted.values())

@@ -1343,7 +1343,7 @@ def _match_analysis_bundle_cached(
         except (ValueError, AttributeError):
             expected_xg = ()
 
-    return MatchAnalysisBundle(
+    bundle = MatchAnalysisBundle(
         predictions=predictions,
         score_only_predictions=score_only_predictions,
         primary=primary,
@@ -1364,6 +1364,56 @@ def _match_analysis_bundle_cached(
         deep_ml_probabilities=deep_ml_probabilities,
         deep_outcome_weight=deep_weight,
     )
+    # Persist a frozen pre-kickoff snapshot of this prediction. Only fires
+    # for matches whose kickoff is still in the future so post-match cache
+    # rebuilds don't pollute the historical record. Idempotent on
+    # (match_id, model_version, data_as_of_utc).
+    try:
+        now_utc = datetime.now(timezone.utc)
+        if match.kickoff_utc > now_utc:
+            payload = _bundle_snapshot_payload(team_a, team_b, predictions, primary,
+                                               expected_xg, deep_count, prior_deep_samples)
+            repo.save_prediction_snapshot(
+                match_id=match.id,
+                payload=payload,
+                data_as_of_utc=now_utc,
+                model_version=engine_version,
+                generated_at_utc=now_utc,
+            )
+    except Exception:
+        # Snapshot persistence must never block prediction rendering.
+        pass
+    return bundle
+
+
+def _bundle_snapshot_payload(
+    team_a: str,
+    team_b: str,
+    predictions,
+    primary,
+    expected_xg,
+    deep_count: int,
+    prior_deep_samples: int,
+) -> dict:
+    """Compact serialisable snapshot of the predictions delivered to the UI."""
+    def _row(row) -> dict:
+        return {
+            "market_family": str(getattr(row, "market_family", "")),
+            "market_name": str(getattr(row, "market_name", "")),
+            "selection_name": str(getattr(row, "selection_name", "")),
+            "line": getattr(row, "line", None),
+            "probability": float(getattr(row, "probability", 0.0)),
+            "confidence": str(getattr(getattr(row, "confidence", None), "value", "")),
+        }
+    return {
+        "team_a": team_a,
+        "team_b": team_b,
+        "expected_xg": list(expected_xg) if expected_xg else [],
+        "deep_count": int(deep_count),
+        "prior_deep_samples": int(prior_deep_samples),
+        "primary": [_row(p) for p in primary],
+        "predictions": [_row(p) for p in predictions],
+    }
 
 
 @st.cache_resource(show_spinner=False)
@@ -3021,16 +3071,6 @@ def render_backtesting() -> None:
     st.caption("La tabla siguiente contiene solo campos de equipo ausentes. Puedes añadir filas de jugador u otras métricas; las vacías no se guardan.")
     stats_by_team = {row["team_name"]: row for row in existing_stats}
     team_names = (match.team_a.name, match.team_b.name)
-    card_totals = _card_totals_by_team(existing_stats, team_names)
-    has_card_totals = any(
-        totals["yellow_cards"] or totals["red_cards"]
-        for totals in card_totals.values()
-    )
-    if has_card_totals:
-        current_players_for_cards, _ = _player_context(repo, match)
-        card_options = _card_player_options(repo, match, current_players_for_cards)
-    else:
-        card_options = {}
     settlement_rows = []
     for team_name in team_names:
         for metric in ("shots", "shots_on_target", "corners", "yellow_cards", "possession"):
@@ -3052,71 +3092,17 @@ def render_backtesting() -> None:
             hide_index=True, width="stretch", num_rows="dynamic",
             key=f"settlement_{match.id}",
         )
-        card_assignments = []
-        if has_card_totals:
-            st.markdown("**Asignar tarjetas a jugadores**")
-            st.caption("Las cantidades vienen de las estadísticas profundas revisadas; cada selector asigna una tarjeta real.")
-            for team_name in team_names:
-                totals = card_totals[team_name]
-                yellow_total = totals["yellow_cards"]
-                red_total = totals["red_cards"]
-                if not yellow_total and not red_total:
-                    continue
-                st.markdown(f"**{team_name}** · {yellow_total} amarillas · {red_total} rojas")
-                options = ["Selecciona jugador"] + card_options.get(team_name, [])
-                if len(options) == 1:
-                    st.warning(f"No hay jugadores disponibles para {team_name}. Importa plantilla o alineación antes de cerrar las tarjetas.")
-                    for index in range(yellow_total):
-                        card_assignments.append({
-                            "team_name": team_name,
-                            "metric": "yellow_cards",
-                            "label": f"amarilla {index + 1}",
-                            "player_name": "",
-                        })
-                    for index in range(red_total):
-                        card_assignments.append({
-                            "team_name": team_name,
-                            "metric": "red_cards",
-                            "label": f"roja {index + 1}",
-                            "player_name": "",
-                        })
-                    continue
-                for index in range(yellow_total):
-                    selected = st.selectbox(
-                        f"Amarilla {index + 1} · {team_name}",
-                        options,
-                        key=f"card_{match.id}_{canonical_team_name(team_name)}_yellow_{index}",
-                    )
-                    card_assignments.append({
-                        "team_name": team_name,
-                        "metric": "yellow_cards",
-                        "label": f"amarilla {index + 1}",
-                        "player_name": "" if selected == "Selecciona jugador" else selected,
-                    })
-                for index in range(red_total):
-                    selected = st.selectbox(
-                        f"Roja {index + 1} · {team_name}",
-                        options,
-                        key=f"card_{match.id}_{canonical_team_name(team_name)}_red_{index}",
-                    )
-                    card_assignments.append({
-                        "team_name": team_name,
-                        "metric": "red_cards",
-                        "label": f"roja {index + 1}",
-                        "player_name": "" if selected == "Selecciona jugador" else selected,
-                    })
+        st.caption(
+            "Las tarjetas individuales se importan automáticamente desde el banco diario "
+            "de jugadores (Actualizar datos) — ya no hace falta asignarlas a mano aquí. "
+            "Si un jugador acumula 2 amarillas o ve una roja, la sanción para el siguiente "
+            "partido se genera al pulsar Guardar."
+        )
         submit_settlement = st.form_submit_button(
             "Guardar resultado, estadísticas y recalibrar", type="primary", width="stretch"
         )
     if submit_settlement:
         rows = [row for row in settlement_stats.to_dict("records") if pd.notna(row.get("value_number")) or str(row.get("value_text") or "").strip()]
-        card_rows, missing_cards = _aggregate_card_assignments(card_assignments if has_card_totals else [])
-        if missing_cards:
-            st.error("Asigna todas las tarjetas antes de cerrar el partido: " + ", ".join(missing_cards))
-            return
-        if has_card_totals and not card_rows:
-            st.error("Hay tarjetas en las estadísticas profundas, pero no hay jugadores asignables para guardarlas.")
-            return
         recorded_at = datetime.now(timezone.utc)
         repo.settle_match_versioned(
             match.id,
@@ -3127,8 +3113,6 @@ def render_backtesting() -> None:
         )
         if rows:
             repo.save_manual_observations(match.id, rows, recorded_at)
-        if card_rows:
-            repo.save_player_card_observations(match.id, card_rows, recorded_at)
         # Re-resolve the knockout bracket: a finished group game may now
         # complete a group → fill R32 slots; a finished knockout game lets
         # its winner bubble up into the next round's slot.

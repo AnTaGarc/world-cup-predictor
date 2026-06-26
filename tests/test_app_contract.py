@@ -282,7 +282,15 @@ class AppContractTests(unittest.TestCase):
         source = (Path(__file__).parents[1] / "src" / "wcpredict" / "ui" / "pages.py").read_text(encoding="utf-8")
         self.assertNotIn("El recolector por partido solo est", source)
         self.assertNotIn("Resumen estructurado (team_match_stats)", source)
-        self.assertIn("Asignar tarjetas a jugadores", source)
+        # Manual card assignment was removed in Phase 0: the daily player
+        # bank from swaptr already provides cumulative yellow/red totals
+        # for every player with minutes, so the form was just a source of
+        # double-counting. The discipline pass still runs automatically.
+        self.assertNotIn("Asignar tarjetas a jugadores", source)
+        self.assertIn(
+            "se importan automáticamente desde el banco diario",
+            source,
+        )
         self.assertIn("auto_apply_discipline_suspensions(recorded_at)", source)
 
     def test_bracket_renders_third_place_before_final(self):

@@ -444,6 +444,23 @@ CREATE TABLE IF NOT EXISTS knockout_bracket (
 CREATE INDEX IF NOT EXISTS idx_knockout_bracket_stage
 ON knockout_bracket(competition, stage);
 
+-- Frozen pre-kickoff payload of model predictions. Persisted automatically
+-- when a fresh bundle is computed for a match whose kickoff is still in
+-- the future. Required by the backtest / calibration framework: without an
+-- immutable record of "what the model said before the match" we cannot
+-- measure improvement honestly when the deep-stats pipeline evolves.
+CREATE TABLE IF NOT EXISTS prediction_snapshots (
+    id INTEGER PRIMARY KEY,
+    match_id INTEGER NOT NULL REFERENCES matches(id),
+    generated_at_utc TEXT NOT NULL,
+    data_as_of_utc TEXT NOT NULL,
+    model_version TEXT NOT NULL,
+    payload_json TEXT NOT NULL,
+    UNIQUE(match_id, model_version, data_as_of_utc)
+);
+CREATE INDEX IF NOT EXISTS idx_prediction_snapshots_match
+ON prediction_snapshots(match_id, generated_at_utc DESC);
+
 -- Hot-path indexes (Streamlit dashboard re-runs these on every interaction)
 CREATE INDEX IF NOT EXISTS idx_matches_competition_kickoff
 ON matches(competition, kickoff_utc);
