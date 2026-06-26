@@ -203,12 +203,22 @@ def replay(
             except Exception:
                 deep_outcome_probs = None
 
+        # When the deep ML produces probs but we don't have a chronologic
+        # Elo ML, feed deep_outcome_probs as outcome_probabilities so the
+        # ensemble actually consumes them. Tradeoff: deep_ml then acts as
+        # the sole 1X2 ML signal (no Elo blend) — fine for measuring its
+        # standalone impact in the backtest.
+        ml_probs = None
+        if deep_outcome_probs is not None:
+            ml_probs = deep_outcome_probs
+
         predictions = predict_match_markets(
             m["team_a"], m["team_b"], results, as_of.date(),
             advanced_form=advanced,
-            outcome_probabilities=None,        # baseline: score-only, no Elo ML
-            deep_outcome_probabilities=deep_outcome_probs,
-            deep_outcome_weight=0.30 if deep_outcome_probs else 0.0,
+            outcome_probabilities=ml_probs,
+            outcome_weight=0.55 if ml_probs else 0.80,  # blend ML/score 55/45 vs 80/20
+            deep_outcome_probabilities=None,
+            deep_outcome_weight=0.0,
         )
 
         ga, gb = int(m["goals_a"]), int(m["goals_b"])
