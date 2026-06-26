@@ -258,6 +258,7 @@ def predict_match_markets(
     precomputed_ratings: dict | None = None,
     draw_incentive: float = 0.0,
     draw_incentive_note: str = "",
+    team_corrections: dict | None = None,
 ) -> list[MarketPrediction]:
     ratings = precomputed_ratings or build_team_ratings(results, as_of=as_of)
     xg_a, xg_b = expected_goals_for_match(
@@ -341,6 +342,22 @@ def predict_match_markets(
             "el ML se ajusta por proceso profundo y localía cuando hay evidencia; la matriz final se repondera "
             "para que marcadores, O/U y BTTS respeten el 1X2 unificado."
         )
+        # Phase 5: per-team shifts in log-prob space. Each entry of
+        # ``team_corrections`` is keyed by canonical team name and may
+        # contain {'1X2': shift_in_logit}. Positive shift increases that
+        # team's win probability.
+        if team_corrections:
+            team_shift_a = float(team_corrections.get(team_a, {}).get("1X2", 0.0))
+            team_shift_b = float(team_corrections.get(team_b, {}).get("1X2", 0.0))
+            if abs(team_shift_a) > 0.005 or abs(team_shift_b) > 0.005:
+                unified_1x2 = apply_outcome_shifts(
+                    unified_1x2,
+                    {"home": team_shift_a, "draw": 0.0, "away": team_shift_b},
+                )
+                unified_note += (
+                    f" Corrección por equipo: {team_a} {team_shift_a:+.2f},"
+                    f" {team_b} {team_shift_b:+.2f} (logit)."
+                )
         if (
             corrections is not None
             and any(abs(value) > 0.005 for value in corrections.outcome_logit_shifts.values())
