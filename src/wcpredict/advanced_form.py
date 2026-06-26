@@ -291,6 +291,39 @@ def build_goalkeeper_baseline(
     )
 
 
+def goalkeeper_xg_factor(
+    baseline: GoalkeeperBaseline | None,
+    *,
+    expected_save_rate: float = 0.70,
+    sensitivity: float = 0.10,
+    floor: float = 0.92,
+    ceiling: float = 1.08,
+    minimum_sample: int = 3,
+) -> float:
+    """Multiplicative factor in [0.92, 1.08] applied to the OPPONENT'S xG.
+
+    A team with a save-rate above ``expected_save_rate`` slightly suppresses
+    rival xG (factor < 1); a porous keeper raises it. The signal is gated
+    by ``minimum_sample`` so a single-match noisy save-rate doesn't move
+    the prediction.
+
+    Phase 4 design notes:
+      * 70% is the league/tournament reference (tipical SOT→save conversion).
+      * sensitivity=0.10 → a keeper at 80% save-rate produces a factor of
+        ~1 - 0.10 × 0.10 = 0.99. The strongest realistic delta (~25 pp
+        above mean) hits the 0.92 floor, the worst the 1.08 ceiling.
+      * If the baseline is missing or undersampled, returns 1.0 (no shift).
+    """
+    if baseline is None or baseline.save_rate is None:
+        return 1.0
+    if baseline.sample_matches < minimum_sample:
+        return 1.0
+    delta = float(baseline.save_rate) - expected_save_rate
+    # Positive delta (good keeper) → factor < 1, lowering rival xG.
+    factor = 1.0 - sensitivity * delta
+    return max(floor, min(ceiling, factor))
+
+
 def build_volume_rate_observations(
     team_a: str, team_b: str, rows: list[dict]
 ) -> list[dict]:

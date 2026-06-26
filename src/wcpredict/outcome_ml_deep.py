@@ -35,11 +35,14 @@ import numpy as np
 from sklearn.ensemble import HistGradientBoostingClassifier
 from sklearn.preprocessing import StandardScaler
 
+from wcpredict.matchup_features import MATCHUP_FEATURES, build_matchup_features
 from wcpredict.names import canonical_team_name
 from wcpredict.team_profile import build_team_profile
 
 
-DEEP_FEATURES = (
+# Original 9 aggregate features kept verbatim so the model degrades
+# gracefully when matchup metrics are partially missing.
+BASE_FEATURES = (
     "rating_diff",           # carried over from outcome_ml
     "form_diff",             # carried over
     "goal_diff_form",        # carried over
@@ -54,6 +57,7 @@ DEEP_FEATURES = (
     "defensive_actions_diff",  # tackles + interceptions + clearances
     "sample_min",              # min of both teams' effective profile samples
 )
+DEEP_FEATURES = BASE_FEATURES + MATCHUP_FEATURES
 CLASSES = ("home", "draw", "away")
 
 
@@ -85,12 +89,17 @@ def build_deep_features(
     profile_a,
     profile_b,
 ) -> dict[str, float]:
-    """Combine the base Elo features with deep-profile differential features."""
+    """Combine the base Elo features, the 13 aggregate diffs and the 12
+    Phase-3 matchup interactions into one dict (25 features total).
+
+    The output is consumed by both training (script) and inference
+    (services.predict_match_markets via load_deep_outcome_model_cached)."""
     xg_a, xg_b = _safe(profile_a.get(_METRIC_XG)), _safe(profile_b.get(_METRIC_XG))
     xg_conc_a, xg_conc_b = _safe(profile_a.conceded(_METRIC_XG)), _safe(profile_b.conceded(_METRIC_XG))
-    return {
+    form_diff = float(base_features.get("form_diff", 0.0))
+    aggregate = {
         "rating_diff": float(base_features.get("rating_diff", 0.0)),
-        "form_diff": float(base_features.get("form_diff", 0.0)),
+        "form_diff": form_diff,
         "goal_diff_form": float(base_features.get("goal_diff_form", 0.0)),
         "neutral_site": float(base_features.get("neutral_site", 1)),
         "xg_created_diff": xg_a - xg_b,
@@ -103,6 +112,9 @@ def build_deep_features(
         "defensive_actions_diff": _defensive_actions(profile_a) - _defensive_actions(profile_b),
         "sample_min": float(min(profile_a.sample_weight, profile_b.sample_weight)),
     }
+    matchup = build_matchup_features(profile_a, profile_b, form_diff=form_diff)
+    aggregate.update(matchup)
+    return aggregate
 
 
 @dataclass

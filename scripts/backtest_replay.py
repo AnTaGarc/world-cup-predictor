@@ -30,16 +30,20 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 
-from wcpredict.advanced_form import build_xg_form_adjustment
+from wcpredict.advanced_form import build_goalkeeper_baseline, build_xg_form_adjustment, goalkeeper_xg_factor
+from wcpredict.outcome_ml_deep import build_deep_features, load_deep_model
 from wcpredict.repository import Repository
 from wcpredict.services import predict_match_markets
 from wcpredict.team_profile import build_team_profile
 from wcpredict.team_volume_markets import derive_xg_factors_from_profile
 
 DB = ROOT / "data" / "worldcup.sqlite"
+DEEP_MODEL_PATH = ROOT / "data" / "models" / "outcome_ml_deep.joblib"
 COMPETITION = "FIFA World Cup 2026"
 MODEL_VERSION_BASELINE = "baseline-score-only-v1"
 MODEL_VERSION_PROFILES = "profiles-fase2-v1"
+MODEL_VERSION_GK = "profiles+gk-fase4-v1"
+MODEL_VERSION_FULL = "profiles+gk+deepml-fase4-v1"
 
 
 def _hist_results_before(repo: Repository, as_of: datetime):
@@ -109,13 +113,37 @@ def _persist_run(
         con.commit()
 
 
-def replay(run_label: str = "baseline-fase1", *, use_profiles: bool = False) -> dict:
+def replay(
+    run_label: str = "baseline-fase1",
+    *,
+    use_profiles: bool = False,
+    use_goalkeeper: bool = False,
+    use_deep_ml: bool = False,
+) -> dict:
     repo = Repository(DB)
     repo.initialize()
     matches = _closed_matches(repo)
-    model_version = MODEL_VERSION_PROFILES if use_profiles else MODEL_VERSION_BASELINE
+    if use_deep_ml and use_goalkeeper:
+        model_version = MODEL_VERSION_FULL
+    elif use_goalkeeper:
+        model_version = MODEL_VERSION_GK
+    elif use_profiles:
+        model_version = MODEL_VERSION_PROFILES
+    else:
+        model_version = MODEL_VERSION_BASELINE
+    flags = []
+    if use_profiles: flags.append("profiles")
+    if use_goalkeeper: flags.append("gk_xg_factor")
+    if use_deep_ml: flags.append("deep_ml")
     print(f"Partidos cerrados WC2026 a replicar: {len(matches)} "
-          f"({'CON' if use_profiles else 'SIN'} team_profile)")
+          f"({'+'.join(flags) if flags else 'baseline'})")
+
+    deep_model = None
+    if use_deep_ml:
+        if DEEP_MODEL_PATH.exists():
+            deep_model = load_deep_model(DEEP_MODEL_PATH)
+            print(f"Deep ML model status: {deep_model.status} "
+                  f"(n={deep_model.sample_size}, val_brier={deep_model.validation_brier:.4f})")
 
     aggregate = {
         "brier_1x2": 0.0, "logloss_1x2": 0.0, "n_1x2": 0,
@@ -135,11 +163,23 @@ def replay(run_label: str = "baseline-fase1", *, use_profiles: bool = False) -> 
         advanced = build_xg_form_adjustment(m["team_a"], m["team_b"], deep_xg_rows, as_of)
 
         # Phase 2: build team profiles from historical deep stats + xG factor.
-        if use_profiles:
+        if use_profiles or use_goalkeeper:
             deep_rows = repo.list_deep_team_metric_observations_before(as_of)
             profile_a = build_team_profile(m["team_a"], deep_rows, as_of)
             profile_b = build_team_profile(m["team_b"], deep_rows, as_of)
-            factor_a, factor_b, _ = derive_xg_factors_from_profile(profile_a, profile_b)
+            if use_profiles:
+                factor_a, factor_b, _ = derive_xg_factors_from_profile(profile_a, profile_b)
+            else:
+                factor_a = factor_b = 1.0
+            if use_goalkeeper:
+                # Phase 4: rival's good keeper lowers MY xG, not theirs.
+                gk_rows = repo.list_deep_goalkeeper_rows_before(as_of)
+                gk_a = build_goalkeeper_baseline(m["team_a"], gk_rows, as_of)
+                gk_b = build_goalkeeper_baseline(m["team_b"], gk_rows, as_of)
+                gk_factor_for_a = goalkeeper_xg_factor(gk_b)  # b's keeper damps a's xG
+                gk_factor_for_b = goalkeeper_xg_factor(gk_a)
+                factor_a *= gk_factor_for_a
+                factor_b *= gk_factor_for_b
             # Compose into advanced_form: multiply existing factors so a single
             # advanced_form payload carries both signals into predict_match_markets.
             if advanced is not None:
@@ -150,11 +190,25 @@ def replay(run_label: str = "baseline-fase1", *, use_profiles: bool = False) -> 
                     factor_b=advanced.factor_b * factor_b,
                 )
 
+        deep_outcome_probs = None
+        if deep_model is not None and deep_model.status == "ready" and (use_profiles or use_goalkeeper):
+            # Construir features deep para inferencia (mismo input shape que el train).
+            base_feats = {
+                "rating_diff": 0.0, "form_diff": 0.0,
+                "goal_diff_form": 0.0, "neutral_site": 1,
+            }
+            try:
+                deep_feats = build_deep_features(base_feats, profile_a, profile_b)
+                deep_outcome_probs = deep_model.predict(deep_feats)
+            except Exception:
+                deep_outcome_probs = None
+
         predictions = predict_match_markets(
             m["team_a"], m["team_b"], results, as_of.date(),
             advanced_form=advanced,
-            outcome_probabilities=None,        # baseline: score-only, no ML
-            deep_outcome_probabilities=None,
+            outcome_probabilities=None,        # baseline: score-only, no Elo ML
+            deep_outcome_probabilities=deep_outcome_probs,
+            deep_outcome_weight=0.30 if deep_outcome_probs else 0.0,
         )
 
         ga, gb = int(m["goals_a"]), int(m["goals_b"])
@@ -248,9 +302,26 @@ def main() -> int:
                         help="Tag stored in backtest_runs.run_label")
     parser.add_argument("--with-profiles", action="store_true",
                         help="Activar perfiles deep historicos (Fase 2)")
+    parser.add_argument("--with-goalkeeper", action="store_true",
+                        help="Activar factor xG por portero (Fase 4)")
+    parser.add_argument("--with-deep-ml", action="store_true",
+                        help="Activar ML deep con matchup features (Fase 3)")
     args = parser.parse_args()
-    agg = replay(args.label, use_profiles=args.with_profiles)
-    _print_summary(agg, MODEL_VERSION_PROFILES if args.with_profiles else MODEL_VERSION_BASELINE)
+    agg = replay(
+        args.label,
+        use_profiles=args.with_profiles,
+        use_goalkeeper=args.with_goalkeeper,
+        use_deep_ml=args.with_deep_ml,
+    )
+    if args.with_deep_ml and args.with_goalkeeper:
+        mv = MODEL_VERSION_FULL
+    elif args.with_goalkeeper:
+        mv = MODEL_VERSION_GK
+    elif args.with_profiles:
+        mv = MODEL_VERSION_PROFILES
+    else:
+        mv = MODEL_VERSION_BASELINE
+    _print_summary(agg, mv)
     return 0
 
 
