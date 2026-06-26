@@ -306,6 +306,47 @@ def _import_runs_cached(db_sig: tuple[int, int]) -> dict[int, bool]:
 
 
 @st.cache_resource(show_spinner=False, ttl=3600)
+def _load_team_shifts_cached(db_sig: tuple[int, int]) -> dict[str, dict[str, float]]:
+    """Load per-team 1X2 shifts derived from the historical residual pool.
+
+    The pool is built offline by ``scripts/build_historical_team_residuals.py``
+    and stored in ``backtest_runs`` with ``run_label='historical-pool-v1'``.
+    Each row holds the model's prob and the actual outcome for a match
+    where BOTH teams were WC2026 selections (covers ~440 matches 2022-2026).
+
+    Returns ``{team_name: {'1X2': logit_shift}}`` ready to feed
+    services.predict_match_markets via the team_corrections kwarg. Negative shift on a
+    team's 1X2 means the model historically over-estimated them.
+    """
+    from wcpredict.team_corrections import compute_team_market_shifts
+    repo = _repo()
+    rows = []
+    try:
+        with sqlite3.connect(repo.path) as con:
+            con.row_factory = sqlite3.Row
+            for r in con.execute(
+                "SELECT br.market, br.selection, br.prob_predicted, br.outcome_observed, "
+                "hm.team_a_name AS team_a, hm.team_b_name AS team_b "
+                "FROM backtest_runs br "
+                "JOIN historical_matches hm ON hm.id = -br.match_id "
+                "WHERE br.run_label='historical-pool-v1'"
+            ):
+                rows.append(dict(r))
+    except Exception:
+        return {}
+    if not rows:
+        return {}
+    raw = compute_team_market_shifts(
+        rows, prior_strength=4.0, min_n=2, market_filter=("1X2",),
+    )
+    by_team: dict[str, dict[str, float]] = {}
+    for (team, _market), shift in raw.items():
+        # Negative residual (model under-predicts) → positive logit shift.
+        by_team.setdefault(team, {})["1X2"] = -shift
+    return by_team
+
+
+@st.cache_resource(show_spinner=False, ttl=3600)
 def _calibration_bias_report_cached(db_sig: tuple[int, int]):
     """Recompute the global-bias report for all finished matches with deep stats."""
     repo = _repo()
@@ -1297,6 +1338,10 @@ def _match_analysis_bundle_cached(
                 corrections = None
         except Exception:
             corrections = None
+    # Phase 5b: load per-team 1X2 shifts from the historical residual pool
+    # (built via scripts/build_historical_team_residuals.py). Validation
+    # showed +3.3pp hit rate, Brier -0.0106 on the 60 closed WC2026 matches.
+    team_shifts_cache = _load_team_shifts_cached(db_sig)
     draw_context = draw_incentive_for_match(
         match,
         _matches_cached(db_sig),
@@ -1316,6 +1361,7 @@ def _match_analysis_bundle_cached(
         precomputed_ratings=ratings_for_match,
         draw_incentive=draw_context.logit_boost,
         draw_incentive_note=draw_context.explanation,
+        team_corrections=team_shifts_cache,
     )
     score_only_predictions = predict_match_markets(
         team_a, team_b, results, match.kickoff_utc.date(), calibration_summary,
@@ -1327,6 +1373,7 @@ def _match_analysis_bundle_cached(
         precomputed_ratings=ratings_for_match,
         draw_incentive=draw_context.logit_boost,
         draw_incentive_note=draw_context.explanation,
+        team_corrections=team_shifts_cache,
     )
     primary = [row for row in predictions if row.market_name == "1X2"]
     exact_score = next(row for row in predictions if row.market_name == "Exact Score")

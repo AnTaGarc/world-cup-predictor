@@ -342,22 +342,6 @@ def predict_match_markets(
             "el ML se ajusta por proceso profundo y localía cuando hay evidencia; la matriz final se repondera "
             "para que marcadores, O/U y BTTS respeten el 1X2 unificado."
         )
-        # Phase 5: per-team shifts in log-prob space. Each entry of
-        # ``team_corrections`` is keyed by canonical team name and may
-        # contain {'1X2': shift_in_logit}. Positive shift increases that
-        # team's win probability.
-        if team_corrections:
-            team_shift_a = float(team_corrections.get(team_a, {}).get("1X2", 0.0))
-            team_shift_b = float(team_corrections.get(team_b, {}).get("1X2", 0.0))
-            if abs(team_shift_a) > 0.005 or abs(team_shift_b) > 0.005:
-                unified_1x2 = apply_outcome_shifts(
-                    unified_1x2,
-                    {"home": team_shift_a, "draw": 0.0, "away": team_shift_b},
-                )
-                unified_note += (
-                    f" Corrección por equipo: {team_a} {team_shift_a:+.2f},"
-                    f" {team_b} {team_shift_b:+.2f} (logit)."
-                )
         if (
             corrections is not None
             and any(abs(value) > 0.005 for value in corrections.outcome_logit_shifts.values())
@@ -377,6 +361,33 @@ def predict_match_markets(
         })
         scoreline_target_1x2 = scoreline_1x2
         scoreline_matrix = _score_matrix_aligned_to_1x2(matrix, score_1x2, scoreline_1x2)
+
+    # Phase 5: per-team shifts in log-prob space. Applied AFTER the
+    # ensemble branch so they work in both code paths (with and without
+    # outcome_probabilities). Positive shift increases that team's
+    # probability.
+    if team_corrections:
+        team_shift_a = float(team_corrections.get(team_a, {}).get("1X2", 0.0))
+        team_shift_b = float(team_corrections.get(team_b, {}).get("1X2", 0.0))
+        if abs(team_shift_a) > 0.005 or abs(team_shift_b) > 0.005:
+            unified_1x2 = apply_outcome_shifts(
+                unified_1x2,
+                {"home": team_shift_a, "draw": 0.0, "away": team_shift_b},
+            )
+            unified_note += (
+                f" Corrección por equipo: {team_a} {team_shift_a:+.2f},"
+                f" {team_b} {team_shift_b:+.2f} (logit)."
+            )
+            # Re-align matrix and scoreline target if we already had them.
+            final_matrix = _score_matrix_aligned_to_1x2(matrix, score_1x2, unified_1x2)
+            scoreline_target_1x2 = _normalize_1x2({
+                key: (
+                    SCORELINE_OUTCOME_ALIGNMENT_WEIGHT * unified_1x2[key]
+                    + (1.0 - SCORELINE_OUTCOME_ALIGNMENT_WEIGHT) * score_1x2[key]
+                )
+                for key in ("home", "draw", "away")
+            })
+            scoreline_matrix = _score_matrix_aligned_to_1x2(matrix, score_1x2, scoreline_target_1x2)
 
     if draw_incentive > 0.0:
         unified_1x2 = _boost_draw(unified_1x2, draw_incentive)
