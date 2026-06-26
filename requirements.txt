@@ -6,6 +6,7 @@ altair>=5.3
 Pillow>=10.4
 scikit-learn>=1.5
 joblib>=1.4
+tzdata>=2024.1
 # statsbombpy fetches StatsBomb Open Data (free, hosted on GitHub) and is
 # only used by scripts/import_statsbomb_history.py to back-fill deep team
 # stats from WC22/18, Euro24/20, Copa América 24, AFCON 23. The Streamlit

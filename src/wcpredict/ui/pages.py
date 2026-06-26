@@ -3,6 +3,7 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from hashlib import sha256
 from html import escape
+from zoneinfo import ZoneInfo
 import json
 import os
 import sqlite3
@@ -107,6 +108,21 @@ OPEN_SCHEDULE_PATH = DATA_DIR / "open" / "martj42-results.csv"
 DAILY_PROVIDERS = (*DEFAULT_PROVIDERS, "martj42_world_schedule")
 HOST_TEAMS = {"USA", "Canada", "Mexico"}
 PREDICTION_ENGINE_VERSION = "2026-06-25-draw-incentive-v1"
+DISPLAY_TZ = ZoneInfo("Europe/Madrid")
+
+
+def _display_dt(value: datetime | str) -> datetime:
+    if isinstance(value, datetime):
+        parsed = value
+    else:
+        parsed = datetime.fromisoformat(str(value).replace("Z", "+00:00"))
+    if parsed.tzinfo is None:
+        parsed = parsed.replace(tzinfo=timezone.utc)
+    return parsed.astimezone(DISPLAY_TZ)
+
+
+def _display_time(value: datetime | str, fmt: str) -> str:
+    return _display_dt(value).strftime(fmt)
 
 
 def _host_factor(team_name: str) -> float:
@@ -993,7 +1009,7 @@ def _database_summary() -> dict[str, int | bool]:
 
 def _match_labels(matches) -> tuple[list[str], dict[str, object]]:
     labels = [
-        f"{match.kickoff_utc.astimezone().strftime('%d %b · %H:%M')} — {match.label}"
+        f"{_display_time(match.kickoff_utc, '%d %b · %H:%M')} — {match.label}"
         for match in matches
     ]
     return labels, dict(zip(labels, matches))
@@ -1037,7 +1053,7 @@ def _render_bundle(bundle: CollectorEventBundle, deep_count: int = 0, daily_play
     st.markdown(
         '<div class="status-row">'
         + status_pill(label, tone)
-        + status_pill(f"Actualizado {bundle.updated_at_utc.astimezone().strftime('%d/%m %H:%M')}")
+        + status_pill(f"Actualizado {_display_time(bundle.updated_at_utc, '%d/%m %H:%M')}")
         + status_pill(f"Fuente event #{bundle.event_id}")
         + "</div>",
         unsafe_allow_html=True,
@@ -1107,6 +1123,12 @@ class MatchVolumeBundle:
     volume_predictions: dict = field(default_factory=dict)
     team_volume_predictions: dict = field(default_factory=dict)
     volume_market_rows: list[dict] = field(default_factory=list)
+    team_volume_stat_rows: list[dict] = field(default_factory=list)
+
+
+@dataclass
+class TeamVolumeContext:
+    team_volume_predictions: dict = field(default_factory=dict)
     team_volume_stat_rows: list[dict] = field(default_factory=list)
 
 
@@ -1345,11 +1367,11 @@ def _match_analysis_bundle_cached(
 
 
 @st.cache_resource(show_spinner=False)
-def _team_volume_stat_rows_cached(
+def _team_volume_context_from_profiles_cached(
     match_id: int,
     db_sig: tuple[int, int],
     engine_version: str,
-) -> list[dict]:
+) -> TeamVolumeContext:
     repo = _repo()
     match = next(item for item in _matches_cached(db_sig) if item.id == match_id)
     team_a, team_b = match.team_a.name, match.team_b.name
@@ -1379,8 +1401,9 @@ def _team_volume_stat_rows_cached(
     )
     team_lines = predict_team_volume_markets(team_profiles[team_a], team_profiles[team_b])
     team_volume_stat_rows: list[dict] = []
+    team_volume_predictions: dict[str, dict[str, float]] = {}
     if not team_lines:
-        return team_volume_stat_rows
+        return TeamVolumeContext()
     expected_by_team_metric: dict[tuple[str, str], dict] = {}
     for row in team_lines:
         key = (row.team_name, row.market)
@@ -1391,6 +1414,12 @@ def _team_volume_stat_rows_cached(
             "confidence": row.confidence,
             "sample": row.sample_size,
         }
+        team_volume_predictions.setdefault(row.market, {})[row.team_name] = float(row.expected)
+    metric_aliases = {"shots_total": "shots", "yellow_cards": "cards"}
+    for source_metric, target_metric in metric_aliases.items():
+        values = team_volume_predictions.get(source_metric)
+        if values:
+            team_volume_predictions[target_metric] = dict(values)
     for market_id in MARKET_CATALOG.keys():
         label = MARKET_CATALOG[market_id]["label"]
         a = expected_by_team_metric.get((team_a, market_id))
@@ -1404,7 +1433,18 @@ def _team_volume_stat_rows_cached(
             "Confianza": (a or b)["confidence"],
             "Muestra": round((a or b)["sample"], 1),
         })
-    return team_volume_stat_rows
+    return TeamVolumeContext(
+        team_volume_predictions=team_volume_predictions,
+        team_volume_stat_rows=team_volume_stat_rows,
+    )
+
+
+def _team_volume_context_from_profiles(match) -> TeamVolumeContext:
+    return _team_volume_context_from_profiles_cached(
+        match.id,
+        _db_signature(),
+        PREDICTION_ENGINE_VERSION,
+    )
 
 
 @st.cache_resource(show_spinner=False)
@@ -1419,7 +1459,7 @@ def _match_volume_context_cached(
     observations_for_match = repo.list_observations(match.id)
 
     volume_predictions: dict[str, float] = {}
-    team_volume_predictions: dict[str, dict[str, float]] = {}
+    team_volume = _team_volume_context_from_profiles_cached(match_id, db_sig, engine_version)
     volume_market_rows: list[dict] = []
     rate_observations = observations_for_match + build_volume_rate_observations(
         team_a, team_b, repo.list_deep_volume_rows_before(match.kickoff_utc)
@@ -1454,17 +1494,12 @@ def _match_volume_context_cached(
         )
         if estimate.expected_total is not None:
             volume_predictions[metric] = float(estimate.expected_total)
-        if estimate.expected_team_a is not None and estimate.expected_team_b is not None:
-            team_volume_predictions[metric] = {
-                team_a: float(estimate.expected_team_a),
-                team_b: float(estimate.expected_team_b),
-            }
 
     return MatchVolumeBundle(
         volume_predictions=volume_predictions,
-        team_volume_predictions=team_volume_predictions,
+        team_volume_predictions=team_volume.team_volume_predictions,
         volume_market_rows=volume_market_rows,
-        team_volume_stat_rows=_team_volume_stat_rows_cached(match_id, db_sig, engine_version),
+        team_volume_stat_rows=team_volume.team_volume_stat_rows,
     )
 
 
@@ -1791,10 +1826,11 @@ def render_dashboard() -> None:
         unsafe_allow_html=True,
     )
     now = datetime.now(timezone.utc)
-    window_end = now + timedelta(days=2)
+    local_today = _display_dt(now).date()
+    window_end = local_today + timedelta(days=2)
     focus = [
         match for match in _list_matches()
-        if now.date() <= match.kickoff_utc.date() <= window_end.date()
+        if local_today <= _display_dt(match.kickoff_utc).date() <= window_end
         and match.status != "finished"
     ]
     if focus:
@@ -1805,14 +1841,14 @@ def render_dashboard() -> None:
             bundle = _cached_bundle(match)
             coverage_label, coverage_tone = _coverage_status(bundle)
             updated_label = (
-                bundle.updated_at_utc.astimezone().strftime("%d/%m %H:%M")
+                _display_time(bundle.updated_at_utc, "%d/%m %H:%M")
                 if bundle else "—"
             )
             href = f"?page=lab&match_id={match.id}"
             rows_html.append(
                 f"<tr class='match-row' onclick=\"window.location.search='page=lab&match_id={match.id}'\" style='cursor:pointer;'>"
                 f'<td style="padding:10px 12px;color:var(--muted);white-space:nowrap;">'
-                f'<a href="{href}" class="match-link">{match.kickoff_utc.astimezone().strftime("%d/%m · %H:%M")}</a></td>'
+                f'<a href="{href}" class="match-link">{_display_time(match.kickoff_utc, "%d/%m · %H:%M")}</a></td>'
                 f'<td style="padding:10px 12px;color:var(--ink);font-weight:600;">'
                 f'<a href="{href}" class="match-link"><span class="match-team">{crest_html(match.team_a.name, size=20)}'
                 f'<span>{match.team_a.name}</span></span> '
@@ -1867,7 +1903,7 @@ BRACKET_ORDER = ("Round of 32", "Round of 16", "Quarter-final",
 
 def _bracket_card_html(slot: dict, theme: dict) -> str:
     """Tournament-style card: coloured stripe header + two team rows + VS."""
-    kickoff_date = slot["kickoff_utc"][:10]
+    kickoff_date = _display_time(slot["kickoff_utc"], "%Y-%m-%d")
     venue = slot.get("venue") or ""
     venue_html = f"<span class='bk-venue'>📍 {venue}</span>" if venue else ""
     match_id = slot.get("match_id")
@@ -1975,7 +2011,7 @@ def render_prediction_lab() -> None:
         f'<span class="hero-team">{crest_b}<span>{team_b}</span></span>'
     )
     hero(
-        f"{match.stage} · {match.kickoff_utc.astimezone().strftime('%d %b %Y · %H:%M')}",
+        f"{match.stage} · {_display_time(match.kickoff_utc, '%d %b %Y · %H:%M')}",
         title_html,
         f"{match.venue or 'Sede por confirmar'} · horario local del sistema",
     )
@@ -2603,7 +2639,7 @@ def render_prediction_lab() -> None:
                     affected_rows = [
                         {
                             "Partido": item.label,
-                            "Kickoff": item.kickoff_utc.astimezone().strftime("%d/%m %H:%M"),
+                            "Kickoff": _display_time(item.kickoff_utc, "%d/%m %H:%M"),
                             "Selecciones afectadas": ", ".join(
                                 team for team in teams_with_new_evidence
                                 if same_team(item.team_a.name, team) or same_team(item.team_b.name, team)
@@ -2752,7 +2788,7 @@ def _render_global_bias_panel() -> None:
     with st.expander("Ver muestras individuales auditadas"):
         rows = [{
             "Partido": f"{s.team_a} vs {s.team_b}",
-            "Kickoff": s.kickoff_utc.astimezone().strftime("%d/%m %H:%M"),
+            "Kickoff": _display_time(s.kickoff_utc, "%d/%m %H:%M"),
             "Pred. local": f"{s.predicted_1x2['home']:.0%}",
             "Pred. empate": f"{s.predicted_1x2['draw']:.0%}",
             "Pred. visitante": f"{s.predicted_1x2['away']:.0%}",
@@ -2876,7 +2912,7 @@ def render_backtesting() -> None:
             tag, label_word = "🔴", "Faltan stats y marcador"
         status_by_id[item.id] = {"tag": tag, "label": label_word, "has_result": has_result, "has_stats": has_stats}
     annotated_labels = [
-        f"{status_by_id[item.id]['tag']} {item.kickoff_utc.astimezone().strftime('%d %b · %H:%M')} — {item.label}  ·  {status_by_id[item.id]['label']}"
+        f"{status_by_id[item.id]['tag']} {_display_time(item.kickoff_utc, '%d %b · %H:%M')} — {item.label}  ·  {status_by_id[item.id]['label']}"
         for item in matches
     ]
     by_annotated = dict(zip(annotated_labels, matches))
@@ -3173,12 +3209,12 @@ def render_data_quality() -> None:
         rows.append(
             {
                 "Partido": match.label,
-                "Fecha": match.kickoff_utc.astimezone().strftime("%d/%m %H:%M"),
+                "Fecha": _display_time(match.kickoff_utc, "%d/%m %H:%M"),
                 "Cobertura": _coverage_status(bundle)[0],
                 "Estadísticas": (len(bundle.statistics) if bundle else 0) + deep_count,
                 "Jugadores disponibles": match_player_count,
                 "Alineación": "Confirmada" if bundle and bundle.lineups else "No confirmada",
-                "Última captura": bundle.updated_at_utc.astimezone().strftime("%d/%m %H:%M") if bundle else "—",
+                "Última captura": _display_time(bundle.updated_at_utc, "%d/%m %H:%M") if bundle else "—",
                 "Importado": "Sí" if import_flags.get(match.id) else "No",
                 "Faltantes": ", ".join(missing) if missing else "Ninguno crítico",
             }

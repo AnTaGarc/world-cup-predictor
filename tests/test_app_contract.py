@@ -1,4 +1,6 @@
 from pathlib import Path
+from types import SimpleNamespace
+from datetime import datetime, timezone
 import unittest
 
 from wcpredict.models import MarketFamily
@@ -25,6 +27,15 @@ class AppContractTests(unittest.TestCase):
         self.assertIn('"Resumen"', source)
         self.assertIn('"Calibración"', source)
 
+    def test_match_labels_use_madrid_local_day(self):
+        match = SimpleNamespace(
+            kickoff_utc=datetime(2026, 6, 25, 22, 0, tzinfo=timezone.utc),
+            label="Scotland vs Brazil",
+        )
+        labels, _ = pages._match_labels([match])
+        self.assertEqual("26 Jun · 00:00 — Scotland vs Brazil", labels[0])
+        source = (Path(__file__).parents[1] / "src" / "wcpredict" / "ui" / "pages.py").read_text(encoding="utf-8")
+        self.assertIn('ZoneInfo("Europe/Madrid")', source)
 
     def test_player_market_uses_observed_player_selectors_not_manual_rates(self):
         source = (Path(__file__).parents[1] / "src" / "wcpredict" / "ui" / "pages.py").read_text(encoding="utf-8")
@@ -330,6 +341,16 @@ class AppContractTests(unittest.TestCase):
         source = (Path(__file__).parents[1] / "src" / "wcpredict" / "ui" / "pages.py").read_text(encoding="utf-8")
         self.assertIn("Esta evidencia alimenta el modelo", source)
         self.assertIn("Selecciones afectadas", source)
+
+    def test_team_volume_predictions_share_single_source(self):
+        source = (Path(__file__).parents[1] / "src" / "wcpredict" / "ui" / "pages.py").read_text(encoding="utf-8")
+        self.assertIn("def _team_volume_context_from_profiles", source)
+        self.assertIn("team_volume_predictions=team_volume.team_volume_predictions", source)
+        self.assertIn("team_volume_stat_rows=team_volume.team_volume_stat_rows", source)
+        volume_context_start = source.index("def _match_volume_context_cached")
+        volume_context_end = source.index("\ndef _match_volume_context", volume_context_start)
+        volume_context = source[volume_context_start:volume_context_end]
+        self.assertNotIn("expected_team_a", volume_context)
 
 
 if __name__ == "__main__":
