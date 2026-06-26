@@ -33,10 +33,13 @@ sys.path.insert(0, str(ROOT / "src"))
 from wcpredict.advanced_form import build_xg_form_adjustment
 from wcpredict.repository import Repository
 from wcpredict.services import predict_match_markets
+from wcpredict.team_profile import build_team_profile
+from wcpredict.team_volume_markets import derive_xg_factors_from_profile
 
 DB = ROOT / "data" / "worldcup.sqlite"
 COMPETITION = "FIFA World Cup 2026"
 MODEL_VERSION_BASELINE = "baseline-score-only-v1"
+MODEL_VERSION_PROFILES = "profiles-fase2-v1"
 
 
 def _hist_results_before(repo: Repository, as_of: datetime):
@@ -106,11 +109,13 @@ def _persist_run(
         con.commit()
 
 
-def replay(run_label: str = "baseline-fase1") -> dict:
+def replay(run_label: str = "baseline-fase1", *, use_profiles: bool = False) -> dict:
     repo = Repository(DB)
     repo.initialize()
     matches = _closed_matches(repo)
-    print(f"Partidos cerrados WC2026 a replicar: {len(matches)}")
+    model_version = MODEL_VERSION_PROFILES if use_profiles else MODEL_VERSION_BASELINE
+    print(f"Partidos cerrados WC2026 a replicar: {len(matches)} "
+          f"({'CON' if use_profiles else 'SIN'} team_profile)")
 
     aggregate = {
         "brier_1x2": 0.0, "logloss_1x2": 0.0, "n_1x2": 0,
@@ -128,6 +133,22 @@ def replay(run_label: str = "baseline-fase1") -> dict:
         # Deep-form adjustment uses the same data-as-of cut-off (no leakage).
         deep_xg_rows = repo.list_deep_xg_rows_before(as_of)
         advanced = build_xg_form_adjustment(m["team_a"], m["team_b"], deep_xg_rows, as_of)
+
+        # Phase 2: build team profiles from historical deep stats + xG factor.
+        if use_profiles:
+            deep_rows = repo.list_deep_team_metric_observations_before(as_of)
+            profile_a = build_team_profile(m["team_a"], deep_rows, as_of)
+            profile_b = build_team_profile(m["team_b"], deep_rows, as_of)
+            factor_a, factor_b, _ = derive_xg_factors_from_profile(profile_a, profile_b)
+            # Compose into advanced_form: multiply existing factors so a single
+            # advanced_form payload carries both signals into predict_match_markets.
+            if advanced is not None:
+                from dataclasses import replace as _replace
+                advanced = _replace(
+                    advanced,
+                    factor_a=advanced.factor_a * factor_a,
+                    factor_b=advanced.factor_b * factor_b,
+                )
 
         predictions = predict_match_markets(
             m["team_a"], m["team_b"], results, as_of.date(),
@@ -159,7 +180,7 @@ def replay(run_label: str = "baseline-fase1") -> dict:
             ("Draw", prob_draw, 1 if winner == "draw" else 0),
             (m["team_b"], prob_away, 1 if winner == "away" else 0),
         ):
-            _persist_run(repo, run_label, MODEL_VERSION_BASELINE, m["id"], "1X2", sel, prob, outcome)
+            _persist_run(repo, run_label, model_version, m["id"], "1X2", sel, prob, outcome)
 
         # Over/Under 2.5
         prob_over25 = next((p.probability for p in predictions if p.market_name == "Over/Under 2.5" and "Over" in p.selection_name), 0.0)
@@ -168,7 +189,7 @@ def replay(run_label: str = "baseline-fase1") -> dict:
         if (prob_over25 >= 0.5 and over25_hit == 1) or (prob_over25 < 0.5 and over25_hit == 0):
             aggregate["hits_ou25"] += 1
         aggregate["n_ou25"] += 1
-        _persist_run(repo, run_label, MODEL_VERSION_BASELINE, m["id"], "Over/Under 2.5", "Over 2.5", prob_over25, over25_hit)
+        _persist_run(repo, run_label, model_version, m["id"], "Over/Under 2.5", "Over 2.5", prob_over25, over25_hit)
 
         # BTTS
         prob_btts = next((p.probability for p in predictions if p.market_name == "Both Teams To Score" and p.selection_name == "Yes"), 0.0)
@@ -177,7 +198,7 @@ def replay(run_label: str = "baseline-fase1") -> dict:
         if (prob_btts >= 0.5 and btts_hit == 1) or (prob_btts < 0.5 and btts_hit == 0):
             aggregate["hits_btts"] += 1
         aggregate["n_btts"] += 1
-        _persist_run(repo, run_label, MODEL_VERSION_BASELINE, m["id"], "BTTS", "Yes", prob_btts, btts_hit)
+        _persist_run(repo, run_label, model_version, m["id"], "BTTS", "Yes", prob_btts, btts_hit)
 
         # Marcadores exactos: top-1 y top-3
         exact_rows = [(p.selection_name, p.probability) for p in predictions
@@ -193,21 +214,21 @@ def replay(run_label: str = "baseline-fase1") -> dict:
             if true_label in top3:
                 aggregate["top3_exact"] += 1
             aggregate["n_exact"] += 1
-            _persist_run(repo, run_label, MODEL_VERSION_BASELINE, m["id"],
+            _persist_run(repo, run_label, model_version, m["id"],
                          "Exact Score Top1", top1, 1.0 if top1 == true_label else 0.0,
                          1 if top1 == true_label else 0, extra={"true": true_label})
-            _persist_run(repo, run_label, MODEL_VERSION_BASELINE, m["id"],
+            _persist_run(repo, run_label, model_version, m["id"],
                          "Exact Score Top3", "|".join(top3), 1.0 if true_label in top3 else 0.0,
                          1 if true_label in top3 else 0, extra={"true": true_label})
 
     return aggregate
 
 
-def _print_summary(agg: dict):
+def _print_summary(agg: dict, model_version: str):
     n = agg["n_1x2"] or 1
     print()
     print("=" * 64)
-    print(f"  Baseline ({MODEL_VERSION_BASELINE}) sobre {n} partidos cerrados")
+    print(f"  {model_version} sobre {n} partidos cerrados")
     print("=" * 64)
     print(f"  Brier 1X2      : {agg['brier_1x2']/n:.4f}")
     print(f"  Log loss 1X2   : {agg['logloss_1x2']/n:.4f}")
@@ -225,9 +246,11 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--label", default="baseline-fase1",
                         help="Tag stored in backtest_runs.run_label")
+    parser.add_argument("--with-profiles", action="store_true",
+                        help="Activar perfiles deep historicos (Fase 2)")
     args = parser.parse_args()
-    agg = replay(args.label)
-    _print_summary(agg)
+    agg = replay(args.label, use_profiles=args.with_profiles)
+    _print_summary(agg, MODEL_VERSION_PROFILES if args.with_profiles else MODEL_VERSION_BASELINE)
     return 0
 
 

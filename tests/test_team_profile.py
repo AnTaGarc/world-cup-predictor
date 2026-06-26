@@ -145,8 +145,9 @@ class TeamProfileTests(unittest.TestCase):
 
 
     def test_competition_weight_downweights_friendlies(self):
-        # Friendly vs current World Cup 2026: WC gets 2.0× weight (current
-        # tournament boost), friendly 0.5×. Verify the WC match dominates.
+        # Phase 2 expanded matrix: WC2026 = 3.0× (was 2.0), friendly in 2026
+        # = 0.55×. The WC match must still dominate, and the friendly must
+        # contribute something (>0) but much less than the WC fixture.
         deep_rows = [
             _row("Spain", "resumen_del_partido.saques_de_esquina", 8,
                  "2026-06-15T19:00:00+00:00", competition="International Friendly"),
@@ -156,9 +157,9 @@ class TeamProfileTests(unittest.TestCase):
         as_of = datetime(2026, 6, 22, tzinfo=timezone.utc)
         profile = build_team_profile("Spain", deep_rows, as_of, half_life_days=720)
         sample = profile.metrics["resumen_del_partido.saques_de_esquina"].sample_size
-        # WC 2026 (~1.0 recency × 2.0 comp) + friendly (~0.99 × 0.5) ≈ 2.5
-        self.assertGreater(sample, 2.2)
-        self.assertLess(sample, 2.7)
+        # WC 2026 (~1.0 recency × 3.0 comp) + friendly (~0.99 × 0.55) ≈ 3.55
+        self.assertGreater(sample, 3.2)
+        self.assertLess(sample, 3.9)
 
 
 if __name__ == "__main__":

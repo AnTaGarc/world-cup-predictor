@@ -140,6 +140,44 @@ def _recency_weight(played_at_utc: datetime, as_of_utc: datetime, half_life_days
     return math.pow(0.5, age_days / max(half_life_days, 1.0))
 
 
+def _composite_weight(
+    metric: str,
+    played_at_utc: datetime,
+    as_of_utc: datetime,
+    *,
+    competition: str,
+    opponent_strength: float | None,
+    mean_strength: float,
+    half_life_override: float | None = None,
+) -> float:
+    """Thin wrapper over historical_relevance.compute_match_weight that
+    lets callers force a single half-life (used by tests and the legacy
+    backtest harness that pin a fixed decay)."""
+    # Late import to avoid the circular `team_profile → historical_relevance →
+    # team_profile.METRIC_CATALOG` reference loop at module load.
+    from wcpredict.historical_relevance import (
+        compute_match_weight,
+        recency_weight as _hr_recency,
+        competition_weight as _hr_competition,
+        opponent_weight as _hr_opponent,
+    )
+    if half_life_override is None:
+        return compute_match_weight(
+            metric, played_at_utc, as_of_utc,
+            competition=competition,
+            opponent_strength=opponent_strength,
+            mean_strength=mean_strength,
+        )
+    w_recency = _hr_recency(played_at_utc, as_of_utc, half_life_days=half_life_override)
+    if w_recency <= 0:
+        return 0.0
+    return (
+        w_recency
+        * _hr_competition(competition, as_of_utc=as_of_utc)
+        * _hr_opponent(opponent_strength, mean_strength)
+    )
+
+
 def _competition_weight(competition: str) -> float:
     """Importance multiplier per match type.
 
@@ -348,21 +386,24 @@ def build_team_profile(
         played = _parse_dt(row.get("kickoff_utc"))
         if played is None:
             continue
-        w = _recency_weight(played, as_of_utc, half_life_days)
-        if w <= 0:
-            continue
-        # Down-weight friendlies relative to qualifiers and top tournaments.
-        w *= _competition_weight(str(row.get("competition") or ""))
+        # Composite weight from historical_relevance (family half-life +
+        # expanded competition matrix + opponent strength).
+        opp_strength: float | None = None
         if normalized_strengths:
             opp = match_opponents.get(str(row.get("kickoff_utc") or ""))
             if opp:
                 opp_strength = normalized_strengths.get(
                     canonical_team_name(opp), mean_strength
                 )
-                # Multiplicative reweighting. Capped to avoid letting one
-                # very strong/weak opponent dominate.
-                ratio = max(0.4, min(2.5, opp_strength / mean_strength))
-                w *= ratio
+        w = _composite_weight(
+            metric, played, as_of_utc,
+            competition=str(row.get("competition") or ""),
+            opponent_strength=opp_strength,
+            mean_strength=mean_strength,
+            half_life_override=half_life_days if half_life_days != 540.0 else None,
+        )
+        if w <= 0:
+            continue
         s, ws = weighted_sums.get(metric, (0.0, 0.0))
         weighted_sums[metric] = (s + float(value) * w, ws + w)
         total_weight = max(total_weight, ws + w)
@@ -445,18 +486,22 @@ def _build_team_profile_from_context(
         played = _parse_dt(row.get("kickoff_utc"))
         if played is None:
             continue
-        w = _recency_weight(played, as_of_utc, half_life_days)
-        if w <= 0:
-            continue
-        w *= _competition_weight(str(row.get("competition") or ""))
+        opp_strength: float | None = None
         if normalized_strengths:
             opp = _opponent_for_match(context, str(row.get("kickoff_utc") or ""), team_name)
             if opp:
                 opp_strength = normalized_strengths.get(
                     canonical_team_name(opp), mean_strength
                 )
-                ratio = max(0.4, min(2.5, opp_strength / mean_strength))
-                w *= ratio
+        w = _composite_weight(
+            metric, played, as_of_utc,
+            competition=str(row.get("competition") or ""),
+            opponent_strength=opp_strength,
+            mean_strength=mean_strength,
+            half_life_override=half_life_days if half_life_days != 540.0 else None,
+        )
+        if w <= 0:
+            continue
         s, ws = weighted_sums.get(metric, (0.0, 0.0))
         weighted_sums[metric] = (s + float(value) * w, ws + w)
         total_weight = max(total_weight, ws + w)
