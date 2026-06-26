@@ -2609,7 +2609,11 @@ def render_prediction_lab() -> None:
             stored.write_bytes(content)
             try:
                 collection = load_deep_match_file(stored)
-                imported_deep = repo.import_deep_match_collection(collection, datetime.now(timezone.utc))
+                imported_deep = repo.import_deep_match_collection(
+                    collection,
+                    datetime.now(timezone.utc),
+                    intended_match_id=match.id,
+                )
                 st.cache_data.clear(); st.cache_resource.clear()
                 st.success(
                     f"Importados {imported_deep.imported_matches}; sin cambios {imported_deep.unchanged_matches}; "

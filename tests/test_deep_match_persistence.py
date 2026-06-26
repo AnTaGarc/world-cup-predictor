@@ -300,6 +300,54 @@ class DeepMatchPersistenceTests(unittest.TestCase):
             result = repo.import_deep_match_collection(load_deep_match_file(path), datetime.now(timezone.utc))
         self.assertEqual(1, result.ambiguous_matches)
 
+    def test_selected_match_id_resolves_deep_import_ambiguity(self):
+        with tempfile.TemporaryDirectory() as directory:
+            repo = Repository(Path(directory) / "app.sqlite")
+            repo.initialize()
+            turkey = repo.upsert_team("Turkiye")
+            usa = repo.upsert_team("USA")
+            first_id = repo.upsert_match(
+                "FIFA World Cup 2026",
+                "Group",
+                datetime(2026, 6, 26, 1, tzinfo=timezone.utc),
+                turkey,
+                usa,
+                "finished",
+            )
+            second_id = repo.upsert_match(
+                "FIFA World Cup 2026",
+                "Group",
+                datetime(2026, 6, 27, 1, tzinfo=timezone.utc),
+                turkey,
+                usa,
+                "scheduled",
+            )
+            payload = {"numero_de_partidos": 1, "partidos": [{
+                "id": "turkiye_usa", "nombre": "Turquia vs Estados Unidos",
+                "equipos": {"izquierda_verde": "Turquia", "derecha_azul": "Estados Unidos"},
+                "estadisticas": {
+                    "resumen_del_partido": {
+                        "tiros_totales": {"Turquia": 11, "Estados Unidos": 8},
+                        "saques_de_esquina": {"Turquia": 4, "Estados Unidos": 3},
+                    }
+                },
+                "fuentes": [],
+            }]}
+            path = Path(directory) / "stats.json"
+            path.write_text(json.dumps(payload), encoding="utf-8")
+            collection = load_deep_match_file(path)
+            result = repo.import_deep_match_collection(
+                collection,
+                datetime.now(timezone.utc),
+                intended_match_id=first_id,
+            )
+            stats = repo.list_team_match_stats(first_id)
+            other_stats = repo.list_team_match_stats(second_id)
+        self.assertEqual(1, result.imported_matches)
+        self.assertEqual(0, result.ambiguous_matches)
+        self.assertEqual(2, len(stats))
+        self.assertEqual([], other_stats)
+
 
 if __name__ == "__main__":
     unittest.main()

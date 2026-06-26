@@ -596,7 +596,10 @@ class Repository:
         ]
 
     def import_deep_match_collection(
-        self, collection: DeepMatchCollection, imported_at_utc: datetime
+        self,
+        collection: DeepMatchCollection,
+        imported_at_utc: datetime,
+        intended_match_id: int | None = None,
     ) -> DeepImportResult:
         """Persist a reviewed deep-stat JSON without guessing ambiguous fixtures."""
         scheduled = self.list_matches()
@@ -639,8 +642,14 @@ class Repository:
                     unmatched += 1
                     continue
                 if len(candidates) != 1:
-                    ambiguous += 1
-                    continue
+                    intended_candidates = [
+                        match for match in candidates
+                        if intended_match_id is not None and match.id == intended_match_id
+                    ]
+                    if len(intended_candidates) != 1:
+                        ambiguous += 1
+                        continue
+                    candidates = intended_candidates
                 match = candidates[0]
                 event_id = f"deep:{collection.sha256}:{record.source_match_id}"
                 exists = con.execute(
