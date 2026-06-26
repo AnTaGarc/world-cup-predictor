@@ -461,6 +461,27 @@ CREATE TABLE IF NOT EXISTS prediction_snapshots (
 CREATE INDEX IF NOT EXISTS idx_prediction_snapshots_match
 ON prediction_snapshots(match_id, generated_at_utc DESC);
 
+-- Per-match prediction error stored once per backtest run. Multiple runs
+-- (one per model_version) can coexist so Fase 6 can compare baseline vs
+-- enhanced model side-by-side without recomputing.
+CREATE TABLE IF NOT EXISTS backtest_runs (
+    id INTEGER PRIMARY KEY,
+    run_label TEXT NOT NULL,
+    model_version TEXT NOT NULL,
+    match_id INTEGER NOT NULL REFERENCES matches(id),
+    market TEXT NOT NULL,
+    selection TEXT,
+    prob_predicted REAL,
+    outcome_observed INTEGER,
+    brier REAL,
+    log_loss REAL,
+    extra_json TEXT,
+    recorded_at_utc TEXT NOT NULL,
+    UNIQUE(run_label, model_version, match_id, market, selection)
+);
+CREATE INDEX IF NOT EXISTS idx_backtest_runs_label
+ON backtest_runs(run_label, model_version);
+
 -- Hot-path indexes (Streamlit dashboard re-runs these on every interaction)
 CREATE INDEX IF NOT EXISTS idx_matches_competition_kickoff
 ON matches(competition, kickoff_utc);
