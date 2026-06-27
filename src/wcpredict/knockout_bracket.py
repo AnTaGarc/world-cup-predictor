@@ -382,8 +382,15 @@ def _assign_thirds_annex_c(
     rival's own group).
 
     Returns ``{slot_id: team_id}`` for slots that could be assigned, or an
-    empty dict if any prerequisite is missing (not enough qualified thirds,
+    empty dict if any prerequisite is missing (need ALL 12 groups closed,
     no valid matching, etc).
+
+    IMPORTANT: this only fires when the full 12 groups are finished. With
+    fewer groups closed the "best 8 thirds" cannot be known — assigning
+    early would put a team into the bracket that ends up cut once the
+    remaining 4 third-places land (Uruguay-vs-Korea-style mistake the user
+    pointed out). Returning {} keeps the slots as ``3.º de A/B/...`` until
+    the picture is fully resolved.
     """
     third_slots: list[tuple[str, set[str]]] = []
     for slot in slots:
@@ -393,6 +400,15 @@ def _assign_thirds_annex_c(
                 third_slots.append((slot.slot_id, allowed))
                 break
     if not third_slots:
+        return {}
+    # Need every single group of 4 to be settled before we can decide who
+    # the 8 best 3rd-placed teams are.
+    finished_groups = 0
+    for letter in "ABCDEFGHIJKL":
+        standings = _group_standings(con, letter)
+        if len(standings) >= 4:
+            finished_groups += 1
+    if finished_groups < 12:
         return {}
     qualified = _third_place_ranking(con)
     if len(qualified) < 8:
