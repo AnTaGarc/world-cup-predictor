@@ -1,0 +1,36 @@
+# FIFA World Cup 2026 — Annex C: third-placed teams to Round of 32 mapping.
+#
+# Each row encodes ONE of the C(12,8) = 495 possible combinations of which
+# 8 of the 12 groups end up sending a third-placed team to the knockout.
+# For that combination, FIFA pre-defines which third faces which group winner.
+#
+# Format:
+#
+#   thirds_combo,1A,1B,1D,1E,1G,1I,1K,1L
+#
+# Where:
+#   thirds_combo: 8-character string with the 8 group letters sorted
+#                 alphabetically (e.g. "ABCDEFGH" means thirds qualified
+#                 from groups A, B, C, D, E, F, G and H).
+#   1A,1B,1D,1E,1G,1I,1K,1L: the group letter (single letter) whose
+#                            third-placed team plays the corresponding
+#                            group winner. Each letter MUST be one of
+#                            the 8 in thirds_combo.
+#
+# Example (illustrative, NOT the official FIFA assignment):
+#   thirds_combo,1A,1B,1D,1E,1G,1I,1K,1L
+#   ABCDEFGH,H,A,E,D,F,B,C,G
+#
+# Lines starting with '#' are ignored.
+#
+# Behaviour when this file is empty / missing / incomplete:
+#   * The runtime falls back to a deterministic bipartite solver that
+#     respects the allowed-set constraints baked into each slot
+#     (3{ABCDF}, 3{CDFGH}, etc.) but may not match the official FIFA
+#     pairing in cases where multiple valid assignments exist.
+#   * Once the 12 groups close, fill in the row corresponding to the
+#     8 qualifying-third groups and the pairing will be deterministic.
+#
+# Source: https://digitalhub.fifa.com (FIFA tournament regulations PDF,
+# Annex C — published by FIFA after the draw).
+thirds_combo,1A,1B,1D,1E,1G,1I,1K,1L

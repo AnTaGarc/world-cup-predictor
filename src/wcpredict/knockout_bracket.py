@@ -30,6 +30,15 @@ from wcpredict.repository import Repository
 
 COMPETITION = "FIFA World Cup 2026"
 
+# Optional override: if this CSV is filled with FIFA's official Annex C
+# matrix, the bipartite solver below is bypassed and the lookup is used
+# instead. Format documented in the file itself.
+_ANNEX_C_CSV = Path(__file__).resolve().parents[2] / "data" / "fixtures" / "world_cup_2026_annex_c.csv"
+
+# Group winners that face a third-placed team (in slot order: M74, M77,
+# M79, M80, M81, M82, M85, M87 → 1E, 1I, 1A, 1L, 1D, 1G, 1B, 1K).
+_THIRD_FACING_WINNERS = ("1A", "1B", "1D", "1E", "1G", "1I", "1K", "1L")
+
 # Stage labels — kept consistent with what we store in matches.stage.
 STAGES = ("Round of 32", "Round of 16", "Quarter-final", "Semi-final",
           "Third-place play-off", "Final")
@@ -371,6 +380,57 @@ def _parse_third_allowed(source: str) -> set[str] | None:
     return None
 
 
+def _load_annex_c_table() -> dict[frozenset[str], dict[str, str]]:
+    """Parse the optional Annex C CSV into ``{frozenset(thirds_combo): {1A: groupX, ...}}``.
+
+    Returns an empty dict if the file is missing, empty (only the header)
+    or any row is malformed (skipped silently to avoid breaking the app
+    on a partial file). Each key is the 8-group combination of third-place
+    qualifiers; each value maps every winner slot to the source group of
+    its third-place opponent.
+    """
+    if not _ANNEX_C_CSV.exists():
+        return {}
+    try:
+        rows = list(csv.DictReader(
+            (line for line in _ANNEX_C_CSV.read_text(encoding="utf-8").splitlines()
+             if line and not line.startswith("#")),
+        ))
+    except Exception:
+        return {}
+    table: dict[frozenset[str], dict[str, str]] = {}
+    for row in rows:
+        combo_raw = (row.get("thirds_combo") or "").strip().upper()
+        if len(combo_raw) != 8 or not combo_raw.isalpha():
+            continue
+        combo = frozenset(combo_raw)
+        if len(combo) != 8:
+            continue
+        mapping: dict[str, str] = {}
+        ok = True
+        for winner_slot in _THIRD_FACING_WINNERS:
+            group_letter = (row.get(winner_slot) or "").strip().upper()
+            if len(group_letter) != 1 or group_letter not in combo:
+                ok = False
+                break
+            mapping[winner_slot] = group_letter
+        if not ok:
+            continue
+        # Sanity: each third-group must be used exactly once.
+        if len(set(mapping.values())) != 8:
+            continue
+        table[combo] = mapping
+    return table
+
+
+# Slot to winner mapping (M74 → 1E, etc.) — used both ways: from the
+# bracket slot ids to the corresponding "1X" code and vice versa.
+_THIRD_SLOTS_BY_WINNER = {
+    "M74": "1E", "M77": "1I", "M79": "1A", "M80": "1L",
+    "M81": "1D", "M82": "1G", "M85": "1B", "M87": "1K",
+}
+
+
 def _assign_thirds_annex_c(
     con: sqlite3.Connection, slots: list[BracketSlot]
 ) -> dict[str, int]:
@@ -417,6 +477,25 @@ def _assign_thirds_annex_c(
     qualified = qualified[:8]
     by_group: dict[str, tuple[int, str]] = {letter: (tid, name) for tid, name, letter in qualified}
     qualified_groups = list(by_group.keys())
+
+    # Preferred path: official FIFA Annex C lookup. The CSV is keyed by
+    # the alphabetically-sorted 8-group combination; for each combo it
+    # declares which third faces which group-winner slot. Falls through
+    # to the bipartite solver if the file is empty / does not contain
+    # this combination.
+    table = _load_annex_c_table()
+    combo_key = frozenset(qualified_groups)
+    official = table.get(combo_key)
+    if official is not None:
+        # Translate ``{1A: group_letter}`` into the bracket's slot_id keys.
+        winner_to_slot = {v: k for k, v in _THIRD_SLOTS_BY_WINNER.items()}
+        out: dict[str, int] = {}
+        for winner, third_group in official.items():
+            slot_id = winner_to_slot.get(winner)
+            if slot_id and third_group in by_group:
+                out[slot_id] = int(by_group[third_group][0])
+        if len(out) == 8:
+            return out
 
     assignment: dict[str, int] = {}
 
