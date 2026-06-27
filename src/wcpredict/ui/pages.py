@@ -958,25 +958,12 @@ def _score_grid_html(
     )
 
 
-def _render_market_visual_panel(
+def _render_exact_score_panel(
     team_a: str,
     team_b: str,
     predictions: list[MarketPrediction],
-    volume_predictions: dict[str, float],
-    saved_odds: list[dict] | None = None,
 ) -> None:
-    """Visual top-of-tab summary for "Mercados y EV".
-
-    Three sections:
-      * Top-3 most likely exact scores as cards.
-      * Main markets (1X2, O/U 2.5, BTTS) with model %, fair odds and —
-        when the user has saved odds — Tu cuota / Edge / Pick (BET/SKIP/FADE).
-      * Heuristic secondary markets (corners, cards, shots) with a
-        suggested line and a LEAN over/under hint, plus edge when there
-        are saved odds for that line.
-    """
-    odds_index = _build_saved_odds_index(saved_odds or [])
-    has_odds = bool(odds_index)
+    """Standalone "Marcadores" view: top-3 cards + full probability grid."""
     score_cards: list[tuple[str, str, float]] = []
     main_exact = next((row for row in predictions if row.market_name == "Exact Score"), None)
     if main_exact is not None:
@@ -984,7 +971,6 @@ def _render_market_visual_panel(
     alt_scores = [row for row in predictions if row.market_name == "Exact Score (alt)"]
     for idx, row in enumerate(alt_scores[:2], start=2):
         label = f"#{idx}"
-        # selection like "2-1 (#2)" → strip the rank suffix for the card.
         score_text = row.selection_name.split(" ")[0]
         score_cards.append((label, score_text, row.probability))
 
@@ -1007,6 +993,29 @@ def _render_market_visual_panel(
     grid_html = _score_grid_html(team_a, team_b, predictions)
     if grid_html:
         st.markdown(grid_html, unsafe_allow_html=True)
+    else:
+        st.info("Sin probabilidades de marcador exacto para este partido.")
+
+
+def _render_market_visual_panel(
+    team_a: str,
+    team_b: str,
+    predictions: list[MarketPrediction],
+    volume_predictions: dict[str, float],
+    saved_odds: list[dict] | None = None,
+) -> None:
+    """Visual top-of-tab summary for "Mercados y EV".
+
+    * Main markets (1X2, O/U 2.5, BTTS) with model %, fair odds and —
+      when the user has saved odds — Tu cuota / Edge / Pick (BET/SKIP/FADE).
+    * Heuristic secondary markets (corners, cards, shots) with a
+      suggested line and a LEAN over/under hint, plus edge when there
+      are saved odds for that line.
+
+    Exact-score cards/grid moved to the dedicated "Marcadores" section.
+    """
+    odds_index = _build_saved_odds_index(saved_odds or [])
+    has_odds = bool(odds_index)
 
     def _fair_odds(p: float) -> str:
         return f"{1.0 / p:.2f}" if p and p > 0.01 else "—"
@@ -2413,7 +2422,7 @@ def render_prediction_lab() -> None:
 
     section = st.segmented_control(
         "Vista de análisis",
-        ["Modelo", "Mercados y EV", "Jugadores", "Datos / SofaScore", "Guardado"],
+        ["Modelo", "Marcadores", "Mercados y EV", "Jugadores", "Datos / SofaScore", "Guardado"],
         default="Modelo",
         label_visibility="collapsed",
     )
@@ -2486,6 +2495,9 @@ def render_prediction_lab() -> None:
             for row in persisted_predictions:
                 repo.add_prediction(match.id, row.market_family.value, row.market_name, row.selection_name, row.line, row.probability, row.confidence.value, now, row.explanation)
             st.success(f"Snapshot guardado: {len(persisted_predictions)} mercados.")
+
+    elif section == "Marcadores":
+        _render_exact_score_panel(team_a, team_b, predictions)
 
     elif section == "Mercados y EV":
         saved_odds_for_match = repo.list_manual_odds(match.id)
