@@ -31,9 +31,14 @@ class AppContractTests(unittest.TestCase):
         match = SimpleNamespace(
             kickoff_utc=datetime(2026, 6, 25, 22, 0, tzinfo=timezone.utc),
             label="Scotland vs Brazil",
+            stage="Group stage - Group A",
         )
-        labels, _ = pages._match_labels([match])
-        self.assertEqual("26 Jun · 00:00 — Scotland vs Brazil", labels[0])
+        labels, by_label = pages._match_labels([match])
+        # New label list starts with a separator row ("─── Fase de grupos ───"),
+        # the real match label sits at index 1 with Madrid local time applied.
+        match_label = "26 Jun · 00:00 — Scotland vs Brazil"
+        self.assertIn(match_label, labels)
+        self.assertIn(match_label, by_label)
         source = (Path(__file__).parents[1] / "src" / "wcpredict" / "ui" / "pages.py").read_text(encoding="utf-8")
         self.assertIn('ZoneInfo("Europe/Madrid")', source)
 

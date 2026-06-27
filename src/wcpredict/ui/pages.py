@@ -1128,12 +1128,54 @@ def _database_summary() -> dict[str, int | bool]:
         }
 
 
+_KNOCKOUT_STAGE_TOKENS = (
+    "round of 32", "round of 16", "octavos", "dieciseisavos",
+    "quarter-final", "quarter final", "cuartos",
+    "semi-final", "semi final", "semifinal",
+    "third-place", "third place", "tercer puesto", "3rd place",
+    "final",
+)
+
+
+def _is_knockout_stage(stage: str | None) -> bool:
+    if not stage:
+        return False
+    s = str(stage).lower()
+    if s.startswith("group stage"):
+        return False
+    return any(token in s for token in _KNOCKOUT_STAGE_TOKENS)
+
+
 def _match_labels(matches) -> tuple[list[str], dict[str, object]]:
-    labels = [
-        f"{_display_time(match.kickoff_utc, '%d %b · %H:%M')} — {match.label}"
-        for match in matches
-    ]
-    return labels, dict(zip(labels, matches))
+    """Build the (labels, lookup) pair for st.selectbox.
+
+    Adds a visual separator between group-stage matches and knockout-stage
+    matches so the dropdown reads naturally: groups first, then a "─── Fase
+    eliminatoria ───" divider row that cannot be selected (lookup returns
+    None on it, the UI handles that gracefully).
+    """
+    group_matches = [m for m in matches if not _is_knockout_stage(getattr(m, "stage", None))]
+    knockout_matches = [m for m in matches if _is_knockout_stage(getattr(m, "stage", None))]
+
+    def _label(match):
+        return f"{_display_time(match.kickoff_utc, '%d %b · %H:%M')} — {match.label}"
+
+    labels: list[str] = []
+    lookup: dict[str, object] = {}
+
+    if group_matches:
+        labels.append("─── Fase de grupos ───")
+        for m in group_matches:
+            l = _label(m)
+            labels.append(l)
+            lookup[l] = m
+    if knockout_matches:
+        labels.append("─── Fase eliminatoria ───")
+        for m in knockout_matches:
+            l = _label(m)
+            labels.append(l)
+            lookup[l] = m
+    return labels, lookup
 
 
 def _cached_bundle(match) -> CollectorEventBundle | None:
@@ -2167,7 +2209,8 @@ def render_prediction_lab() -> None:
         "Czechia vs South Africa", "Switzerland vs Bosnia and Herzegovina",
         "Canada vs Qatar", "Mexico vs South Korea",
     }
-    # Preselection from the dashboard's match links (?match_id=X).
+    # Preselection from the dashboard's match links (?match_id=X). We
+    # validate against ``by_label`` so we never land on a separator row.
     requested_match_id = st.query_params.get("match_id")
     try:
         requested_match_id = int(requested_match_id) if requested_match_id else None
@@ -2177,15 +2220,24 @@ def render_prediction_lab() -> None:
     if requested_match_id is not None:
         preselect_index = next(
             (index for index, label in enumerate(labels)
-             if by_label[label].id == requested_match_id),
+             if label in by_label and by_label[label].id == requested_match_id),
             None,
         )
     if preselect_index is None:
         preselect_index = next(
-            (index for index, label in enumerate(labels) if by_label[label].label in calibration_labels),
+            (index for index, label in enumerate(labels)
+             if label in by_label and by_label[label].label in calibration_labels),
+            None,
+        )
+    if preselect_index is None:
+        preselect_index = next(
+            (index for index, label in enumerate(labels) if label in by_label),
             0,
         )
     selected_label = st.selectbox("Partido", labels, index=preselect_index, label_visibility="collapsed")
+    if selected_label not in by_label:
+        st.info("Selecciona un partido de la lista (no un separador).")
+        return
     match = by_label[selected_label]
     team_a, team_b = match.team_a.name, match.team_b.name
     crest_a = crest_html(team_a, size=44)
@@ -3355,6 +3407,9 @@ def render_data_quality() -> None:
     st.subheader("Corrección manual trazable")
     labels, by_label = _match_labels(matches)
     selected_label = st.selectbox("Partido a corregir", labels)
+    if selected_label not in by_label:
+        st.info("Selecciona un partido de la lista (no un separador).")
+        return
     selected = by_label[selected_label]
     existing = repo.list_observations(selected.id)
     editable_columns = ["subject_type", "subject_name", "metric", "value_number", "value_text", "unit", "sample_size"]
