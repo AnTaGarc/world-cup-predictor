@@ -816,24 +816,125 @@ def _knockout_prediction_for_match(match, bundle, repo: Repository | None = None
     )
 
 
-def _render_knockout_advance_section(match, bundle, team_a: str, team_b: str, repo: Repository) -> None:
-    """For knockout matches, surface the 'who advances?' breakdown using the
-    regulation xG already computed by the unified pipeline. Skipped silently
-    for group-stage games."""
+def _find_next_knockout_fixture(repo: Repository, match_id: int) -> str | None:
+    """Return a human-readable description of the next knockout slot that
+    depends on the winner of ``match_id`` (e.g. "Octavos · 4 jul · ganador
+    vs ganador M77"). Returns None if no downstream slot references it.
+    """
+    from wcpredict.knockout_bracket import list_bracket_slots
+    try:
+        slots = list_bracket_slots(repo)
+    except Exception:
+        return None
+    # The slot for the *current* match has match_id == match_id; downstream
+    # slots reference it via 'W:M73', 'W:M74', etc.
+    current_slot = next((s for s in slots if s.match_id == match_id), None)
+    if current_slot is None:
+        return None
+    needle = f"W:{current_slot.slot_id}"
+    downstream = next(
+        (s for s in slots
+         if s.home_source == needle or s.away_source == needle),
+        None,
+    )
+    if downstream is None:
+        return None
+    other_src = downstream.away_source if downstream.home_source == needle else downstream.home_source
+    rival_label = other_src
+    if other_src.startswith("W:") and downstream.match_id is None:
+        rival_label = f"ganador de {other_src.split(':', 1)[1]}"
+    elif other_src.startswith("W:"):
+        rival_label = f"ganador de {other_src.split(':', 1)[1]}"
+    date_label = downstream.kickoff_utc[:10] if downstream.kickoff_utc else "fecha por confirmar"
+    return f"{downstream.stage} · {date_label} · enfrenta a {rival_label}"
+
+
+def _render_knockout_panel(
+    match,
+    bundle,
+    team_a: str,
+    team_b: str,
+    repo: Repository,
+    predictions,
+    primary,
+    expected_xg,
+) -> bool:
+    """Knockout-stage prediction panel with four stacked blocks.
+
+    Returns True when the match is a knockout fixture and the panel was
+    rendered; False otherwise so the caller falls back to the standard
+    group-stage 1X2 layout.
+
+    Bloques:
+      1. PRINCIPAL  — quién avanza + vía (90' / ET / penaltis) + próximo cruce
+      2. RESULTADO AL 90' — 1X2 estándar + marcador modo + xG
+      3. PRÓRROGA Y PENALTIS — xG adicional + tabla de vías + datos de portería
+      4. (los mercados de córners/tarjetas/etc se mantienen vía el flujo
+         normal después de este panel)
+    """
     pred = _knockout_prediction_for_match(match, bundle, repo)
     if pred is None:
-        return
-    st.subheader("Desglose de clasificación")
+        return False
+
+    # ────────── 1. PRINCIPAL ──────────
+    st.subheader("Quién avanza al siguiente cruce")
     section_note(
-        "Modelo de eliminatoria: matriz Dixon-Coles de 90' + matriz de prórroga "
-        "con xG escalado al tiempo extra + penaltis (~50/50 con ajuste por portero "
-        "cuando hay dato). Las tres vías son excluyentes y suman 100%."
+        "En eliminatorias el partido se decide con prórroga y penaltis si el "
+        "marcador al 90' es de empate. La barra de avance integra las tres vías."
     )
     advance_html = (
         probability_bar(team_with_crest_html(team_a, size=18), pred.home_advances, "win")
         + probability_bar(team_with_crest_html(team_b, size=18), pred.away_advances, "loss")
     )
     st.markdown(advance_html, unsafe_allow_html=True)
+    via_90 = pred.home_wins_90 + pred.away_wins_90
+    via_et = pred.home_wins_et + pred.away_wins_et
+    via_pen = pred.home_wins_penalties + pred.away_wins_penalties
+    c1, c2, c3 = st.columns(3)
+    c1.metric("En 90'", f"{via_90:.1%}")
+    c2.metric("En prórroga", f"{via_et:.1%}")
+    c3.metric("En penaltis", f"{via_pen:.1%}")
+    next_fixture = _find_next_knockout_fixture(repo, match.id)
+    if next_fixture:
+        st.caption(f"Cruce siguiente para el ganador: {next_fixture}.")
+
+    # ────────── 2. RESULTADO AL 90' ──────────
+    st.subheader("Resultado al 90'")
+    p_home_90 = next(
+        (row.probability for row in primary if row.selection_name == team_a), pred.home_wins_90
+    )
+    p_draw_90 = next(
+        (row.probability for row in primary if row.selection_name == "Draw"), pred.p_draw_90
+    )
+    p_away_90 = next(
+        (row.probability for row in primary if row.selection_name == team_b), pred.away_wins_90
+    )
+    bars_html = (
+        probability_bar(team_with_crest_html(team_a, size=16), p_home_90, "win")
+        + probability_bar("Empate", p_draw_90, "draw")
+        + probability_bar(team_with_crest_html(team_b, size=16), p_away_90, "loss")
+    )
+    st.markdown(bars_html, unsafe_allow_html=True)
+    if expected_xg and len(expected_xg) == 2:
+        xa, xb = float(expected_xg[0]), float(expected_xg[1])
+        c4, c5 = st.columns(2)
+        c4.metric(f"xG {team_a} (90')", f"{xa:.2f}")
+        c5.metric(f"xG {team_b} (90')", f"{xb:.2f}")
+    exact_row = next((row for row in predictions if row.market_name == "Exact Score"), None)
+    if exact_row is not None:
+        st.caption(
+            f"Marcador modo al 90': **{exact_row.selection_name}** ({exact_row.probability:.1%}). "
+            "El empate al 90' implica prórroga; no es resultado final."
+        )
+
+    # ────────── 3. PRÓRROGA Y PENALTIS ──────────
+    st.subheader("Prórroga y penaltis")
+    if expected_xg and len(expected_xg) == 2:
+        xa, xb = float(expected_xg[0]), float(expected_xg[1])
+        et_a, et_b = xa * 0.30, xb * 0.30
+        c6, c7 = st.columns(2)
+        c6.metric(f"xG {team_a} en prórroga", f"{et_a:.2f}", help="xG_90 × 0.30 (30 min de tiempo extra)")
+        c7.metric(f"xG {team_b} en prórroga", f"{et_b:.2f}", help="xG_90 × 0.30 (30 min de tiempo extra)")
     method_rows = [
         {"Vía": f"{team_a} en 90'", "Probabilidad (%)": pred.home_wins_90 * 100},
         {"Vía": f"{team_b} en 90'", "Probabilidad (%)": pred.away_wins_90 * 100},
@@ -849,13 +950,31 @@ def _render_knockout_advance_section(match, bundle, team_a: str, team_b: str, re
         },
     )
     st.caption(
-        f"Empate al 90': {pred.p_draw_90:.1%} · Empate tras prórroga: {pred.p_draw_after_et:.1%}. "
-        "En eliminatorias el empate solo es una vía hacia prórroga/penaltis, no un resultado final."
+        f"Empate al 90': **{pred.p_draw_90:.1%}** · Empate tras prórroga: **{pred.p_draw_after_et:.1%}**."
     )
-    penalty_context = build_penalty_match_context(
-        team_a, team_b, _penalty_attempts_for_match(repo, team_a, team_b),
+    # Penalty narrative: convertimos los datos del module dedicado en un
+    # callout para el usuario.
+    try:
+        penalty_context = build_penalty_match_context(
+            team_a, team_b, _penalty_attempts_for_match(repo, team_a, team_b),
+        )
+        if penalty_context and getattr(penalty_context, "explanation", ""):
+            callout(penalty_context.explanation, tone="blue")
+    except Exception:
+        pass
+    return True
+
+
+def _render_knockout_advance_section(match, bundle, team_a: str, team_b: str, repo: Repository) -> None:
+    """Legacy shim kept for callers that haven't migrated to the full panel
+    yet. The new ``_render_knockout_panel`` covers the same ground and more.
+    """
+    _render_knockout_panel(
+        match, bundle, team_a, team_b, repo,
+        predictions=bundle.predictions,
+        primary=bundle.primary,
+        expected_xg=bundle.expected_xg,
     )
-    st.caption(penalty_context.explanation)
 
 
 def _build_saved_odds_index(saved_odds: list[dict]) -> dict[tuple[str, str, float | None], float]:
@@ -1003,6 +1122,9 @@ def _render_market_visual_panel(
     predictions: list[MarketPrediction],
     volume_predictions: dict[str, float],
     saved_odds: list[dict] | None = None,
+    *,
+    match=None,
+    ko_prediction=None,
 ) -> None:
     """Visual top-of-tab summary for "Mercados y EV".
 
@@ -1067,9 +1189,14 @@ def _render_market_visual_panel(
             unsafe_allow_html=True,
         )
 
+    # Knockout fixtures keep all the volume markets, but with a slightly
+    # higher cards line (KO matches tend to be tighter and more physical),
+    # plus a "llega a penaltis" probability that only makes sense in KOs.
+    is_knockout = _is_knockout_stage(getattr(match, "stage", None))
+    cards_line = 5.5 if is_knockout else 4.5
     secondary = [
         ("Córners totales", "corners", 9.5),
-        ("Tarjetas totales", "cards", 4.5),
+        (f"Tarjetas totales (KO {cards_line})" if is_knockout else "Tarjetas totales", "cards", cards_line),
         ("Tiros totales", "shots", 22.5),
         ("Tiros a puerta totales", "shots_on_target", 8.5),
     ]
@@ -1091,6 +1218,24 @@ def _render_market_visual_panel(
             f"<td class='num'>{line}</td>"
             f"<td class='center'>{lean_html}</td></tr>"
         )
+    if is_knockout and ko_prediction is not None:
+        # Add the "llega a penaltis" probability row. Pre-kickoff this
+        # uses the predicted draw-after-ET probability from the KO model.
+        ko_pred = ko_prediction
+        if ko_pred is not None:
+            pen_prob = ko_pred.p_draw_after_et
+            if pen_prob >= 0.18:
+                lean_pen = "<span class='pill pill-amber'>POSIBLE</span>"
+            elif pen_prob <= 0.08:
+                lean_pen = "<span class='pill pill-neutral'>BAJO</span>"
+            else:
+                lean_pen = "<span class='pill pill-neutral'>SKIP</span>"
+            sec_rows.append(
+                f"<tr><td class='market-name'>Llega a penaltis</td>"
+                f"<td class='num'>{pen_prob*100:.1f}%</td>"
+                f"<td class='num'>—</td>"
+                f"<td class='center'>{lean_pen}</td></tr>"
+            )
     if sec_rows:
         st.markdown(
             '<div class="eyebrow">Mercados secundarios · Heurístico</div>'
@@ -2470,7 +2615,15 @@ def render_prediction_lab() -> None:
         else:
             callout("Modelo ML no activado: ejecuta scripts/import_open_history.py para crear el artefacto calibrado.")
 
-        _render_knockout_advance_section(match, bundle, team_a, team_b, repo)
+        # Panel completo para partidos de eliminatoria (sustituye al 1X2
+        # estándar con avance/vía/cruce + 90' + ET/penaltis). Para grupos
+        # devuelve False y caemos al flujo de mercados normales abajo.
+        _render_knockout_panel(
+            match, bundle, team_a, team_b, repo,
+            predictions=predictions,
+            primary=primary,
+            expected_xg=bundle.expected_xg,
+        )
 
         st.subheader("Mercados modelados")
         frame = pd.DataFrame(prediction_rows(predictions)).rename(
@@ -2502,8 +2655,10 @@ def render_prediction_lab() -> None:
     elif section == "Mercados y EV":
         saved_odds_for_match = repo.list_manual_odds(match.id)
         auxiliary = _match_auxiliary_context(match)
+        ko_prediction = _knockout_prediction_for_match(match, bundle, repo)
         _render_market_visual_panel(
             team_a, team_b, predictions, auxiliary.volume_predictions, saved_odds_for_match,
+            match=match, ko_prediction=ko_prediction,
         )
         st.markdown("---")
         st.markdown("**Introducir cuotas manualmente para calcular EV**")
