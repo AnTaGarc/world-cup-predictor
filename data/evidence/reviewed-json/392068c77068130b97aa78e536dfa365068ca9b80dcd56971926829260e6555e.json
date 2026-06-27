@@ -1,0 +1,270 @@
+{
+  "descripcion": "Estadísticas profundas revisadas manualmente a partir de capturas de SofaScore.",
+  "numero_de_partidos": 1,
+  "partidos": [
+    {
+      "id": "cabo_verde_arabia_saudita",
+      "nombre": "Cabo Verde vs Arabia Saudita",
+      "equipos": {
+        "izquierda_verde": "Cabo Verde",
+        "derecha_azul": "Arabia Saudita"
+      },
+      "estadisticas": {
+        "resumen_del_partido": {
+          "posesion_de_balon_pct": {
+            "Cabo Verde": 51,
+            "Arabia Saudita": 49
+          },
+          "goles_esperados_xg": {
+            "Cabo Verde": 1.52,
+            "Arabia Saudita": 0.4
+          },
+          "ocasiones_claras": {
+            "Cabo Verde": 1,
+            "Arabia Saudita": 1
+          },
+          "tiros_totales": {
+            "Cabo Verde": 15,
+            "Arabia Saudita": 7
+          },
+          "paradas": {
+            "Cabo Verde": 3,
+            "Arabia Saudita": 2
+          },
+          "saques_de_esquina": {
+            "Cabo Verde": 4,
+            "Arabia Saudita": 2
+          },
+          "faltas": {
+            "Cabo Verde": 10,
+            "Arabia Saudita": 16
+          },
+          "pases": {
+            "Cabo Verde": 452,
+            "Arabia Saudita": 442
+          },
+          "entradas": {
+            "Cabo Verde": 16,
+            "Arabia Saudita": 29
+          },
+          "tiros_libres": {
+            "Cabo Verde": 16,
+            "Arabia Saudita": 10
+          },
+          "tarjetas_amarillas": {
+            "Cabo Verde": 1,
+            "Arabia Saudita": 3
+          }
+        },
+        "tiros": {
+          "tiros_totales": {
+            "Cabo Verde": 15,
+            "Arabia Saudita": 7
+          },
+          "tiros_a_puerta": {
+            "Cabo Verde": 2,
+            "Arabia Saudita": 3
+          },
+          "tiros_al_palo": {
+            "Cabo Verde": 0,
+            "Arabia Saudita": 0
+          },
+          "tiros_fuera": {
+            "Cabo Verde": 8,
+            "Arabia Saudita": 1
+          },
+          "tiros_bloqueados": {
+            "Cabo Verde": 5,
+            "Arabia Saudita": 3
+          },
+          "tiros_dentro_del_area_penal": {
+            "Cabo Verde": 9,
+            "Arabia Saudita": 5
+          },
+          "tiros_fuera_del_area": {
+            "Cabo Verde": 6,
+            "Arabia Saudita": 2
+          }
+        },
+        "ataque": {
+          "ocasiones_claras_falladas": {
+            "Cabo Verde": 1,
+            "Arabia Saudita": 1
+          },
+          "pases_en_profundidad": {
+            "Cabo Verde": 1,
+            "Arabia Saudita": 0
+          },
+          "toques_dentro_del_area": {
+            "Cabo Verde": 18,
+            "Arabia Saudita": 20
+          },
+          "faltas_recibidas_en_el_tercio_final": {
+            "Cabo Verde": 1,
+            "Arabia Saudita": 3
+          },
+          "fueras_de_juego": {
+            "Cabo Verde": 2,
+            "Arabia Saudita": 0
+          }
+        },
+        "duelos": {
+          "duelos_pct": {
+            "Cabo Verde": 51,
+            "Arabia Saudita": 49
+          },
+          "perdidas": {
+            "Cabo Verde": 16,
+            "Arabia Saudita": 9
+          },
+          "duelos_en_el_suelo": {
+            "Cabo Verde": {
+              "ganados": 41,
+              "totales": 86,
+              "porcentaje": 48
+            },
+            "Arabia Saudita": {
+              "ganados": 45,
+              "totales": 86,
+              "porcentaje": 52
+            }
+          },
+          "duelos_aereos": {
+            "Cabo Verde": {
+              "ganados": 17,
+              "totales": 28,
+              "porcentaje": 61
+            },
+            "Arabia Saudita": {
+              "ganados": 11,
+              "totales": 28,
+              "porcentaje": 39
+            }
+          },
+          "regates": {
+            "Cabo Verde": {
+              "completados": 10,
+              "intentados": 23,
+              "porcentaje": 43
+            },
+            "Arabia Saudita": {
+              "completados": 6,
+              "intentados": 13,
+              "porcentaje": 46
+            }
+          }
+        },
+        "pases": {
+          "pases_precisos": {
+            "Cabo Verde": 385,
+            "Arabia Saudita": 355
+          },
+          "saques_de_banda": {
+            "Cabo Verde": 21,
+            "Arabia Saudita": 27
+          },
+          "pases_al_ultimo_tercio": {
+            "Cabo Verde": 60,
+            "Arabia Saudita": 62
+          },
+          "pases_en_el_ultimo_tercio": {
+            "Cabo Verde": {
+              "completados": 87,
+              "intentados": 123,
+              "porcentaje": 71
+            },
+            "Arabia Saudita": {
+              "completados": 71,
+              "intentados": 114,
+              "porcentaje": 62
+            }
+          },
+          "pases_largos": {
+            "Cabo Verde": {
+              "completados": 29,
+              "intentados": 56,
+              "porcentaje": 52
+            },
+            "Arabia Saudita": {
+              "completados": 23,
+              "intentados": 54,
+              "porcentaje": 43
+            }
+          },
+          "centros": {
+            "Cabo Verde": {
+              "completados": 2,
+              "intentados": 18,
+              "porcentaje": 11
+            },
+            "Arabia Saudita": {
+              "completados": 3,
+              "intentados": 10,
+              "porcentaje": 30
+            }
+          }
+        },
+        "defensa": {
+          "entradas_ganadas_pct": {
+            "Cabo Verde": 75,
+            "Arabia Saudita": 52
+          },
+          "tackles_totales": {
+            "Cabo Verde": 16,
+            "Arabia Saudita": 29
+          },
+          "intercepciones": {
+            "Cabo Verde": 13,
+            "Arabia Saudita": 10
+          },
+          "recuperaciones": {
+            "Cabo Verde": 52,
+            "Arabia Saudita": 43
+          },
+          "despejes": {
+            "Cabo Verde": 30,
+            "Arabia Saudita": 23
+          },
+          "errores_que_llevan_a_disparo": {
+            "Cabo Verde": 0,
+            "Arabia Saudita": 1
+          }
+        },
+        "porteria": {
+          "paradas": {
+            "Cabo Verde": 3,
+            "Arabia Saudita": 2
+          },
+          "goles_evitados": {
+            "Cabo Verde": 0.33,
+            "Arabia Saudita": 0.56
+          },
+          "grandes_paradas": {
+            "Cabo Verde": 0,
+            "Arabia Saudita": 1
+          },
+          "saques_de_puerta": {
+            "Cabo Verde": 5,
+            "Arabia Saudita": 12
+          }
+        },
+        "mapa_de_ataques": {
+          "equipo_mostrado": "Cabo Verde",
+          "direccion_de_ataque": "hacia_la_derecha",
+          "descripcion": "Mapa de ataques mostrado para Cabo Verde."
+        },
+        "mapa_de_pases": {
+          "tipo_de_dato": "distribucion_global_no_atribuible_por_equipo",
+          "tercio_defensivo_pct": 27,
+          "tercio_central_pct": 45,
+          "tercio_ofensivo_pct": 28
+        }
+      },
+      "fuentes": [
+        "Captura de pantalla 2026-06-27 043134.png",
+        "Captura de pantalla 2026-06-27 043149.png",
+        "Captura de pantalla 2026-06-27 043203.png"
+      ]
+    }
+  ]
+}

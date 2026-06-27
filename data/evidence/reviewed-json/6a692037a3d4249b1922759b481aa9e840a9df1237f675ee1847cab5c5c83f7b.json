@@ -1,0 +1,311 @@
+{
+  "numero_de_partidos": 1,
+  "partidos": [
+    {
+      "id": "noruega_francia",
+      "nombre": "Noruega vs Francia",
+      "equipos": {
+        "izquierda_verde": "Noruega",
+        "derecha_azul": "Francia"
+      },
+      "estadisticas": {
+        "resumen_del_partido": {
+          "posesion_de_balon_pct": {
+            "Noruega": 43,
+            "Francia": 57
+          },
+          "distancia_recorrida_km": {
+            "Noruega": null,
+            "Francia": null,
+            "estado_dato": "No mostrado en la captura"
+          },
+          "goles_esperados_xg": {
+            "Noruega": 1.7,
+            "Francia": 1.5
+          },
+          "ocasiones_claras": {
+            "Noruega": 4,
+            "Francia": 3
+          },
+          "tiros_totales": {
+            "Noruega": 10,
+            "Francia": 18
+          },
+          "paradas": {
+            "Noruega": 5,
+            "Francia": 3
+          },
+          "numero_de_sprints": {
+            "Noruega": null,
+            "Francia": null,
+            "estado_dato": "No mostrado en la captura"
+          },
+          "saques_de_esquina": {
+            "Noruega": 4,
+            "Francia": 5
+          },
+          "faltas": {
+            "Noruega": 9,
+            "Francia": 11
+          },
+          "pases": {
+            "Noruega": 421,
+            "Francia": 555
+          },
+          "entradas": {
+            "Noruega": 17,
+            "Francia": 17
+          },
+          "tiros_libres": {
+            "Noruega": 10,
+            "Francia": 9
+          },
+          "tarjetas_amarillas": {
+            "Noruega": 1,
+            "Francia": 1
+          },
+          "tarjetas_rojas": {
+            "Noruega": null,
+            "Francia": null,
+            "estado_dato": "No mostrado en la captura"
+          }
+        },
+        "tiros": {
+          "tiros_totales": {
+            "Noruega": 10,
+            "Francia": 18
+          },
+          "tiros_a_puerta": {
+            "Noruega": 4,
+            "Francia": 9
+          },
+          "tiros_al_palo": {
+            "Noruega": 0,
+            "Francia": 1
+          },
+          "tiros_fuera": {
+            "Noruega": 3,
+            "Francia": 6
+          },
+          "tiros_bloqueados": {
+            "Noruega": 3,
+            "Francia": 3
+          },
+          "tiros_dentro_del_area_penal": {
+            "Noruega": 6,
+            "Francia": 10
+          },
+          "tiros_fuera_del_area": {
+            "Noruega": 4,
+            "Francia": 8
+          }
+        },
+        "ataque": {
+          "ocasiones_claras_realizadas": {
+            "Noruega": 1,
+            "Francia": 1
+          },
+          "ocasiones_claras_falladas": {
+            "Noruega": 3,
+            "Francia": 2
+          },
+          "pases_en_profundidad": {
+            "Noruega": 0,
+            "Francia": 3
+          },
+          "toques_dentro_del_area": {
+            "Noruega": 26,
+            "Francia": 31
+          },
+          "faltas_recibidas_en_el_tercio_final": {
+            "Noruega": 3,
+            "Francia": 1
+          },
+          "fueras_de_juego": {
+            "Noruega": 1,
+            "Francia": 2
+          }
+        },
+        "mapa_de_ataques": {
+          "equipo_mostrado": "Noruega",
+          "direccion_de_ataque": "izquierda_a_derecha",
+          "tipo_de_dato": "mapa_de_intensidad_sin_valores_numericos"
+        },
+        "mapa_de_pases": {
+          "equipo_mostrado": "Noruega",
+          "descripcion": "Distribución porcentual de los pases según la zona del campo.",
+          "direccion_de_ataque": "izquierda_a_derecha",
+          "distribucion_por_zonas_del_campo_pct": {
+            "tercio_defensivo": 30,
+            "tercio_central": 44,
+            "tercio_ofensivo": 26
+          }
+        },
+        "duelos": {
+          "duelos_ganados_pct_del_total": {
+            "Noruega": 48,
+            "Francia": 52
+          },
+          "perdidas": {
+            "Noruega": 11,
+            "Francia": 8
+          },
+          "duelos_en_el_suelo": {
+            "Noruega": {
+              "ganados": 35,
+              "total_mostrado": 66,
+              "porcentaje": 53
+            },
+            "Francia": {
+              "ganados": 31,
+              "total_mostrado": 66,
+              "porcentaje": 47
+            }
+          },
+          "duelos_aereos": {
+            "Noruega": {
+              "ganados": 7,
+              "total_mostrado": 21,
+              "porcentaje": 33
+            },
+            "Francia": {
+              "ganados": 14,
+              "total_mostrado": 21,
+              "porcentaje": 67
+            }
+          },
+          "regates": {
+            "Noruega": {
+              "completados": 7,
+              "intentados": 13,
+              "porcentaje": 54
+            },
+            "Francia": {
+              "completados": 7,
+              "intentados": 17,
+              "porcentaje": 41
+            }
+          }
+        },
+        "pases": {
+          "pases_precisos": {
+            "Noruega": 343,
+            "Francia": 480
+          },
+          "saques_de_banda": {
+            "Noruega": 23,
+            "Francia": 12
+          },
+          "pases_al_ultimo_tercio": {
+            "Noruega": 40,
+            "Francia": 57
+          },
+          "pases_en_el_ultimo_tercio": {
+            "Noruega": {
+              "completados": 77,
+              "intentados": 112,
+              "porcentaje": 69
+            },
+            "Francia": {
+              "completados": 136,
+              "intentados": 172,
+              "porcentaje": 79
+            }
+          },
+          "pases_largos": {
+            "Noruega": {
+              "completados": 18,
+              "intentados": 40,
+              "porcentaje": 45
+            },
+            "Francia": {
+              "completados": 28,
+              "intentados": 53,
+              "porcentaje": 53
+            }
+          },
+          "centros": {
+            "Noruega": {
+              "completados": 3,
+              "intentados": 9,
+              "porcentaje": 33
+            },
+            "Francia": {
+              "completados": 3,
+              "intentados": 10,
+              "porcentaje": 30
+            }
+          }
+        },
+        "defensa": {
+          "entradas_ganadas_pct": {
+            "Noruega": 65,
+            "Francia": 71
+          },
+          "tackles_totales": {
+            "Noruega": 17,
+            "Francia": 17
+          },
+          "intercepciones": {
+            "Noruega": 13,
+            "Francia": 11
+          },
+          "recuperaciones": {
+            "Noruega": 40,
+            "Francia": 54
+          },
+          "despejes": {
+            "Noruega": 16,
+            "Francia": 19
+          },
+          "errores_que_llevan_a_disparo": {
+            "Noruega": 3,
+            "Francia": 3
+          },
+          "errores_que_llevan_a_gol": {
+            "Noruega": null,
+            "Francia": null,
+            "estado_dato": "No mostrado en la captura"
+          }
+        },
+        "porteria": {
+          "paradas": {
+            "Noruega": 5,
+            "Francia": 3
+          },
+          "goles_evitados": {
+            "Noruega": -1.0,
+            "Francia": 0.41
+          },
+          "grandes_paradas": {
+            "Noruega": 1,
+            "Francia": 1
+          },
+          "despejes_por_alto": {
+            "Noruega": null,
+            "Francia": null,
+            "estado_dato": "No mostrado en la captura"
+          },
+          "con_los_punos": {
+            "Noruega": null,
+            "Francia": null,
+            "estado_dato": "No mostrado en la captura"
+          },
+          "saques_de_puerta": {
+            "Noruega": 8,
+            "Francia": 5
+          },
+          "paradas_de_penalti": {
+            "Noruega": 0,
+            "Francia": 1
+          }
+        }
+      },
+      "fuentes": [
+        "Captura de pantalla 2026-06-27 042614.png",
+        "Captura de pantalla 2026-06-27 042708.png",
+        "Captura de pantalla 2026-06-27 042720.png"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,311 @@
+{
+  "numero_de_partidos": 1,
+  "partidos": [
+    {
+      "id": "paraguay_australia",
+      "nombre": "Paraguay vs Australia",
+      "equipos": {
+        "izquierda_verde": "Paraguay",
+        "derecha_azul": "Australia"
+      },
+      "estadisticas": {
+        "resumen_del_partido": {
+          "posesion_de_balon_pct": {
+            "Paraguay": 44,
+            "Australia": 56
+          },
+          "distancia_recorrida_km": {
+            "Paraguay": null,
+            "Australia": null,
+            "estado_dato": "No mostrado en la captura"
+          },
+          "goles_esperados_xg": {
+            "Paraguay": 0.24,
+            "Australia": 0.55
+          },
+          "ocasiones_claras": {
+            "Paraguay": null,
+            "Australia": null,
+            "estado_dato": "No mostrado en la captura"
+          },
+          "tiros_totales": {
+            "Paraguay": 7,
+            "Australia": 12
+          },
+          "paradas": {
+            "Paraguay": 5,
+            "Australia": 2
+          },
+          "numero_de_sprints": {
+            "Paraguay": null,
+            "Australia": null,
+            "estado_dato": "No mostrado en la captura"
+          },
+          "saques_de_esquina": {
+            "Paraguay": 1,
+            "Australia": 3
+          },
+          "faltas": {
+            "Paraguay": 9,
+            "Australia": 6
+          },
+          "pases": {
+            "Paraguay": 426,
+            "Australia": 537
+          },
+          "entradas": {
+            "Paraguay": 24,
+            "Australia": 20
+          },
+          "tiros_libres": {
+            "Paraguay": 6,
+            "Australia": 9
+          },
+          "tarjetas_amarillas": {
+            "Paraguay": 1,
+            "Australia": 1
+          },
+          "tarjetas_rojas": {
+            "Paraguay": null,
+            "Australia": null,
+            "estado_dato": "No mostrado en la captura"
+          }
+        },
+        "tiros": {
+          "tiros_totales": {
+            "Paraguay": 7,
+            "Australia": 12
+          },
+          "tiros_a_puerta": {
+            "Paraguay": 2,
+            "Australia": 5
+          },
+          "tiros_al_palo": {
+            "Paraguay": 0,
+            "Australia": 0
+          },
+          "tiros_fuera": {
+            "Paraguay": 4,
+            "Australia": 4
+          },
+          "tiros_bloqueados": {
+            "Paraguay": 1,
+            "Australia": 3
+          },
+          "tiros_dentro_del_area_penal": {
+            "Paraguay": 3,
+            "Australia": 7
+          },
+          "tiros_fuera_del_area": {
+            "Paraguay": 4,
+            "Australia": 5
+          }
+        },
+        "ataque": {
+          "ocasiones_claras_realizadas": {
+            "Paraguay": null,
+            "Australia": null,
+            "estado_dato": "No mostrado en la captura"
+          },
+          "ocasiones_claras_falladas": {
+            "Paraguay": null,
+            "Australia": null,
+            "estado_dato": "No mostrado en la captura"
+          },
+          "pases_en_profundidad": {
+            "Paraguay": null,
+            "Australia": null,
+            "estado_dato": "No mostrado en la captura"
+          },
+          "toques_dentro_del_area": {
+            "Paraguay": 7,
+            "Australia": 14
+          },
+          "faltas_recibidas_en_el_tercio_final": {
+            "Paraguay": 0,
+            "Australia": 1
+          },
+          "fueras_de_juego": {
+            "Paraguay": null,
+            "Australia": null,
+            "estado_dato": "No mostrado en la captura"
+          }
+        },
+        "mapa_de_ataques": {
+          "equipo_mostrado": "Paraguay",
+          "direccion_de_ataque": "izquierda_a_derecha",
+          "tipo_de_dato": "mapa_de_intensidad_sin_valores_numericos"
+        },
+        "mapa_de_pases": {
+          "equipo_mostrado": "Paraguay",
+          "descripcion": "Distribución porcentual de los pases según la zona del campo.",
+          "direccion_de_ataque": "izquierda_a_derecha",
+          "distribucion_por_zonas_del_campo_pct": {
+            "tercio_defensivo": 28,
+            "tercio_central": 50,
+            "tercio_ofensivo": 22
+          }
+        },
+        "duelos": {
+          "duelos_ganados_pct_del_total": {
+            "Paraguay": 46,
+            "Australia": 54
+          },
+          "perdidas": {
+            "Paraguay": 9,
+            "Australia": 11
+          },
+          "duelos_en_el_suelo": {
+            "Paraguay": {
+              "ganados": 35,
+              "total_mostrado": 74,
+              "porcentaje": 47
+            },
+            "Australia": {
+              "ganados": 39,
+              "total_mostrado": 74,
+              "porcentaje": 53
+            }
+          },
+          "duelos_aereos": {
+            "Paraguay": {
+              "ganados": 20,
+              "total_mostrado": 45,
+              "porcentaje": 44
+            },
+            "Australia": {
+              "ganados": 25,
+              "total_mostrado": 45,
+              "porcentaje": 56
+            }
+          },
+          "regates": {
+            "Paraguay": {
+              "completados": 5,
+              "intentados": 16,
+              "porcentaje": 31
+            },
+            "Australia": {
+              "completados": 11,
+              "intentados": 24,
+              "porcentaje": 46
+            }
+          }
+        },
+        "pases": {
+          "pases_precisos": {
+            "Paraguay": 330,
+            "Australia": 438
+          },
+          "saques_de_banda": {
+            "Paraguay": 26,
+            "Australia": 28
+          },
+          "pases_al_ultimo_tercio": {
+            "Paraguay": 57,
+            "Australia": 56
+          },
+          "pases_en_el_ultimo_tercio": {
+            "Paraguay": {
+              "completados": 52,
+              "intentados": 91,
+              "porcentaje": 57
+            },
+            "Australia": {
+              "completados": 74,
+              "intentados": 123,
+              "porcentaje": 60
+            }
+          },
+          "pases_largos": {
+            "Paraguay": {
+              "completados": 14,
+              "intentados": 59,
+              "porcentaje": 24
+            },
+            "Australia": {
+              "completados": 17,
+              "intentados": 58,
+              "porcentaje": 29
+            }
+          },
+          "centros": {
+            "Paraguay": {
+              "completados": 0,
+              "intentados": 7,
+              "porcentaje": 0
+            },
+            "Australia": {
+              "completados": 4,
+              "intentados": 13,
+              "porcentaje": 31
+            }
+          }
+        },
+        "defensa": {
+          "entradas_ganadas_pct": {
+            "Paraguay": 71,
+            "Australia": 60
+          },
+          "tackles_totales": {
+            "Paraguay": 24,
+            "Australia": 20
+          },
+          "intercepciones": {
+            "Paraguay": 8,
+            "Australia": 7
+          },
+          "recuperaciones": {
+            "Paraguay": 43,
+            "Australia": 43
+          },
+          "despejes": {
+            "Paraguay": 24,
+            "Australia": 10
+          },
+          "errores_que_llevan_a_disparo": {
+            "Paraguay": 0,
+            "Australia": 1
+          },
+          "errores_que_llevan_a_gol": {
+            "Paraguay": null,
+            "Australia": null,
+            "estado_dato": "No mostrado en la captura"
+          }
+        },
+        "porteria": {
+          "paradas": {
+            "Paraguay": 5,
+            "Australia": 2
+          },
+          "goles_evitados": {
+            "Paraguay": 0.6,
+            "Australia": 0.3
+          },
+          "grandes_paradas": {
+            "Paraguay": 1,
+            "Australia": 0
+          },
+          "despejes_por_alto": {
+            "Paraguay": 0,
+            "Australia": 1
+          },
+          "con_los_punos": {
+            "Paraguay": null,
+            "Australia": null,
+            "estado_dato": "No mostrado en la captura"
+          },
+          "saques_de_puerta": {
+            "Paraguay": 9,
+            "Australia": 9
+          }
+        }
+      },
+      "fuentes": [
+        "Captura de pantalla 2026-06-26 104609.png",
+        "Captura de pantalla 2026-06-26 104619.png",
+        "Captura de pantalla 2026-06-26 104631.png"
+      ]
+    }
+  ]
+}

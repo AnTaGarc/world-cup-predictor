@@ -1,0 +1,274 @@
+{
+  "descripcion": "Estadísticas profundas revisadas manualmente a partir de capturas de SofaScore.",
+  "numero_de_partidos": 1,
+  "partidos": [
+    {
+      "id": "uruguay_espana",
+      "nombre": "Uruguay vs España",
+      "equipos": {
+        "izquierda_verde": "Uruguay",
+        "derecha_azul": "España"
+      },
+      "estadisticas": {
+        "resumen_del_partido": {
+          "posesion_de_balon_pct": {
+            "Uruguay": 33,
+            "España": 67
+          },
+          "goles_esperados_xg": {
+            "Uruguay": 0.2,
+            "España": 0.86
+          },
+          "ocasiones_claras": {
+            "Uruguay": 1,
+            "España": 1
+          },
+          "tiros_totales": {
+            "Uruguay": 5,
+            "España": 6
+          },
+          "paradas": {
+            "Uruguay": 0,
+            "España": 2
+          },
+          "saques_de_esquina": {
+            "Uruguay": 1,
+            "España": 6
+          },
+          "faltas": {
+            "Uruguay": 14,
+            "España": 14
+          },
+          "pases": {
+            "Uruguay": 301,
+            "España": 623
+          },
+          "entradas": {
+            "Uruguay": 25,
+            "España": 17
+          },
+          "tiros_libres": {
+            "Uruguay": 14,
+            "España": 14
+          },
+          "tarjetas_amarillas": {
+            "Uruguay": 3,
+            "España": 1
+          },
+          "tarjetas_rojas": {
+            "Uruguay": 1,
+            "España": 0
+          }
+        },
+        "tiros": {
+          "tiros_totales": {
+            "Uruguay": 5,
+            "España": 6
+          },
+          "tiros_a_puerta": {
+            "Uruguay": 1,
+            "España": 1
+          },
+          "tiros_al_palo": {
+            "Uruguay": 0,
+            "España": 1
+          },
+          "tiros_fuera": {
+            "Uruguay": 3,
+            "España": 4
+          },
+          "tiros_bloqueados": {
+            "Uruguay": 1,
+            "España": 1
+          },
+          "tiros_dentro_del_area_penal": {
+            "Uruguay": 2,
+            "España": 5
+          },
+          "tiros_fuera_del_area": {
+            "Uruguay": 3,
+            "España": 1
+          }
+        },
+        "ataque": {
+          "ocasiones_claras_falladas": {
+            "Uruguay": 1,
+            "España": 1
+          },
+          "toques_dentro_del_area": {
+            "Uruguay": 12,
+            "España": 19
+          },
+          "faltas_recibidas_en_el_tercio_final": {
+            "Uruguay": 4,
+            "España": 0
+          },
+          "fueras_de_juego": {
+            "Uruguay": 5,
+            "España": 2
+          }
+        },
+        "duelos": {
+          "duelos_pct": {
+            "Uruguay": 47,
+            "España": 53
+          },
+          "perdidas": {
+            "Uruguay": 9,
+            "España": 13
+          },
+          "duelos_en_el_suelo": {
+            "Uruguay": {
+              "ganados": 46,
+              "totales": 86,
+              "porcentaje": 53
+            },
+            "España": {
+              "ganados": 40,
+              "totales": 86,
+              "porcentaje": 47
+            }
+          },
+          "duelos_aereos": {
+            "Uruguay": {
+              "ganados": 4,
+              "totales": 20,
+              "porcentaje": 20
+            },
+            "España": {
+              "ganados": 16,
+              "totales": 20,
+              "porcentaje": 80
+            }
+          },
+          "regates": {
+            "Uruguay": {
+              "completados": 7,
+              "intentados": 15,
+              "porcentaje": 47
+            },
+            "España": {
+              "completados": 10,
+              "intentados": 22,
+              "porcentaje": 45
+            }
+          }
+        },
+        "pases": {
+          "pases_precisos": {
+            "Uruguay": 228,
+            "España": 553
+          },
+          "saques_de_banda": {
+            "Uruguay": 17,
+            "España": 10
+          },
+          "pases_al_ultimo_tercio": {
+            "Uruguay": 42,
+            "España": 47
+          },
+          "pases_en_el_ultimo_tercio": {
+            "Uruguay": {
+              "completados": 69,
+              "intentados": 105,
+              "porcentaje": 66
+            },
+            "España": {
+              "completados": 78,
+              "intentados": 108,
+              "porcentaje": 72
+            }
+          },
+          "pases_largos": {
+            "Uruguay": {
+              "completados": 15,
+              "intentados": 43,
+              "porcentaje": 35
+            },
+            "España": {
+              "completados": 18,
+              "intentados": 34,
+              "porcentaje": 53
+            }
+          },
+          "centros": {
+            "Uruguay": {
+              "completados": 1,
+              "intentados": 16,
+              "porcentaje": 6
+            },
+            "España": {
+              "completados": 3,
+              "intentados": 12,
+              "porcentaje": 25
+            }
+          }
+        },
+        "defensa": {
+          "entradas_ganadas_pct": {
+            "Uruguay": 60,
+            "España": 59
+          },
+          "tackles_totales": {
+            "Uruguay": 25,
+            "España": 17
+          },
+          "intercepciones": {
+            "Uruguay": 14,
+            "España": 9
+          },
+          "recuperaciones": {
+            "Uruguay": 51,
+            "España": 51
+          },
+          "despejes": {
+            "Uruguay": 14,
+            "España": 23
+          },
+          "errores_que_llevan_a_gol": {
+            "Uruguay": 1,
+            "España": 0
+          }
+        },
+        "porteria": {
+          "paradas": {
+            "Uruguay": 0,
+            "España": 2
+          },
+          "goles_evitados": {
+            "Uruguay": -0.78,
+            "España": 0.1
+          },
+          "grandes_paradas": {
+            "Uruguay": 0,
+            "España": 1
+          },
+          "despejes_por_alto": {
+            "Uruguay": 1,
+            "España": 0
+          },
+          "saques_de_puerta": {
+            "Uruguay": 5,
+            "España": 6
+          }
+        },
+        "mapa_de_ataques": {
+          "equipo_mostrado": "Uruguay",
+          "direccion_de_ataque": "hacia_la_derecha",
+          "descripcion": "Mapa de ataques mostrado para Uruguay."
+        },
+        "mapa_de_pases": {
+          "tipo_de_dato": "distribucion_global_no_atribuible_por_equipo",
+          "tercio_defensivo_pct": 23,
+          "tercio_central_pct": 45,
+          "tercio_ofensivo_pct": 32
+        }
+      },
+      "fuentes": [
+        "Captura de pantalla 2026-06-27 043544.png",
+        "Captura de pantalla 2026-06-27 043557.png",
+        "Captura de pantalla 2026-06-27 043608.png"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,309 @@
+{
+  "numero_de_partidos": 1,
+  "partidos": [
+    {
+      "id": "tunez_paises_bajos",
+      "nombre": "Túnez vs Países Bajos",
+      "equipos": {
+        "izquierda_verde": "Túnez",
+        "derecha_azul": "Países Bajos"
+      },
+      "estadisticas": {
+        "resumen_del_partido": {
+          "posesion_de_balon_pct": {
+            "Túnez": 28,
+            "Países Bajos": 72
+          },
+          "distancia_recorrida_km": {
+            "Túnez": null,
+            "Países Bajos": null,
+            "estado_dato": "No mostrado en la captura"
+          },
+          "goles_esperados_xg": {
+            "Túnez": 0.43,
+            "Países Bajos": 1.68
+          },
+          "ocasiones_claras": {
+            "Túnez": 3,
+            "Países Bajos": 2
+          },
+          "tiros_totales": {
+            "Túnez": 10,
+            "Países Bajos": 20
+          },
+          "paradas": {
+            "Túnez": 4,
+            "Países Bajos": 3
+          },
+          "numero_de_sprints": {
+            "Túnez": null,
+            "Países Bajos": null,
+            "estado_dato": "No mostrado en la captura"
+          },
+          "saques_de_esquina": {
+            "Túnez": 4,
+            "Países Bajos": 6
+          },
+          "faltas": {
+            "Túnez": 11,
+            "Países Bajos": 10
+          },
+          "pases": {
+            "Túnez": 258,
+            "Países Bajos": 652
+          },
+          "entradas": {
+            "Túnez": 16,
+            "Países Bajos": 8
+          },
+          "tiros_libres": {
+            "Túnez": 10,
+            "Países Bajos": 11
+          },
+          "tarjetas_amarillas": {
+            "Túnez": null,
+            "Países Bajos": null,
+            "estado_dato": "No mostrado en la captura"
+          },
+          "tarjetas_rojas": {
+            "Túnez": null,
+            "Países Bajos": null,
+            "estado_dato": "No mostrado en la captura"
+          }
+        },
+        "tiros": {
+          "tiros_totales": {
+            "Túnez": 10,
+            "Países Bajos": 20
+          },
+          "tiros_a_puerta": {
+            "Túnez": 4,
+            "Países Bajos": 7
+          },
+          "tiros_al_palo": {
+            "Túnez": 0,
+            "Países Bajos": 1
+          },
+          "tiros_fuera": {
+            "Túnez": 5,
+            "Países Bajos": 8
+          },
+          "tiros_bloqueados": {
+            "Túnez": 1,
+            "Países Bajos": 5
+          },
+          "tiros_dentro_del_area_penal": {
+            "Túnez": 4,
+            "Países Bajos": 16
+          },
+          "tiros_fuera_del_area": {
+            "Túnez": 6,
+            "Países Bajos": 4
+          }
+        },
+        "ataque": {
+          "ocasiones_claras_realizadas": {
+            "Túnez": 1,
+            "Países Bajos": 1
+          },
+          "ocasiones_claras_falladas": {
+            "Túnez": 2,
+            "Países Bajos": 1
+          },
+          "pases_en_profundidad": {
+            "Túnez": null,
+            "Países Bajos": null,
+            "estado_dato": "No mostrado en la captura"
+          },
+          "toques_dentro_del_area": {
+            "Túnez": 11,
+            "Países Bajos": 43
+          },
+          "faltas_recibidas_en_el_tercio_final": {
+            "Túnez": 0,
+            "Países Bajos": 3
+          },
+          "fueras_de_juego": {
+            "Túnez": 2,
+            "Países Bajos": 1
+          }
+        },
+        "mapa_de_ataques": {
+          "equipo_mostrado": "Túnez",
+          "direccion_de_ataque": "izquierda_a_derecha",
+          "tipo_de_dato": "mapa_de_intensidad_sin_valores_numericos"
+        },
+        "mapa_de_pases": {
+          "equipo_mostrado": "Túnez",
+          "descripcion": "Distribución porcentual de los pases según la zona del campo.",
+          "direccion_de_ataque": "izquierda_a_derecha",
+          "distribucion_por_zonas_del_campo_pct": {
+            "tercio_defensivo": 42,
+            "tercio_central": 42,
+            "tercio_ofensivo": 16
+          }
+        },
+        "duelos": {
+          "duelos_ganados_pct_del_total": {
+            "Túnez": 49,
+            "Países Bajos": 51
+          },
+          "perdidas": {
+            "Túnez": 1,
+            "Países Bajos": 6
+          },
+          "duelos_en_el_suelo": {
+            "Túnez": {
+              "ganados": 27,
+              "total_mostrado": 50,
+              "porcentaje": 54
+            },
+            "Países Bajos": {
+              "ganados": 23,
+              "total_mostrado": 50,
+              "porcentaje": 46
+            }
+          },
+          "duelos_aereos": {
+            "Túnez": {
+              "ganados": 6,
+              "total_mostrado": 18,
+              "porcentaje": 33
+            },
+            "Países Bajos": {
+              "ganados": 12,
+              "total_mostrado": 18,
+              "porcentaje": 67
+            }
+          },
+          "regates": {
+            "Túnez": {
+              "completados": 2,
+              "intentados": 9,
+              "porcentaje": 22
+            },
+            "Países Bajos": {
+              "completados": 4,
+              "intentados": 14,
+              "porcentaje": 29
+            }
+          }
+        },
+        "pases": {
+          "pases_precisos": {
+            "Túnez": 200,
+            "Países Bajos": 601
+          },
+          "saques_de_banda": {
+            "Túnez": 12,
+            "Países Bajos": 14
+          },
+          "pases_al_ultimo_tercio": {
+            "Túnez": 41,
+            "Países Bajos": 112
+          },
+          "pases_en_el_ultimo_tercio": {
+            "Túnez": {
+              "completados": 40,
+              "intentados": 66,
+              "porcentaje": 61
+            },
+            "Países Bajos": {
+              "completados": 190,
+              "intentados": 230,
+              "porcentaje": 83
+            }
+          },
+          "pases_largos": {
+            "Túnez": {
+              "completados": 21,
+              "intentados": 48,
+              "porcentaje": 44
+            },
+            "Países Bajos": {
+              "completados": 15,
+              "intentados": 23,
+              "porcentaje": 65
+            }
+          },
+          "centros": {
+            "Túnez": {
+              "completados": 4,
+              "intentados": 13,
+              "porcentaje": 31
+            },
+            "Países Bajos": {
+              "completados": 7,
+              "intentados": 28,
+              "porcentaje": 25
+            }
+          }
+        },
+        "defensa": {
+          "entradas_ganadas_pct": {
+            "Túnez": 56,
+            "Países Bajos": 50
+          },
+          "tackles_totales": {
+            "Túnez": 16,
+            "Países Bajos": 8
+          },
+          "intercepciones": {
+            "Túnez": 8,
+            "Países Bajos": 10
+          },
+          "recuperaciones": {
+            "Túnez": 44,
+            "Países Bajos": 43
+          },
+          "despejes": {
+            "Túnez": 36,
+            "Países Bajos": 10
+          },
+          "errores_que_llevan_a_disparo": {
+            "Túnez": 1,
+            "Países Bajos": 1
+          },
+          "errores_que_llevan_a_gol": {
+            "Túnez": null,
+            "Países Bajos": null,
+            "estado_dato": "No mostrado en la captura"
+          }
+        },
+        "porteria": {
+          "paradas": {
+            "Túnez": 4,
+            "Países Bajos": 3
+          },
+          "goles_evitados": {
+            "Túnez": -0.5,
+            "Países Bajos": -0.26
+          },
+          "grandes_paradas": {
+            "Túnez": null,
+            "Países Bajos": null,
+            "estado_dato": "No mostrado en la captura"
+          },
+          "despejes_por_alto": {
+            "Túnez": null,
+            "Países Bajos": null,
+            "estado_dato": "No mostrado en la captura"
+          },
+          "con_los_punos": {
+            "Túnez": 2,
+            "Países Bajos": 0
+          },
+          "saques_de_puerta": {
+            "Túnez": 10,
+            "Países Bajos": 6
+          }
+        }
+      },
+      "fuentes": [
+        "Captura de pantalla 2026-06-26 031503.png",
+        "Captura de pantalla 2026-06-26 031515.png",
+        "Captura de pantalla 2026-06-26 031523.png"
+      ]
+    }
+  ]
+}

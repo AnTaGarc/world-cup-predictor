@@ -4,7 +4,10 @@ import unicodedata
 
 
 _ALIASES = {
-    "alemania": "Germany", "arabia saudi": "Saudi Arabia", "argelia": "Algeria",
+    "alemania": "Germany", "arabia saudi": "Saudi Arabia",
+    "arabia saudita": "Saudi Arabia",
+    "saudi arabia": "Saudi Arabia",
+    "argelia": "Algeria",
     "belgica": "Belgium", "bosnia": "Bosnia and Herzegovina", "brasil": "Brazil",
     "bosnia herzegovina": "Bosnia and Herzegovina",
     "bosnia y herzegovina": "Bosnia and Herzegovina",

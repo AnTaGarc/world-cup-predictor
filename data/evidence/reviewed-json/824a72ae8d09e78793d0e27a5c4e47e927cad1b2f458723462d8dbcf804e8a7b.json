@@ -1,0 +1,306 @@
+{
+  "numero_de_partidos": 1,
+  "partidos": [
+    {
+      "id": "turquia_estados_unidos",
+      "nombre": "Turquía vs Estados Unidos",
+      "equipos": {
+        "izquierda_verde": "Turquía",
+        "derecha_azul": "Estados Unidos"
+      },
+      "estadisticas": {
+        "resumen_del_partido": {
+          "posesion_de_balon_pct": {
+            "Turquía": 47,
+            "Estados Unidos": 53
+          },
+          "distancia_recorrida_km": {
+            "Turquía": null,
+            "Estados Unidos": null,
+            "estado_dato": "No mostrado en la captura"
+          },
+          "goles_esperados_xg": {
+            "Turquía": 3.01,
+            "Estados Unidos": 2.13
+          },
+          "ocasiones_claras": {
+            "Turquía": 5,
+            "Estados Unidos": 4
+          },
+          "tiros_totales": {
+            "Turquía": 9,
+            "Estados Unidos": 18
+          },
+          "paradas": {
+            "Turquía": 5,
+            "Estados Unidos": 1
+          },
+          "numero_de_sprints": {
+            "Turquía": null,
+            "Estados Unidos": null,
+            "estado_dato": "No mostrado en la captura"
+          },
+          "saques_de_esquina": {
+            "Turquía": 2,
+            "Estados Unidos": 9
+          },
+          "faltas": {
+            "Turquía": 13,
+            "Estados Unidos": 13
+          },
+          "pases": {
+            "Turquía": 434,
+            "Estados Unidos": 471
+          },
+          "entradas": {
+            "Turquía": 32,
+            "Estados Unidos": 14
+          },
+          "tiros_libres": {
+            "Turquía": 13,
+            "Estados Unidos": 13
+          },
+          "tarjetas_amarillas": {
+            "Turquía": 0,
+            "Estados Unidos": 2
+          },
+          "tarjetas_rojas": {
+            "Turquía": null,
+            "Estados Unidos": null,
+            "estado_dato": "No mostrado en la captura"
+          }
+        },
+        "tiros": {
+          "tiros_totales": {
+            "Turquía": 9,
+            "Estados Unidos": 18
+          },
+          "tiros_a_puerta": {
+            "Turquía": 3,
+            "Estados Unidos": 7
+          },
+          "tiros_al_palo": {
+            "Turquía": 0,
+            "Estados Unidos": 1
+          },
+          "tiros_fuera": {
+            "Turquía": 4,
+            "Estados Unidos": 6
+          },
+          "tiros_bloqueados": {
+            "Turquía": 2,
+            "Estados Unidos": 5
+          },
+          "tiros_dentro_del_area_penal": {
+            "Turquía": 8,
+            "Estados Unidos": 15
+          },
+          "tiros_fuera_del_area": {
+            "Turquía": 1,
+            "Estados Unidos": 3
+          }
+        },
+        "ataque": {
+          "ocasiones_claras_realizadas": {
+            "Turquía": 3,
+            "Estados Unidos": 1
+          },
+          "ocasiones_claras_falladas": {
+            "Turquía": 2,
+            "Estados Unidos": 3
+          },
+          "pases_en_profundidad": {
+            "Turquía": 0,
+            "Estados Unidos": 1
+          },
+          "toques_dentro_del_area": {
+            "Turquía": 22,
+            "Estados Unidos": 36
+          },
+          "faltas_recibidas_en_el_tercio_final": {
+            "Turquía": 1,
+            "Estados Unidos": 0
+          },
+          "fueras_de_juego": {
+            "Turquía": 2,
+            "Estados Unidos": 5
+          }
+        },
+        "mapa_de_ataques": {
+          "equipo_mostrado": "Turquía",
+          "direccion_de_ataque": "izquierda_a_derecha",
+          "tipo_de_dato": "mapa_de_intensidad_sin_valores_numericos"
+        },
+        "mapa_de_pases": {
+          "equipo_mostrado": "Turquía",
+          "descripcion": "Distribución porcentual de los pases según la zona del campo.",
+          "direccion_de_ataque": "izquierda_a_derecha",
+          "distribucion_por_zonas_del_campo_pct": {
+            "tercio_defensivo": 29,
+            "tercio_central": 46,
+            "tercio_ofensivo": 25
+          }
+        },
+        "duelos": {
+          "duelos_ganados_pct_del_total": {
+            "Turquía": 58,
+            "Estados Unidos": 42
+          },
+          "perdidas": {
+            "Turquía": 10,
+            "Estados Unidos": 22
+          },
+          "duelos_en_el_suelo": {
+            "Turquía": {
+              "ganados": 52,
+              "total_mostrado": 86,
+              "porcentaje": 60
+            },
+            "Estados Unidos": {
+              "ganados": 34,
+              "total_mostrado": 86,
+              "porcentaje": 40
+            }
+          },
+          "duelos_aereos": {
+            "Turquía": {
+              "ganados": 12,
+              "total_mostrado": 24,
+              "porcentaje": 50
+            },
+            "Estados Unidos": {
+              "ganados": 12,
+              "total_mostrado": 24,
+              "porcentaje": 50
+            }
+          },
+          "regates": {
+            "Turquía": {
+              "completados": 9,
+              "intentados": 13,
+              "porcentaje": 69
+            },
+            "Estados Unidos": {
+              "completados": 7,
+              "intentados": 17,
+              "porcentaje": 41
+            }
+          }
+        },
+        "pases": {
+          "pases_precisos": {
+            "Turquía": 335,
+            "Estados Unidos": 398
+          },
+          "saques_de_banda": {
+            "Turquía": 28,
+            "Estados Unidos": 31
+          },
+          "pases_al_ultimo_tercio": {
+            "Turquía": 43,
+            "Estados Unidos": 57
+          },
+          "pases_en_el_ultimo_tercio": {
+            "Turquía": {
+              "completados": 80,
+              "intentados": 120,
+              "porcentaje": 67
+            },
+            "Estados Unidos": {
+              "completados": 84,
+              "intentados": 115,
+              "porcentaje": 73
+            }
+          },
+          "pases_largos": {
+            "Turquía": {
+              "completados": 24,
+              "intentados": 66,
+              "porcentaje": 36
+            },
+            "Estados Unidos": {
+              "completados": 16,
+              "intentados": 42,
+              "porcentaje": 38
+            }
+          },
+          "centros": {
+            "Turquía": {
+              "completados": 0,
+              "intentados": 12,
+              "porcentaje": 0
+            },
+            "Estados Unidos": {
+              "completados": 5,
+              "intentados": 19,
+              "porcentaje": 26
+            }
+          }
+        },
+        "defensa": {
+          "entradas_ganadas_pct": {
+            "Turquía": 63,
+            "Estados Unidos": 64
+          },
+          "tackles_totales": {
+            "Turquía": 32,
+            "Estados Unidos": 14
+          },
+          "intercepciones": {
+            "Turquía": 9,
+            "Estados Unidos": 9
+          },
+          "recuperaciones": {
+            "Turquía": 42,
+            "Estados Unidos": 42
+          },
+          "despejes": {
+            "Turquía": 24,
+            "Estados Unidos": 27
+          },
+          "errores_que_llevan_a_disparo": {
+            "Turquía": null,
+            "Estados Unidos": null,
+            "estado_dato": "No mostrado en la captura"
+          },
+          "errores_que_llevan_a_gol": {
+            "Turquía": null,
+            "Estados Unidos": null,
+            "estado_dato": "No mostrado en la captura"
+          }
+        },
+        "porteria": {
+          "paradas": {
+            "Turquía": 5,
+            "Estados Unidos": 1
+          },
+          "goles_evitados": {
+            "Turquía": 0.36,
+            "Estados Unidos": -0.7
+          },
+          "grandes_paradas": {
+            "Turquía": 1,
+            "Estados Unidos": 0
+          },
+          "despejes_por_alto": {
+            "Turquía": 0,
+            "Estados Unidos": 2
+          },
+          "con_los_punos": {
+            "Turquía": 1,
+            "Estados Unidos": 0
+          },
+          "saques_de_puerta": {
+            "Turquía": 6,
+            "Estados Unidos": 4
+          }
+        }
+      },
+      "fuentes": [
+        "Captura de pantalla 2026-06-26 104846.png",
+        "Captura de pantalla 2026-06-26 104857.png",
+        "Captura de pantalla 2026-06-26 104905.png"
+      ]
+    }
+  ]
+}

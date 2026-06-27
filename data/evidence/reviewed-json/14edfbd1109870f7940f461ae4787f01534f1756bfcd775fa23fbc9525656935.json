@@ -1,0 +1,306 @@
+{
+  "numero_de_partidos": 1,
+  "partidos": [
+    {
+      "id": "ecuador_alemania",
+      "nombre": "Ecuador vs Alemania",
+      "equipos": {
+        "izquierda_verde": "Ecuador",
+        "derecha_azul": "Alemania"
+      },
+      "estadisticas": {
+        "resumen_del_partido": {
+          "posesion_de_balon_pct": {
+            "Ecuador": 39,
+            "Alemania": 61
+          },
+          "distancia_recorrida_km": {
+            "Ecuador": null,
+            "Alemania": null,
+            "estado_dato": "No mostrado en la captura"
+          },
+          "goles_esperados_xg": {
+            "Ecuador": 1.51,
+            "Alemania": 0.65
+          },
+          "ocasiones_claras": {
+            "Ecuador": 2,
+            "Alemania": 2
+          },
+          "tiros_totales": {
+            "Ecuador": 7,
+            "Alemania": 11
+          },
+          "paradas": {
+            "Ecuador": 2,
+            "Alemania": 1
+          },
+          "numero_de_sprints": {
+            "Ecuador": null,
+            "Alemania": null,
+            "estado_dato": "No mostrado en la captura"
+          },
+          "saques_de_esquina": {
+            "Ecuador": 3,
+            "Alemania": 2
+          },
+          "faltas": {
+            "Ecuador": 15,
+            "Alemania": 10
+          },
+          "pases": {
+            "Ecuador": 379,
+            "Alemania": 592
+          },
+          "entradas": {
+            "Ecuador": 26,
+            "Alemania": 20
+          },
+          "tiros_libres": {
+            "Ecuador": 10,
+            "Alemania": 15
+          },
+          "tarjetas_amarillas": {
+            "Ecuador": 3,
+            "Alemania": 1
+          },
+          "tarjetas_rojas": {
+            "Ecuador": null,
+            "Alemania": null,
+            "estado_dato": "No mostrado en la captura"
+          }
+        },
+        "tiros": {
+          "tiros_totales": {
+            "Ecuador": 7,
+            "Alemania": 11
+          },
+          "tiros_a_puerta": {
+            "Ecuador": 3,
+            "Alemania": 3
+          },
+          "tiros_al_palo": {
+            "Ecuador": 0,
+            "Alemania": 0
+          },
+          "tiros_fuera": {
+            "Ecuador": 2,
+            "Alemania": 3
+          },
+          "tiros_bloqueados": {
+            "Ecuador": 2,
+            "Alemania": 5
+          },
+          "tiros_dentro_del_area_penal": {
+            "Ecuador": 5,
+            "Alemania": 6
+          },
+          "tiros_fuera_del_area": {
+            "Ecuador": 2,
+            "Alemania": 5
+          }
+        },
+        "ataque": {
+          "ocasiones_claras_realizadas": {
+            "Ecuador": 1,
+            "Alemania": 1
+          },
+          "ocasiones_claras_falladas": {
+            "Ecuador": 1,
+            "Alemania": 1
+          },
+          "pases_en_profundidad": {
+            "Ecuador": null,
+            "Alemania": null,
+            "estado_dato": "No mostrado en la captura"
+          },
+          "toques_dentro_del_area": {
+            "Ecuador": 17,
+            "Alemania": 20
+          },
+          "faltas_recibidas_en_el_tercio_final": {
+            "Ecuador": 3,
+            "Alemania": 4
+          },
+          "fueras_de_juego": {
+            "Ecuador": null,
+            "Alemania": null,
+            "estado_dato": "No mostrado en la captura"
+          }
+        },
+        "mapa_de_ataques": {
+          "equipo_mostrado": "Ecuador",
+          "direccion_de_ataque": "izquierda_a_derecha",
+          "tipo_de_dato": "mapa_de_intensidad_sin_valores_numericos"
+        },
+        "mapa_de_pases": {
+          "equipo_mostrado": "Ecuador",
+          "descripcion": "Distribución porcentual de los pases según la zona del campo.",
+          "direccion_de_ataque": "izquierda_a_derecha",
+          "distribucion_por_zonas_del_campo_pct": {
+            "tercio_defensivo": 27,
+            "tercio_central": 46,
+            "tercio_ofensivo": 27
+          }
+        },
+        "duelos": {
+          "duelos_ganados_pct_del_total": {
+            "Ecuador": 51,
+            "Alemania": 49
+          },
+          "perdidas": {
+            "Ecuador": 10,
+            "Alemania": 11
+          },
+          "duelos_en_el_suelo": {
+            "Ecuador": {
+              "ganados": 44,
+              "total_mostrado": 85,
+              "porcentaje": 52
+            },
+            "Alemania": {
+              "ganados": 41,
+              "total_mostrado": 85,
+              "porcentaje": 48
+            }
+          },
+          "duelos_aereos": {
+            "Ecuador": {
+              "ganados": 9,
+              "total_mostrado": 19,
+              "porcentaje": 47
+            },
+            "Alemania": {
+              "ganados": 10,
+              "total_mostrado": 19,
+              "porcentaje": 53
+            }
+          },
+          "regates": {
+            "Ecuador": {
+              "completados": 8,
+              "intentados": 18,
+              "porcentaje": 44
+            },
+            "Alemania": {
+              "completados": 7,
+              "intentados": 22,
+              "porcentaje": 32
+            }
+          }
+        },
+        "pases": {
+          "pases_precisos": {
+            "Ecuador": 313,
+            "Alemania": 517
+          },
+          "saques_de_banda": {
+            "Ecuador": 18,
+            "Alemania": 21
+          },
+          "pases_al_ultimo_tercio": {
+            "Ecuador": 67,
+            "Alemania": 78
+          },
+          "pases_en_el_ultimo_tercio": {
+            "Ecuador": {
+              "completados": 79,
+              "intentados": 116,
+              "porcentaje": 68
+            },
+            "Alemania": {
+              "completados": 110,
+              "intentados": 152,
+              "porcentaje": 72
+            }
+          },
+          "pases_largos": {
+            "Ecuador": {
+              "completados": 25,
+              "intentados": 51,
+              "porcentaje": 49
+            },
+            "Alemania": {
+              "completados": 17,
+              "intentados": 37,
+              "porcentaje": 46
+            }
+          },
+          "centros": {
+            "Ecuador": {
+              "completados": 3,
+              "intentados": 12,
+              "porcentaje": 25
+            },
+            "Alemania": {
+              "completados": 5,
+              "intentados": 16,
+              "porcentaje": 31
+            }
+          }
+        },
+        "defensa": {
+          "entradas_ganadas_pct": {
+            "Ecuador": 62,
+            "Alemania": 65
+          },
+          "tackles_totales": {
+            "Ecuador": 26,
+            "Alemania": 20
+          },
+          "intercepciones": {
+            "Ecuador": 12,
+            "Alemania": 4
+          },
+          "recuperaciones": {
+            "Ecuador": 50,
+            "Alemania": 50
+          },
+          "despejes": {
+            "Ecuador": 29,
+            "Alemania": 15
+          },
+          "errores_que_llevan_a_disparo": {
+            "Ecuador": 0,
+            "Alemania": 2
+          },
+          "errores_que_llevan_a_gol": {
+            "Ecuador": 0,
+            "Alemania": 1
+          }
+        },
+        "porteria": {
+          "paradas": {
+            "Ecuador": 2,
+            "Alemania": 1
+          },
+          "goles_evitados": {
+            "Ecuador": -0.01,
+            "Alemania": -0.4
+          },
+          "grandes_paradas": {
+            "Ecuador": 0,
+            "Alemania": 1
+          },
+          "despejes_por_alto": {
+            "Ecuador": 1,
+            "Alemania": 0
+          },
+          "con_los_punos": {
+            "Ecuador": 0,
+            "Alemania": 1
+          },
+          "saques_de_puerta": {
+            "Ecuador": 5,
+            "Alemania": 2
+          }
+        }
+      },
+      "fuentes": [
+        "Captura de pantalla 2026-06-26 003709.png",
+        "Captura de pantalla 2026-06-26 003738.png",
+        "Captura de pantalla 2026-06-26 003807.png"
+      ]
+    }
+  ]
+}

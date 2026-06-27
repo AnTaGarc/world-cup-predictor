@@ -1,0 +1,305 @@
+{
+  "numero_de_partidos": 1,
+  "partidos": [
+    {
+      "id": "curazao_costa_de_marfil",
+      "nombre": "Curazao vs Costa de Marfil",
+      "equipos": {
+        "izquierda_verde": "Curazao",
+        "derecha_azul": "Costa de Marfil"
+      },
+      "estadisticas": {
+        "resumen_del_partido": {
+          "posesion_de_balon_pct": {
+            "Curazao": 37,
+            "Costa de Marfil": 63
+          },
+          "distancia_recorrida_km": {
+            "Curazao": null,
+            "Costa de Marfil": null,
+            "estado_dato": "No mostrado en la captura"
+          },
+          "goles_esperados_xg": {
+            "Curazao": 0.47,
+            "Costa de Marfil": 1.3
+          },
+          "ocasiones_claras": {
+            "Curazao": 0,
+            "Costa de Marfil": 3
+          },
+          "tiros_totales": {
+            "Curazao": 11,
+            "Costa de Marfil": 7
+          },
+          "paradas": {
+            "Curazao": 1,
+            "Costa de Marfil": 2
+          },
+          "numero_de_sprints": {
+            "Curazao": null,
+            "Costa de Marfil": null,
+            "estado_dato": "No mostrado en la captura"
+          },
+          "saques_de_esquina": {
+            "Curazao": 4,
+            "Costa de Marfil": 6
+          },
+          "faltas": {
+            "Curazao": 11,
+            "Costa de Marfil": 6
+          },
+          "pases": {
+            "Curazao": 354,
+            "Costa de Marfil": 623
+          },
+          "entradas": {
+            "Curazao": 20,
+            "Costa de Marfil": 17
+          },
+          "tiros_libres": {
+            "Curazao": 6,
+            "Costa de Marfil": 11
+          },
+          "tarjetas_amarillas": {
+            "Curazao": 2,
+            "Costa de Marfil": 1
+          },
+          "tarjetas_rojas": {
+            "Curazao": null,
+            "Costa de Marfil": null,
+            "estado_dato": "No mostrado en la captura"
+          }
+        },
+        "tiros": {
+          "tiros_totales": {
+            "Curazao": 11,
+            "Costa de Marfil": 7
+          },
+          "tiros_a_puerta": {
+            "Curazao": 2,
+            "Costa de Marfil": 3
+          },
+          "tiros_al_palo": {
+            "Curazao": 0,
+            "Costa de Marfil": 0
+          },
+          "tiros_fuera": {
+            "Curazao": 7,
+            "Costa de Marfil": 3
+          },
+          "tiros_bloqueados": {
+            "Curazao": 2,
+            "Costa de Marfil": 1
+          },
+          "tiros_dentro_del_area_penal": {
+            "Curazao": 6,
+            "Costa de Marfil": 5
+          },
+          "tiros_fuera_del_area": {
+            "Curazao": 5,
+            "Costa de Marfil": 2
+          }
+        },
+        "ataque": {
+          "ocasiones_claras_realizadas": {
+            "Curazao": 0,
+            "Costa de Marfil": 2
+          },
+          "ocasiones_claras_falladas": {
+            "Curazao": 0,
+            "Costa de Marfil": 1
+          },
+          "pases_en_profundidad": {
+            "Curazao": 0,
+            "Costa de Marfil": 1
+          },
+          "toques_dentro_del_area": {
+            "Curazao": 19,
+            "Costa de Marfil": 23
+          },
+          "faltas_recibidas_en_el_tercio_final": {
+            "Curazao": 1,
+            "Costa de Marfil": 1
+          },
+          "fueras_de_juego": {
+            "Curazao": 2,
+            "Costa de Marfil": 1
+          }
+        },
+        "mapa_de_ataques": {
+          "equipo_mostrado": "Curazao",
+          "direccion_de_ataque": "izquierda_a_derecha",
+          "tipo_de_dato": "mapa_de_intensidad_sin_valores_numericos"
+        },
+        "mapa_de_pases": {
+          "equipo_mostrado": "Curazao",
+          "descripcion": "Distribución porcentual de los pases según la zona del campo.",
+          "direccion_de_ataque": "izquierda_a_derecha",
+          "distribucion_por_zonas_del_campo_pct": {
+            "tercio_defensivo": 26,
+            "tercio_central": 50,
+            "tercio_ofensivo": 24
+          }
+        },
+        "duelos": {
+          "duelos_ganados_pct_del_total": {
+            "Curazao": 51,
+            "Costa de Marfil": 49
+          },
+          "perdidas": {
+            "Curazao": 11,
+            "Costa de Marfil": 12
+          },
+          "duelos_en_el_suelo": {
+            "Curazao": {
+              "ganados": 38,
+              "total_mostrado": 76,
+              "porcentaje": 50
+            },
+            "Costa de Marfil": {
+              "ganados": 38,
+              "total_mostrado": 76,
+              "porcentaje": 50
+            }
+          },
+          "duelos_aereos": {
+            "Curazao": {
+              "ganados": 9,
+              "total_mostrado": 16,
+              "porcentaje": 56
+            },
+            "Costa de Marfil": {
+              "ganados": 7,
+              "total_mostrado": 16,
+              "porcentaje": 44
+            }
+          },
+          "regates": {
+            "Curazao": {
+              "completados": 12,
+              "intentados": 18,
+              "porcentaje": 67
+            },
+            "Costa de Marfil": {
+              "completados": 10,
+              "intentados": 18,
+              "porcentaje": 56
+            }
+          }
+        },
+        "pases": {
+          "pases_precisos": {
+            "Curazao": 295,
+            "Costa de Marfil": 558
+          },
+          "saques_de_banda": {
+            "Curazao": 19,
+            "Costa de Marfil": 20
+          },
+          "pases_al_ultimo_tercio": {
+            "Curazao": 33,
+            "Costa de Marfil": 41
+          },
+          "pases_en_el_ultimo_tercio": {
+            "Curazao": {
+              "completados": 49,
+              "intentados": 73,
+              "porcentaje": 67
+            },
+            "Costa de Marfil": {
+              "completados": 105,
+              "intentados": 133,
+              "porcentaje": 79
+            }
+          },
+          "pases_largos": {
+            "Curazao": {
+              "completados": 14,
+              "intentados": 30,
+              "porcentaje": 47
+            },
+            "Costa de Marfil": {
+              "completados": 21,
+              "intentados": 39,
+              "porcentaje": 54
+            }
+          },
+          "centros": {
+            "Curazao": {
+              "completados": 5,
+              "intentados": 15,
+              "porcentaje": 33
+            },
+            "Costa de Marfil": {
+              "completados": 3,
+              "intentados": 16,
+              "porcentaje": 19
+            }
+          }
+        },
+        "defensa": {
+          "entradas_ganadas_pct": {
+            "Curazao": 60,
+            "Costa de Marfil": 59
+          },
+          "tackles_totales": {
+            "Curazao": 20,
+            "Costa de Marfil": 17
+          },
+          "intercepciones": {
+            "Curazao": 15,
+            "Costa de Marfil": 12
+          },
+          "recuperaciones": {
+            "Curazao": 44,
+            "Costa de Marfil": 46
+          },
+          "despejes": {
+            "Curazao": 17,
+            "Costa de Marfil": 19
+          },
+          "errores_que_llevan_a_disparo": {
+            "Curazao": 0,
+            "Costa de Marfil": 2
+          },
+          "errores_que_llevan_a_gol": {
+            "Curazao": 1,
+            "Costa de Marfil": 0
+          }
+        },
+        "porteria": {
+          "paradas": {
+            "Curazao": 1,
+            "Costa de Marfil": 2
+          },
+          "goles_evitados": {
+            "Curazao": -0.2,
+            "Costa de Marfil": 0.06
+          },
+          "grandes_paradas": {
+            "Curazao": 1,
+            "Costa de Marfil": 0
+          },
+          "despejes_por_alto": {
+            "Curazao": null,
+            "Costa de Marfil": null,
+            "estado_dato": "No mostrado en la captura"
+          },
+          "con_los_punos": {
+            "Curazao": 0,
+            "Costa de Marfil": 1
+          },
+          "saques_de_puerta": {
+            "Curazao": 5,
+            "Costa de Marfil": 6
+          }
+        }
+      },
+      "fuentes": [
+        "Captura de pantalla 2026-06-26 004025.png",
+        "Captura de pantalla 2026-06-26 004103.png",
+        "Captura de pantalla 2026-06-26 004134.png"
+      ]
+    }
+  ]
+}

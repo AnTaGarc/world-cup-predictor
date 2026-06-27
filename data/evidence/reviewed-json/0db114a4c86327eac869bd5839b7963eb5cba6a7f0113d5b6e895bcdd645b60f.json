@@ -1,0 +1,305 @@
+{
+  "numero_de_partidos": 1,
+  "partidos": [
+    {
+      "id": "japon_suecia",
+      "nombre": "Japón vs Suecia",
+      "equipos": {
+        "izquierda_verde": "Japón",
+        "derecha_azul": "Suecia"
+      },
+      "estadisticas": {
+        "resumen_del_partido": {
+          "posesion_de_balon_pct": {
+            "Japón": 52,
+            "Suecia": 48
+          },
+          "distancia_recorrida_km": {
+            "Japón": null,
+            "Suecia": null,
+            "estado_dato": "No mostrado en la captura"
+          },
+          "goles_esperados_xg": {
+            "Japón": 1.31,
+            "Suecia": 0.61
+          },
+          "ocasiones_claras": {
+            "Japón": 2,
+            "Suecia": 1
+          },
+          "tiros_totales": {
+            "Japón": 8,
+            "Suecia": 11
+          },
+          "paradas": {
+            "Japón": 4,
+            "Suecia": 2
+          },
+          "numero_de_sprints": {
+            "Japón": null,
+            "Suecia": null,
+            "estado_dato": "No mostrado en la captura"
+          },
+          "saques_de_esquina": {
+            "Japón": 2,
+            "Suecia": 8
+          },
+          "faltas": {
+            "Japón": 20,
+            "Suecia": 11
+          },
+          "pases": {
+            "Japón": 446,
+            "Suecia": 395
+          },
+          "entradas": {
+            "Japón": 13,
+            "Suecia": 6
+          },
+          "tiros_libres": {
+            "Japón": 11,
+            "Suecia": 20
+          },
+          "tarjetas_amarillas": {
+            "Japón": 1,
+            "Suecia": 2
+          },
+          "tarjetas_rojas": {
+            "Japón": null,
+            "Suecia": null,
+            "estado_dato": "No mostrado en la captura"
+          }
+        },
+        "tiros": {
+          "tiros_totales": {
+            "Japón": 8,
+            "Suecia": 11
+          },
+          "tiros_a_puerta": {
+            "Japón": 3,
+            "Suecia": 5
+          },
+          "tiros_al_palo": {
+            "Japón": 0,
+            "Suecia": 1
+          },
+          "tiros_fuera": {
+            "Japón": 3,
+            "Suecia": 3
+          },
+          "tiros_bloqueados": {
+            "Japón": 2,
+            "Suecia": 3
+          },
+          "tiros_dentro_del_area_penal": {
+            "Japón": 4,
+            "Suecia": 6
+          },
+          "tiros_fuera_del_area": {
+            "Japón": 4,
+            "Suecia": 5
+          }
+        },
+        "ataque": {
+          "ocasiones_claras_realizadas": {
+            "Japón": 1,
+            "Suecia": 0
+          },
+          "ocasiones_claras_falladas": {
+            "Japón": 1,
+            "Suecia": 1
+          },
+          "pases_en_profundidad": {
+            "Japón": 1,
+            "Suecia": 0
+          },
+          "toques_dentro_del_area": {
+            "Japón": 12,
+            "Suecia": 15
+          },
+          "faltas_recibidas_en_el_tercio_final": {
+            "Japón": 1,
+            "Suecia": 4
+          },
+          "fueras_de_juego": {
+            "Japón": 3,
+            "Suecia": 2
+          }
+        },
+        "mapa_de_ataques": {
+          "equipo_mostrado": "Japón",
+          "direccion_de_ataque": "izquierda_a_derecha",
+          "tipo_de_dato": "mapa_de_intensidad_sin_valores_numericos"
+        },
+        "mapa_de_pases": {
+          "equipo_mostrado": "Japón",
+          "descripcion": "Distribución porcentual de los pases según la zona del campo.",
+          "direccion_de_ataque": "izquierda_a_derecha",
+          "distribucion_por_zonas_del_campo_pct": {
+            "tercio_defensivo": 30,
+            "tercio_central": 46,
+            "tercio_ofensivo": 24
+          }
+        },
+        "duelos": {
+          "duelos_ganados_pct_del_total": {
+            "Japón": 53,
+            "Suecia": 47
+          },
+          "perdidas": {
+            "Japón": 2,
+            "Suecia": 7
+          },
+          "duelos_en_el_suelo": {
+            "Japón": {
+              "ganados": 30,
+              "total_mostrado": 58,
+              "porcentaje": 52
+            },
+            "Suecia": {
+              "ganados": 28,
+              "total_mostrado": 58,
+              "porcentaje": 48
+            }
+          },
+          "duelos_aereos": {
+            "Japón": {
+              "ganados": 16,
+              "total_mostrado": 29,
+              "porcentaje": 55
+            },
+            "Suecia": {
+              "ganados": 13,
+              "total_mostrado": 29,
+              "porcentaje": 45
+            }
+          },
+          "regates": {
+            "Japón": {
+              "completados": 6,
+              "intentados": 10,
+              "porcentaje": 60
+            },
+            "Suecia": {
+              "completados": 4,
+              "intentados": 10,
+              "porcentaje": 40
+            }
+          }
+        },
+        "pases": {
+          "pases_precisos": {
+            "Japón": 379,
+            "Suecia": 312
+          },
+          "saques_de_banda": {
+            "Japón": 14,
+            "Suecia": 18
+          },
+          "pases_al_ultimo_tercio": {
+            "Japón": 51,
+            "Suecia": 51
+          },
+          "pases_en_el_ultimo_tercio": {
+            "Japón": {
+              "completados": 68,
+              "intentados": 101,
+              "porcentaje": 67
+            },
+            "Suecia": {
+              "completados": 73,
+              "intentados": 120,
+              "porcentaje": 61
+            }
+          },
+          "pases_largos": {
+            "Japón": {
+              "completados": 20,
+              "intentados": 51,
+              "porcentaje": 39
+            },
+            "Suecia": {
+              "completados": 18,
+              "intentados": 50,
+              "porcentaje": 36
+            }
+          },
+          "centros": {
+            "Japón": {
+              "completados": 4,
+              "intentados": 13,
+              "porcentaje": 31
+            },
+            "Suecia": {
+              "completados": 4,
+              "intentados": 16,
+              "porcentaje": 25
+            }
+          }
+        },
+        "defensa": {
+          "entradas_ganadas_pct": {
+            "Japón": 54,
+            "Suecia": 50
+          },
+          "tackles_totales": {
+            "Japón": 13,
+            "Suecia": 6
+          },
+          "intercepciones": {
+            "Japón": 4,
+            "Suecia": 5
+          },
+          "recuperaciones": {
+            "Japón": 42,
+            "Suecia": 39
+          },
+          "despejes": {
+            "Japón": 40,
+            "Suecia": 21
+          },
+          "errores_que_llevan_a_disparo": {
+            "Japón": 1,
+            "Suecia": 0
+          },
+          "errores_que_llevan_a_gol": {
+            "Japón": null,
+            "Suecia": null,
+            "estado_dato": "No mostrado en la captura"
+          }
+        },
+        "porteria": {
+          "paradas": {
+            "Japón": 4,
+            "Suecia": 2
+          },
+          "goles_evitados": {
+            "Japón": -0.17,
+            "Suecia": 0.27
+          },
+          "grandes_paradas": {
+            "Japón": 2,
+            "Suecia": 1
+          },
+          "despejes_por_alto": {
+            "Japón": 1,
+            "Suecia": 1
+          },
+          "con_los_punos": {
+            "Japón": 4,
+            "Suecia": 1
+          },
+          "saques_de_puerta": {
+            "Japón": 6,
+            "Suecia": 4
+          }
+        }
+      },
+      "fuentes": [
+        "Captura de pantalla 2026-06-26 031245.png",
+        "Captura de pantalla 2026-06-26 031254.png",
+        "Captura de pantalla 2026-06-26 031305.png"
+      ]
+    }
+  ]
+}

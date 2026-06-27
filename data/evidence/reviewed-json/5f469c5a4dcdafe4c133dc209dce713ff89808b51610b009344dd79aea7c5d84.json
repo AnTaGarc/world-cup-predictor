@@ -1,0 +1,282 @@
+{
+  "descripcion": "Estadísticas profundas revisadas manualmente a partir de capturas de SofaScore.",
+  "numero_de_partidos": 1,
+  "partidos": [
+    {
+      "id": "senegal_irak",
+      "nombre": "Senegal vs Irak",
+      "equipos": {
+        "izquierda_verde": "Senegal",
+        "derecha_azul": "Irak"
+      },
+      "estadisticas": {
+        "resumen_del_partido": {
+          "posesion_de_balon_pct": {
+            "Senegal": 69,
+            "Irak": 31
+          },
+          "goles_esperados_xg": {
+            "Senegal": 3.01,
+            "Irak": 0.14
+          },
+          "ocasiones_claras": {
+            "Senegal": 5,
+            "Irak": 0
+          },
+          "tiros_totales": {
+            "Senegal": 28,
+            "Irak": 6
+          },
+          "paradas": {
+            "Senegal": 1,
+            "Irak": 7
+          },
+          "saques_de_esquina": {
+            "Senegal": 12,
+            "Irak": 3
+          },
+          "faltas": {
+            "Senegal": 10,
+            "Irak": 11
+          },
+          "pases": {
+            "Senegal": 590,
+            "Irak": 266
+          },
+          "entradas": {
+            "Senegal": 12,
+            "Irak": 20
+          },
+          "tiros_libres": {
+            "Senegal": 11,
+            "Irak": 10
+          },
+          "tarjetas_amarillas": {
+            "Senegal": 2,
+            "Irak": 2
+          },
+          "tarjetas_rojas": {
+            "Senegal": 0,
+            "Irak": 1
+          }
+        },
+        "tiros": {
+          "tiros_totales": {
+            "Senegal": 28,
+            "Irak": 6
+          },
+          "tiros_a_puerta": {
+            "Senegal": 12,
+            "Irak": 1
+          },
+          "tiros_al_palo": {
+            "Senegal": 1,
+            "Irak": 0
+          },
+          "tiros_fuera": {
+            "Senegal": 11,
+            "Irak": 1
+          },
+          "tiros_bloqueados": {
+            "Senegal": 5,
+            "Irak": 4
+          },
+          "tiros_dentro_del_area_penal": {
+            "Senegal": 17,
+            "Irak": 1
+          },
+          "tiros_fuera_del_area": {
+            "Senegal": 11,
+            "Irak": 5
+          }
+        },
+        "ataque": {
+          "ocasiones_claras_realizadas": {
+            "Senegal": 2,
+            "Irak": 0
+          },
+          "ocasiones_claras_falladas": {
+            "Senegal": 3,
+            "Irak": 0
+          },
+          "toques_dentro_del_area": {
+            "Senegal": 51,
+            "Irak": 5
+          },
+          "faltas_recibidas_en_el_tercio_final": {
+            "Senegal": 2,
+            "Irak": 2
+          },
+          "fueras_de_juego": {
+            "Senegal": 1,
+            "Irak": 0
+          }
+        },
+        "duelos": {
+          "duelos_pct": {
+            "Senegal": 50,
+            "Irak": 50
+          },
+          "perdidas": {
+            "Senegal": 4,
+            "Irak": 7
+          },
+          "duelos_en_el_suelo": {
+            "Senegal": {
+              "ganados": 30,
+              "totales": 67,
+              "porcentaje": 45
+            },
+            "Irak": {
+              "ganados": 37,
+              "totales": 67,
+              "porcentaje": 55
+            }
+          },
+          "duelos_aereos": {
+            "Senegal": {
+              "ganados": 19,
+              "totales": 31,
+              "porcentaje": 61
+            },
+            "Irak": {
+              "ganados": 12,
+              "totales": 31,
+              "porcentaje": 39
+            }
+          },
+          "regates": {
+            "Senegal": {
+              "completados": 8,
+              "intentados": 24,
+              "porcentaje": 33
+            },
+            "Irak": {
+              "completados": 8,
+              "intentados": 13,
+              "porcentaje": 62
+            }
+          }
+        },
+        "pases": {
+          "pases_precisos": {
+            "Senegal": 517,
+            "Irak": 184
+          },
+          "saques_de_banda": {
+            "Senegal": 26,
+            "Irak": 16
+          },
+          "pases_al_ultimo_tercio": {
+            "Senegal": 95,
+            "Irak": 32
+          },
+          "pases_en_el_ultimo_tercio": {
+            "Senegal": {
+              "completados": 197,
+              "intentados": 243,
+              "porcentaje": 81
+            },
+            "Irak": {
+              "completados": 27,
+              "intentados": 54,
+              "porcentaje": 50
+            }
+          },
+          "pases_largos": {
+            "Senegal": {
+              "completados": 23,
+              "intentados": 43,
+              "porcentaje": 53
+            },
+            "Irak": {
+              "completados": 13,
+              "intentados": 68,
+              "porcentaje": 19
+            }
+          },
+          "centros": {
+            "Senegal": {
+              "completados": 7,
+              "intentados": 25,
+              "porcentaje": 28
+            },
+            "Irak": {
+              "completados": 0,
+              "intentados": 6,
+              "porcentaje": 0
+            }
+          }
+        },
+        "defensa": {
+          "entradas_ganadas_pct": {
+            "Senegal": 75,
+            "Irak": 65
+          },
+          "tackles_totales": {
+            "Senegal": 12,
+            "Irak": 20
+          },
+          "intercepciones": {
+            "Senegal": 2,
+            "Irak": 7
+          },
+          "recuperaciones": {
+            "Senegal": 53,
+            "Irak": 38
+          },
+          "despejes": {
+            "Senegal": 10,
+            "Irak": 34
+          },
+          "errores_que_llevan_a_gol": {
+            "Senegal": 0,
+            "Irak": 2
+          }
+        },
+        "porteria": {
+          "paradas": {
+            "Senegal": 1,
+            "Irak": 7
+          },
+          "goles_evitados": {
+            "Senegal": 0.07,
+            "Irak": -0.07
+          },
+          "grandes_paradas": {
+            "Senegal": 0,
+            "Irak": 3
+          },
+          "despejes_por_alto": {
+            "Senegal": 3,
+            "Irak": 1
+          },
+          "con_los_punos": {
+            "Senegal": 0,
+            "Irak": 1
+          },
+          "saques_de_puerta": {
+            "Senegal": 4,
+            "Irak": 20
+          }
+        },
+        "mapa_de_ataques": {
+          "equipo_mostrado": "Senegal",
+          "direccion_de_ataque": "hacia_la_derecha",
+          "descripcion": "Mayor intensidad ofensiva de Senegal por el carril central y el costado derecho."
+        },
+        "mapa_de_pases": {
+          "tipo_de_dato": "distribucion_global_no_atribuible_por_equipo",
+          "tercio_defensivo_pct": 16,
+          "tercio_central_pct": 40,
+          "tercio_ofensivo_pct": 44
+        }
+      },
+      "fuentes": [
+        "Captura de pantalla 2026-06-27 042918.png",
+        "Captura de pantalla 2026-06-27 042931.png",
+        "Captura de pantalla 2026-06-27 042949.png"
+      ]
+    }
+  ]
+}
