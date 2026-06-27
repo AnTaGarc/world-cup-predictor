@@ -497,24 +497,47 @@ def _assign_thirds_annex_c(
         if len(out) == 8:
             return out
 
+    # MRV (Minimum Remaining Values) backtracking:
+    # at each step we expand the slot with the fewest currently-feasible
+    # thirds. This collapses cases like 3K → 1L (only one valid champion)
+    # in the first step and dramatically reduces the chance of picking a
+    # valid-but-non-official pairing when multiple solutions exist.
     assignment: dict[str, int] = {}
+    qualified_set = set(qualified_groups)
 
-    def backtrack(idx: int, used: set[str]) -> bool:
-        if idx == len(third_slots):
+    def feasible_groups(slot_idx: int, used: set[str]) -> list[str]:
+        _slot_id, allowed = third_slots[slot_idx]
+        return [g for g in qualified_groups
+                if g in allowed and g not in used]
+
+    def backtrack(remaining: list[int], used: set[str]) -> bool:
+        if not remaining:
             return True
-        slot_id, allowed = third_slots[idx]
-        for group in qualified_groups:
-            if group in used or group not in allowed:
-                continue
+        # MRV: pick the index whose feasible-groups list is shortest.
+        best_pos = 0
+        best_options: list[str] = feasible_groups(remaining[0], used)
+        for pos in range(1, len(remaining)):
+            opts = feasible_groups(remaining[pos], used)
+            if len(opts) < len(best_options):
+                best_pos = pos
+                best_options = opts
+                if not best_options:
+                    return False
+        chosen_idx = remaining[best_pos]
+        slot_id, _allowed = third_slots[chosen_idx]
+        next_remaining = remaining[:best_pos] + remaining[best_pos + 1:]
+        for group in best_options:
             assignment[slot_id] = int(by_group[group][0])
             used.add(group)
-            if backtrack(idx + 1, used):
+            if backtrack(next_remaining, used):
                 return True
             used.discard(group)
             del assignment[slot_id]
         return False
 
-    return assignment if backtrack(0, set()) else {}
+    if not backtrack(list(range(len(third_slots))), set()):
+        return {}
+    return assignment
 
 
 def _resolve_source(

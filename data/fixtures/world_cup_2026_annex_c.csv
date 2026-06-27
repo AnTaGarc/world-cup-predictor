@@ -33,4 +33,7 @@
 #
 # Source: https://digitalhub.fifa.com (FIFA tournament regulations PDF,
 # Annex C — published by FIFA after the draw).
+#
+# Verified rows below; add more as FIFA publishes / users find them.
 thirds_combo,1A,1B,1D,1E,1G,1I,1K,1L
+EFGHIJKL,E,J,I,F,H,G,L,K
