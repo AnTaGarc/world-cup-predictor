@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from contextlib import contextmanager
 import json
@@ -2227,7 +2227,73 @@ class Repository:
                     persisted_reason, evaluated,
                 ),
             )
+            # Phase 5b EMA online: persist the 1X2 residual for this match
+            # in backtest_runs so _load_team_shifts_cached() can fold it
+            # into the per-team correction at the very next prediction.
+            # Uses the most recent pre-kickoff snapshot; if none exists
+            # (e.g. result fed without ever opening the prediction lab),
+            # silently skip — the historical pool still provides coverage.
+            self._record_live_residual(
+                con, match, match_id, goals_a, goals_b, evaluated_at_utc,
+            )
             return settlement_id
+
+    def _record_live_residual(
+        self,
+        con,
+        match,
+        match_id: int,
+        goals_a: int,
+        goals_b: int,
+        evaluated_at_utc: datetime,
+    ) -> None:
+        """Insert one row per 1X2 selection into backtest_runs.
+
+        Reads the latest payload from prediction_snapshots (saved when the
+        bundle was built pre-kickoff) and extracts the home/draw/away
+        probabilities. Idempotent on (run_label, model_version, match_id,
+        market, selection): re-settling a match just overwrites.
+        """
+        snapshot = con.execute(
+            "SELECT payload_json FROM prediction_snapshots "
+            "WHERE match_id=? ORDER BY generated_at_utc DESC LIMIT 1",
+            (int(match_id),),
+        ).fetchone()
+        if snapshot is None:
+            return
+        try:
+            payload = json.loads(snapshot["payload_json"])
+        except Exception:
+            return
+        team_a = match.team_a.name
+        team_b = match.team_b.name
+        winner = "home" if goals_a > goals_b else "away" if goals_b > goals_a else "draw"
+        outcomes = {team_a: "home", "Draw": "draw", team_b: "away"}
+        recorded = evaluated_at_utc.isoformat()
+        for row in payload.get("primary", []) or payload.get("predictions", []):
+            if row.get("market_name") != "1X2":
+                continue
+            selection = str(row.get("selection_name") or "")
+            slot = outcomes.get(selection)
+            if slot is None:
+                continue
+            prob = float(row.get("probability") or 0.0)
+            outcome_observed = 1 if slot == winner else 0
+            brier = (prob - outcome_observed) ** 2
+            # log-loss on the observed-outcome probability.
+            import math as _math
+            p_clip = max(1e-6, min(1.0 - 1e-6, prob if outcome_observed == 1 else 1.0 - prob))
+            log_loss = -_math.log(p_clip)
+            con.execute(
+                "INSERT INTO backtest_runs(run_label, model_version, match_id, market, selection, "
+                "prob_predicted, outcome_observed, brier, log_loss, extra_json, recorded_at_utc) "
+                "VALUES('live-wc2026-v1', 'unified-live', ?, '1X2', ?, ?, ?, ?, ?, ?, ?) "
+                "ON CONFLICT(run_label, model_version, match_id, market, selection) DO UPDATE SET "
+                "prob_predicted=excluded.prob_predicted, outcome_observed=excluded.outcome_observed, "
+                "brier=excluded.brier, log_loss=excluded.log_loss, recorded_at_utc=excluded.recorded_at_utc",
+                (int(match_id), selection, prob, outcome_observed, brier, log_loss,
+                 '{"source":"settle_match_versioned"}', recorded),
+            )
 
     def list_prediction_evaluations(
         self, match_id: int, active_only: bool = True

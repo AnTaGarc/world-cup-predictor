@@ -306,17 +306,80 @@ def _import_runs_cached(db_sig: tuple[int, int]) -> dict[int, bool]:
 
 
 @st.cache_resource(show_spinner=False, ttl=3600)
+def _low_intensity_pairs_cached(db_sig: tuple[int, int]) -> set[tuple[str, str]]:
+    """Return ``{(YYYY-MM-DD, team_name)}`` for every WC2026 group fixture
+    where that team was already mathematically classified/eliminated before
+    the match. Used to down-weight rotated-XI matchday-3 dead-rubbers.
+
+    Computed once per cache miss; the set is tiny (≤96 entries even if
+    every team had at least one dead-rubber side per group).
+    """
+    from wcpredict.low_intensity import is_low_intensity_match, _group_letter
+    repo = _repo()
+    matches = _matches_cached(db_sig)
+    # Filter to WC2026 group-stage matches with a date.
+    group_matches = [
+        m for m in matches
+        if m.competition == "FIFA World Cup 2026" and _group_letter(m.stage)
+    ]
+    # Index fixtures per group.
+    by_group: dict[str, list] = {}
+    for m in group_matches:
+        g = _group_letter(m.stage)
+        by_group.setdefault(g, []).append(m)
+    # Load WC2026 results once.
+    with sqlite3.connect(repo.path) as con:
+        con.row_factory = sqlite3.Row
+        results_rows = list(con.execute(
+            "SELECT mr.match_id, mr.goals_a, mr.goals_b, ta.name a, tb.name b "
+            "FROM match_results mr "
+            "JOIN matches m ON m.id=mr.match_id "
+            "JOIN teams ta ON ta.id=m.team_a_id "
+            "JOIN teams tb ON tb.id=m.team_b_id "
+            "WHERE m.competition='FIFA World Cup 2026'"
+        ))
+    completed_by_id = {
+        int(r["match_id"]): (int(r["goals_a"]), int(r["goals_b"]), r["a"], r["b"])
+        for r in results_rows
+    }
+    pairs: set[tuple[str, str]] = set()
+    for group, fixtures in by_group.items():
+        if len(fixtures) != 6:
+            continue
+        group_fixture_dicts = [
+            {"id": f.id, "team_a": f.team_a.name, "team_b": f.team_b.name}
+            for f in fixtures
+        ]
+        kickoff_by_id = {f.id: f.kickoff_utc for f in fixtures}
+        # Only matches with a final result feed the team profile, so we
+        # only need to flag those.
+        finished = [f for f in fixtures if f.id in completed_by_id]
+        for fx in finished:
+            a_low, b_low = is_low_intensity_match(
+                fx, group_fixture_dicts, completed_by_id,
+                fixture_kickoff_by_id=kickoff_by_id,
+            )
+            date_key = fx.kickoff_utc.date().isoformat()
+            if a_low:
+                pairs.add((date_key, fx.team_a.name))
+            if b_low:
+                pairs.add((date_key, fx.team_b.name))
+    return pairs
+
+
+@st.cache_resource(show_spinner=False, ttl=3600)
 def _load_team_shifts_cached(db_sig: tuple[int, int]) -> dict[str, dict[str, float]]:
-    """Load per-team 1X2 shifts derived from the historical residual pool.
+    """Load per-team 1X2 shifts from two stacked sources.
 
-    The pool is built offline by ``scripts/build_historical_team_residuals.py``
-    and stored in ``backtest_runs`` with ``run_label='historical-pool-v1'``.
-    Each row holds the model's prob and the actual outcome for a match
-    where BOTH teams were WC2026 selections (covers ~440 matches 2022-2026).
+    1. ``historical-pool-v1``: ~440 partidos 2022-2026 entre selecciones
+       del WC2026. Built offline; covers nearly every team out of the box.
+    2. ``live-wc2026-v1``: residuos guardados automáticamente cada vez que
+       se cierra un partido del Mundial (settle_match_versioned). Cada
+       residuo live cuenta TRIPLE (replicado 3 veces) frente al histórico
+       para reflejar que es muestra de la competición activa.
 
-    Returns ``{team_name: {'1X2': logit_shift}}`` ready to feed
-    services.predict_match_markets via the team_corrections kwarg. Negative shift on a
-    team's 1X2 means the model historically over-estimated them.
+    Returns ``{team_name: {'1X2': logit_shift}}``. Negative shift means
+    the model historically over-estimated that team (apply downward).
     """
     from wcpredict.team_corrections import compute_team_market_shifts
     repo = _repo()
@@ -324,6 +387,7 @@ def _load_team_shifts_cached(db_sig: tuple[int, int]) -> dict[str, dict[str, flo
     try:
         with sqlite3.connect(repo.path) as con:
             con.row_factory = sqlite3.Row
+            # Historical pool (one row per query, sourced from historical_matches).
             for r in con.execute(
                 "SELECT br.market, br.selection, br.prob_predicted, br.outcome_observed, "
                 "hm.team_a_name AS team_a, hm.team_b_name AS team_b "
@@ -332,6 +396,22 @@ def _load_team_shifts_cached(db_sig: tuple[int, int]) -> dict[str, dict[str, flo
                 "WHERE br.run_label='historical-pool-v1'"
             ):
                 rows.append(dict(r))
+            # Live WC2026 residuals: weighted 3× by inserting each row thrice.
+            # This is the simplest stable EMA-equivalent: the per-team mean of
+            # residuals stays mathematically the same as a 3:1 weighted blend
+            # between live and historical, without needing a custom weight in
+            # compute_team_market_shifts.
+            for r in con.execute(
+                "SELECT br.market, br.selection, br.prob_predicted, br.outcome_observed, "
+                "ta.name AS team_a, tb.name AS team_b "
+                "FROM backtest_runs br "
+                "JOIN matches m ON m.id=br.match_id "
+                "JOIN teams ta ON ta.id=m.team_a_id "
+                "JOIN teams tb ON tb.id=m.team_b_id "
+                "WHERE br.run_label='live-wc2026-v1'"
+            ):
+                row = dict(r)
+                rows.extend([row, row, row])
     except Exception:
         return {}
     if not rows:
@@ -1247,6 +1327,14 @@ def _match_analysis_bundle_cached(
     from wcpredict.team_volume_markets import derive_xg_factors_from_profile
     from wcpredict.advanced_form import XgFormAdjustment
     deep_obs_for_profile = repo.list_deep_team_metric_observations_before(match.kickoff_utc)
+    # Phase: mark MD3 dead-rubber rows so their weight is cut to 30% in
+    # team_profile. Detects the case where a team was already mathematically
+    # classified (or eliminated) before its MD3 fixture and likely fielded
+    # a rotated squad (Spain 0-0 with subs after sealing 1st place, etc).
+    low_intensity_pairs = _low_intensity_pairs_cached(db_sig)
+    if low_intensity_pairs:
+        from wcpredict.low_intensity import mark_low_intensity_rows
+        deep_obs_for_profile = mark_low_intensity_rows(deep_obs_for_profile, low_intensity_pairs)
     # Opponent strength = (attack + defense) average per team, derived from the
     # Elo-style ratings. Used so metrics produced against strong sides count
     # for more than the same numbers against weak ones.

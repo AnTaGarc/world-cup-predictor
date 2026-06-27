@@ -157,6 +157,9 @@ def roster_overlap_weight(*_args, **_kwargs) -> float:
     return 1.0
 
 
+LOW_INTENSITY_FACTOR = 0.30
+
+
 def compute_match_weight(
     metric: str,
     played_at_utc: datetime,
@@ -165,10 +168,13 @@ def compute_match_weight(
     competition: str = "",
     opponent_strength: float | None = None,
     mean_strength: float = 1.0,
+    low_intensity: bool = False,
 ) -> float:
     """One-stop combined weight for a single (metric, match, team) cell.
 
     Returns 0.0 if the match is in the future relative to ``as_of_utc``.
+    ``low_intensity=True`` (used for MD3 dead-rubber matches with rotated
+    line-ups) reduces the contribution by 70%.
     """
     w_recency = recency_weight(played_at_utc, as_of_utc, family=metric_family(metric))
     if w_recency <= 0:
@@ -176,4 +182,5 @@ def compute_match_weight(
     w_comp = competition_weight(competition, as_of_utc=as_of_utc)
     w_opp = opponent_weight(opponent_strength, mean_strength)
     w_roster = roster_overlap_weight()
-    return w_recency * w_comp * w_opp * w_roster
+    w_intensity = LOW_INTENSITY_FACTOR if low_intensity else 1.0
+    return w_recency * w_comp * w_opp * w_roster * w_intensity

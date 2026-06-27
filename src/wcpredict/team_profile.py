@@ -149,6 +149,7 @@ def _composite_weight(
     opponent_strength: float | None,
     mean_strength: float,
     half_life_override: float | None = None,
+    low_intensity: bool = False,
 ) -> float:
     """Thin wrapper over historical_relevance.compute_match_weight that
     lets callers force a single half-life (used by tests and the legacy
@@ -156,6 +157,7 @@ def _composite_weight(
     # Late import to avoid the circular `team_profile → historical_relevance →
     # team_profile.METRIC_CATALOG` reference loop at module load.
     from wcpredict.historical_relevance import (
+        LOW_INTENSITY_FACTOR,
         compute_match_weight,
         recency_weight as _hr_recency,
         competition_weight as _hr_competition,
@@ -167,14 +169,17 @@ def _composite_weight(
             competition=competition,
             opponent_strength=opponent_strength,
             mean_strength=mean_strength,
+            low_intensity=low_intensity,
         )
     w_recency = _hr_recency(played_at_utc, as_of_utc, half_life_days=half_life_override)
     if w_recency <= 0:
         return 0.0
+    w_intensity = LOW_INTENSITY_FACTOR if low_intensity else 1.0
     return (
         w_recency
         * _hr_competition(competition, as_of_utc=as_of_utc)
         * _hr_opponent(opponent_strength, mean_strength)
+        * w_intensity
     )
 
 
@@ -401,6 +406,7 @@ def build_team_profile(
             opponent_strength=opp_strength,
             mean_strength=mean_strength,
             half_life_override=half_life_days if half_life_days != 540.0 else None,
+            low_intensity=bool(row.get("_low_intensity", False)),
         )
         if w <= 0:
             continue
@@ -499,6 +505,7 @@ def _build_team_profile_from_context(
             opponent_strength=opp_strength,
             mean_strength=mean_strength,
             half_life_override=half_life_days if half_life_days != 540.0 else None,
+            low_intensity=bool(row.get("_low_intensity", False)),
         )
         if w <= 0:
             continue
