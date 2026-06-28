@@ -264,11 +264,19 @@ class AppContractTests(unittest.TestCase):
 
     def test_refresh_button_surfaces_providers_and_invalidates_cache(self):
         source = (Path(__file__).parents[1] / "src" / "wcpredict" / "ui" / "pages.py").read_text(encoding="utf-8")
-        self.assertIn("st.cache_resource.clear()", source)
+        self.assertIn("_invalidate_match_analysis_caches()", source)
         self.assertIn("Llamadas hechas", source)
         self.assertIn("Proveedores OK", source)
         self.assertIn("Faltantes", source)
         self.assertIn("Salida técnica del recolector", source)
+
+    def test_ui_mutations_never_clear_all_streamlit_caches(self):
+        source = (Path(__file__).parents[1] / "src" / "wcpredict" / "ui" / "pages.py").read_text(encoding="utf-8")
+        self.assertNotIn("st.cache_data.clear()", source)
+        self.assertNotIn("st.cache_resource.clear()", source)
+        self.assertIn("def _invalidate_match_analysis_caches", source)
+        self.assertIn("def _invalidate_odds_caches", source)
+        self.assertIn("def _invalidate_player_caches", source)
 
     def test_theme_exposes_full_design_system(self):
         from wcpredict.ui import theme

@@ -1982,6 +1982,29 @@ def _player_match_context_cached(
     )
 
 
+@st.cache_resource(show_spinner=False)
+def _manual_odds_cached(match_id: int, db_sig: tuple[int, int]):
+    return _repo().list_manual_odds(match_id)
+
+
+def _invalidate_match_analysis_caches() -> None:
+    _match_analysis_bundle_cached.clear()
+    _match_volume_context_cached.clear()
+    _match_auxiliary_context_cached.clear()
+    _player_match_context_cached.clear()
+
+
+def _invalidate_odds_caches() -> None:
+    _manual_odds_cached.clear()
+
+
+def _invalidate_player_caches() -> None:
+    _match_analysis_bundle_cached.clear()
+    _match_auxiliary_context_cached.clear()
+    _player_match_context_cached.clear()
+    _player_intelligence_rows_cached.clear()
+
+
 def _render_volume_markets(auxiliary: MatchVolumeBundle | MatchAuxiliaryBundle) -> None:
     st.subheader("Mercados de volumen")
     if auxiliary.volume_market_rows:
@@ -2502,7 +2525,7 @@ def _render_prediction_workspace(
         _render_exact_score_panel(team_a, team_b, predictions)
 
     elif section == "Mercados y EV":
-        saved_odds_for_match = repo.list_manual_odds(match.id)
+        saved_odds_for_match = _manual_odds_cached(match.id, _db_signature())
         auxiliary = _match_auxiliary_context(match)
         ko_prediction = _knockout_prediction_for_match(match, bundle, repo)
         _render_market_visual_panel(
@@ -2527,6 +2550,7 @@ def _render_prediction_workspace(
                 if st.button("Guardar cuotas del CSV", width="stretch"):
                     for row in csv_odds:
                         repo.add_manual_odds(row.match_id, row.market_family.value, row.market_name, row.selection_name, row.line, row.decimal_odds, row.bookmaker, row.captured_at_utc)
+                    _invalidate_odds_caches()
                     st.success(f"Guardadas {len(csv_odds)} cuotas del CSV.")
         odds_frame = pd.DataFrame(localized_default_odds_rows(team_a, team_b))
         editor = st.data_editor(
@@ -2554,6 +2578,7 @@ def _render_prediction_workspace(
             captured = datetime.now(timezone.utc)
             for row in entered:
                 repo.add_manual_odds(match.id, row["market_family"], row["market_name"], row["selection_name"], row["line"], row["decimal_odds"], row["bookmaker"], captured)
+            _invalidate_odds_caches()
             st.success(f"Guardadas {len(entered)} cuotas.")
 
     elif section == "Jugadores":
@@ -2803,7 +2828,7 @@ def _render_prediction_workspace(
                     datetime.now(timezone.utc),
                     intended_match_id=match.id,
                 )
-                st.cache_data.clear(); st.cache_resource.clear()
+                _invalidate_match_analysis_caches()
                 st.success(
                     f"Importados {imported_deep.imported_matches}; sin cambios {imported_deep.unchanged_matches}; "
                     f"observaciones {imported_deep.observations}."
@@ -2863,7 +2888,7 @@ def _render_prediction_workspace(
 
     elif section == "Guardado":
         saved_predictions = repo.list_predictions(match.id)
-        saved_odds = repo.list_manual_odds(match.id)
+        saved_odds = _manual_odds_cached(match.id, _db_signature())
         imports = repo.list_import_runs(match.id)
         if imports:
             st.subheader("Historial de datos")
@@ -2973,7 +2998,7 @@ def render_prediction_lab() -> None:
             cached = result.bundle
             # New bundle data → invalidate cached analysis so the prediction
             # actually reflects the freshly imported evidence.
-            st.cache_data.clear(); st.cache_resource.clear()
+            _invalidate_match_analysis_caches()
         status_tone = {
             "complete": ("success", "Datos del partido completos."),
             "partial": ("warning", "Datos parciales: el modelo usa lo disponible y marca lo que falta."),
@@ -3710,7 +3735,7 @@ def render_player_intelligence() -> None:
                     "Proveedor con error: " + ", ".join(refresh_result.failed)
                     + ". Se conservan los datos cacheados."
                 )
-            st.cache_data.clear(); st.cache_resource.clear()
+            _invalidate_player_caches()
             st.rerun()
     minimum_minutes = st.slider(
         "Minutos mínimos (solo afecta a Impacto)", 0, 900, 60, 30,
