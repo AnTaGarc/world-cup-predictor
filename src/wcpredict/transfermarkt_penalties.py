@@ -311,7 +311,9 @@ def parse_penalty_attempts(
 
 def _row_outcome(cells: list[str]) -> str | None:
     text = " ".join(cells).lower()
-    if "missed" in text or "saved" in text or "off target" in text or "woodwork" in text:
+    if "saved" in text:
+        return "saved"
+    if "missed" in text or "off target" in text or "woodwork" in text:
         return "missed"
     if "scored" in text or "goal" in text:
         return "scored"

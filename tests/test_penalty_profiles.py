@@ -34,12 +34,34 @@ class PenaltyProfileTests(unittest.TestCase):
 
     def test_goalkeeper_penalty_history_dominates_general_rate_only_with_sample(self):
         keeper = {"player_name": "Keeper", "save_percentage": 80.0}
-        one = [{"goalkeeper_name": "Keeper", "outcome": "missed"}]
-        ten = [{"goalkeeper_name": "Keeper", "outcome": "missed"} for _ in range(10)]
+        one = [{"goalkeeper_name": "Keeper", "outcome": "saved"}]
+        ten = [{"goalkeeper_name": "Keeper", "outcome": "saved"} for _ in range(10)]
         sparse = build_goalkeeper_profile(keeper, one, deep_save_rate=0.80)
         sampled = build_goalkeeper_profile(keeper, ten, deep_save_rate=0.80)
         self.assertLess(abs(sparse.penalty_save_rate - GLOBAL_PENALTY_SAVE), 0.10)
         self.assertGreater(sampled.penalty_history_weight, sparse.penalty_history_weight)
+
+    def test_goalkeeper_does_not_get_credit_for_off_target_attempt(self):
+        keeper = {"player_name": "Keeper"}
+        attempts = [
+            {"goalkeeper_name": "Keeper", "outcome": "saved"},
+            {"goalkeeper_name": "Keeper", "outcome": "missed"},
+        ]
+        profile = build_goalkeeper_profile(keeper, attempts)
+        expected = (GLOBAL_PENALTY_SAVE * 12.0 + 1.0) / 14.0
+        self.assertEqual(2, profile.faced_penalties)
+        self.assertAlmostEqual(expected, profile.penalty_save_rate)
+
+    def test_goalkeeper_recovers_saved_outcome_from_legacy_raw_json(self):
+        keeper = {"player_name": "Keeper"}
+        attempts = [{
+            "goalkeeper_name": "Keeper",
+            "outcome": "missed",
+            "raw_json": '{"cells": ["Saved", "Keeper"]}',
+        }]
+        profile = build_goalkeeper_profile(keeper, attempts)
+        expected = (GLOBAL_PENALTY_SAVE * 12.0 + 1.0) / 13.0
+        self.assertAlmostEqual(expected, profile.penalty_save_rate)
 
     def test_profiles_only_consume_attempts_for_the_matching_player(self):
         attempts = [

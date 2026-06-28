@@ -73,6 +73,25 @@ class TransfermarktPenaltyTests(unittest.TestCase):
         self.assertEqual("World Cup", attempts[0]["competition"])
         self.assertEqual("Keeper One", attempts[0]["goalkeeper_name"])
 
+    def test_parser_keeps_saved_separate_from_off_target(self):
+        html = """
+        <table>
+          <tr><th>Date</th><th>Result</th><th>Goalkeeper</th></tr>
+          <tr><td>Jun 20, 2026</td><td>Saved</td><td>Keeper One</td></tr>
+          <tr><td>Jun 21, 2026</td><td>Off target</td><td>Keeper Two</td></tr>
+          <tr><td>Jun 22, 2026</td><td>Woodwork</td><td>Keeper Three</td></tr>
+        </table>
+        """
+        attempts = parse_penalty_attempts(
+            html,
+            player_name="Taker",
+            team_name="Test",
+            transfermarkt_player_id="1",
+            source_url="https://example.test",
+            fetched_at_utc=datetime(2026, 6, 25, tzinfo=timezone.utc),
+        )
+        self.assertEqual(["saved", "missed", "missed"], [row["outcome"] for row in attempts])
+
     def test_repository_saves_penalty_attempts_idempotently(self):
         with tempfile.TemporaryDirectory() as directory:
             repo = Repository(Path(directory) / "app.sqlite")

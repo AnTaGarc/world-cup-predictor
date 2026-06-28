@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import date, datetime
+import json
 import math
 import re
 import unicodedata
@@ -65,6 +66,27 @@ def _confidence(effective_attempts: float) -> str:
     return "low"
 
 
+def _outcome(row: dict) -> str:
+    return str(row.get("outcome") or "").casefold()
+
+
+def _is_goalkeeper_save(row: dict) -> bool:
+    outcome = _outcome(row)
+    if outcome == "saved":
+        return True
+    if outcome != "missed":
+        return False
+    raw = row.get("raw")
+    if raw is None and row.get("raw_json"):
+        try:
+            raw = json.loads(str(row["raw_json"]))
+        except (TypeError, ValueError):
+            raw = None
+    cells = raw.get("cells", []) if isinstance(raw, dict) else []
+    text = " ".join(str(cell) for cell in cells).casefold()
+    return "saved" in text
+
+
 def build_player_profile(
     player_name: str,
     position: str | None,
@@ -75,7 +97,7 @@ def build_player_profile(
     relevant = [
         row for row in attempts
         if _name_key(row.get("player_name")) == player_key
-        and str(row.get("outcome") or "").casefold() in {"scored", "missed"}
+        and _outcome(row) in {"scored", "saved", "missed"}
     ]
     weighted_successes = 0.0
     weighted_failures = 0.0
@@ -87,7 +109,7 @@ def build_player_profile(
         attempted_on = _as_date(row.get("attempted_on"))
         age_days = max(0, (as_of - attempted_on).days) if attempted_on else 0
         weight = phase_weight * (0.5 ** (age_days / RECENCY_HALF_LIFE_DAYS))
-        if str(row.get("outcome")).casefold() == "scored":
+        if _outcome(row) == "scored":
             weighted_successes += weight
         else:
             weighted_failures += weight
@@ -141,9 +163,9 @@ def build_goalkeeper_profile(
     relevant = [
         row for row in attempts
         if _name_key(row.get("goalkeeper_name")) == player_key
-        and str(row.get("outcome") or "").casefold() in {"scored", "missed"}
+        and _outcome(row) in {"scored", "saved", "missed"}
     ]
-    saves = sum(str(row.get("outcome")).casefold() == "missed" for row in relevant)
+    saves = sum(_is_goalkeeper_save(row) for row in relevant)
     faced = len(relevant)
     history_weight = faced / (PRIOR_ATTEMPTS + faced)
     penalty_rate = (GLOBAL_PENALTY_SAVE * PRIOR_ATTEMPTS + saves) / (PRIOR_ATTEMPTS + faced)

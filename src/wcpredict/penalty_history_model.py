@@ -91,7 +91,7 @@ def build_penalty_team_profile(team_name: str, attempts: list[dict]) -> PenaltyT
     team_rows = _team_rows(team_name, attempts)
     valid_rows = [
         row for row in team_rows
-        if str(row.get("outcome") or "").casefold() in {"scored", "missed"}
+        if str(row.get("outcome") or "").casefold() in {"scored", "saved", "missed"}
     ]
     scored = sum(str(row.get("outcome") or "").casefold() == "scored" for row in valid_rows)
     total = len(valid_rows)
