@@ -170,21 +170,65 @@ After confirmed lineups, starter and bench status replaces the uncertain start c
 
 The output is a weight for ending extra time on the pitch. These independent weights are not treated as a valid lineup by themselves.
 
-### 5. Constrained end-of-extra-time lineup sampler
+### 5. Constrained substitution-path simulator
 
-Each simulation samples exactly one goalkeeper and ten outfield players from the available squad, weighted by the minute-120 profiles. It must:
+Each Monte Carlo scenario simulates the path from the probable starting lineup to the end of extra time instead of sampling the minute-120 lineup directly.
 
-- exclude confirmed unavailable players;
-- allow zero-minute squad members with a conservative prior;
-- strongly favor a confirmed starting goalkeeper while retaining a small replacement probability;
-- preserve at least a minimally plausible positional composition;
-- use a deterministic seed derived from the match and model version.
+#### Starting state
 
-The sampler does not attempt to recreate the exact substitution timeline. It models the only state needed by the shootout: who is eligible at the end of extra time.
+The scenario begins with exactly one goalkeeper and ten outfield players in a plausible formation. Confirmed lineups are used when available; otherwise players are sampled from the start-probability model. Confirmed unavailable players are excluded, while zero-minute registered players remain possible with conservative priors.
+
+#### Substitution windows
+
+The default pre-match windows are:
+
+- minutes 55-65;
+- minutes 65-75;
+- minutes 75-90;
+- minutes 90-105;
+- minutes 105-120.
+
+At each window, the model samples whether the team makes zero, one, or multiple changes subject to the competition's substitution and opportunity limits. The rule configuration is explicit rather than embedded in model code. It defaults to five substitutions plus one additional substitution in extra time, matching the recent FIFA World Cup structure, and can be changed without retraining the model.
+
+Official rule references:
+
+- FIFA substitution history: `https://www.fifa.com/en/tournaments/mens/worldcup/articles/substitutions-substitutes-rule-changes-history`
+- IFAB Law 10 eligibility at the end of extra time: `https://www.theifab.com/laws/latest/determining-the-outcome-of-a-match/`
+
+Only players on the field or temporarily off for a valid reason at the final whistle are eligible for the shootout. A requested substitution that did not occur before the end of extra time cannot introduce a new taker. The exceptional replacement of a goalkeeper unable to continue is handled separately.
+
+#### Logical player-for-player changes
+
+Player positions are normalized into goalkeeper, centre-back, full-back/wing-back, defensive/central/attacking midfield, winger, and striker groups when source detail permits. Coarser `GK/DF/MF/FW` values use compatible parent groups.
+
+Most changes are role-preserving:
+
+- striker for striker;
+- winger for winger or attacking midfielder;
+- central midfielder for a compatible midfielder;
+- full-back for full-back/wing-back;
+- centre-back for centre-back;
+- goalkeeper only for injury or a very low-probability exceptional tactical scenario.
+
+Adjacent-role tactical changes are permitted when the simulated match state supports them:
+
+- trailing teams increase attacking substitutions and may replace a defender or defensive midfielder with an attacker;
+- leading teams increase defensive substitutions and may replace an attacker with a midfielder or defender;
+- level teams near the end of extra time favor role-preserving fresh legs and may modestly favor a known penalty taker, without guaranteeing that the specialist enters.
+
+Outgoing-player weights use expected minutes, start history, position, fatigue, card exposure, and forced-substitution risk. Incoming-player weights use bench status, appearance history, positional compatibility, freshness, and penalty-taker propensity. No player who has already left may return.
+
+#### Match-state path
+
+The score state at each window is sampled from regulation and extra-time goal intensities. Scenarios that reach the shootout are conditioned on finishing level after 120 minutes, but their intermediate states may include either team leading before a later equalizer. This permits tactical changes that are consistent with the path rather than assuming the match was level throughout.
+
+#### End state
+
+The final state contains the exact eleven eligible players at minute 120, substitutions used, role changes, and relevant scenario diagnostics. Dismissals are outside the first implementation because the current data does not support a sufficiently reliable player-level red-card path model.
 
 ### 6. Taker selection and shootout simulation
 
-For each sampled eleven:
+For each simulated substitution path that finishes level:
 
 1. Select the first five takers without replacement using taker-propensity weights.
 2. Order them using propensity plus a small deterministic tie-breaker.
@@ -253,7 +297,7 @@ The model is pre-match and deterministic. Cache the penalty match context by:
 
 Monte Carlo runs only on a cold key. Changing analysis views, odds, or unrelated player markets retrieves the cached result. Data refresh invalidates only penalty and affected match-analysis contexts.
 
-The initial simulation target is 10,000 shootouts per match. Tests use a smaller fixed count. The production count may be adjusted only after measuring runtime and convergence.
+The initial simulation target is 25,000 complete paths per match, configurable between 20,000 and 50,000 after measuring runtime and convergence. Tests use a smaller fixed count.
 
 ## Error Handling and Honest Fallbacks
 
@@ -274,6 +318,12 @@ Tests must prove:
 - existing Transfermarkt IDs in `penalty_attempts` are reused;
 - ambiguous identities are not auto-assigned;
 - substitutes can appear in sampled minute-120 lineups;
+- confirmed starters can leave before penalties and cannot return;
+- role-preserving substitutions dominate neutral match states;
+- trailing teams produce more attacking role changes than leading teams;
+- the configured substitution maximum and opportunity limits are never exceeded;
+- the extra-time substitution is only available when extra time is played;
+- intermediate leads and later equalisers can still produce a shootout path;
 - every sampled lineup has exactly one goalkeeper and ten outfield players;
 - unavailable players never appear;
 - a strong historical taker is selected more often but small samples remain shrunk;
@@ -290,6 +340,8 @@ Tests must prove:
 ## Out of Scope
 
 - Live in-play substitution/event ingestion.
+- Claiming that an estimated substitution path is an observed coaching decision.
+- Player-dismissal paths and the associated equalisation-of-numbers procedure.
 - Betting placement or bookmaker-account integration.
 - Treating general save percentage as direct penalty save percentage.
 - Claiming exact substitution sequences before kickoff.
