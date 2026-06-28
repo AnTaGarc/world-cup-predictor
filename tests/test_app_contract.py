@@ -206,8 +206,8 @@ class AppContractTests(unittest.TestCase):
     def test_knockout_prediction_header_prioritizes_advancement(self):
         source = (Path(__file__).parents[1] / "src" / "wcpredict" / "ui" / "pages.py").read_text(encoding="utf-8")
         self.assertIn("knockout_prediction = _knockout_prediction_for_match(match, bundle, repo)", source)
-        self.assertIn('st.subheader("Probabilidad de clasificación")', source)
-        self.assertIn('st.metric("Clasifica"', source)
+        self.assertIn("knockout_advance_html(", source)
+        self.assertIn('meta_cols[0].metric("Clasifica"', source)
         self.assertIn('st.subheader("Probabilidad 1X2")', source)
         self.assertIn('if is_knockout:', source)
 
@@ -244,14 +244,17 @@ class AppContractTests(unittest.TestCase):
             self.assertIn(selector, theme.CSS)
 
         source = (Path(__file__).parents[1] / "src" / "wcpredict" / "ui" / "pages.py").read_text(encoding="utf-8")
-        panel = source[source.index("def _render_knockout_panel"):source.index("def _render_knockout_advance_section")]
-        self.assertIn("knockout_badge_html(", panel)
-        self.assertIn("knockout_advance_html(", panel)
-        self.assertIn("knockout_via_table_html(", panel)
-        self.assertIn("knockout_section_head(", panel)
-        self.assertIn('title="Contexto de penaltis"', panel)
-        self.assertNotIn("st.subheader(", panel)
-        self.assertNotIn("st.dataframe(\n        pd.DataFrame(method_rows)", panel)
+        lab = source[source.index("def render_prediction_lab"):source.index("def _render_global_bias_panel")]
+        knockout_block = lab[lab.index("if is_knockout:"):lab.index("    else:", lab.index("if is_knockout:"))]
+        self.assertIn("knockout_badge_html(", knockout_block)
+        self.assertIn("knockout_advance_html(", knockout_block)
+        self.assertIn('title="Contexto de penaltis"', knockout_block)
+        self.assertIn(
+            "cond_home_pen=knockout_prediction.cond_home_wins_penalties_given_draw_after_et",
+            knockout_block,
+        )
+        self.assertNotIn("cond_home_pen=0.5", knockout_block)
+        self.assertNotIn("st.subheader(", knockout_block)
 
     def test_volume_markets_render_without_manual_button(self):
         source = (Path(__file__).parents[1] / "src" / "wcpredict" / "ui" / "pages.py").read_text(encoding="utf-8")
