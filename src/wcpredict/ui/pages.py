@@ -2239,6 +2239,34 @@ _BRACKET_STAGE_TO_ROUND = {
     "Third-place play-off": "third_place",
 }
 
+# Positional order of slots within each stage, matching the official FIFA 2026
+# bracket tree. The CSV defines slot_ids by KICKOFF order, not by bracket
+# position, so rendering by slot_id (M73, M74, M75…) makes the CSS connectors
+# pair the wrong matches visually (e.g. Argentina M86 next to M85 instead of
+# M88, even though data has M95 = W:M86 vs W:M88). Sorting by this list makes
+# the visual connectors line up with the actual pairings:
+#
+#   R32  pair 0 → M89 (W74-W77) · pair 1 → M90 (W73-W75) · pair 2 → M93 …
+#   R16  pair 0 → M97 (W89-W90) · pair 1 → M98 (W93-W94) · …
+#   QF   pair 0 → SF1 (W97-W98) · pair 1 → SF2 (W99-W100)
+_BRACKET_POSITION_ORDER = {
+    "Round of 32": [
+        "M74", "M77",  # → M89 → M97 (top half / top quadrant)
+        "M73", "M75",  # → M90 ↗
+        "M83", "M84",  # → M93 → M98 (bottom half / upper)
+        "M81", "M82",  # → M94 ↗
+        "M76", "M78",  # → M91 → M99 (top half / lower)
+        "M79", "M80",  # → M92 ↗
+        "M86", "M88",  # → M95 → M100 (bottom half / bottom)
+        "M85", "M87",  # → M96 ↗
+    ],
+    "Round of 16":   ["M89", "M90", "M93", "M94", "M91", "M92", "M95", "M96"],
+    "Quarter-final": ["M97", "M98", "M99", "M100"],
+    "Semi-final":    ["SF1", "SF2"],
+    "Final":         ["F"],
+    "Third-place play-off": ["3RD"],
+}
+
 _MONTH_ES_SHORT = ("ene", "feb", "mar", "abr", "may", "jun",
                    "jul", "ago", "sep", "oct", "nov", "dic")
 
@@ -2269,6 +2297,23 @@ def _render_bracket_section(repo: Repository) -> None:
     if not slots:
         return
     st.subheader("Bracket eliminatorio")
+
+    # Sort by bracket position (not slot_id) so the CSS connectors visually
+    # match the actual pairings — see _BRACKET_POSITION_ORDER for the why.
+    def _position_key(slot: dict) -> tuple[int, int]:
+        stage = slot.get("stage", "")
+        order_list = _BRACKET_POSITION_ORDER.get(stage, [])
+        slot_id = slot.get("slot_id", "")
+        try:
+            pos = order_list.index(slot_id)
+        except ValueError:
+            pos = len(order_list)
+        # Stage order: R32 → R16 → QF → SF → Final, third-place stays last.
+        stage_rank = list(_BRACKET_STAGE_TO_ROUND.keys()).index(stage) \
+            if stage in _BRACKET_STAGE_TO_ROUND else 99
+        return (stage_rank, pos)
+
+    slots = sorted(slots, key=_position_key)
 
     rendered_slots: list[dict] = []
     for slot in slots:
