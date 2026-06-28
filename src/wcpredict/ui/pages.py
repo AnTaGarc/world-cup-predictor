@@ -64,6 +64,7 @@ from wcpredict.squad_context import apply_squad_context
 from wcpredict.names import canonical_team_name, same_team
 from wcpredict.deep_match_import import load_deep_match_file
 from wcpredict.ui.postmatch_capture import render_capture_review
+from wcpredict.ui.bracket import render_bracket
 from wcpredict.ui.crests import crest_html, team_with_crest_html
 from wcpredict.ui.theme import (
     callout,
@@ -2229,54 +2230,37 @@ def render_dashboard() -> None:
     _render_bracket_section(repo)
 
 
-BRACKET_STAGE_THEME = {
-    "Round of 32":          {"label": "R32", "tone": "blue",   "title": "ROUND OF 32"},
-    "Round of 16":          {"label": "R16", "tone": "teal",   "title": "ROUND OF 16"},
-    "Quarter-final":        {"label": "QF",  "tone": "green",  "title": "QUARTER-FINALS"},
-    "Semi-final":           {"label": "SF",  "tone": "orange", "title": "SEMI-FINALS"},
-    "Final":                {"label": "F",   "tone": "gold",   "title": "FINAL"},
-    "Third-place play-off": {"label": "3rd", "tone": "grey",   "title": "3RD PLACE"},
+_BRACKET_STAGE_TO_ROUND = {
+    "Round of 32":          "round_of_32",
+    "Round of 16":          "round_of_16",
+    "Quarter-final":        "quarter",
+    "Semi-final":           "semi",
+    "Final":                "final",
+    "Third-place play-off": "third_place",
 }
-BRACKET_ORDER = ("Round of 32", "Round of 16", "Quarter-final",
-                 "Semi-final", "Third-place play-off", "Final")
+
+_MONTH_ES_SHORT = ("ene", "feb", "mar", "abr", "may", "jun",
+                   "jul", "ago", "sep", "oct", "nov", "dic")
 
 
-def _bracket_card_html(slot: dict, theme: dict) -> str:
-    """Tournament-style card: coloured stripe header + two team rows + VS."""
-    kickoff_date = _display_time(slot["kickoff_utc"], "%Y-%m-%d")
-    venue = slot.get("venue") or ""
-    venue_html = f"<span class='bk-venue'>📍 {venue}</span>" if venue else ""
-    match_id = slot.get("match_id")
-    href = f"?page=lab&match_id={int(match_id)}" if match_id else ""
-    open_tag = f"<a class='bk-card-link' href='{href}'>" if href else ""
-    close_tag = "</a>" if href else ""
-
-    def team_cell(name: str, pending: bool) -> str:
-        if pending:
-            return (
-                f"<div class='bk-team bk-pending'>"
-                f"<span class='bk-flag-placeholder'>?</span>"
-                f"<span class='bk-name'>{name}</span></div>"
-            )
-        return f"<div class='bk-team'>{team_with_crest_html(name, size=20)}</div>"
-
-    return (
-        f"{open_tag}<div class='bk-card bk-{theme['tone']}'>"
-        f"<div class='bk-card-head'>"
-        f"<span class='bk-slot'>{slot['slot_id']}</span>"
-        f"<span class='bk-date'>{kickoff_date}</span>"
-        f"</div>"
-        f"<div class='bk-card-meta'>{venue_html}</div>"
-        f"{team_cell(slot['home'], slot['home_pending'])}"
-        f"<div class='bk-vs'>VS</div>"
-        f"{team_cell(slot['away'], slot['away_pending'])}"
-        f"</div>{close_tag}"
-    )
+def _bracket_date_label(kickoff_utc: str | None) -> str:
+    """Compact Spanish date label, e.g. '28 jun'."""
+    if not kickoff_utc:
+        return ""
+    iso = _display_time(kickoff_utc, "%Y-%m-%d")
+    try:
+        _, month_str, day_str = iso.split("-")
+        return f"{int(day_str)} {_MONTH_ES_SHORT[int(month_str) - 1]}"
+    except (ValueError, IndexError):
+        return iso
 
 
 def _render_bracket_section(repo: Repository) -> None:
-    """Tournament-style bracket: cards in stage columns, colour-coded per
-    round, with crest + name + VS. Pending slots show the source token."""
+    """Tournament-style bracket: cards connected by CSS gutters, colour-coded
+    per round, with crest + name + VS. Pending slots show the source token.
+
+    Horizontal scroll is preserved on every viewport (the inner container has
+    a 1260px minimum width and ``overflow-x: auto`` on the outer wrapper)."""
     try:
         resolve_knockout_bracket(repo)
     except Exception:
@@ -2285,27 +2269,38 @@ def _render_bracket_section(repo: Repository) -> None:
     if not slots:
         return
     st.subheader("Bracket eliminatorio")
-    by_stage: dict[str, list[dict]] = {}
-    for slot in slots:
-        by_stage.setdefault(slot["stage"], []).append(slot)
 
-    columns_html = []
-    for stage in BRACKET_ORDER:
-        items = by_stage.get(stage, [])
-        if not items:
+    rendered_slots: list[dict] = []
+    for slot in slots:
+        stage = slot.get("stage", "")
+        round_key = _BRACKET_STAGE_TO_ROUND.get(stage)
+        if round_key is None:
             continue
-        theme = BRACKET_STAGE_THEME[stage]
-        cards = "".join(_bracket_card_html(slot, theme) for slot in items)
-        columns_html.append(
-            f"<div class='bk-column bk-col-{theme['tone']}'>"
-            f"<div class='bk-col-title'>{theme['title']}</div>"
-            f"{cards}"
-            "</div>"
-        )
-    st.markdown(
-        f"<div class='bk-board'>{''.join(columns_html)}</div>",
-        unsafe_allow_html=True,
-    )
+
+        def _team(name: str, pending: bool) -> dict:
+            name = name or ""
+            return {
+                "name": name,
+                "crest_html": "" if pending else crest_html(name, size=24),
+                "is_placeholder": bool(pending),
+            }
+
+        match_id = slot.get("match_id")
+        href = f"?page=lab&match_id={int(match_id)}" if match_id else None
+        rendered_slots.append({
+            "match_id": slot.get("slot_id", ""),
+            "round": round_key,
+            "date": _bracket_date_label(slot.get("kickoff_utc")),
+            "stadium": slot.get("venue") or "",
+            "home": _team(slot.get("home", ""), bool(slot.get("home_pending"))),
+            "away": _team(slot.get("away", ""), bool(slot.get("away_pending"))),
+            "status": "pending",
+            "score": None,
+            "advances_to": None,
+            "href": href,
+        })
+
+    st.markdown(render_bracket(rendered_slots), unsafe_allow_html=True)
 
 
 @st.fragment

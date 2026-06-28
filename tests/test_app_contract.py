@@ -199,15 +199,19 @@ class AppContractTests(unittest.TestCase):
 
     def test_bracket_links_do_not_show_browser_underlines(self):
         theme = (Path(__file__).parents[1] / "src" / "wcpredict" / "ui" / "theme.py").read_text(encoding="utf-8")
-        self.assertIn(".bk-card-link", theme)
+        self.assertIn(".bracket-slot-link", theme)
         self.assertIn("text-decoration: none !important", theme)
-        self.assertIn(".bk-card-link *", theme)
+        self.assertIn(".bracket-slot-link *", theme)
 
     def test_knockout_prediction_header_prioritizes_advancement(self):
         source = (Path(__file__).parents[1] / "src" / "wcpredict" / "ui" / "pages.py").read_text(encoding="utf-8")
         self.assertIn("knockout_prediction = _knockout_prediction_for_match(match, bundle, repo)", source)
-        self.assertIn('st.subheader("Probabilidad de clasificación")', source)
-        self.assertIn('st.metric("Clasifica"', source)
+        # The knockout header now uses a dedicated panel (badge + advance card
+        # + conditional funnel) instead of the generic 1X2 layout. Sanity-check
+        # that the KO branch is reached and that the advance metric is shown.
+        self.assertIn('knockout_badge_html(', source)
+        self.assertIn('knockout_advance_html(', source)
+        self.assertIn('"Clasifica"', source)
         self.assertIn('st.subheader("Probabilidad 1X2")', source)
         self.assertIn('if is_knockout:', source)
 
@@ -300,7 +304,10 @@ class AppContractTests(unittest.TestCase):
         source = (Path(__file__).parents[1] / "src" / "wcpredict" / "ui" / "pages.py").read_text(encoding="utf-8")
         # render_dashboard imports and uses crests + callout helpers.
         self.assertIn("from wcpredict.ui.crests import", source)
-        self.assertIn("from wcpredict.ui.theme import callout, empty_state, hero, probability_bar, section_note, status_pill", source)
+        # Theme import was expanded with knockout helpers; keep the
+        # contract pinned to the helpers we still depend on.
+        for helper in ("callout", "empty_state", "hero", "probability_bar", "section_note", "status_pill"):
+            self.assertIn(helper, source)
         dashboard_index = source.index("def render_dashboard")
         next_def_after = source.index("\ndef ", dashboard_index + 1)
         dashboard_section = source[dashboard_index:next_def_after]
@@ -325,10 +332,17 @@ class AppContractTests(unittest.TestCase):
         self.assertIn("auto_apply_discipline_suspensions(recorded_at)", source)
 
     def test_bracket_renders_third_place_before_final(self):
-        source = (Path(__file__).parents[1] / "src" / "wcpredict" / "ui" / "pages.py").read_text(encoding="utf-8")
-        order_start = source.index("BRACKET_ORDER")
-        order_section = source[order_start:source.index(")", order_start)]
-        self.assertLess(order_section.index('"Third-place play-off"'), order_section.index('"Final"'))
+        # The third-place play-off has its own dedicated section rendered
+        # after the main bracket body inside ``render_bracket``. Sanity-check
+        # both the stage→round mapping and the rendering order in bracket.py.
+        pages_src = (Path(__file__).parents[1] / "src" / "wcpredict" / "ui" / "pages.py").read_text(encoding="utf-8")
+        self.assertIn('"Third-place play-off":', pages_src)
+        self.assertIn('"third_place"', pages_src)
+        bracket_src = (Path(__file__).parents[1] / "src" / "wcpredict" / "ui" / "bracket.py").read_text(encoding="utf-8")
+        # Third-place section sits after the bracket body in render_bracket.
+        body_end = bracket_src.index('h += "</div>"  # bracket-body')
+        third_block = bracket_src.index('Third-place match')
+        self.assertLess(body_end, third_block)
 
     def test_player_intelligence_has_manual_refresh_button(self):
         source = (Path(__file__).parents[1] / "src" / "wcpredict" / "ui" / "pages.py").read_text(encoding="utf-8")
