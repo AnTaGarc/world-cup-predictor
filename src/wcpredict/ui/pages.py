@@ -15,7 +15,6 @@ import streamlit as st
 from wcpredict.backtesting import brier_score, calibration_bands, summarize_by_market_family, calibration_drift
 from wcpredict.collector_store import CollectorEventBundle, CollectorStore
 from wcpredict.group_context import draw_incentive_for_match
-from wcpredict.market_catalog import default_market_rows, normalize_market_rows
 from wcpredict.models import MarketFamily
 from wcpredict.odds import compare_odds_to_probability
 from wcpredict.odds import parse_odds_csv
@@ -68,9 +67,6 @@ from wcpredict.ui.postmatch_capture import render_capture_review
 from wcpredict.ui.crests import crest_html, team_with_crest_html
 from wcpredict.ui.theme import callout, empty_state, hero, probability_bar, section_note, status_pill
 from wcpredict.ui.translations import (
-    canonical_market,
-    canonical_market_family,
-    canonical_selection,
     localize_cost_tier,
     localize_market,
     localize_market_family,
@@ -90,6 +86,10 @@ from wcpredict.ui.view_models import (
     postmatch_queue_message,
     prediction_rows,
     probability_chart_rows,
+)
+from wcpredict.ui.interaction_models import (
+    evaluate_odds_rows,
+    localized_default_odds_rows,
 )
 from wcpredict.volume_markets import estimate_total_market
 
@@ -2708,10 +2708,7 @@ def render_prediction_lab() -> None:
                     for row in csv_odds:
                         repo.add_manual_odds(row.match_id, row.market_family.value, row.market_name, row.selection_name, row.line, row.decimal_odds, row.bookmaker, row.captured_at_utc)
                     st.success(f"Guardadas {len(csv_odds)} cuotas del CSV.")
-        odds_frame = pd.DataFrame(default_market_rows(team_a, team_b))
-        odds_frame["market_family"] = odds_frame["market_family"].map(localize_market_family)
-        odds_frame["market_name"] = odds_frame["market_name"].map(localize_market)
-        odds_frame["selection_name"] = odds_frame["selection_name"].map(localize_selection)
+        odds_frame = pd.DataFrame(localized_default_odds_rows(team_a, team_b))
         editor = st.data_editor(
             odds_frame,
             key=f"odds_{match.id}", width="stretch", num_rows="dynamic", hide_index=True,
@@ -2724,33 +2721,9 @@ def render_prediction_lab() -> None:
                 "bookmaker": st.column_config.TextColumn("Casa"),
             },
         )
-        edited_odds = editor.to_dict("records")
-        for row in edited_odds:
-            row["market_family"] = canonical_market_family(str(row.get("market_family") or ""))
-            row["market_name"] = canonical_market(str(row.get("market_name") or ""))
-            row["selection_name"] = canonical_selection(str(row.get("selection_name") or ""))
-        entered = normalize_market_rows(edited_odds)
-        prediction_index = _prediction_index(predictions)
-        comparisons = []
-        for row in entered:
-            model = prediction_index.get((row["market_name"], row["selection_name"]))
-            if model:
-                push_probability = 0.0
-                if model.market_name == "Draw No Bet":
-                    draw_model = prediction_index.get(("1X2", "Draw"))
-                    push_probability = draw_model.probability if draw_model else 0.0
-                    model_probability = model.probability * max(0.0, 1.0 - push_probability)
-                else:
-                    model_probability = model.probability
-                comparisons.append(compare_odds_to_probability(
-                    model_probability,
-                    row["decimal_odds"],
-                    model.market_family,
-                    model.market_name,
-                    model.selection_name,
-                    model.confidence.value,
-                    push_probability=push_probability,
-                ))
+        evaluation = evaluate_odds_rows(predictions, editor.to_dict("records"))
+        entered = evaluation.entered
+        comparisons = evaluation.comparisons
         if comparisons:
             ranked = sorted(ev_rows(comparisons), key=lambda row: row["EV"], reverse=True)
             st.subheader("Ranking EV")

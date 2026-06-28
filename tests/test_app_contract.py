@@ -97,7 +97,7 @@ class AppContractTests(unittest.TestCase):
         self.assertIn("@st.cache_resource(show_spinner=False)\ndef _repo", source)
         self.assertIn("@st.cache_resource(ttl=900, show_spinner=False)\ndef _refresh_current_world_cup_banks_cached", source)
         self.assertIn("_load_outcome_model_cached", source)
-        self.assertIn("prediction_index = _prediction_index(predictions)", source)
+        self.assertIn("evaluation = evaluate_odds_rows(predictions", source)
         self.assertIn("player_ev_comparison = compare_odds_to_probability", source)
         self.assertNotIn('st.button("Calcular probabilidad y valor"', source)
 
