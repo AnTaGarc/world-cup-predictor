@@ -822,24 +822,25 @@ div[data-testid="stDataEditor"] tbody tr:hover {
   background: rgba(255, 255, 255, 0.12);
 }
 .ko-stacked-fill-home {
-  background: linear-gradient(90deg, #4d8eea, #1769e0);
+  background: linear-gradient(90deg, #6ee7b7, #34d399);
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 13px;
   font-weight: 800;
-  color: #fff;
+  color: #022c1f;
   font-variant-numeric: tabular-nums;
   animation: ko-bar-grow 0.6s ease-out;
 }
 .ko-stacked-fill-away {
   flex: 1;
+  background: linear-gradient(90deg, #fdba74, #fb923c);
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 13px;
-  font-weight: 700;
-  color: rgba(255, 255, 255, 0.70);
+  font-weight: 800;
+  color: #431407;
   font-variant-numeric: tabular-nums;
 }
 
