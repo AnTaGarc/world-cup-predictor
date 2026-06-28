@@ -65,7 +65,16 @@ from wcpredict.names import canonical_team_name, same_team
 from wcpredict.deep_match_import import load_deep_match_file
 from wcpredict.ui.postmatch_capture import render_capture_review
 from wcpredict.ui.crests import crest_html, team_with_crest_html
-from wcpredict.ui.theme import callout, empty_state, hero, probability_bar, section_note, status_pill
+from wcpredict.ui.theme import (
+    callout,
+    empty_state,
+    hero,
+    knockout_advance_html,
+    knockout_badge_html,
+    probability_bar,
+    section_note,
+    status_pill,
+)
 from wcpredict.ui.translations import (
     localize_cost_tier,
     localize_market,
@@ -860,139 +869,16 @@ def _render_knockout_panel(
     primary,
     expected_xg,
 ) -> bool:
-    """Knockout-stage prediction panel with four stacked blocks.
+    """No-op for knockout matches: the full KO identity (badge + advance card
+    + conditional funnel + xG por fase + penalty narrative) is rendered
+    upstream in ``render_prediction_lab`` to keep the layout cohesive.
 
-    Returns True when the match is a knockout fixture and the panel was
-    rendered; False otherwise so the caller falls back to the standard
-    group-stage 1X2 layout.
-
-    Bloques:
-      1. PRINCIPAL  — quién avanza + vía (90' / ET / penaltis) + próximo cruce
-      2. RESULTADO AL 90' — 1X2 estándar + marcador modo + xG
-      3. PRÓRROGA Y PENALTIS — xG adicional + tabla de vías + datos de portería
-      4. (los mercados de córners/tarjetas/etc se mantienen vía el flujo
-         normal después de este panel)
+    Returns True when the match is a knockout fixture (signalling the caller
+    that the KO flow already took over), False otherwise so the caller falls
+    back to the standard group-stage market panel.
     """
     pred = _knockout_prediction_for_match(match, bundle, repo)
-    if pred is None:
-        return False
-
-    # ────────── 1. PRINCIPAL ──────────
-    st.subheader("Quién avanza al siguiente cruce")
-    section_note(
-        "Funnel del partido: cada barra muestra la probabilidad CONDICIONAL "
-        "dentro de su fase. Si llega la prórroga, esas son las probabilidades "
-        "una vez ya estás en prórroga; lo mismo para los penaltis."
-    )
-    advance_html = (
-        probability_bar(team_with_crest_html(team_a, size=18), pred.home_advances, "win")
-        + probability_bar(team_with_crest_html(team_b, size=18), pred.away_advances, "loss")
-    )
-    st.markdown(advance_html, unsafe_allow_html=True)
-    next_fixture = _find_next_knockout_fixture(repo, match.id)
-    if next_fixture:
-        st.caption(f"Cruce siguiente para el ganador: {next_fixture}.")
-
-    # === Funnel de 3 barras condicionales ===
-    st.markdown("**Al 90'**")
-    funnel_90 = (
-        probability_bar(team_with_crest_html(team_a, size=16), pred.home_wins_90, "win")
-        + probability_bar("Empate (va a prórroga)", pred.p_draw_90, "draw")
-        + probability_bar(team_with_crest_html(team_b, size=16), pred.away_wins_90, "loss")
-    )
-    st.markdown(funnel_90, unsafe_allow_html=True)
-
-    st.markdown(f"**Si llega la prórroga** ({pred.p_draw_90:.1%} a-priori)")
-    if pred.p_draw_90 > 0:
-        funnel_et = (
-            probability_bar(team_with_crest_html(team_a, size=16),
-                            pred.cond_home_wins_et_given_draw_90, "win")
-            + probability_bar("Empate (va a penaltis)",
-                              pred.cond_draw_after_et_given_draw_90, "draw")
-            + probability_bar(team_with_crest_html(team_b, size=16),
-                              pred.cond_away_wins_et_given_draw_90, "loss")
-        )
-        st.markdown(funnel_et, unsafe_allow_html=True)
-    else:
-        st.caption("Sin probabilidad de prórroga relevante.")
-
-    st.markdown(f"**Si se resuelve en penaltis** ({pred.p_draw_after_et:.1%} a-priori)")
-    if pred.p_draw_after_et > 0:
-        funnel_pen = (
-            probability_bar(team_with_crest_html(team_a, size=16),
-                            pred.cond_home_wins_penalties_given_draw_after_et, "win")
-            + probability_bar(team_with_crest_html(team_b, size=16),
-                              pred.cond_away_wins_penalties_given_draw_after_et, "loss")
-        )
-        st.markdown(funnel_pen, unsafe_allow_html=True)
-    else:
-        st.caption("Sin probabilidad de tanda de penaltis relevante.")
-
-    # ────────── 2. RESULTADO AL 90' ──────────
-    st.subheader("Resultado al 90'")
-    p_home_90 = next(
-        (row.probability for row in primary if row.selection_name == team_a), pred.home_wins_90
-    )
-    p_draw_90 = next(
-        (row.probability for row in primary if row.selection_name == "Draw"), pred.p_draw_90
-    )
-    p_away_90 = next(
-        (row.probability for row in primary if row.selection_name == team_b), pred.away_wins_90
-    )
-    bars_html = (
-        probability_bar(team_with_crest_html(team_a, size=16), p_home_90, "win")
-        + probability_bar("Empate", p_draw_90, "draw")
-        + probability_bar(team_with_crest_html(team_b, size=16), p_away_90, "loss")
-    )
-    st.markdown(bars_html, unsafe_allow_html=True)
-    if expected_xg and len(expected_xg) == 2:
-        xa, xb = float(expected_xg[0]), float(expected_xg[1])
-        c4, c5 = st.columns(2)
-        c4.metric(f"xG {team_a} (90')", f"{xa:.2f}")
-        c5.metric(f"xG {team_b} (90')", f"{xb:.2f}")
-    exact_row = next((row for row in predictions if row.market_name == "Exact Score"), None)
-    if exact_row is not None:
-        st.caption(
-            f"Marcador modo al 90': **{exact_row.selection_name}** ({exact_row.probability:.1%}). "
-            "El empate al 90' implica prórroga; no es resultado final."
-        )
-
-    # ────────── 3. PRÓRROGA Y PENALTIS ──────────
-    st.subheader("Prórroga y penaltis")
-    if expected_xg and len(expected_xg) == 2:
-        xa, xb = float(expected_xg[0]), float(expected_xg[1])
-        et_a, et_b = xa * 0.30, xb * 0.30
-        c6, c7 = st.columns(2)
-        c6.metric(f"xG {team_a} en prórroga", f"{et_a:.2f}", help="xG_90 × 0.30 (30 min de tiempo extra)")
-        c7.metric(f"xG {team_b} en prórroga", f"{et_b:.2f}", help="xG_90 × 0.30 (30 min de tiempo extra)")
-    method_rows = [
-        {"Vía": f"{team_a} en 90'", "Probabilidad (%)": pred.home_wins_90 * 100},
-        {"Vía": f"{team_b} en 90'", "Probabilidad (%)": pred.away_wins_90 * 100},
-        {"Vía": f"{team_a} en prórroga", "Probabilidad (%)": pred.home_wins_et * 100},
-        {"Vía": f"{team_b} en prórroga", "Probabilidad (%)": pred.away_wins_et * 100},
-        {"Vía": f"{team_a} en penaltis", "Probabilidad (%)": pred.home_wins_penalties * 100},
-        {"Vía": f"{team_b} en penaltis", "Probabilidad (%)": pred.away_wins_penalties * 100},
-    ]
-    st.dataframe(
-        pd.DataFrame(method_rows), width="stretch", hide_index=True,
-        column_config={
-            "Probabilidad (%)": st.column_config.ProgressColumn(format="%.1f%%", min_value=0, max_value=100),
-        },
-    )
-    st.caption(
-        f"Empate al 90': **{pred.p_draw_90:.1%}** · Empate tras prórroga: **{pred.p_draw_after_et:.1%}**."
-    )
-    # Penalty narrative: convertimos los datos del module dedicado en un
-    # callout para el usuario.
-    try:
-        penalty_context = build_penalty_match_context(
-            team_a, team_b, _penalty_attempts_for_match(repo, team_a, team_b),
-        )
-        if penalty_context and getattr(penalty_context, "explanation", ""):
-            callout(penalty_context.explanation, tone="blue")
-    except Exception:
-        pass
-    return True
+    return pred is not None
 
 
 def _render_knockout_advance_section(match, bundle, team_a: str, team_b: str, repo: Repository) -> None:
@@ -3051,22 +2937,94 @@ def render_prediction_lab() -> None:
         callout(describe_corrections(bundle.corrections), tone="blue", title="Corrección automática activa")
     knockout_prediction = _knockout_prediction_for_match(match, bundle, repo)
     is_knockout = knockout_prediction is not None
-    top_left, top_right = st.columns([1.55, 1])
-    with top_left:
-        home_p = next((row.probability for row in primary if row.selection_name == team_a), 0)
-        draw_p = next((row.probability for row in primary if row.selection_name == "Draw"), 0)
-        away_p = next((row.probability for row in primary if row.selection_name == team_b), 0)
-        if is_knockout:
-            st.subheader("Probabilidad de clasificación")
-            section_note(
-                "Partido de eliminatoria: la probabilidad principal es avanzar al siguiente cruce. "
-                "Incluye victoria en 90', prórroga y tanda de penaltis; el empate al 90' solo alimenta esas vías."
+    best = max(primary, key=lambda row: row.probability)
+    exact_score = next(row for row in predictions if row.market_name == "Exact Score")
+    alt_scores = [row for row in predictions if row.market_name == "Exact Score (alt)"]
+    expected_row = next(
+        (row for row in predictions if row.market_name == "Expected Score"),
+        None,
+    )
+    home_p = next((row.probability for row in primary if row.selection_name == team_a), 0)
+    draw_p = next((row.probability for row in primary if row.selection_name == "Draw"), 0)
+    away_p = next((row.probability for row in primary if row.selection_name == team_b), 0)
+
+    if is_knockout:
+        # Knockout: dedicated panel (badge + advance card + conditional funnel)
+        # replaces the standard "Probabilidad 1X2 / Lectura inmediata" header.
+        stage_label = getattr(match, "stage", None) or "Eliminatoria"
+        st.markdown(knockout_badge_html(stage_label), unsafe_allow_html=True)
+        next_fixture = _find_next_knockout_fixture(repo, match.id)
+        next_caption = (
+            f"Cruce siguiente para el ganador: {next_fixture}"
+            if next_fixture else None
+        )
+        # Penalty model is still WIP — show 50/50 placeholder with a hint.
+        st.markdown(
+            knockout_advance_html(
+                team_a=team_a,
+                team_b=team_b,
+                home_advances=knockout_prediction.home_advances,
+                away_advances=knockout_prediction.away_advances,
+                home_wins_90=knockout_prediction.home_wins_90,
+                draw_90=knockout_prediction.p_draw_90,
+                away_wins_90=knockout_prediction.away_wins_90,
+                cond_home_et=knockout_prediction.cond_home_wins_et_given_draw_90,
+                cond_draw_et=knockout_prediction.cond_draw_after_et_given_draw_90,
+                cond_away_et=knockout_prediction.cond_away_wins_et_given_draw_90,
+                cond_home_pen=0.5,
+                cond_away_pen=0.5,
+                crest_a=crest_html(team_a, size=28),
+                crest_b=crest_html(team_b, size=28),
+                next_fixture=next_caption,
+                pen_pending=True,
+            ),
+            unsafe_allow_html=True,
+        )
+        # Compact "Lectura inmediata" inline below the advance card.
+        meta_cols = st.columns(3)
+        advancing_team = team_a if knockout_prediction.home_advances >= knockout_prediction.away_advances else team_b
+        advancing_probability = max(knockout_prediction.home_advances, knockout_prediction.away_advances)
+        meta_cols[0].metric("Clasifica", advancing_team, f"{advancing_probability:.1%}")
+        meta_cols[1].metric("Marcador más probable (modo)", exact_score.selection_name, f"{exact_score.probability:.1%}")
+        if expected_row is not None:
+            meta_cols[2].metric(
+                "Marcador esperado (xG)",
+                expected_row.selection_name,
+                help="Goles esperados según la distribución conjunta. Es una lectura promedio, no un marcador entero.",
             )
-            bars_html = (
-                probability_bar(team_with_crest_html(team_a, size=18), knockout_prediction.home_advances, "win")
-                + probability_bar(team_with_crest_html(team_b, size=18), knockout_prediction.away_advances, "loss")
+        if alt_scores:
+            alt_lines = " · ".join(
+                f"{row.selection_name.split(' ')[0]} ({row.probability:.1%})"
+                for row in alt_scores[:3]
             )
-        else:
+            st.caption(f"Marcadores alternativos: {alt_lines}")
+
+        # xG por fase (90' + prórroga) y contexto de penaltis: van AQUÍ
+        # integrados con el panel KO, no como sección separada abajo.
+        if bundle.expected_xg and len(bundle.expected_xg) == 2:
+            xa, xb = float(bundle.expected_xg[0]), float(bundle.expected_xg[1])
+            et_a, et_b = xa * 0.30, xb * 0.30
+            xg_cols = st.columns(4)
+            xg_cols[0].metric(f"xG {team_a} (90')", f"{xa:.2f}")
+            xg_cols[1].metric(f"xG {team_b} (90')", f"{xb:.2f}")
+            xg_cols[2].metric(f"xG {team_a} (prórroga)", f"{et_a:.2f}", help="xG_90 × 0.30 (30 min de tiempo extra)")
+            xg_cols[3].metric(f"xG {team_b} (prórroga)", f"{et_b:.2f}", help="xG_90 × 0.30 (30 min de tiempo extra)")
+        try:
+            penalty_context = build_penalty_match_context(
+                team_a, team_b, _penalty_attempts_for_match(repo, team_a, team_b),
+            )
+            if penalty_context and getattr(penalty_context, "explanation", ""):
+                callout(penalty_context.explanation, tone="blue", title="Contexto de penaltis")
+        except Exception:
+            pass
+
+        with st.expander("Ver cálculo y jugadores usados"):
+            st.caption(best.explanation)
+        if best.confidence.value == "low":
+            st.warning("Confianza baja: la base observada para estos equipos aún es insuficiente.")
+    else:
+        top_left, top_right = st.columns([1.55, 1])
+        with top_left:
             st.subheader("Probabilidad 1X2")
             section_note(
                 "Modelo unificado: matriz de marcadores (xG ajustado + Dixon-Coles) + "
@@ -3078,47 +3036,29 @@ def render_prediction_lab() -> None:
                 + probability_bar("Empate", draw_p, "draw")
                 + probability_bar(team_with_crest_html(team_b, size=18), away_p, "loss")
             )
-        st.markdown(bars_html, unsafe_allow_html=True)
-    with top_right:
-        best = max(primary, key=lambda row: row.probability)
-        exact_score = next(row for row in predictions if row.market_name == "Exact Score")
-        alt_scores = [row for row in predictions if row.market_name == "Exact Score (alt)"]
-        expected_row = next(
-            (row for row in predictions if row.market_name == "Expected Score"),
-            None,
-        )
-        st.subheader("Lectura inmediata")
-        if is_knockout:
-            advancing_team = team_a if knockout_prediction.home_advances >= knockout_prediction.away_advances else team_b
-            advancing_probability = max(knockout_prediction.home_advances, knockout_prediction.away_advances)
-            st.metric("Clasifica", advancing_team, f"{advancing_probability:.1%}")
-        else:
+            st.markdown(bars_html, unsafe_allow_html=True)
+        with top_right:
+            st.subheader("Lectura inmediata")
             st.metric("Resultado más probable", localize_selection(best.selection_name), f"{best.probability:.1%}")
-        st.metric("Marcador más probable (modo)", exact_score.selection_name, f"{exact_score.probability:.1%}")
-        if expected_row is not None:
-            st.metric(
-                "Marcador esperado (goles xG)",
-                expected_row.selection_name,
-                help="Goles esperados según la distribución conjunta. Es una lectura promedio, no un marcador entero.",
-            )
-        if alt_scores:
-            alt_lines = " · ".join(
-                f"{row.selection_name.split(' ')[0]} ({row.probability:.1%})"
-                for row in alt_scores[:3]
-            )
-            st.caption(f"Alternativos más probables: {alt_lines}")
-        short_explanation = best.explanation.split("Ajuste de jugadores:", 1)[0].strip()
-        if is_knockout:
-            st.caption(
-                f"Resultado a 90': {team_a} {home_p:.1%} · empate {draw_p:.1%} · {team_b} {away_p:.1%}. "
-                "Si hay empate, el modelo continúa con prórroga y penaltis."
-            )
-        else:
+            st.metric("Marcador más probable (modo)", exact_score.selection_name, f"{exact_score.probability:.1%}")
+            if expected_row is not None:
+                st.metric(
+                    "Marcador esperado (goles xG)",
+                    expected_row.selection_name,
+                    help="Goles esperados según la distribución conjunta. Es una lectura promedio, no un marcador entero.",
+                )
+            if alt_scores:
+                alt_lines = " · ".join(
+                    f"{row.selection_name.split(' ')[0]} ({row.probability:.1%})"
+                    for row in alt_scores[:3]
+                )
+                st.caption(f"Alternativos más probables: {alt_lines}")
+            short_explanation = best.explanation.split("Ajuste de jugadores:", 1)[0].strip()
             st.caption(short_explanation)
-        with st.expander("Ver cálculo y jugadores usados"):
-            st.caption(best.explanation)
-        if best.confidence.value == "low":
-            st.warning("Confianza baja: la base observada para estos equipos aún es insuficiente.")
+            with st.expander("Ver cálculo y jugadores usados"):
+                st.caption(best.explanation)
+            if best.confidence.value == "low":
+                st.warning("Confianza baja: la base observada para estos equipos aún es insuficiente.")
 
     _render_prediction_workspace(match, bundle, cached, repo)
 

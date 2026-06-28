@@ -746,6 +746,256 @@ div[data-testid="stDataEditor"] tbody tr:hover {
 .player-table .pt-strong { font-weight: 700; color: var(--blue-link); }
 .player-table .pt-team img { flex: 0 0 auto; }
 
+/* ---- Knockout panel (eliminatoria identity) ---- */
+@keyframes ko-bar-grow { from { width: 0%; } }
+
+.ko-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: var(--r-pill);
+  background: linear-gradient(135deg, #0e2b57, #145ebc);
+  color: #fff;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.10em;
+  text-transform: uppercase;
+  line-height: 1;
+}
+.ko-badge svg { flex: 0 0 auto; }
+.ko-badge-stage {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--muted);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.ko-advance {
+  background: linear-gradient(135deg, #0e2b57 0%, #12468a 60%, #1769e0 100%);
+  border-radius: var(--r-hero);
+  padding: 22px 24px 20px;
+  margin-bottom: 16px;
+  box-shadow: 0 8px 24px rgba(19, 62, 120, 0.15);
+  color: #fff;
+}
+.ko-advance-label {
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.70);
+  margin-bottom: 12px;
+}
+.ko-advance-bar {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 8px;
+}
+.ko-advance-team {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 0 0 auto;
+}
+.ko-advance-team img {
+  width: 28px; height: 28px;
+  border-radius: 5px;
+  background: rgba(255, 255, 255, 0.15);
+  padding: 3px;
+  object-fit: contain;
+}
+.ko-advance-team span {
+  font-size: 14px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.ko-advance-team.away span { color: rgba(255, 255, 255, 0.75); }
+.ko-stacked-bar {
+  flex: 1;
+  height: 32px;
+  border-radius: 6px;
+  overflow: hidden;
+  display: flex;
+  background: rgba(255, 255, 255, 0.12);
+}
+.ko-stacked-fill-home {
+  background: linear-gradient(90deg, #4d8eea, #1769e0);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 800;
+  color: #fff;
+  font-variant-numeric: tabular-nums;
+  animation: ko-bar-grow 0.6s ease-out;
+}
+.ko-stacked-fill-away {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.70);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Funnel: decreasing-height rows inside the advance card */
+.ko-funnel {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  margin-top: 14px;
+}
+.ko-funnel-header {
+  display: flex;
+  justify-content: space-between;
+  font-size: 10px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.50);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 0 4px;
+  margin-bottom: 2px;
+}
+.ko-funnel-row {
+  display: flex;
+  align-items: center;
+  border-radius: 5px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.08);
+}
+.ko-funnel-row.via-90  { height: 28px; }
+.ko-funnel-row.via-et  { height: 24px; }
+.ko-funnel-row.via-pen { height: 20px; }
+.ko-funnel-fill {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  padding: 0 6px;
+  font-weight: 800;
+  color: #fff;
+  font-variant-numeric: tabular-nums;
+  min-width: 36px;
+}
+.ko-funnel-fill.home { background: #34d399; color: #022c1f; justify-content: flex-end; }
+.ko-funnel-fill.home.via-et  { background: #6ee7b7; color: #022c1f; }
+.ko-funnel-fill.home.via-pen { background: #a7f3d0; color: #022c1f; }
+.ko-funnel-fill.away { background: #fb923c; color: #431407; justify-content: flex-start; }
+.ko-funnel-fill.away.via-et  { background: #fdba74; color: #431407; }
+.ko-funnel-fill.away.via-pen { background: #fed7aa; color: #431407; }
+.ko-funnel-fill.draw { background: rgba(255,255,255,0.30); color: #fff; justify-content: center; }
+.ko-funnel-fill.draw.via-et { background: rgba(255,255,255,0.22); color: #fff; }
+.ko-funnel-fill .pct { font-size: 11px; }
+.ko-funnel-row.via-et  .ko-funnel-fill .pct { font-size: 10px; }
+.ko-funnel-row.via-pen .ko-funnel-fill .pct { font-size: 9px; }
+.ko-funnel-row-label {
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.55);
+  padding: 6px 4px 2px;
+}
+.ko-funnel-row-label .hint {
+  text-transform: none;
+  letter-spacing: 0;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.45);
+  margin-left: 6px;
+}
+.ko-funnel-label {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.80);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.ko-funnel-row.via-90  .ko-funnel-label { font-size: 10px; }
+.ko-funnel-row.via-et  .ko-funnel-label { font-size: 9px; color: rgba(255, 255, 255, 0.65); }
+.ko-funnel-row.via-pen .ko-funnel-label { font-size: 8.5px; color: rgba(255, 255, 255, 0.55); }
+
+.ko-advance-caption {
+  margin-top: 12px;
+  font-size: 11.5px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.60);
+  line-height: 1.4;
+}
+
+/* Via table (6 rows: replaces st.dataframe for full style control) */
+.ko-via-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12.5px;
+}
+.ko-via-table th {
+  text-align: left;
+  padding: 8px 12px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+  background: var(--panel-2);
+}
+.ko-via-table th.num { text-align: right; }
+.ko-via-table td {
+  padding: 7px 12px;
+  border-top: 1px solid var(--line);
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+.ko-via-table td.via-name { font-weight: 600; }
+.ko-via-table td.via-pct { text-align: right; font-weight: 700; }
+.ko-via-table tr.via-et td { background: var(--panel); }
+.ko-via-table .via-mini-bar {
+  height: 6px;
+  border-radius: 3px;
+  background: var(--prob-track);
+  overflow: hidden;
+}
+.ko-via-table .via-mini-fill {
+  height: 100%;
+  border-radius: 3px;
+}
+
+/* Section divider with line (used for 90' / prórroga headings) */
+.ko-section-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.ko-section-head h3 {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--ink);
+  margin: 0;
+  white-space: nowrap;
+}
+.ko-section-head .ko-line { flex: 1; height: 1px; background: var(--line); }
+
+/* Mobile adjustments for KO panel */
+@media (max-width: 720px) {
+  .ko-advance { padding: 18px 16px 16px; border-radius: 16px; }
+  .ko-advance-team img { width: 24px; height: 24px; }
+  .ko-advance-team span { font-size: 12px; }
+  .ko-stacked-bar { height: 28px; }
+  .ko-stacked-fill-home, .ko-stacked-fill-away { font-size: 12px; }
+  .ko-funnel-fill .pct { font-size: 10px; }
+  .ko-funnel-row.via-et  .ko-funnel-fill .pct { font-size: 9px; }
+  .ko-funnel-row.via-pen .ko-funnel-fill .pct { font-size: 8px; }
+  .ko-via-table th, .ko-via-table td { padding: 6px 10px; font-size: 12px; }
+}
+
 /* ---- Empty states ---- */
 .empty-state {
   text-align: center;
@@ -1068,3 +1318,200 @@ def probability_bar(label: str, probability: float, kind: str = "win") -> str:
 def section_note(text: str) -> None:
     """Muted note rendered just under a heading."""
     st.markdown(f'<div class="section-note">{text}</div>', unsafe_allow_html=True)
+
+
+# ---- Knockout helpers ----
+
+_KO_TROPHY_SVG = (
+    '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" '
+    'stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">'
+    '<path d="M6 9H4.5a2.5 2.5 0 0 1 0-5C7 4 7 7 7 7"/>'
+    '<path d="M18 9h1.5a2.5 2.5 0 0 0 0-5C17 4 17 7 17 7"/>'
+    '<path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20 7 22"/>'
+    '<path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20 17 22"/>'
+    '<path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/>'
+    '</svg>'
+)
+
+_VIA_BAR_COLORS = {
+    ("home", "90"): "#34d399",
+    ("home", "et"): "#6ee7b7",
+    ("home", "pen"): "#a7f3d0",
+    ("away", "90"): "#fb923c",
+    ("away", "et"): "#fdba74",
+    ("away", "pen"): "#fed7aa",
+}
+
+
+def knockout_badge_html(stage_label: str) -> str:
+    """Gradient pill with trophy icon signalling 'this is a knockout match'."""
+    return (
+        '<div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">'
+        f'<span class="ko-badge">{_KO_TROPHY_SVG} ELIMINATORIA</span>'
+        f'<span class="ko-badge-stage">{stage_label}</span>'
+        '</div>'
+    )
+
+
+def knockout_advance_html(
+    team_a: str,
+    team_b: str,
+    home_advances: float,
+    away_advances: float,
+    home_wins_90: float,
+    draw_90: float,
+    away_wins_90: float,
+    cond_home_et: float,
+    cond_draw_et: float,
+    cond_away_et: float,
+    cond_home_pen: float,
+    cond_away_pen: float,
+    crest_a: str = "",
+    crest_b: str = "",
+    next_fixture: str | None = None,
+    pen_pending: bool = True,
+) -> str:
+    """Full 'who advances' card with stacked bar + conditional via funnel.
+
+    Each funnel row uses CONDITIONAL probabilities within its phase:
+      * via-90:  marginal P(home/draw/away at 90') — sum to 100%.
+      * via-et:  P(home/draw/away in ET | draw at 90') — sum to 100%.
+      * via-pen: P(home/away in shootout | draw after ET) — sum to 100%.
+                 ``pen_pending`` flags that the dedicated model is not ready,
+                 so the renderer hints the user the 50/50 is a placeholder.
+    """
+    from html import escape
+    ha = home_advances * 100
+    aa = away_advances * 100
+    img_a = f'{crest_a} ' if crest_a else ''
+    img_b = f' {crest_b}' if crest_b else ''
+
+    def _three_seg_row(
+        css_class: str, h: float, d: float, a: float,
+    ) -> str:
+        # Force a tiny minimum width so 0% segments stay visible as sliver.
+        h_w = max(h * 100, 0.5)
+        d_w = max(d * 100, 0.5)
+        a_w = max(a * 100, 0.5)
+        return (
+            f'<div class="ko-funnel-row {css_class}">'
+            f'<div class="ko-funnel-fill home {css_class}" style="width:{h_w:.1f}%">'
+            f'<span class="pct">{h:.1%}</span></div>'
+            f'<div class="ko-funnel-fill draw {css_class}" style="width:{d_w:.1f}%">'
+            f'<span class="pct">{d:.1%}</span></div>'
+            f'<div class="ko-funnel-fill away {css_class}" style="width:{a_w:.1f}%">'
+            f'<span class="pct">{a:.1%}</span></div>'
+            '</div>'
+        )
+
+    def _two_seg_row(css_class: str, h: float, a: float) -> str:
+        h_w = max(h * 100, 0.5)
+        a_w = max(a * 100, 0.5)
+        return (
+            f'<div class="ko-funnel-row {css_class}">'
+            f'<div class="ko-funnel-fill home {css_class}" style="width:{h_w:.1f}%">'
+            f'<span class="pct">{h:.1%}</span></div>'
+            f'<div class="ko-funnel-fill away {css_class}" style="width:{a_w:.1f}%">'
+            f'<span class="pct">{a:.1%}</span></div>'
+            '</div>'
+        )
+
+    row_90 = (
+        '<div class="ko-funnel-row-label">EN 90\''
+        '<span class="hint">marginal · ganar o forzar prórroga</span></div>'
+        + _three_seg_row("via-90", home_wins_90, draw_90, away_wins_90)
+    )
+    row_et = (
+        '<div class="ko-funnel-row-label">PRÓRROGA'
+        '<span class="hint">condicional · si hubo empate al 90\'</span></div>'
+        + _three_seg_row("via-et", cond_home_et, cond_draw_et, cond_away_et)
+    )
+    pen_hint = (
+        'condicional · si hubo empate tras prórroga · modelo en desarrollo (50/50)'
+        if pen_pending else
+        'condicional · si hubo empate tras prórroga'
+    )
+    row_pen = (
+        f'<div class="ko-funnel-row-label">PENALTIS<span class="hint">{pen_hint}</span></div>'
+        + _two_seg_row("via-pen", cond_home_pen, cond_away_pen)
+    )
+
+    caption = (
+        f'<div class="ko-advance-caption">{escape(next_fixture)}</div>'
+        if next_fixture else ''
+    )
+    return (
+        '<div class="ko-advance">'
+        '<div class="ko-advance-label">Quién avanza al siguiente cruce</div>'
+        '<div class="ko-advance-bar">'
+        f'<div class="ko-advance-team">{img_a}<span>{escape(team_a)}</span></div>'
+        '<div class="ko-stacked-bar">'
+        f'<div class="ko-stacked-fill-home" style="width:{ha:.1f}%">{ha:.1f}%</div>'
+        f'<div class="ko-stacked-fill-away">{aa:.1f}%</div>'
+        '</div>'
+        f'<div class="ko-advance-team away"><span>{escape(team_b)}</span>{img_b}</div>'
+        '</div>'
+        '<div class="ko-funnel">'
+        '<div class="ko-funnel-header">'
+        f'<span>{escape(team_a)}</span>'
+        '<span>Vía de avance</span>'
+        f'<span>{escape(team_b)}</span>'
+        '</div>'
+        + row_90
+        + row_et
+        + row_pen
+        + '</div>'
+        + caption
+        + '</div>'
+    )
+
+
+def knockout_via_table_html(
+    team_a: str,
+    team_b: str,
+    home_wins_90: float,
+    away_wins_90: float,
+    home_wins_et: float,
+    away_wins_et: float,
+    home_wins_pen: float,
+    away_wins_pen: float,
+) -> str:
+    """6-row table of resolution paths with mini probability bars."""
+    from html import escape
+    rows_data = [
+        (f"{escape(team_a)} en 90'", home_wins_90, "var(--prob-win)", ""),
+        (f"{escape(team_b)} en 90'", away_wins_90, "var(--prob-loss)", ""),
+        (f"{escape(team_a)} en prórroga", home_wins_et, "#4d8eea", " class='via-et'"),
+        (f"{escape(team_b)} en prórroga", away_wins_et, "#b8c7d8", " class='via-et'"),
+        (f"{escape(team_a)} en penaltis", home_wins_pen, "#7aa8e8", ""),
+        (f"{escape(team_b)} en penaltis", away_wins_pen, "#c8d4e4", ""),
+    ]
+    rows_html = []
+    for label, prob, color, tr_attr in rows_data:
+        w = max(prob * 100, 0.1)
+        rows_html.append(
+            f'<tr{tr_attr}>'
+            f'<td class="via-name">{label}</td>'
+            f'<td class="via-pct">{prob:.1%}</td>'
+            f'<td><div class="via-mini-bar">'
+            f'<div class="via-mini-fill" style="width:{w:.1f}%;background:{color}"></div>'
+            '</div></td></tr>'
+        )
+    return (
+        '<div style="border:1px solid var(--line);border-radius:10px;overflow:hidden;margin-bottom:10px">'
+        '<table class="ko-via-table">'
+        '<thead><tr><th>Vía</th><th class="num">Prob.</th><th style="width:90px"></th></tr></thead>'
+        '<tbody>' + ''.join(rows_html) + '</tbody>'
+        '</table></div>'
+    )
+
+
+def knockout_section_head(title: str) -> str:
+    """Section heading with trailing line."""
+    from html import escape
+    return (
+        '<div class="ko-section-head">'
+        f'<h3>{escape(title)}</h3>'
+        '<div class="ko-line"></div>'
+        '</div>'
+    )
