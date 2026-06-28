@@ -286,16 +286,22 @@ The knockout panel shows:
 
 The primary advancement probability remains the headline. Taker details explain the penalty branch rather than replacing it.
 
-## Caching and Performance
+## Offline Precomputation, Web Deployment, and Performance
 
-The model is pre-match and deterministic. Cache the penalty match context by:
+The full Monte Carlo must not run inside a normal application request. Once both teams in a resolved knockout fixture have three completed group-stage matches, `scripts/precompute_penalty_contexts.py` computes the deterministic 25,000-simulation context outside Streamlit and writes one atomic, versioned JSON artifact under `data/precomputed/penalties/`.
+
+Each artifact contains the canonical team pair, match ID, model version, generation timestamp, simulation count, input fingerprint, the complete `PenaltyMatchContext`, player probabilities, coverage, and convergence metadata. The final JSON files are deployable static assets and may be committed after review; temporary files and incomplete calculations are never served.
+
+Desktop and online versions use the same lightweight loader. They validate the canonical team pair and `PENALTY_MODEL_VERSION`, then deserialize the artifact. This requires no writable filesystem, background worker, or long-running web request. If an artifact is absent or stale, the application uses the existing fast team-level fallback and labels the detailed simulation as pending; it never launches 25,000 simulations while rendering a page.
+
+The offline model is deterministic and versioned by:
 
 - match ID;
-- database signature;
-- confirmed-lineup signature;
+- canonical team pair;
+- fingerprint of squads, confirmed lineups, completed group data, penalty attempts, and goalkeeper evidence;
 - penalty-history/model version.
 
-Monte Carlo runs only on a cold key. Changing analysis views, odds, or unrelated player markets retrieves the cached result. Data refresh invalidates only penalty and affected match-analysis contexts.
+Streamlit may additionally cache the deserialized object by match ID, database signature, and model version. Changing analysis views, odds, or unrelated player markets therefore does no penalty-model work. Regeneration is explicit through the external script when relevant inputs or the model version change.
 
 The initial simulation target is 25,000 complete paths per match, configurable between 20,000 and 50,000 after measuring runtime and convergence. Tests use a smaller fixed count.
 
@@ -306,6 +312,7 @@ The initial simulation target is 25,000 complete paths per match, configurable b
 - Missing lineup -> tournament start/appearance model.
 - Missing goalkeeper penalty history -> deep/general save evidence, then global prior.
 - Missing all squad data -> team-level prior with explicit low confidence; no invented player list.
+- Missing/stale precomputed JSON -> fast team-level fallback plus `cálculo detallado pendiente`; never calculate the full Monte Carlo in the web request.
 - Transfermarkt failure -> preserve cached pages and existing attempts.
 - Snapshot/bracket mismatch -> surface both sets and require review; never silently alter the canonical 32.
 
