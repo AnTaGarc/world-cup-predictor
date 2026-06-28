@@ -49,5 +49,6 @@ data/external/
 # Project-internal
 .codex/
 .claude/
+.worktrees/
 claude-design-context/
 claude-design-context-v2/
