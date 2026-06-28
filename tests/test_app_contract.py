@@ -145,6 +145,24 @@ class AppContractTests(unittest.TestCase):
         self.assertIn('elif section == "Mercados y EV":', source)
         self.assertNotIn('st.tabs(\n        ["Modelo", "Mercados y EV", "Jugadores", "Datos / SofaScore", "Guardado"]', source)
 
+    def test_prediction_workspace_is_fragment_scoped(self):
+        source = (Path(__file__).parents[1] / "src" / "wcpredict" / "ui" / "pages.py").read_text(encoding="utf-8")
+        self.assertIn("@st.fragment\ndef _render_prediction_workspace(", source)
+        outer_start = source.index("def render_prediction_lab")
+        outer = source[outer_start:source.index("def _render_global_bias_panel")]
+        self.assertIn("_render_prediction_workspace(match, bundle, cached, repo)", outer)
+        self.assertNotIn('"Vista de análisis"', outer)
+
+    def test_odds_and_player_controls_live_inside_workspace_fragment(self):
+        source = (Path(__file__).parents[1] / "src" / "wcpredict" / "ui" / "pages.py").read_text(encoding="utf-8")
+        workspace = source[
+            source.index("def _render_prediction_workspace"):
+            source.index("def render_prediction_lab")
+        ]
+        self.assertIn('"Vista de análisis"', workspace)
+        self.assertIn('elif section == "Mercados y EV":', workspace)
+        self.assertIn('elif section == "Jugadores":', workspace)
+
     def test_player_intelligence_rankings_are_lazy(self):
         source = (Path(__file__).parents[1] / "src" / "wcpredict" / "ui" / "pages.py").read_text(encoding="utf-8")
         self.assertIn("st.segmented_control(", source)

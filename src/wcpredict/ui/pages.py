@@ -2399,222 +2399,21 @@ def _render_bracket_section(repo: Repository) -> None:
     )
 
 
-def render_prediction_lab() -> None:
-    repo = _repo()
-    with st.spinner("Comprobando calendario y bancos diarios del Mundial…"):
-        daily_result = _refresh_current_world_cup_banks(repo)
-    _resolve_bracket_after_daily_refresh(repo, daily_result)
-    matches = _list_matches()
-    if not matches:
-        empty_state("Sin partidos", "No hay partidos cargados en el calendario.", icon="📅")
-        return
-    labels, by_label = _match_labels(matches)
-    calibration_labels = {
-        "Czechia vs South Africa", "Switzerland vs Bosnia and Herzegovina",
-        "Canada vs Qatar", "Mexico vs South Korea",
-    }
-    # Preselection from the dashboard's match links (?match_id=X). We
-    # validate against ``by_label`` so we never land on a separator row.
-    requested_match_id = st.query_params.get("match_id")
-    try:
-        requested_match_id = int(requested_match_id) if requested_match_id else None
-    except ValueError:
-        requested_match_id = None
-    preselect_index = None
-    if requested_match_id is not None:
-        preselect_index = next(
-            (index for index, label in enumerate(labels)
-             if label in by_label and by_label[label].id == requested_match_id),
-            None,
-        )
-    if preselect_index is None:
-        preselect_index = next(
-            (index for index, label in enumerate(labels)
-             if label in by_label and by_label[label].label in calibration_labels),
-            None,
-        )
-    if preselect_index is None:
-        preselect_index = next(
-            (index for index, label in enumerate(labels) if label in by_label),
-            0,
-        )
-    selected_label = st.selectbox("Partido", labels, index=preselect_index, label_visibility="collapsed")
-    if selected_label not in by_label:
-        st.info("Selecciona un partido de la lista (no un separador).")
-        return
-    match = by_label[selected_label]
+@st.fragment
+def _render_prediction_workspace(
+    match,
+    bundle: MatchAnalysisBundle,
+    cached,
+    repo: Repository,
+) -> None:
     team_a, team_b = match.team_a.name, match.team_b.name
-    crest_a = crest_html(team_a, size=44)
-    crest_b = crest_html(team_b, size=44)
-    title_html = (
-        f'<span class="hero-team">{crest_a}<span>{team_a}</span></span>'
-        f'<span class="hero-vs">vs</span>'
-        f'<span class="hero-team">{crest_b}<span>{team_b}</span></span>'
-    )
-    hero(
-        f"{match.stage} · {_display_time(match.kickoff_utc, '%d %b %Y · %H:%M')}",
-        title_html,
-        f"{match.venue or 'Sede por confirmar'} · horario local del sistema",
-    )
-
-    tone = "green" if daily_result.status in {"current", "updated"} else "amber" if daily_result.status in {"partial", "stale"} else "red"
-    st.markdown(
-        '<div class="status-row">'
-        + status_pill(f"Datos del Mundial: {localize_status(daily_result.status)}", tone)
-        + status_pill(f"Actualizados: {len(daily_result.updated)}")
-        + status_pill(f"Sin cambios: {len(daily_result.unchanged) + len(daily_result.skipped_recent)}")
-        + "</div>",
-        unsafe_allow_html=True,
-    )
-
-    cache_key = f"refresh_{match.id}"
-    cached = _cached_bundle(match)
-    # The "Actualizar datos" button uses a Python script that lives in the
-    # user's local ~/.codex/skills/ directory. It isn't shipped in the repo
-    # and therefore doesn't exist on Streamlit Cloud — clicking it there
-    # only produced a red "El recolector local no está instalado" error.
-    # We hide the button entirely in environments without the script.
-    from wcpredict.refresh import default_collector_script
-    collector_available = default_collector_script().exists()
-    if collector_available:
-        button_col, note_col = st.columns([1, 2.2])
-        with button_col:
-            refresh_clicked = st.button("Actualizar datos", type="primary", width="stretch")
-        with note_col:
-            st.caption("Consulta acotada: un partido, máximo 14 llamadas y 0 créditos de cuotas. Conserva la caché si falla.")
-    else:
-        refresh_clicked = False
-    if refresh_clicked:
-        with st.spinner("Recopilando y normalizando datos del partido…"):
-            result = refresh_match(team_a, team_b, match.kickoff_utc, SPORTS_DATA_DIR)
-        st.session_state[cache_key] = result
-        if result.bundle is not None:
-            repo.import_collector_bundle(match.id, result.bundle)
-            cached = result.bundle
-            # New bundle data → invalidate cached analysis so the prediction
-            # actually reflects the freshly imported evidence.
-            st.cache_data.clear(); st.cache_resource.clear()
-        status_tone = {
-            "complete": ("success", "Datos del partido completos."),
-            "partial": ("warning", "Datos parciales: el modelo usa lo disponible y marca lo que falta."),
-            "cached": ("info", "No se pudieron añadir datos nuevos; se conserva la caché previa."),
-            "failed": ("error", "La actualización falló y no había caché previa."),
-            "unavailable": ("error", "El recolector local no está instalado o accesible."),
-        }
-        tone, default_message = status_tone.get(result.status, ("warning", result.message))
-        getattr(st, tone)(default_message)
-        metric_cols = st.columns(4)
-        metric_cols[0].metric("Llamadas hechas", result.calls_made)
-        metric_cols[1].metric("Proveedores OK", len(result.providers))
-        metric_cols[2].metric("Cuotas tocadas", len(result.odds_providers))
-        metric_cols[3].metric("Faltantes", len(result.missing_critical))
-        if result.providers:
-            st.caption("Proveedores que respondieron: " + ", ".join(result.providers))
-        if result.missing_critical:
-            st.warning(
-                "Campos no obtenidos en este partido: "
-                + ", ".join(result.missing_critical)
-                + ". La app no los inventa: aparecerán como vacíos en cobertura."
-            )
-        if result.odds_status == "skipped_zero_budget":
-            st.caption("Cuotas automáticas deshabilitadas (presupuesto 0); usa la pestaña Mercados para meterlas manualmente.")
-        if result.stderr_tail:
-            with st.expander("Salida técnica del recolector"):
-                st.code(result.stderr_tail)
-    bundle = _match_analysis_bundle(match)
     current_players = bundle.current_players
-    squad_notes = bundle.squad_notes
-    deep_rows_before = bundle.deep_rows_before
-    prior_deep_samples = bundle.prior_deep_samples
-    deep_count = bundle.deep_count
-    if cached:
-        _render_bundle(cached, deep_count, len(current_players))
-    elif not (deep_count or current_players or prior_deep_samples):
-        callout(
-            "No hay evidencia previa ni caché automática suficiente para modelar este partido con confianza.",
-            tone="red", title="Sin datos",
-        )
-
-    results = bundle.results
     predictions = bundle.predictions
     score_only_predictions = bundle.score_only_predictions
     primary = bundle.primary
     ml_probabilities = bundle.ml_probabilities
     ml_features = bundle.ml_features
     ml_model_meta = bundle.ml_model_meta
-    if bundle.corrections is not None and corrections_active(bundle.corrections):
-        callout(describe_corrections(bundle.corrections), tone="blue", title="Corrección automática activa")
-    knockout_prediction = _knockout_prediction_for_match(match, bundle, repo)
-    is_knockout = knockout_prediction is not None
-    top_left, top_right = st.columns([1.55, 1])
-    with top_left:
-        home_p = next((row.probability for row in primary if row.selection_name == team_a), 0)
-        draw_p = next((row.probability for row in primary if row.selection_name == "Draw"), 0)
-        away_p = next((row.probability for row in primary if row.selection_name == team_b), 0)
-        if is_knockout:
-            st.subheader("Probabilidad de clasificación")
-            section_note(
-                "Partido de eliminatoria: la probabilidad principal es avanzar al siguiente cruce. "
-                "Incluye victoria en 90', prórroga y tanda de penaltis; el empate al 90' solo alimenta esas vías."
-            )
-            bars_html = (
-                probability_bar(team_with_crest_html(team_a, size=18), knockout_prediction.home_advances, "win")
-                + probability_bar(team_with_crest_html(team_b, size=18), knockout_prediction.away_advances, "loss")
-            )
-        else:
-            st.subheader("Probabilidad 1X2")
-            section_note(
-                "Modelo unificado: matriz de marcadores (xG ajustado + Dixon-Coles) + "
-                "ML cronológico (Elo, ~50k partidos) + ML deep stats (HistGBM con xG/posesión/tiros/defensa). "
-                "Pesos adaptativos según la muestra deep disponible para cada equipo."
-            )
-            bars_html = (
-                probability_bar(team_with_crest_html(team_a, size=18), home_p, "win")
-                + probability_bar("Empate", draw_p, "draw")
-                + probability_bar(team_with_crest_html(team_b, size=18), away_p, "loss")
-            )
-        st.markdown(bars_html, unsafe_allow_html=True)
-    with top_right:
-        best = max(primary, key=lambda row: row.probability)
-        exact_score = next(row for row in predictions if row.market_name == "Exact Score")
-        alt_scores = [row for row in predictions if row.market_name == "Exact Score (alt)"]
-        expected_row = next(
-            (row for row in predictions if row.market_name == "Expected Score"),
-            None,
-        )
-        st.subheader("Lectura inmediata")
-        if is_knockout:
-            advancing_team = team_a if knockout_prediction.home_advances >= knockout_prediction.away_advances else team_b
-            advancing_probability = max(knockout_prediction.home_advances, knockout_prediction.away_advances)
-            st.metric("Clasifica", advancing_team, f"{advancing_probability:.1%}")
-        else:
-            st.metric("Resultado más probable", localize_selection(best.selection_name), f"{best.probability:.1%}")
-        st.metric("Marcador más probable (modo)", exact_score.selection_name, f"{exact_score.probability:.1%}")
-        if expected_row is not None:
-            st.metric(
-                "Marcador esperado (goles xG)",
-                expected_row.selection_name,
-                help="Goles esperados según la distribución conjunta. Es una lectura promedio, no un marcador entero.",
-            )
-        if alt_scores:
-            alt_lines = " · ".join(
-                f"{row.selection_name.split(' ')[0]} ({row.probability:.1%})"
-                for row in alt_scores[:3]
-            )
-            st.caption(f"Alternativos más probables: {alt_lines}")
-        short_explanation = best.explanation.split("Ajuste de jugadores:", 1)[0].strip()
-        if is_knockout:
-            st.caption(
-                f"Resultado a 90': {team_a} {home_p:.1%} · empate {draw_p:.1%} · {team_b} {away_p:.1%}. "
-                "Si hay empate, el modelo continúa con prórroga y penaltis."
-            )
-        else:
-            st.caption(short_explanation)
-        with st.expander("Ver cálculo y jugadores usados"):
-            st.caption(best.explanation)
-        if best.confidence.value == "low":
-            st.warning("Confianza baja: la base observada para estos equipos aún es insuficiente.")
-
     section = st.segmented_control(
         "Vista de análisis",
         ["Modelo", "Marcadores", "Mercados y EV", "Jugadores", "Datos / SofaScore", "Guardado"],
@@ -3078,6 +2877,225 @@ def render_prediction_lab() -> None:
         if not imports and not saved_predictions and not saved_odds:
             empty_state("Sin predicciones guardadas", "Guarda un snapshot antes del partido para evaluarlo después.", icon="📭")
 
+
+
+def render_prediction_lab() -> None:
+    repo = _repo()
+    with st.spinner("Comprobando calendario y bancos diarios del Mundial…"):
+        daily_result = _refresh_current_world_cup_banks(repo)
+    _resolve_bracket_after_daily_refresh(repo, daily_result)
+    matches = _list_matches()
+    if not matches:
+        empty_state("Sin partidos", "No hay partidos cargados en el calendario.", icon="📅")
+        return
+    labels, by_label = _match_labels(matches)
+    calibration_labels = {
+        "Czechia vs South Africa", "Switzerland vs Bosnia and Herzegovina",
+        "Canada vs Qatar", "Mexico vs South Korea",
+    }
+    # Preselection from the dashboard's match links (?match_id=X). We
+    # validate against ``by_label`` so we never land on a separator row.
+    requested_match_id = st.query_params.get("match_id")
+    try:
+        requested_match_id = int(requested_match_id) if requested_match_id else None
+    except ValueError:
+        requested_match_id = None
+    preselect_index = None
+    if requested_match_id is not None:
+        preselect_index = next(
+            (index for index, label in enumerate(labels)
+             if label in by_label and by_label[label].id == requested_match_id),
+            None,
+        )
+    if preselect_index is None:
+        preselect_index = next(
+            (index for index, label in enumerate(labels)
+             if label in by_label and by_label[label].label in calibration_labels),
+            None,
+        )
+    if preselect_index is None:
+        preselect_index = next(
+            (index for index, label in enumerate(labels) if label in by_label),
+            0,
+        )
+    selected_label = st.selectbox("Partido", labels, index=preselect_index, label_visibility="collapsed")
+    if selected_label not in by_label:
+        st.info("Selecciona un partido de la lista (no un separador).")
+        return
+    match = by_label[selected_label]
+    team_a, team_b = match.team_a.name, match.team_b.name
+    crest_a = crest_html(team_a, size=44)
+    crest_b = crest_html(team_b, size=44)
+    title_html = (
+        f'<span class="hero-team">{crest_a}<span>{team_a}</span></span>'
+        f'<span class="hero-vs">vs</span>'
+        f'<span class="hero-team">{crest_b}<span>{team_b}</span></span>'
+    )
+    hero(
+        f"{match.stage} · {_display_time(match.kickoff_utc, '%d %b %Y · %H:%M')}",
+        title_html,
+        f"{match.venue or 'Sede por confirmar'} · horario local del sistema",
+    )
+
+    tone = "green" if daily_result.status in {"current", "updated"} else "amber" if daily_result.status in {"partial", "stale"} else "red"
+    st.markdown(
+        '<div class="status-row">'
+        + status_pill(f"Datos del Mundial: {localize_status(daily_result.status)}", tone)
+        + status_pill(f"Actualizados: {len(daily_result.updated)}")
+        + status_pill(f"Sin cambios: {len(daily_result.unchanged) + len(daily_result.skipped_recent)}")
+        + "</div>",
+        unsafe_allow_html=True,
+    )
+
+    cache_key = f"refresh_{match.id}"
+    cached = _cached_bundle(match)
+    # The "Actualizar datos" button uses a Python script that lives in the
+    # user's local ~/.codex/skills/ directory. It isn't shipped in the repo
+    # and therefore doesn't exist on Streamlit Cloud — clicking it there
+    # only produced a red "El recolector local no está instalado" error.
+    # We hide the button entirely in environments without the script.
+    from wcpredict.refresh import default_collector_script
+    collector_available = default_collector_script().exists()
+    if collector_available:
+        button_col, note_col = st.columns([1, 2.2])
+        with button_col:
+            refresh_clicked = st.button("Actualizar datos", type="primary", width="stretch")
+        with note_col:
+            st.caption("Consulta acotada: un partido, máximo 14 llamadas y 0 créditos de cuotas. Conserva la caché si falla.")
+    else:
+        refresh_clicked = False
+    if refresh_clicked:
+        with st.spinner("Recopilando y normalizando datos del partido…"):
+            result = refresh_match(team_a, team_b, match.kickoff_utc, SPORTS_DATA_DIR)
+        st.session_state[cache_key] = result
+        if result.bundle is not None:
+            repo.import_collector_bundle(match.id, result.bundle)
+            cached = result.bundle
+            # New bundle data → invalidate cached analysis so the prediction
+            # actually reflects the freshly imported evidence.
+            st.cache_data.clear(); st.cache_resource.clear()
+        status_tone = {
+            "complete": ("success", "Datos del partido completos."),
+            "partial": ("warning", "Datos parciales: el modelo usa lo disponible y marca lo que falta."),
+            "cached": ("info", "No se pudieron añadir datos nuevos; se conserva la caché previa."),
+            "failed": ("error", "La actualización falló y no había caché previa."),
+            "unavailable": ("error", "El recolector local no está instalado o accesible."),
+        }
+        tone, default_message = status_tone.get(result.status, ("warning", result.message))
+        getattr(st, tone)(default_message)
+        metric_cols = st.columns(4)
+        metric_cols[0].metric("Llamadas hechas", result.calls_made)
+        metric_cols[1].metric("Proveedores OK", len(result.providers))
+        metric_cols[2].metric("Cuotas tocadas", len(result.odds_providers))
+        metric_cols[3].metric("Faltantes", len(result.missing_critical))
+        if result.providers:
+            st.caption("Proveedores que respondieron: " + ", ".join(result.providers))
+        if result.missing_critical:
+            st.warning(
+                "Campos no obtenidos en este partido: "
+                + ", ".join(result.missing_critical)
+                + ". La app no los inventa: aparecerán como vacíos en cobertura."
+            )
+        if result.odds_status == "skipped_zero_budget":
+            st.caption("Cuotas automáticas deshabilitadas (presupuesto 0); usa la pestaña Mercados para meterlas manualmente.")
+        if result.stderr_tail:
+            with st.expander("Salida técnica del recolector"):
+                st.code(result.stderr_tail)
+    bundle = _match_analysis_bundle(match)
+    current_players = bundle.current_players
+    squad_notes = bundle.squad_notes
+    deep_rows_before = bundle.deep_rows_before
+    prior_deep_samples = bundle.prior_deep_samples
+    deep_count = bundle.deep_count
+    if cached:
+        _render_bundle(cached, deep_count, len(current_players))
+    elif not (deep_count or current_players or prior_deep_samples):
+        callout(
+            "No hay evidencia previa ni caché automática suficiente para modelar este partido con confianza.",
+            tone="red", title="Sin datos",
+        )
+
+    results = bundle.results
+    predictions = bundle.predictions
+    score_only_predictions = bundle.score_only_predictions
+    primary = bundle.primary
+    ml_probabilities = bundle.ml_probabilities
+    ml_features = bundle.ml_features
+    ml_model_meta = bundle.ml_model_meta
+    if bundle.corrections is not None and corrections_active(bundle.corrections):
+        callout(describe_corrections(bundle.corrections), tone="blue", title="Corrección automática activa")
+    knockout_prediction = _knockout_prediction_for_match(match, bundle, repo)
+    is_knockout = knockout_prediction is not None
+    top_left, top_right = st.columns([1.55, 1])
+    with top_left:
+        home_p = next((row.probability for row in primary if row.selection_name == team_a), 0)
+        draw_p = next((row.probability for row in primary if row.selection_name == "Draw"), 0)
+        away_p = next((row.probability for row in primary if row.selection_name == team_b), 0)
+        if is_knockout:
+            st.subheader("Probabilidad de clasificación")
+            section_note(
+                "Partido de eliminatoria: la probabilidad principal es avanzar al siguiente cruce. "
+                "Incluye victoria en 90', prórroga y tanda de penaltis; el empate al 90' solo alimenta esas vías."
+            )
+            bars_html = (
+                probability_bar(team_with_crest_html(team_a, size=18), knockout_prediction.home_advances, "win")
+                + probability_bar(team_with_crest_html(team_b, size=18), knockout_prediction.away_advances, "loss")
+            )
+        else:
+            st.subheader("Probabilidad 1X2")
+            section_note(
+                "Modelo unificado: matriz de marcadores (xG ajustado + Dixon-Coles) + "
+                "ML cronológico (Elo, ~50k partidos) + ML deep stats (HistGBM con xG/posesión/tiros/defensa). "
+                "Pesos adaptativos según la muestra deep disponible para cada equipo."
+            )
+            bars_html = (
+                probability_bar(team_with_crest_html(team_a, size=18), home_p, "win")
+                + probability_bar("Empate", draw_p, "draw")
+                + probability_bar(team_with_crest_html(team_b, size=18), away_p, "loss")
+            )
+        st.markdown(bars_html, unsafe_allow_html=True)
+    with top_right:
+        best = max(primary, key=lambda row: row.probability)
+        exact_score = next(row for row in predictions if row.market_name == "Exact Score")
+        alt_scores = [row for row in predictions if row.market_name == "Exact Score (alt)"]
+        expected_row = next(
+            (row for row in predictions if row.market_name == "Expected Score"),
+            None,
+        )
+        st.subheader("Lectura inmediata")
+        if is_knockout:
+            advancing_team = team_a if knockout_prediction.home_advances >= knockout_prediction.away_advances else team_b
+            advancing_probability = max(knockout_prediction.home_advances, knockout_prediction.away_advances)
+            st.metric("Clasifica", advancing_team, f"{advancing_probability:.1%}")
+        else:
+            st.metric("Resultado más probable", localize_selection(best.selection_name), f"{best.probability:.1%}")
+        st.metric("Marcador más probable (modo)", exact_score.selection_name, f"{exact_score.probability:.1%}")
+        if expected_row is not None:
+            st.metric(
+                "Marcador esperado (goles xG)",
+                expected_row.selection_name,
+                help="Goles esperados según la distribución conjunta. Es una lectura promedio, no un marcador entero.",
+            )
+        if alt_scores:
+            alt_lines = " · ".join(
+                f"{row.selection_name.split(' ')[0]} ({row.probability:.1%})"
+                for row in alt_scores[:3]
+            )
+            st.caption(f"Alternativos más probables: {alt_lines}")
+        short_explanation = best.explanation.split("Ajuste de jugadores:", 1)[0].strip()
+        if is_knockout:
+            st.caption(
+                f"Resultado a 90': {team_a} {home_p:.1%} · empate {draw_p:.1%} · {team_b} {away_p:.1%}. "
+                "Si hay empate, el modelo continúa con prórroga y penaltis."
+            )
+        else:
+            st.caption(short_explanation)
+        with st.expander("Ver cálculo y jugadores usados"):
+            st.caption(best.explanation)
+        if best.confidence.value == "low":
+            st.warning("Confianza baja: la base observada para estos equipos aún es insuficiente.")
+
+    _render_prediction_workspace(match, bundle, cached, repo)
 
 def _render_global_bias_panel() -> None:
     """Show the model's systematic biases across all matches with deep stats,
