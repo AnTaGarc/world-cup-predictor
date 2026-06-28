@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+import math
 from random import Random
 from typing import Callable, Iterable
 
@@ -57,20 +58,14 @@ def _weighted_permutation(
     profiles: dict[str, PenaltyPlayerProfile],
     rng: Random,
 ) -> list[str]:
-    remaining = [_player_name(player) for player in players]
-    order: list[str] = []
-    while remaining:
-        weights = [max(0.02, profiles.get(name).taker_propensity if name in profiles else 0.20) for name in remaining]
-        threshold = rng.random() * sum(weights)
-        cumulative = 0.0
-        selected_index = len(remaining) - 1
-        for index, weight in enumerate(weights):
-            cumulative += weight
-            if threshold <= cumulative:
-                selected_index = index
-                break
-        order.append(remaining.pop(selected_index))
-    return order
+    names = [_player_name(player) for player in players]
+    # Exponential-race keys produce an exact weighted sample without replacement
+    # in O(n log n), instead of repeatedly scanning a shrinking list.
+    return sorted(
+        names,
+        key=lambda name: -math.log(max(rng.random(), 1e-15))
+        / max(0.02, profiles.get(name).taker_propensity if name in profiles else 0.20),
+    )
 
 
 class _TakerQueue:
