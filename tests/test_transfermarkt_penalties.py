@@ -15,6 +15,12 @@ from wcpredict.transfermarkt_penalties import (
 
 
 class TransfermarktPenaltyTests(unittest.TestCase):
+    def test_fetch_script_configures_utf8_console_output(self):
+        source = (
+            Path(__file__).parents[1] / "scripts" / "fetch_transfermarkt_penalties.py"
+        ).read_text(encoding="utf-8")
+        self.assertIn('sys.stdout.reconfigure(encoding="utf-8", errors="replace")', source)
+
     def test_penalty_snapshot_contains_exactly_the_confirmed_32(self):
         teams = load_penalty_team_snapshot(
             Path(__file__).parents[1]
@@ -169,6 +175,17 @@ class TransfermarktPenaltyTests(unittest.TestCase):
             "999",
             next(row.transfermarkt_player_id for row in targets if row.player_name == "Unused"),
         )
+
+    def test_repository_persists_resolved_identity_even_without_attempts(self):
+        with tempfile.TemporaryDirectory() as directory:
+            repo = Repository(Path(directory) / "app.sqlite")
+            repo.initialize()
+            repo.save_transfermarkt_player_identity(
+                "No Penalties Yet", "United States", "12345",
+                {"confidence": 0.98, "reason": "exact_name"},
+            )
+            identities = repo.list_transfermarkt_player_ids()
+        self.assertEqual("12345", identities[("No Penalties Yet", "USA")])
 
 
 if __name__ == "__main__":

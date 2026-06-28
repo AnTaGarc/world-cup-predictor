@@ -10,6 +10,8 @@ Keep visual decisions HERE. The page renderers in ``pages.py`` should only
 import these helpers, never inline CSS.
 """
 
+from html import escape
+
 import streamlit as st
 
 
@@ -926,6 +928,193 @@ div[data-testid="stDataEditor"] tbody tr:hover {
   .prob-bar { height: 10px; }
 }
 
+/* ---- Knockout panel ---- */
+.ko-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  margin: 2px 0 12px;
+  padding: 6px 11px;
+  border: 1px solid var(--status-blue-border);
+  border-radius: var(--r-pill);
+  background: var(--status-blue-fill);
+  color: var(--status-blue-ink);
+  font-size: 0.72rem;
+  font-weight: 760;
+  letter-spacing: 0.08em;
+  line-height: 1;
+  text-transform: uppercase;
+}
+.ko-badge::before {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--blue-500);
+  box-shadow: 0 0 0 4px rgba(23, 105, 224, 0.10);
+  content: "";
+}
+.ko-section-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 28px 0 13px;
+  color: var(--ink);
+  font-size: 1.02rem;
+  font-weight: 760;
+  letter-spacing: -0.01em;
+}
+.ko-section-head::after {
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, var(--line), transparent);
+  content: "";
+}
+.ko-advance {
+  overflow: hidden;
+  margin-bottom: 14px;
+  border: 1px solid #cfe0f7;
+  border-radius: 18px;
+  background:
+    radial-gradient(circle at 12% 0%, rgba(23, 105, 224, 0.11), transparent 32%),
+    linear-gradient(145deg, #fbfdff 0%, #f3f7fc 58%, #eef4fb 100%);
+  box-shadow: 0 9px 28px rgba(16, 35, 63, 0.09);
+}
+.ko-advance-top {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
+  gap: 18px;
+  padding: 22px 24px 18px;
+}
+.ko-team {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 10px;
+}
+.ko-team-away { justify-content: flex-end; text-align: right; }
+.ko-team-name {
+  min-width: 0;
+  overflow: hidden;
+  font-size: 0.96rem;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ko-team-prob {
+  display: block;
+  margin-top: 3px;
+  color: var(--blue-500);
+  font-size: 1.7rem;
+  font-variant-numeric: tabular-nums;
+  font-weight: 760;
+  letter-spacing: -0.04em;
+  line-height: 1;
+}
+.ko-team-away .ko-team-prob { color: #59708d; }
+.ko-vs {
+  display: grid;
+  width: 36px;
+  height: 36px;
+  place-items: center;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.85);
+  color: var(--muted);
+  font-size: 0.68rem;
+  font-weight: 760;
+}
+.ko-funnel {
+  display: grid;
+  gap: 9px;
+  padding: 17px 24px 20px;
+  border-top: 1px solid rgba(16, 35, 63, 0.08);
+  background: rgba(255, 255, 255, 0.58);
+}
+.ko-funnel-row { margin-inline: auto; width: 100%; }
+.ko-funnel-row:nth-child(2) { width: 92%; }
+.ko-funnel-row:nth-child(3) { width: 84%; }
+.ko-funnel-label {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 5px;
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 650;
+}
+.ko-funnel-track {
+  display: flex;
+  overflow: hidden;
+  min-height: 28px;
+  border-radius: 8px;
+  background: var(--prob-track);
+}
+.ko-funnel-segment {
+  display: flex;
+  min-width: 3%;
+  align-items: center;
+  justify-content: center;
+  padding: 0 6px;
+  color: #fff;
+  font-size: 0.68rem;
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.ko-funnel-segment.win { background: var(--prob-win); }
+.ko-funnel-segment.draw { background: var(--prob-draw); }
+.ko-funnel-segment.loss { background: var(--prob-loss); color: var(--ink); }
+.ko-next {
+  padding: 10px 24px 13px;
+  border-top: 1px solid rgba(16, 35, 63, 0.06);
+  color: var(--muted);
+  font-size: 0.78rem;
+}
+.ko-via-table {
+  overflow: hidden;
+  margin: 2px 0 10px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-card);
+  background: #fff;
+  box-shadow: var(--shadow-card);
+}
+.ko-via-row {
+  display: grid;
+  grid-template-columns: minmax(150px, 1.2fr) minmax(120px, 2fr) 62px;
+  align-items: center;
+  gap: 14px;
+  min-height: 45px;
+  padding: 8px 14px;
+  border-bottom: 1px solid #edf1f6;
+}
+.ko-via-row:last-child { border-bottom: 0; }
+.ko-via-label { color: var(--ink); font-size: 0.85rem; font-weight: 620; }
+.ko-via-track { overflow: hidden; height: 8px; border-radius: var(--r-pill); background: var(--prob-track); }
+.ko-via-fill { height: 100%; border-radius: inherit; background: linear-gradient(90deg, #1769e0, #4b8dea); }
+.ko-via-row:nth-child(even) .ko-via-fill { background: linear-gradient(90deg, #7990ac, #a7b6c8); }
+.ko-via-value {
+  color: var(--ink);
+  font-size: 0.84rem;
+  font-variant-numeric: tabular-nums;
+  font-weight: 720;
+  text-align: right;
+}
+@media (max-width: 720px) {
+  .ko-advance-top { gap: 9px; padding: 18px 14px 15px; }
+  .ko-team { display: block; }
+  .ko-team-name { font-size: 0.78rem; }
+  .ko-team-prob { font-size: 1.35rem; }
+  .ko-vs { width: 30px; height: 30px; }
+  .ko-funnel { padding: 14px 12px 17px; }
+  .ko-funnel-row:nth-child(2), .ko-funnel-row:nth-child(3) { width: 100%; }
+  .ko-funnel-segment { padding-inline: 3px; font-size: 0.61rem; }
+  .ko-next { padding-inline: 14px; }
+  .ko-via-row { grid-template-columns: minmax(0, 1fr) 72px; gap: 10px; }
+  .ko-via-track { grid-column: 1 / -1; grid-row: 2; }
+  .ko-via-value { grid-column: 2; grid-row: 1; }
+}
+
 /* ---- Very small phones ---- */
 @media (max-width: 400px) {
   .hero-title { font-size: 1.2rem; gap: 6px; }
@@ -1063,6 +1252,73 @@ def probability_bar(label: str, probability: float, kind: str = "win") -> str:
         f'<div class="prob-track"><div class="prob-fill {kind}" style="width:{width:.1f}%"></div></div>'
         f"</div>"
     )
+
+
+def knockout_badge_html(stage: str) -> str:
+    """Compact tournament-stage marker for knockout fixtures."""
+    return f'<div class="ko-badge">{escape(stage)}</div>'
+
+
+def knockout_section_head(title: str) -> str:
+    """Section title with a responsive divider line."""
+    return f'<div class="ko-section-head">{escape(title)}</div>'
+
+
+def knockout_advance_html(
+    team_a_html: str,
+    team_a_probability: float,
+    team_b_html: str,
+    team_b_probability: float,
+    funnel_rows: list[dict],
+    next_fixture: str | None = None,
+) -> str:
+    """Advancement card with three conditional match-stage rows."""
+    rendered_rows = []
+    for row in funnel_rows:
+        segments = []
+        for segment in row.get("segments", []):
+            probability = max(0.0, min(1.0, float(segment[1])))
+            kind = segment[2] if segment[2] in {"win", "draw", "loss"} else "draw"
+            segments.append(
+                f'<div class="ko-funnel-segment {kind}" style="flex:{max(0.03, probability):.4f}" '
+                f'title="{escape(str(segment[0]))}: {probability:.1%}">{probability:.0%}</div>'
+            )
+        rendered_rows.append(
+            '<div class="ko-funnel-row">'
+            f'<div class="ko-funnel-label"><span>{escape(str(row.get("label") or ""))}</span>'
+            f'<span>{escape(str(row.get("meta") or ""))}</span></div>'
+            f'<div class="ko-funnel-track">{"".join(segments)}</div></div>'
+        )
+    next_html = (
+        f'<div class="ko-next">Cruce siguiente: {escape(next_fixture)}</div>'
+        if next_fixture else ""
+    )
+    return (
+        '<div class="ko-advance">'
+        '<div class="ko-advance-top">'
+        f'<div class="ko-team"><div class="ko-team-name">{team_a_html}'
+        f'<span class="ko-team-prob">{team_a_probability:.1%}</span></div></div>'
+        '<div class="ko-vs">VS</div>'
+        f'<div class="ko-team ko-team-away"><div class="ko-team-name">{team_b_html}'
+        f'<span class="ko-team-prob">{team_b_probability:.1%}</span></div></div>'
+        '</div>'
+        f'<div class="ko-funnel">{"".join(rendered_rows)}</div>'
+        f'{next_html}</div>'
+    )
+
+
+def knockout_via_table_html(rows: list[dict]) -> str:
+    """Six-path probability table with compact, fully controlled mini-bars."""
+    rendered = []
+    for row in rows:
+        probability = max(0.0, min(100.0, float(row.get("Probabilidad (%)") or 0.0)))
+        rendered.append(
+            '<div class="ko-via-row">'
+            f'<div class="ko-via-label">{escape(str(row.get("Vía") or ""))}</div>'
+            f'<div class="ko-via-track"><div class="ko-via-fill" style="width:{probability:.1f}%"></div></div>'
+            f'<div class="ko-via-value">{probability:.1f}%</div></div>'
+        )
+    return f'<div class="ko-via-table">{"".join(rendered)}</div>'
 
 
 def section_note(text: str) -> None:

@@ -1844,6 +1844,38 @@ class Repository:
             )
         return identities
 
+    def save_transfermarkt_player_identity(
+        self,
+        player_name: str,
+        team_name: str,
+        transfermarkt_player_id: str,
+        metadata: dict | None = None,
+    ) -> None:
+        canonical_team = canonical_team_name(team_name)
+        team_id = self.upsert_team(canonical_team)
+        with self.session() as con:
+            con.execute(
+                "INSERT INTO players(name, team_id) VALUES(?, ?) "
+                "ON CONFLICT(name, team_id) DO NOTHING",
+                (player_name, team_id),
+            )
+            player_id = int(con.execute(
+                "SELECT id FROM players WHERE name=? AND team_id=?",
+                (player_name, team_id),
+            ).fetchone()[0])
+            con.execute(
+                "INSERT INTO provider_entities(provider, entity_type, provider_id, canonical_type, canonical_id, original_name, metadata_json) "
+                "VALUES('transfermarkt', 'player', ?, 'player', ?, ?, ?) "
+                "ON CONFLICT(provider, entity_type, provider_id) DO UPDATE SET "
+                "canonical_id=excluded.canonical_id, original_name=excluded.original_name, metadata_json=excluded.metadata_json",
+                (
+                    str(transfermarkt_player_id),
+                    player_id,
+                    player_name,
+                    json.dumps(metadata or {}, ensure_ascii=False, sort_keys=True),
+                ),
+            )
+
     def save_penalty_attempts(self, attempts: list[dict]) -> int:
         if not attempts:
             return 0

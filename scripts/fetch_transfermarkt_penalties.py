@@ -5,6 +5,9 @@ from datetime import datetime, timezone
 from pathlib import Path
 import sys
 
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+
 ROOT = Path(__file__).resolve().parents[1]
 SRC = ROOT / "src"
 if str(SRC) not in sys.path:
@@ -96,6 +99,18 @@ def main() -> int:
                 review_candidates.append(candidate)
                 if candidate.confidence >= args.auto_confidence:
                     transfermarkt_id = candidate.transfermarkt_player_id
+                    if not args.dry_run:
+                        repo.save_transfermarkt_player_identity(
+                            target.player_name,
+                            target.team_name,
+                            transfermarkt_id,
+                            {
+                                "candidate_name": candidate.candidate_name,
+                                "confidence": candidate.confidence,
+                                "reason": candidate.reason,
+                                "url": candidate.url,
+                            },
+                        )
             else:
                 missing.append(target)
         elif transfermarkt_id is None:
