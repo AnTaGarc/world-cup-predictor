@@ -41,7 +41,7 @@ The 32 qualified teams, stored under project canonical names, are:
 21. Mexico
 22. Ecuador
 23. England
-24. DR Congo
+24. Congo DR
 25. Argentina
 26. Cape Verde
 27. Australia
@@ -56,7 +56,7 @@ Source aliases in the player bank must resolve as follows:
 - `United States` -> `USA`
 - `Bosnia & Herz.` -> `Bosnia and Herzegovina`
 - `Côte d'Ivoire` -> `Cote d'Ivoire`
-- `Congo DR` -> `DR Congo`
+- `DR Congo` -> `Congo DR`
 - `Cabo Verde` -> `Cape Verde`
 
 The explicit snapshot prevents incomplete bracket state from suppressing data collection. Once the database resolves all 32 teams, an automated check must confirm that the dynamic bracket set matches this snapshot. A mismatch is reported; it does not silently add or remove teams.

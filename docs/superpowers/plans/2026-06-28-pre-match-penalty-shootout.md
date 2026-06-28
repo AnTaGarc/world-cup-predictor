@@ -59,7 +59,7 @@ def test_penalty_snapshot_contains_exactly_the_user_confirmed_32(self):
     )
     self.assertEqual(32, len(teams))
     self.assertEqual(32, len(set(teams)))
-    for team in ("USA", "Bosnia and Herzegovina", "Cote d'Ivoire", "DR Congo", "Cape Verde"):
+    for team in ("USA", "Bosnia and Herzegovina", "Cote d'Ivoire", "Congo DR", "Cape Verde"):
         self.assertIn(team, teams)
 
 def test_full_squad_targets_include_zero_minute_players_and_reuse_attempt_ids(self):
@@ -118,7 +118,7 @@ Norway
 Mexico
 Ecuador
 England
-DR Congo
+Congo DR
 Argentina
 Cape Verde
 Australia

@@ -111,6 +111,23 @@ def penalty_url(player_name: str, transfermarkt_player_id: str) -> str:
     return f"{TRANSFERMARKT_BASE}/{slugify_player_name(player_name)}/elfmetertore/spieler/{transfermarkt_player_id}"
 
 
+def load_penalty_team_snapshot(path: Path) -> list[str]:
+    with path.open(encoding="utf-8-sig", newline="") as handle:
+        teams = [canonical_team_name(row["team_name"]) for row in csv.DictReader(handle)]
+    return list(dict.fromkeys(team for team in teams if team))
+
+
+def reconcile_penalty_teams(
+    snapshot: list[str], dynamic: list[str]
+) -> dict[str, list[str]]:
+    wanted = {canonical_team_name(team) for team in snapshot}
+    actual = {canonical_team_name(team) for team in dynamic}
+    return {
+        "missing_from_bracket": sorted(wanted - actual),
+        "unexpected_in_bracket": sorted(actual - wanted),
+    }
+
+
 def eligible_penalty_teams(repo: Repository) -> list[str]:
     """Teams worth fetching now: resolved bracket teams, closed top-two, clinched winners."""
     team_ids: set[int] = set()
@@ -157,7 +174,7 @@ def player_targets_for_teams(repo: Repository, team_names: list[str]) -> list[Pe
         team = canonical_team_name(str(row.get("team_name") or ""))
         name = str(row.get("player_name") or "").strip()
         minutes = int(row.get("minutes") or 0)
-        if team not in team_set or not name or minutes <= 0:
+        if team not in team_set or not name:
             continue
         key = (name, team)
         if key in seen:
@@ -172,7 +189,7 @@ def player_targets_for_teams(repo: Repository, team_names: list[str]) -> list[Pe
                 transfermarkt_player_id=tm_ids.get(key),
             )
         )
-    return selected
+    return sorted(selected, key=lambda row: (row.team_name, -row.minutes, row.player_name))
 
 
 def _cache_path(cache_dir: Path, url: str) -> Path:

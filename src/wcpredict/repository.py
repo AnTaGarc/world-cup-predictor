@@ -1824,10 +1824,25 @@ class Repository:
                 "JOIN teams t ON t.id=p.team_id "
                 "WHERE pe.provider='transfermarkt' AND pe.entity_type='player'"
             ).fetchall()
-        return {
+        identities = {
             (str(row["player_name"]), canonical_team_name(str(row["team_name"]))): str(row["provider_id"])
             for row in rows
         }
+        with self.session() as con:
+            penalty_rows = con.execute(
+                "SELECT player_name, team_name, transfermarkt_player_id "
+                "FROM penalty_attempts WHERE transfermarkt_player_id IS NOT NULL "
+                "GROUP BY player_name, team_name, transfermarkt_player_id"
+            ).fetchall()
+        for row in penalty_rows:
+            identities.setdefault(
+                (
+                    str(row["player_name"]),
+                    canonical_team_name(str(row["team_name"] or "")),
+                ),
+                str(row["transfermarkt_player_id"]),
+            )
+        return identities
 
     def save_penalty_attempts(self, attempts: list[dict]) -> int:
         if not attempts:

@@ -6,13 +6,40 @@ import unittest
 from wcpredict.repository import Repository
 from wcpredict.transfermarkt_penalties import (
     eligible_penalty_teams,
+    load_penalty_team_snapshot,
     parse_penalty_attempts,
     player_targets_for_teams,
+    reconcile_penalty_teams,
     slugify_player_name,
 )
 
 
 class TransfermarktPenaltyTests(unittest.TestCase):
+    def test_penalty_snapshot_contains_exactly_the_confirmed_32(self):
+        teams = load_penalty_team_snapshot(
+            Path(__file__).parents[1]
+            / "data"
+            / "fixtures"
+            / "world_cup_2026_penalty_teams.csv"
+        )
+        self.assertEqual(32, len(teams))
+        self.assertEqual(32, len(set(teams)))
+        for team in (
+            "USA",
+            "Bosnia and Herzegovina",
+            "Cote d'Ivoire",
+            "Congo DR",
+            "Cape Verde",
+        ):
+            self.assertIn(team, teams)
+
+    def test_reconciliation_reports_incomplete_dynamic_bracket(self):
+        result = reconcile_penalty_teams(
+            ["USA", "Spain", "Cape Verde"], ["United States", "Spain"]
+        )
+        self.assertEqual(["Cape Verde"], result["missing_from_bracket"])
+        self.assertEqual([], result["unexpected_in_bracket"])
+
     def test_slugify_player_name_for_transfermarkt_url(self):
         self.assertEqual("harry-kane", slugify_player_name("Harry Kane"))
         self.assertEqual("matej-kovar", slugify_player_name("Matej Kovar"))
@@ -111,6 +138,37 @@ class TransfermarktPenaltyTests(unittest.TestCase):
         self.assertIn("South Africa", teams)
         self.assertNotIn("Spain", {target.team_name for target in targets})
         self.assertEqual({"Player Mexico", "Player SA"}, {target.player_name for target in targets})
+
+    def test_targets_include_zero_minutes_and_reuse_ids_from_attempts(self):
+        with tempfile.TemporaryDirectory() as directory:
+            repo = Repository(Path(directory) / "app.sqlite")
+            repo.initialize()
+            now = datetime.now(timezone.utc)
+            repo.replace_current_world_cup_players(
+                "test",
+                [
+                    {"player_name": "Starter", "team_name": "United States", "position": "FW", "minutes": 180},
+                    {"player_name": "Unused", "team_name": "United States", "position": "MF", "minutes": 0},
+                ],
+                now,
+            )
+            repo.save_penalty_attempts([{
+                "player_name": "Unused", "team_name": "USA",
+                "transfermarkt_player_id": "999", "attempted_on": "2026-01-01",
+                "competition": "Test", "phase": "regular", "outcome": "scored",
+                "goalkeeper_name": "Keeper", "opponent_team": "Test", "minute": "70'",
+                "match_label": "Test", "source_provider": "transfermarkt",
+                "source_url": "https://example.test/999",
+                "source_row_key": "transfermarkt:999:test", "fetched_at_utc": now.isoformat(),
+                "raw": {},
+            }])
+            targets = player_targets_for_teams(repo, ["USA"])
+
+        self.assertEqual({"Starter", "Unused"}, {row.player_name for row in targets})
+        self.assertEqual(
+            "999",
+            next(row.transfermarkt_player_id for row in targets if row.player_name == "Unused"),
+        )
 
 
 if __name__ == "__main__":
