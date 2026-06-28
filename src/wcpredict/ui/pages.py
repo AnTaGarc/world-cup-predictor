@@ -90,6 +90,7 @@ from wcpredict.ui.view_models import (
 from wcpredict.ui.interaction_models import (
     evaluate_odds_rows,
     localized_default_odds_rows,
+    prepare_player_match_context,
 )
 from wcpredict.volume_markets import estimate_total_market
 
@@ -1961,6 +1962,26 @@ def _match_auxiliary_context(match) -> MatchAuxiliaryBundle:
     )
 
 
+@st.cache_resource(show_spinner=False)
+def _player_match_context_cached(
+    match_id: int,
+    db_sig: tuple[int, int],
+    engine_version: str,
+    team_a: str,
+    team_b: str,
+    _current_players: list[dict],
+    _auxiliary: MatchAuxiliaryBundle,
+):
+    return prepare_player_match_context(
+        team_a,
+        team_b,
+        _current_players,
+        _repo().list_imported_lineups(match_id),
+        _auxiliary.team_volume_predictions,
+        _auxiliary.goalkeeper_baselines,
+    )
+
+
 def _render_volume_markets(auxiliary: MatchVolumeBundle | MatchAuxiliaryBundle) -> None:
     st.subheader("Mercados de volumen")
     if auxiliary.volume_market_rows:
@@ -2738,11 +2759,23 @@ def render_prediction_lab() -> None:
 
     elif section == "Jugadores":
         auxiliary = _match_auxiliary_context(match)
-        lineups = repo.list_imported_lineups(match.id)
-        if lineups:
+        player_context = _player_match_context_cached(
+            match.id,
+            _db_signature(),
+            PREDICTION_ENGINE_VERSION,
+            team_a,
+            team_b,
+            current_players,
+            auxiliary,
+        )
+        if player_context.lineups:
             st.success("Alineación importada para este partido.")
             with st.expander("Ver alineación"):
-                st.dataframe(_visible_frame(lineups), width="stretch", hide_index=True)
+                st.dataframe(
+                    _visible_frame(player_context.lineups),
+                    width="stretch",
+                    hide_index=True,
+                )
         else:
             st.info("Alineación no confirmada: las tasas observadas sí están disponibles, pero la confianza se mantiene baja.")
         st.caption("Elige jugador, mercado, línea y cuota. La tasa por 90, los minutos y la titularidad se calculan desde el banco de jugadores.")
@@ -2763,27 +2796,14 @@ def render_prediction_lab() -> None:
             MarketFamily.PLAYER_GOALS_CONCEDED: 1.5,
             MarketFamily.PLAYER_CLEAN_SHEET: 0.5,
         }
-        # Pre-compute opponent SOT expectation per team so GK markets get a
-        # realistic baseline instead of the global default.
-        sot_predictions = auxiliary.team_volume_predictions.get("shots_on_target", {})
-        opponent_sot_for = {
-            team_a: sot_predictions.get(team_b),
-            team_b: sot_predictions.get(team_a),
-        }
         for team_name in (selected_team,):
-                team_players = sorted(
-                    (
-                        row for row in current_players
-                        if same_team(str(row.get("team_name") or ""), team_name)
-                        and int(row.get("minutes") or 0) > 0
-                    ),
-                    key=lambda row: (-int(row.get("minutes") or 0), str(row.get("player_name") or "")),
-                )
+                team_context = player_context.by_team[team_name]
+                team_players = team_context.players
                 if not team_players:
                     st.warning(f"No hay estadísticas observadas de jugadores de {team_name}.")
                     continue
-                goalkeepers = [row for row in team_players if is_goalkeeper(row)]
-                field_players = [row for row in team_players if not is_goalkeeper(row)]
+                goalkeepers = team_context.goalkeepers
+                field_players = team_context.field_players
                 # Player roster table: lets the user scan candidates and pick
                 # interesting names before drilling into market/odds entry.
                 st.markdown(f"**Plantilla disponible de {team_name}**")
@@ -2808,50 +2828,14 @@ def render_prediction_lab() -> None:
                     )
                     continue
 
-                def per90(value, minutes):
-                    minutes = int(minutes or 0)
-                    if not minutes:
-                        return None
-                    return round(90.0 * float(value or 0) / minutes, 2)
-
-                roster_rows = []
-                for row in roster_source:
-                    minutes = int(row.get("minutes") or 0)
-                    games = max(1, int(row.get("games") or 0))
-                    starts = int(row.get("starts") or 0)
-                    base = {
-                        "Jugador": row.get("player_name"),
-                        "Posición": row.get("position") or "—",
-                        "Min": minutes,
-                        "Partidos": games,
-                        "Titularidad": f"{min(1.0, starts / games):.0%}",
-                    }
-                    if is_goalkeeper(row):
-                        save_pct = row.get("save_percentage")
-                        base.update({
-                            "Save %": round(float(save_pct), 1) if save_pct is not None else None,
-                            "Paradas": int(row.get("saves") or 0),
-                            "GC": int(row.get("goals_conceded") or 0),
-                            "Intercepciones": row.get("interceptions") or 0,
-                            "Pases": int(row.get("passes") or 0),
-                            "Amarillas": int(row.get("yellow_cards") or 0),
-                            "Rojas": int(row.get("red_cards") or 0),
-                        })
-                    else:
-                        base.update({
-                            "Goles": int(row.get("goals") or 0),
-                            "Asist.": int(row.get("assists") or 0),
-                            "Tiros": int(row.get("shots") or 0),
-                            "SOT": int(row.get("shots_on_target") or 0),
-                            "Amarillas": int(row.get("yellow_cards") or 0),
-                            "Rojas": int(row.get("red_cards") or 0),
-                            "Pases": int(row.get("passes") or 0),
-                            "G/90": per90(row.get("goals"), minutes),
-                            "A/90": per90(row.get("assists"), minutes),
-                            "Tiros/90": per90(row.get("shots"), minutes),
-                            "SOT/90": per90(row.get("shots_on_target"), minutes),
-                        })
-                    roster_rows.append(base)
+                roster_names = {
+                    str(row.get("player_name") or "") for row in roster_source
+                }
+                roster_rows = [
+                    row
+                    for row in team_context.roster_rows
+                    if str(row.get("Jugador") or "") in roster_names
+                ]
                 roster_frame = pd.DataFrame(roster_rows)
                 min_minutes = st.slider(
                     "Minutos mínimos para mostrar",
@@ -2937,7 +2921,7 @@ def render_prediction_lab() -> None:
                         key=f"player_odds_{match.id}_{team_name}_{family.value}",
                     )
                 if family in GOALKEEPER_MARKETS:
-                    baseline = auxiliary.goalkeeper_baselines.get(team_name)
+                    baseline = team_context.goalkeeper_baseline
                     bank_save_pct = (
                         float(player_row.get("bank_save_percentage") or player_row.get("save_percentage") or 0)
                     ) / 100.0
@@ -2961,7 +2945,7 @@ def render_prediction_lab() -> None:
                         )
                     derived = derive_player_assumption(
                         player_row, family,
-                        opponent_sot_per90=opponent_sot_for.get(team_name),
+                        opponent_sot_per90=team_context.opponent_sot_per90,
                         team_save_rate_override=save_override,
                     )
                 else:
