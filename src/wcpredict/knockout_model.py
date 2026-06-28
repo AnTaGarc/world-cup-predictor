@@ -48,6 +48,16 @@ class KnockoutPrediction:
     # Intermediate diagnostics.
     p_draw_90: float
     p_draw_after_et: float
+    # Conditional probabilities used by the UI funnel:
+    #   * ``cond_*_given_draw_90``: probability of each ET branch given
+    #     the 90' ended in a draw (so ET actually happens). They sum to 1.
+    #   * ``cond_*_given_draw_after_et``: probability of each penalty
+    #     shoot-out result given ET also ended level. They sum to 1.
+    cond_home_wins_et_given_draw_90: float = 0.0
+    cond_draw_after_et_given_draw_90: float = 0.0
+    cond_away_wins_et_given_draw_90: float = 0.0
+    cond_home_wins_penalties_given_draw_after_et: float = 0.0
+    cond_away_wins_penalties_given_draw_after_et: float = 0.0
 
 
 def predict_knockout_match(
@@ -93,6 +103,22 @@ def predict_knockout_match(
     home_wins_pen = p_draw_after_et * p_home_penalty
     away_wins_pen = p_draw_after_et * p_away_penalty
 
+    # Conditional probabilities (used by the UI funnel: "given we're
+    # already in ET, who wins it?"). When the chain is degenerate
+    # (p_draw_90 == 0, or p_draw_after_et == 0) we fall back to
+    # zeros — the UI renders an empty funnel instead of a crash.
+    if p_draw_90 > 0:
+        cond_home_et = summary_et.team_a_win
+        cond_away_et = summary_et.team_b_win
+        cond_draw_et = summary_et.draw
+    else:
+        cond_home_et = cond_away_et = cond_draw_et = 0.0
+    if p_draw_after_et > 0:
+        cond_home_pen = p_home_penalty
+        cond_away_pen = p_away_penalty
+    else:
+        cond_home_pen = cond_away_pen = 0.0
+
     return KnockoutPrediction(
         home_advances=home_wins_90 + home_wins_et + home_wins_pen,
         away_advances=away_wins_90 + away_wins_et + away_wins_pen,
@@ -104,6 +130,11 @@ def predict_knockout_match(
         away_wins_penalties=away_wins_pen,
         p_draw_90=p_draw_90,
         p_draw_after_et=p_draw_after_et,
+        cond_home_wins_et_given_draw_90=cond_home_et,
+        cond_draw_after_et_given_draw_90=cond_draw_et,
+        cond_away_wins_et_given_draw_90=cond_away_et,
+        cond_home_wins_penalties_given_draw_after_et=cond_home_pen,
+        cond_away_wins_penalties_given_draw_after_et=cond_away_pen,
     )
 
 

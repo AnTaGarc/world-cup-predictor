@@ -879,24 +879,53 @@ def _render_knockout_panel(
     # ────────── 1. PRINCIPAL ──────────
     st.subheader("Quién avanza al siguiente cruce")
     section_note(
-        "En eliminatorias el partido se decide con prórroga y penaltis si el "
-        "marcador al 90' es de empate. La barra de avance integra las tres vías."
+        "Funnel del partido: cada barra muestra la probabilidad CONDICIONAL "
+        "dentro de su fase. Si llega la prórroga, esas son las probabilidades "
+        "una vez ya estás en prórroga; lo mismo para los penaltis."
     )
     advance_html = (
         probability_bar(team_with_crest_html(team_a, size=18), pred.home_advances, "win")
         + probability_bar(team_with_crest_html(team_b, size=18), pred.away_advances, "loss")
     )
     st.markdown(advance_html, unsafe_allow_html=True)
-    via_90 = pred.home_wins_90 + pred.away_wins_90
-    via_et = pred.home_wins_et + pred.away_wins_et
-    via_pen = pred.home_wins_penalties + pred.away_wins_penalties
-    c1, c2, c3 = st.columns(3)
-    c1.metric("En 90'", f"{via_90:.1%}")
-    c2.metric("En prórroga", f"{via_et:.1%}")
-    c3.metric("En penaltis", f"{via_pen:.1%}")
     next_fixture = _find_next_knockout_fixture(repo, match.id)
     if next_fixture:
         st.caption(f"Cruce siguiente para el ganador: {next_fixture}.")
+
+    # === Funnel de 3 barras condicionales ===
+    st.markdown("**Al 90'**")
+    funnel_90 = (
+        probability_bar(team_with_crest_html(team_a, size=16), pred.home_wins_90, "win")
+        + probability_bar("Empate (va a prórroga)", pred.p_draw_90, "draw")
+        + probability_bar(team_with_crest_html(team_b, size=16), pred.away_wins_90, "loss")
+    )
+    st.markdown(funnel_90, unsafe_allow_html=True)
+
+    st.markdown(f"**Si llega la prórroga** ({pred.p_draw_90:.1%} a-priori)")
+    if pred.p_draw_90 > 0:
+        funnel_et = (
+            probability_bar(team_with_crest_html(team_a, size=16),
+                            pred.cond_home_wins_et_given_draw_90, "win")
+            + probability_bar("Empate (va a penaltis)",
+                              pred.cond_draw_after_et_given_draw_90, "draw")
+            + probability_bar(team_with_crest_html(team_b, size=16),
+                              pred.cond_away_wins_et_given_draw_90, "loss")
+        )
+        st.markdown(funnel_et, unsafe_allow_html=True)
+    else:
+        st.caption("Sin probabilidad de prórroga relevante.")
+
+    st.markdown(f"**Si se resuelve en penaltis** ({pred.p_draw_after_et:.1%} a-priori)")
+    if pred.p_draw_after_et > 0:
+        funnel_pen = (
+            probability_bar(team_with_crest_html(team_a, size=16),
+                            pred.cond_home_wins_penalties_given_draw_after_et, "win")
+            + probability_bar(team_with_crest_html(team_b, size=16),
+                              pred.cond_away_wins_penalties_given_draw_after_et, "loss")
+        )
+        st.markdown(funnel_pen, unsafe_allow_html=True)
+    else:
+        st.caption("Sin probabilidad de tanda de penaltis relevante.")
 
     # ────────── 2. RESULTADO AL 90' ──────────
     st.subheader("Resultado al 90'")
