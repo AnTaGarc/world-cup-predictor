@@ -8,6 +8,7 @@ from wcpredict.transfermarkt_penalties import (
     eligible_penalty_teams,
     load_penalty_team_snapshot,
     parse_penalty_attempts,
+    penalty_urls,
     player_targets_for_teams,
     reconcile_penalty_teams,
     slugify_player_name,
@@ -50,6 +51,15 @@ class TransfermarktPenaltyTests(unittest.TestCase):
         self.assertEqual("harry-kane", slugify_player_name("Harry Kane"))
         self.assertEqual("matej-kovar", slugify_player_name("Matej Kovar"))
 
+    def test_penalty_urls_cover_scored_and_missed_pages(self):
+        self.assertEqual(
+            [
+                ("scored", "https://www.transfermarkt.com/harry-kane/elfmetertore/spieler/132098"),
+                ("missed", "https://www.transfermarkt.com/harry-kane/elfmeterstatistik/spieler/132098"),
+            ],
+            penalty_urls("Harry Kane", "132098"),
+        )
+
     def test_parse_penalty_attempts_from_cached_html(self):
         html = """
         <html><body>
@@ -90,7 +100,28 @@ class TransfermarktPenaltyTests(unittest.TestCase):
             source_url="https://example.test",
             fetched_at_utc=datetime(2026, 6, 25, tzinfo=timezone.utc),
         )
-        self.assertEqual(["saved", "missed", "missed"], [row["outcome"] for row in attempts])
+        self.assertEqual(
+            ["saved", "off_target", "woodwork"],
+            [row["outcome"] for row in attempts],
+        )
+
+    def test_missed_page_uses_missed_default_when_rows_only_contain_match_scores(self):
+        html = """
+        <table>
+          <tr><th>Date</th><th>Competition</th><th>Result</th><th>Goalkeeper</th></tr>
+          <tr><td>Jun 20, 2026</td><td>World Cup</td><td>2:1</td><td>Keeper</td></tr>
+        </table>
+        """
+        attempts = parse_penalty_attempts(
+            html,
+            player_name="Taker",
+            team_name="Test",
+            transfermarkt_player_id="1",
+            source_url="https://example.test/elfmeterstatistik/spieler/1",
+            fetched_at_utc=datetime(2026, 6, 25, tzinfo=timezone.utc),
+            default_outcome="missed",
+        )
+        self.assertEqual("missed", attempts[0]["outcome"])
 
     def test_repository_saves_penalty_attempts_idempotently(self):
         with tempfile.TemporaryDirectory() as directory:

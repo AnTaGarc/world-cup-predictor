@@ -29,7 +29,7 @@ RECENT_BLEND = 0.35
 MAX_SHOOTOUT_SHIFT = 0.14
 DEFAULT_SIMULATIONS = 25_000
 MAX_SUBSTITUTION_PATH_PAIRS = 1_024
-PENALTY_MODEL_VERSION = "path-monte-carlo-v1"
+PENALTY_MODEL_VERSION = "path-monte-carlo-v2"
 
 
 @dataclass(frozen=True)
@@ -91,7 +91,9 @@ def build_penalty_team_profile(team_name: str, attempts: list[dict]) -> PenaltyT
     team_rows = _team_rows(team_name, attempts)
     valid_rows = [
         row for row in team_rows
-        if str(row.get("outcome") or "").casefold() in {"scored", "saved", "missed"}
+        if str(row.get("outcome") or "").casefold() in {
+            "scored", "saved", "missed", "off_target", "woodwork"
+        }
     ]
     scored = sum(str(row.get("outcome") or "").casefold() == "scored" for row in valid_rows)
     total = len(valid_rows)

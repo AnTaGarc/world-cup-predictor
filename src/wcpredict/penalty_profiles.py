@@ -14,6 +14,7 @@ PRIOR_ATTEMPTS = 12.0
 SHOOTOUT_WEIGHT = 1.50
 REGULAR_WEIGHT = 1.00
 RECENCY_HALF_LIFE_DAYS = 1095.0
+VALID_TAKER_OUTCOMES = {"scored", "saved", "missed", "off_target", "woodwork"}
 
 
 @dataclass(frozen=True)
@@ -97,7 +98,7 @@ def build_player_profile(
     relevant = [
         row for row in attempts
         if _name_key(row.get("player_name")) == player_key
-        and _outcome(row) in {"scored", "saved", "missed"}
+        and _outcome(row) in VALID_TAKER_OUTCOMES
     ]
     weighted_successes = 0.0
     weighted_failures = 0.0
@@ -160,11 +161,18 @@ def build_goalkeeper_profile(
 ) -> GoalkeeperPenaltyProfile:
     player_name = str(player.get("player_name") or "")
     player_key = _name_key(player_name)
-    relevant = [
+    matching = [
         row for row in attempts
         if _name_key(row.get("goalkeeper_name")) == player_key
-        and _outcome(row) in {"scored", "saved", "missed"}
     ]
+    observed_saves = [row for row in matching if _is_goalkeeper_save(row)]
+    # Transfermarkt's generic missed-penalty page does not always say whether
+    # the goalkeeper saved it or the taker missed. Avoid a one-sided sample of
+    # scored penalties unless at least one save is explicitly identified.
+    relevant = (
+        [row for row in matching if _outcome(row) == "scored" or _is_goalkeeper_save(row)]
+        if observed_saves else []
+    )
     saves = sum(_is_goalkeeper_save(row) for row in relevant)
     faced = len(relevant)
     history_weight = faced / (PRIOR_ATTEMPTS + faced)

@@ -45,11 +45,11 @@ class PenaltyProfileTests(unittest.TestCase):
         keeper = {"player_name": "Keeper"}
         attempts = [
             {"goalkeeper_name": "Keeper", "outcome": "saved"},
-            {"goalkeeper_name": "Keeper", "outcome": "missed"},
+            {"goalkeeper_name": "Keeper", "outcome": "off_target"},
         ]
         profile = build_goalkeeper_profile(keeper, attempts)
-        expected = (GLOBAL_PENALTY_SAVE * 12.0 + 1.0) / 14.0
-        self.assertEqual(2, profile.faced_penalties)
+        expected = (GLOBAL_PENALTY_SAVE * 12.0 + 1.0) / 13.0
+        self.assertEqual(1, profile.faced_penalties)
         self.assertAlmostEqual(expected, profile.penalty_save_rate)
 
     def test_goalkeeper_recovers_saved_outcome_from_legacy_raw_json(self):
@@ -62,6 +62,16 @@ class PenaltyProfileTests(unittest.TestCase):
         profile = build_goalkeeper_profile(keeper, attempts)
         expected = (GLOBAL_PENALTY_SAVE * 12.0 + 1.0) / 13.0
         self.assertAlmostEqual(expected, profile.penalty_save_rate)
+
+    def test_goalkeeper_ignores_one_sided_scored_only_history(self):
+        keeper = {"player_name": "Keeper", "save_percentage": 75.0}
+        attempts = [
+            {"goalkeeper_name": "Keeper", "outcome": "scored"}
+            for _ in range(20)
+        ]
+        profile = build_goalkeeper_profile(keeper, attempts)
+        self.assertEqual(0, profile.faced_penalties)
+        self.assertEqual("general_save_fallback", profile.source)
 
     def test_profiles_only_consume_attempts_for_the_matching_player(self):
         attempts = [

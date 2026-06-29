@@ -111,6 +111,15 @@ def penalty_url(player_name: str, transfermarkt_player_id: str) -> str:
     return f"{TRANSFERMARKT_BASE}/{slugify_player_name(player_name)}/elfmetertore/spieler/{transfermarkt_player_id}"
 
 
+def penalty_urls(player_name: str, transfermarkt_player_id: str) -> list[tuple[str, str]]:
+    base = f"{TRANSFERMARKT_BASE}/{slugify_player_name(player_name)}"
+    suffix = f"/spieler/{transfermarkt_player_id}"
+    return [
+        ("scored", f"{base}/elfmetertore{suffix}"),
+        ("missed", f"{base}/elfmeterstatistik{suffix}"),
+    ]
+
+
 def load_penalty_team_snapshot(path: Path) -> list[str]:
     with path.open(encoding="utf-8-sig", newline="") as handle:
         teams = [canonical_team_name(row["team_name"]) for row in csv.DictReader(handle)]
@@ -265,6 +274,7 @@ def parse_penalty_attempts(
     transfermarkt_player_id: str,
     source_url: str,
     fetched_at_utc: datetime,
+    default_outcome: str | None = None,
 ) -> list[dict]:
     parser = TableParser()
     parser.feed(html)
@@ -276,7 +286,7 @@ def parse_penalty_attempts(
         lowered = " | ".join(cells).lower()
         if any(header in lowered for header in ("date", "competition", "result", "goalkeeper")):
             continue
-        outcome = _row_outcome(cells)
+        outcome = _row_outcome(cells, default_outcome=default_outcome)
         if outcome is None:
             continue
         date_value = _first_date(cells)
@@ -309,11 +319,15 @@ def parse_penalty_attempts(
     return attempts
 
 
-def _row_outcome(cells: list[str]) -> str | None:
+def _row_outcome(cells: list[str], *, default_outcome: str | None = None) -> str | None:
     text = " ".join(cells).lower()
     if "saved" in text:
         return "saved"
-    if "missed" in text or "off target" in text or "woodwork" in text:
+    if "off target" in text:
+        return "off_target"
+    if "woodwork" in text:
+        return "woodwork"
+    if "missed" in text:
         return "missed"
     if "scored" in text or "goal" in text:
         return "scored"
@@ -321,7 +335,7 @@ def _row_outcome(cells: list[str]) -> str | None:
         # Transfermarkt's successful-penalty table often lacks an explicit
         # "scored" token; if the row has a match result and no miss token,
         # treat it as a made penalty.
-        return "scored"
+        return default_outcome or "scored"
     return None
 
 
