@@ -2708,6 +2708,46 @@ class Repository:
             ).fetchall()
         return [dict(row) for row in rows]
 
+    def list_extra_time_training_rows_before(
+        self, as_of_utc: datetime
+    ) -> list[dict]:
+        with self.session() as con:
+            rows = con.execute(
+                "WITH ranked AS ("
+                " SELECT ps.*, ROW_NUMBER() OVER ("
+                "  PARTITION BY ps.match_id, ps.team_id, ps.period "
+                "  ORDER BY ps.observed_at_utc DESC, ps.source_id DESC"
+                " ) AS row_rank FROM team_match_period_stats ps "
+                " JOIN matches pm ON pm.id=ps.match_id "
+                " WHERE pm.kickoff_utc < ? AND ps.period IN ('extra_time_first', 'extra_time_second')"
+                "), et AS ("
+                " SELECT match_id, team_id, SUM(xg) AS extra_time_xg "
+                " FROM ranked WHERE row_rank=1 GROUP BY match_id, team_id"
+                ") "
+                "SELECT m.kickoff_utc, ta.name AS team_name, tb.name AS opponent_name, "
+                "tsa.xg AS regulation_xg, eta.extra_time_xg, pr.extra_time_goals_a AS extra_time_goals "
+                "FROM match_phase_results pr "
+                "JOIN settlement_versions sv ON sv.id=pr.settlement_version_id AND sv.active=1 "
+                "JOIN matches m ON m.id=pr.match_id "
+                "JOIN teams ta ON ta.id=m.team_a_id JOIN teams tb ON tb.id=m.team_b_id "
+                "LEFT JOIN team_match_stats tsa ON tsa.match_id=m.id AND tsa.team_id=m.team_a_id "
+                "LEFT JOIN et eta ON eta.match_id=m.id AND eta.team_id=m.team_a_id "
+                "WHERE m.kickoff_utc < ? AND pr.decided_in IN ('extra_time', 'shootout') "
+                "UNION ALL "
+                "SELECT m.kickoff_utc, tb.name AS team_name, ta.name AS opponent_name, "
+                "tsb.xg AS regulation_xg, etb.extra_time_xg, pr.extra_time_goals_b AS extra_time_goals "
+                "FROM match_phase_results pr "
+                "JOIN settlement_versions sv ON sv.id=pr.settlement_version_id AND sv.active=1 "
+                "JOIN matches m ON m.id=pr.match_id "
+                "JOIN teams ta ON ta.id=m.team_a_id JOIN teams tb ON tb.id=m.team_b_id "
+                "LEFT JOIN team_match_stats tsb ON tsb.match_id=m.id AND tsb.team_id=m.team_b_id "
+                "LEFT JOIN et etb ON etb.match_id=m.id AND etb.team_id=m.team_b_id "
+                "WHERE m.kickoff_utc < ? AND pr.decided_in IN ('extra_time', 'shootout') "
+                "ORDER BY kickoff_utc, team_name",
+                (as_of_utc.isoformat(), as_of_utc.isoformat(), as_of_utc.isoformat()),
+            ).fetchall()
+        return [dict(row) for row in rows]
+
     def _record_live_residual(
         self,
         con,

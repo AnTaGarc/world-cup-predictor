@@ -69,6 +69,7 @@ def predict_knockout_match(
     home_gk_rating: float | None = None,
     away_gk_rating: float | None = None,
     home_penalty_win_probability: float | None = None,
+    extra_time_xg: tuple[float, float] | None = None,
 ) -> KnockoutPrediction:
     """Compute advance probabilities for a single knockout tie.
 
@@ -80,9 +81,14 @@ def predict_knockout_match(
         team_a_xg, team_b_xg, dispersion=dispersion, max_goals=10, rho=rho,
     )
     summary_90 = summarize_score_matrix(matrix_90, total_line=2.5)
+    et_xg_a, et_xg_b = (
+        (float(extra_time_xg[0]), float(extra_time_xg[1]))
+        if extra_time_xg is not None
+        else (team_a_xg * EXTRA_TIME_FRACTION, team_b_xg * EXTRA_TIME_FRACTION)
+    )
     matrix_et = score_matrix_negative_binomial(
-        team_a_xg * EXTRA_TIME_FRACTION,
-        team_b_xg * EXTRA_TIME_FRACTION,
+        et_xg_a,
+        et_xg_b,
         dispersion=dispersion, max_goals=8, rho=rho,
     )
     summary_et = summarize_score_matrix(matrix_et, total_line=0.5)

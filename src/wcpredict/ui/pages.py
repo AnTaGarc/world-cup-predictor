@@ -40,6 +40,7 @@ from wcpredict.knockout_bracket import (
 from wcpredict.knockout_model import predict_knockout_match
 from wcpredict.penalty_history_model import PENALTY_MODEL_VERSION, build_penalty_match_context
 from wcpredict.penalty_context_cache import load_precomputed_context
+from wcpredict.extra_time_model import adjust_extra_time_xg
 from wcpredict.services import MarketPrediction, predict_match_markets
 from wcpredict.source_catalog import default_source_catalog
 from wcpredict.daily_refresh import DEFAULT_PROVIDERS, DatasetDownload, ensure_current_world_cup_data
@@ -121,7 +122,7 @@ OPEN_SCHEDULE_PATH = DATA_DIR / "open" / "martj42-results.csv"
 PRECOMPUTED_PENALTY_DIR = DATA_DIR / "precomputed" / "penalties"
 DAILY_PROVIDERS = (*DEFAULT_PROVIDERS, "martj42_world_schedule")
 HOST_TEAMS = {"USA", "Canada", "Mexico"}
-PREDICTION_ENGINE_VERSION = "2026-06-25-draw-incentive-v1"
+PREDICTION_ENGINE_VERSION = "2026-06-29-knockout-phases-v1"
 DISPLAY_TZ = ZoneInfo("Europe/Madrid")
 
 
@@ -849,8 +850,18 @@ def _knockout_prediction_for_match(match, bundle, repo: Repository | None = None
     if xa <= 0 or xb <= 0:
         return None
     penalty_context = None
+    extra_time_xg = None
     if repo is not None:
         penalty_context = _penalty_match_context(match)
+        adjustment = adjust_extra_time_xg(
+            match.team_a.name,
+            match.team_b.name,
+            xa,
+            xb,
+            repo.list_extra_time_training_rows_before(match.kickoff_utc),
+            match.kickoff_utc,
+        )
+        extra_time_xg = adjustment.adjusted_xg
     return predict_knockout_match(
         xa, xb,
         dispersion=0.08,    # matches DEFAULT_NB_DISPERSION in services.py
@@ -858,6 +869,7 @@ def _knockout_prediction_for_match(match, bundle, repo: Repository | None = None
         home_penalty_win_probability=(
             penalty_context.team_a_shootout_win_probability if penalty_context else None
         ),
+        extra_time_xg=extra_time_xg,
     )
 
 
