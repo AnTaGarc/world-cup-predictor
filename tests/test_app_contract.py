@@ -219,6 +219,20 @@ class AppContractTests(unittest.TestCase):
         self.assertIn("def _persist_pre_match_snapshot(", source)
         self.assertIn('payload["knockout"] = build_knockout_snapshot_section(', source)
         self.assertIn("_persist_pre_match_snapshot(match, bundle, repo, knockout_prediction)", source)
+
+    def test_calibration_uses_guided_knockout_settlement_without_replacing_group_form(self):
+        source = (Path(__file__).parents[1] / "src" / "wcpredict" / "ui" / "pages.py").read_text(encoding="utf-8")
+        self.assertIn("render_knockout_settlement(", source)
+        self.assertIn('if _is_knockout_stage(getattr(match, "stage", None)):', source)
+        self.assertIn('with st.form(key=f"settlement_form_{match.id}"', source)
+
+    def test_closed_knockout_renders_phase_audit_sections(self):
+        source = (Path(__file__).parents[1] / "src" / "wcpredict" / "ui" / "pages.py").read_text(encoding="utf-8")
+        self.assertIn("def _render_knockout_phase_audit(", source)
+        self.assertIn('"90 minutos"', source)
+        self.assertIn('"Prórroga"', source)
+        self.assertIn('"Penaltis"', source)
+        self.assertIn("evaluate_knockout_snapshot(", source)
         # The knockout header now uses a dedicated panel (badge + advance card
         # + conditional funnel) instead of the generic 1X2 layout. Sanity-check
         # that the KO branch is reached and that the advance metric is shown.

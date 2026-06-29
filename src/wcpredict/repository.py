@@ -3101,6 +3101,28 @@ class Repository:
             rows = con.execute(query, params).fetchall()
         return [dict(row) for row in rows]
 
+    def list_selectable_squad_players(
+        self, team_id: int, team_name: str
+    ) -> list[dict]:
+        bank = [
+            row for row in self.list_current_world_cup_players()
+            if same_team(str(row.get("team_name") or ""), team_name)
+        ]
+        with self.session() as con:
+            for row in bank:
+                con.execute(
+                    "INSERT INTO players(name, team_id, position) VALUES(?, ?, ?) "
+                    "ON CONFLICT(name, team_id) DO UPDATE SET "
+                    "position=COALESCE(excluded.position, players.position)",
+                    (row["player_name"], team_id, row.get("position")),
+                )
+            rows = con.execute(
+                "SELECT id AS player_id, name AS player_name, position "
+                "FROM players WHERE team_id=? ORDER BY CASE WHEN position LIKE '%GK%' THEN 0 ELSE 1 END, name",
+                (team_id,),
+            ).fetchall()
+        return [dict(row) for row in rows]
+
     def list_deep_goalkeeper_player_profiles(self, team_names: tuple[str, ...] | None = None) -> list[dict]:
         """Aggregate goalkeeper rows created from reviewed deep-match stats.
 

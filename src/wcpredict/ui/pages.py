@@ -41,7 +41,10 @@ from wcpredict.knockout_model import predict_knockout_match
 from wcpredict.penalty_history_model import PENALTY_MODEL_VERSION, build_penalty_match_context
 from wcpredict.penalty_context_cache import load_precomputed_context
 from wcpredict.extra_time_model import adjust_extra_time_xg
-from wcpredict.knockout_audit import build_knockout_snapshot_section
+from wcpredict.knockout_audit import (
+    build_knockout_snapshot_section,
+    evaluate_knockout_snapshot,
+)
 from wcpredict.services import MarketPrediction, predict_match_markets
 from wcpredict.source_catalog import default_source_catalog
 from wcpredict.daily_refresh import DEFAULT_PROVIDERS, DatasetDownload, ensure_current_world_cup_data
@@ -68,6 +71,7 @@ from wcpredict.squad_context import apply_squad_context
 from wcpredict.names import canonical_team_name, same_team
 from wcpredict.deep_match_import import load_deep_match_file
 from wcpredict.ui.postmatch_capture import render_capture_review
+from wcpredict.ui.knockout_settlement import render_knockout_settlement
 from wcpredict.ui.bracket import render_bracket
 from wcpredict.ui.crests import crest_html, team_with_crest_html
 from wcpredict.ui.theme import (
@@ -2067,12 +2071,81 @@ def _render_per_team_audit_table(rows: list[dict], team_a: str, team_b: str) -> 
     st.markdown("".join(html_parts), unsafe_allow_html=True)
 
 
+def _render_knockout_phase_audit(repo: Repository, match) -> None:
+    snapshots = repo.list_prediction_snapshots(match.id)
+    phase_result = repo.get_active_match_phase_result(match.id)
+    if not snapshots or phase_result is None:
+        st.caption(
+            "Auditoría por fases no disponible: este cierre no tiene snapshot "
+            "prepartido o desglose de eliminatoria."
+        )
+        return
+    try:
+        snapshot = json.loads(snapshots[0]["payload_json"])
+        audit = evaluate_knockout_snapshot(
+            snapshot,
+            phase_result,
+            repo.list_active_shootout_kicks(match.id),
+        )
+    except (KeyError, TypeError, ValueError, json.JSONDecodeError):
+        st.caption("El snapshot anterior no contiene el formato de auditoría por fases.")
+        return
+
+    st.markdown("#### Auditoría por fases")
+    sections = (
+        ("90 minutos", audit.regulation),
+        ("Prórroga", audit.extra_time),
+        ("Penaltis", audit.shootout),
+    )
+    for label, section in sections:
+        with st.expander(label, expanded=label == "90 minutos"):
+            if section.status == "not_played":
+                st.caption("No se disputó.")
+                continue
+            cols = st.columns(3)
+            cols[0].metric("Real", section.actual_score or "—")
+            cols[1].metric(
+                "Resultado previsto",
+                {"home": match.team_a.name, "draw": "Empate", "away": match.team_b.name}.get(
+                    section.predicted_outcome, "—"
+                ),
+            )
+            cols[2].metric(
+                "Probabilidad de lo ocurrido",
+                f"{section.observed_probability:.1%}"
+                if section.observed_probability is not None else "—",
+            )
+            if label == "Prórroga" and section.rows:
+                details = section.rows[0]
+                st.caption(
+                    "xG esperado de prórroga: "
+                    + "–".join(f"{float(value):.2f}" for value in details.get("expected_xg", []))
+                    + f" · marcador modal {details.get('mode_score') or '—'}"
+                )
+            if label == "Penaltis" and section.rows:
+                st.dataframe(
+                    pd.DataFrame(section.rows).rename(columns={
+                        "team_name": "Selección",
+                        "player_name": "Tirador",
+                        "outcome": "Resultado",
+                        "predicted_conversion": "Prob. gol",
+                        "on_field_probability": "Prob. al 120'",
+                        "first_five_probability": "Prob. primeros cinco",
+                        "brier": "Brier",
+                    }),
+                    hide_index=True,
+                    width="stretch",
+                )
+
+
 def _render_post_match_audit(
     bundle: MatchAnalysisBundle,
     auxiliary: MatchAuxiliaryBundle,
     team_a: str,
     team_b: str,
     is_knockout: bool = False,
+    repo: Repository | None = None,
+    match=None,
 ) -> None:
     result = auxiliary.match_result
     if not result:
@@ -2191,6 +2264,8 @@ def _render_post_match_audit(
         "Lo registrado aquí ya alimenta `build_xg_form_adjustment` y `build_volume_rate_observations` "
         "para los próximos partidos de ambas selecciones (auditoría usada, no solo registrada)."
     )
+    if is_knockout and repo is not None and match is not None:
+        _render_knockout_phase_audit(repo, match)
 
 
 def _match_analysis_bundle(match) -> MatchAnalysisBundle:
@@ -2511,6 +2586,8 @@ def _render_prediction_workspace(
                 team_a,
                 team_b,
                 is_knockout=_is_knockout_stage(getattr(match, "stage", None)),
+                repo=repo,
+                match=match,
             )
         with st.expander("Cómo se elige el modelo de cada mercado"):
             st.caption("Activo es lo que calcula hoy la app; challenger solo se promueve si gana una validación temporal.")
@@ -3624,42 +3701,54 @@ def render_backtesting() -> None:
             if stats_by_team.get(team_name, {}).get(metric) is None:
                 settlement_rows.append({"subject_type": "team", "subject_name": team_name, "metric": metric, "value_number": None, "value_text": "", "unit": "match", "sample_size": 1})
     settlement_columns = ["subject_type", "subject_name", "metric", "value_number", "value_text", "unit", "sample_size"]
-    with st.form(key=f"settlement_form_{match.id}", clear_on_submit=False):
-        score_a, score_b = st.columns(2)
-        goals_a = score_a.number_input(
-            f"Goles · {match.team_a.name}", 0, 20,
-            int(existing_result["goals_a"]) if existing_result else 0,
-        )
-        goals_b = score_b.number_input(
-            f"Goles · {match.team_b.name}", 0, 20,
-            int(existing_result["goals_b"]) if existing_result else 0,
-        )
-        settlement_stats = st.data_editor(
-            pd.DataFrame(settlement_rows, columns=settlement_columns),
-            hide_index=True, width="stretch", num_rows="dynamic",
-            key=f"settlement_{match.id}",
-        )
-        st.caption(
-            "Las tarjetas individuales se importan automáticamente desde el banco diario "
-            "de jugadores (Actualizar datos) — ya no hace falta asignarlas a mano aquí. "
-            "Si un jugador acumula 2 amarillas o ve una roja, la sanción para el siguiente "
-            "partido se genera al pulsar Guardar."
-        )
-        submit_settlement = st.form_submit_button(
-            "Guardar resultado, estadísticas y recalibrar", type="primary", width="stretch"
-        )
-    if submit_settlement:
-        rows = [row for row in settlement_stats.to_dict("records") if pd.notna(row.get("value_number")) or str(row.get("value_text") or "").strip()]
-        recorded_at = datetime.now(timezone.utc)
-        repo.settle_match_versioned(
-            match.id,
-            int(goals_a),
-            int(goals_b),
+    if _is_knockout_stage(getattr(match, "stage", None)):
+        knockout_settlement_id = render_knockout_settlement(
+            repo,
+            match,
+            DATA_DIR / "evidence" / "reviewed-json",
             reviewed_batch_id,
-            recorded_at,
         )
-        if rows:
-            repo.save_manual_observations(match.id, rows, recorded_at)
+        submit_settlement = knockout_settlement_id is not None
+        rows = []
+        recorded_at = datetime.now(timezone.utc)
+    else:
+        with st.form(key=f"settlement_form_{match.id}", clear_on_submit=False):
+            score_a, score_b = st.columns(2)
+            goals_a = score_a.number_input(
+                f"Goles · {match.team_a.name}", 0, 20,
+                int(existing_result["goals_a"]) if existing_result else 0,
+            )
+            goals_b = score_b.number_input(
+                f"Goles · {match.team_b.name}", 0, 20,
+                int(existing_result["goals_b"]) if existing_result else 0,
+            )
+            settlement_stats = st.data_editor(
+                pd.DataFrame(settlement_rows, columns=settlement_columns),
+                hide_index=True, width="stretch", num_rows="dynamic",
+                key=f"settlement_{match.id}",
+            )
+            st.caption(
+                "Las tarjetas individuales se importan automáticamente desde el banco diario "
+                "de jugadores (Actualizar datos) — ya no hace falta asignarlas a mano aquí. "
+                "Si un jugador acumula 2 amarillas o ve una roja, la sanción para el siguiente "
+                "partido se genera al pulsar Guardar."
+            )
+            submit_settlement = st.form_submit_button(
+                "Guardar resultado, estadísticas y recalibrar", type="primary", width="stretch"
+            )
+        if submit_settlement:
+            rows = [row for row in settlement_stats.to_dict("records") if pd.notna(row.get("value_number")) or str(row.get("value_text") or "").strip()]
+            recorded_at = datetime.now(timezone.utc)
+            repo.settle_match_versioned(
+                match.id,
+                int(goals_a),
+                int(goals_b),
+                reviewed_batch_id,
+                recorded_at,
+            )
+            if rows:
+                repo.save_manual_observations(match.id, rows, recorded_at)
+    if submit_settlement:
         # Re-resolve the knockout bracket: a finished group game may now
         # complete a group → fill R32 slots; a finished knockout game lets
         # its winner bubble up into the next round's slot.
