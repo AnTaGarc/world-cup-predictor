@@ -57,7 +57,7 @@ _ROUND_KEYS = {
 _ROUND_ORDER = ["r32", "r16", "qf", "sf", "final"]
 
 _ROUND_LABELS = {
-    "r32": "Treintaidosavos",
+    "r32": "Dieciseisavos",
     "r16": "Octavos",
     "qf": "Cuartos",
     "sf": "Semifinales",

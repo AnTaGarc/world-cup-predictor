@@ -203,6 +203,13 @@ class AppContractTests(unittest.TestCase):
         self.assertIn("text-decoration: none !important", theme)
         self.assertIn(".bracket-slot-link *", theme)
 
+    def test_bracket_labels_round_of_32_as_dieciseisavos(self):
+        from wcpredict.ui.bracket import render_bracket
+
+        html = render_bracket([])
+        self.assertIn("Dieciseisavos", html)
+        self.assertNotIn("Treintaidosavos", html)
+
     def test_knockout_prediction_header_prioritizes_advancement(self):
         source = (Path(__file__).parents[1] / "src" / "wcpredict" / "ui" / "pages.py").read_text(encoding="utf-8")
         self.assertIn("knockout_prediction = _knockout_prediction_for_match(match, bundle, repo)", source)
