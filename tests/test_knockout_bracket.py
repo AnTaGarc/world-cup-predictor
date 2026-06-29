@@ -438,6 +438,8 @@ class AnnexCAssignmentTests(unittest.TestCase):
             view = {row["slot_id"]: row for row in bracket_view(repo)}
             self.assertEqual(expected_m82, view["M82"]["away"])
             self.assertEqual(expected_m85, view["M85"]["away"])
+            self.assertEqual(expected_m82, repo.get_match(m82.match_id).team_b.name)
+            self.assertEqual(expected_m85, repo.get_match(m85.match_id).team_b.name)
 
 
 class KnockoutModelTests(unittest.TestCase):

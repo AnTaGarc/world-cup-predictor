@@ -686,6 +686,12 @@ def resolve_knockout_bracket(repo: Repository, now: datetime | None = None) -> d
                             slot.match_id,
                         ),
                     )
+                    if side_changed:
+                        con.execute(
+                            "UPDATE matches SET team_a_id=?, team_b_id=? WHERE id=?",
+                            (home_id, away_id, slot.match_id),
+                        )
+                        summary["matches_updated"] += 1
                 if (home_id, away_id) == (slot.home_team_id, slot.away_team_id) and slot.match_id is not None:
                     continue
                 match_id = slot.match_id
