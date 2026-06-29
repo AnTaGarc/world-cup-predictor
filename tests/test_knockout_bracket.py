@@ -7,6 +7,7 @@ from pathlib import Path
 from wcpredict.knockout_bracket import (
     COMPETITION,
     _group_standings,
+    _load_annex_c_table,
     bracket_view,
     list_bracket_slots,
     resolve_knockout_bracket,
@@ -294,6 +295,30 @@ class KnockoutBracketTests(unittest.TestCase):
             again = resolve_knockout_bracket(repo)
         self.assertEqual(0, again["matches_created"])
 
+    def test_resolution_repairs_stage_overwritten_by_schedule_provider(self):
+        with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as tmp:
+            repo = Repository(Path(tmp) / "app.sqlite")
+            repo.initialize()
+            seed_knockout_bracket(repo, KNOCKOUT_CSV)
+            _seed_group(repo, "A", ["Mexico", "South Africa", "Spain", "Korea Republic"])
+            _seed_group(repo, "B", ["Canada", "Bosnia and Herzegovina", "Germany", "Japan"])
+            resolve_knockout_bracket(repo)
+            slot = next(row for row in list_bracket_slots(repo) if row.slot_id == "M73")
+            with sqlite3.connect(repo.path) as con:
+                con.execute(
+                    "UPDATE matches SET competition='FIFA World Cup 2026', stage='FIFA World Cup' WHERE id=?",
+                    (slot.match_id,),
+                )
+                con.commit()
+
+            resolve_knockout_bracket(repo)
+
+            with sqlite3.connect(repo.path) as con:
+                repaired = con.execute(
+                    "SELECT competition, stage FROM matches WHERE id=?", (slot.match_id,)
+                ).fetchone()
+        self.assertEqual((COMPETITION, "Round of 32"), repaired)
+
     def test_group_standings_use_head_to_head_before_goal_difference(self):
         with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as tmp:
             repo = Repository(Path(tmp) / "app.sqlite")
@@ -332,6 +357,14 @@ class AnnexCAssignmentTests(unittest.TestCase):
     """Verify the bipartite assignment of the 8 best 3rd-placed teams to the
     eight specific slots that take a third (M74/M77/M79/M80/M81/M82/M85/M87)."""
 
+    def test_current_bdefijkl_combo_pairs_belgium_with_i_and_switzerland_with_j(self):
+        table = _load_annex_c_table()
+        combo = frozenset("BDEFIJKL")
+        self.assertIn(combo, table)
+        mapping = table[combo]
+        self.assertEqual("I", mapping["1G"])
+        self.assertEqual("J", mapping["1B"])
+
     def test_assignment_returns_empty_until_all_twelve_groups_finish(self):
         with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as tmp:
             repo = Repository(Path(tmp) / "app.sqlite")
@@ -363,6 +396,61 @@ class AnnexCAssignmentTests(unittest.TestCase):
                                  f"{slot_id} home unresolved after all groups finished")
                 self.assertFalse(slot["away_pending"],
                                  f"{slot_id} away unresolved after all groups finished")
+
+    def test_resolution_repairs_stale_persisted_third_place_assignment(self):
+        with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as tmp:
+            repo = Repository(Path(tmp) / "app.sqlite")
+            repo.initialize()
+            seed_knockout_bracket(repo, KNOCKOUT_CSV)
+            for letter in "ABCDEFGHIJKL":
+                _seed_group(
+                    repo,
+                    letter,
+                    [f"{letter}1", f"{letter}2", f"{letter}3", f"{letter}4"],
+                )
+            resolve_knockout_bracket(repo)
+            slots = {row.slot_id: row for row in list_bracket_slots(repo)}
+            original_view = {row["slot_id"]: row for row in bracket_view(repo)}
+            expected_m82 = original_view["M82"]["away"]
+            expected_m85 = original_view["M85"]["away"]
+            m82, m85 = slots["M82"], slots["M85"]
+            with sqlite3.connect(repo.path) as con:
+                con.execute(
+                    "UPDATE knockout_bracket SET away_team_id=? WHERE id=?",
+                    (m85.away_team_id, m82.id),
+                )
+                con.execute(
+                    "UPDATE knockout_bracket SET away_team_id=? WHERE id=?",
+                    (m82.away_team_id, m85.id),
+                )
+                con.execute(
+                    "UPDATE matches SET team_b_id=? WHERE id=?",
+                    (m85.away_team_id, m82.match_id),
+                )
+                con.execute(
+                    "UPDATE matches SET team_b_id=? WHERE id=?",
+                    (m82.away_team_id, m85.match_id),
+                )
+                con.commit()
+
+            resolve_knockout_bracket(repo)
+
+            view = {row["slot_id"]: row for row in bracket_view(repo)}
+            self.assertEqual(expected_m82, view["M82"]["away"])
+            self.assertEqual(expected_m85, view["M85"]["away"])
+            self.assertEqual(expected_m82, repo.get_match(m82.match_id).team_b.name)
+            self.assertEqual(expected_m85, repo.get_match(m85.match_id).team_b.name)
+
+            # A prior resolver version could fix the slot but leave only the
+            # linked match stale. A later pass must repair that state too.
+            with sqlite3.connect(repo.path) as con:
+                con.execute(
+                    "UPDATE matches SET team_b_id=? WHERE id=?",
+                    (m85.away_team_id, m82.match_id),
+                )
+                con.commit()
+            resolve_knockout_bracket(repo)
+            self.assertEqual(expected_m82, repo.get_match(m82.match_id).team_b.name)
 
 
 class KnockoutModelTests(unittest.TestCase):

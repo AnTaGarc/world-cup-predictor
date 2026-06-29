@@ -5,6 +5,9 @@ from datetime import datetime, timezone
 from pathlib import Path
 import sys
 
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+
 ROOT = Path(__file__).resolve().parents[1]
 SRC = ROOT / "src"
 if str(SRC) not in sys.path:
@@ -16,9 +19,11 @@ from wcpredict.repository import Repository
 from wcpredict.transfermarkt_penalties import (
     eligible_penalty_teams,
     fetch_html,
+    load_penalty_team_snapshot,
     parse_penalty_attempts,
     penalty_url,
     player_targets_for_teams,
+    reconcile_penalty_teams,
     search_transfermarkt_player,
     write_identity_review,
 )
@@ -30,6 +35,11 @@ def main() -> int:
     )
     parser.add_argument("--db", default=str(ROOT / "data" / "worldcup.sqlite"))
     parser.add_argument("--knockout-csv", default=str(ROOT / "data" / "fixtures" / "world_cup_2026_knockouts.csv"))
+    parser.add_argument(
+        "--team-snapshot",
+        default=str(ROOT / "data" / "fixtures" / "world_cup_2026_penalty_teams.csv"),
+        help="Canonical qualified-team snapshot used unless --teams is supplied.",
+    )
     parser.add_argument("--cache-dir", default=str(ROOT / "data" / "cache" / "transfermarkt_penalties"))
     parser.add_argument("--review-csv", default=str(ROOT / "output" / "penalty_identity_review.csv"))
     parser.add_argument("--teams", nargs="*", help="Optional explicit team list; otherwise uses bracket/group status.")
@@ -47,14 +57,30 @@ def main() -> int:
         seed_knockout_bracket(repo, knockout_csv)
         resolve_knockout_bracket(repo)
 
-    teams = args.teams or eligible_penalty_teams(repo)
+    dynamic_teams = eligible_penalty_teams(repo)
+    snapshot_path = Path(args.team_snapshot)
+    snapshot_teams = load_penalty_team_snapshot(snapshot_path) if snapshot_path.exists() else []
+    teams = args.teams or snapshot_teams or dynamic_teams
     if not teams:
         print("No hay selecciones elegibles todavía.")
         return 0
 
+    if snapshot_teams:
+        reconciliation = reconcile_penalty_teams(snapshot_teams, dynamic_teams)
+        if reconciliation["missing_from_bracket"]:
+            print(
+                "Pendientes de aparecer en el cuadro dinámico: "
+                + ", ".join(reconciliation["missing_from_bracket"])
+            )
+        if reconciliation["unexpected_in_bracket"]:
+            print(
+                "Equipos dinámicos fuera de la instantánea: "
+                + ", ".join(reconciliation["unexpected_in_bracket"])
+            )
+
     targets = player_targets_for_teams(repo, teams)
     print(f"Selecciones: {', '.join(teams)}")
-    print(f"Jugadores con minutos detectados: {len(targets)}")
+    print(f"Jugadores de convocatoria detectados: {len(targets)}")
 
     cache_dir = Path(args.cache_dir)
     review_candidates = []
@@ -73,6 +99,18 @@ def main() -> int:
                 review_candidates.append(candidate)
                 if candidate.confidence >= args.auto_confidence:
                     transfermarkt_id = candidate.transfermarkt_player_id
+                    if not args.dry_run:
+                        repo.save_transfermarkt_player_identity(
+                            target.player_name,
+                            target.team_name,
+                            transfermarkt_id,
+                            {
+                                "candidate_name": candidate.candidate_name,
+                                "confidence": candidate.confidence,
+                                "reason": candidate.reason,
+                                "url": candidate.url,
+                            },
+                        )
             else:
                 missing.append(target)
         elif transfermarkt_id is None:

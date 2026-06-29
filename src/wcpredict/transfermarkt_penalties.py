@@ -62,6 +62,8 @@ class TableParser(HTMLParser):
         self.current_cell: list[str] = []
         self.current_row: list[str] = []
         self.rows: list[list[str]] = []
+        self.row_default_outcomes: list[str | None] = []
+        self.penalty_section_outcome: str | None = None
         self.link_stack: list[str] = []
         self.links: list[tuple[str, str]] = []
 
@@ -87,6 +89,7 @@ class TableParser(HTMLParser):
         if self.in_table and tag == "tr":
             if any(cell for cell in self.current_row):
                 self.rows.append(self.current_row)
+                self.row_default_outcomes.append(self.penalty_section_outcome)
             self.current_row = []
         if tag == "table":
             self.in_table = False
@@ -94,6 +97,11 @@ class TableParser(HTMLParser):
             self.link_stack.pop()
 
     def handle_data(self, data: str) -> None:
+        normalized = " ".join(data.split()).casefold()
+        if "total penalties scored" in normalized:
+            self.penalty_section_outcome = "scored"
+        elif "total penalties missed" in normalized:
+            self.penalty_section_outcome = "missed"
         if self.in_cell:
             self.current_cell.append(data)
         if self.link_stack:
@@ -109,6 +117,23 @@ def slugify_player_name(player_name: str) -> str:
 
 def penalty_url(player_name: str, transfermarkt_player_id: str) -> str:
     return f"{TRANSFERMARKT_BASE}/{slugify_player_name(player_name)}/elfmetertore/spieler/{transfermarkt_player_id}"
+
+
+def load_penalty_team_snapshot(path: Path) -> list[str]:
+    with path.open(encoding="utf-8-sig", newline="") as handle:
+        teams = [canonical_team_name(row["team_name"]) for row in csv.DictReader(handle)]
+    return list(dict.fromkeys(team for team in teams if team))
+
+
+def reconcile_penalty_teams(
+    snapshot: list[str], dynamic: list[str]
+) -> dict[str, list[str]]:
+    wanted = {canonical_team_name(team) for team in snapshot}
+    actual = {canonical_team_name(team) for team in dynamic}
+    return {
+        "missing_from_bracket": sorted(wanted - actual),
+        "unexpected_in_bracket": sorted(actual - wanted),
+    }
 
 
 def eligible_penalty_teams(repo: Repository) -> list[str]:
@@ -157,7 +182,7 @@ def player_targets_for_teams(repo: Repository, team_names: list[str]) -> list[Pe
         team = canonical_team_name(str(row.get("team_name") or ""))
         name = str(row.get("player_name") or "").strip()
         minutes = int(row.get("minutes") or 0)
-        if team not in team_set or not name or minutes <= 0:
+        if team not in team_set or not name:
             continue
         key = (name, team)
         if key in seen:
@@ -172,7 +197,7 @@ def player_targets_for_teams(repo: Repository, team_names: list[str]) -> list[Pe
                 transfermarkt_player_id=tm_ids.get(key),
             )
         )
-    return selected
+    return sorted(selected, key=lambda row: (row.team_name, -row.minutes, row.player_name))
 
 
 def _cache_path(cache_dir: Path, url: str) -> Path:
@@ -248,18 +273,23 @@ def parse_penalty_attempts(
     transfermarkt_player_id: str,
     source_url: str,
     fetched_at_utc: datetime,
+    default_outcome: str | None = None,
 ) -> list[dict]:
     parser = TableParser()
     parser.feed(html)
     attempts: list[dict] = []
-    for index, row in enumerate(parser.rows):
+    for index, (row, section_outcome) in enumerate(
+        zip(parser.rows, parser.row_default_outcomes)
+    ):
         cells = [cell for cell in row if cell]
         if len(cells) < 3:
             continue
         lowered = " | ".join(cells).lower()
         if any(header in lowered for header in ("date", "competition", "result", "goalkeeper")):
             continue
-        outcome = _row_outcome(cells)
+        outcome = _row_outcome(
+            cells, default_outcome=section_outcome or default_outcome
+        )
         if outcome is None:
             continue
         date_value = _first_date(cells)
@@ -267,9 +297,14 @@ def parse_penalty_attempts(
         minute = next((cell for cell in cells if re.match(r"^\d{1,3}'", cell)), None)
         goalkeeper = _goalkeeper_from_cells(cells)
         opponent = _opponent_from_cells(cells)
+        # Keep the identity key compatible with rows imported before table
+        # context was available. The corrected section outcome may change
+        # scored -> missed, but must update that row rather than duplicate it.
+        legacy_key_outcome = _row_outcome(cells) or outcome
         source_row_key = (
             f"transfermarkt:{transfermarkt_player_id}:"
-            f"{date_value or 'unknown'}:{index}:{outcome}:{hashlib.sha1('|'.join(cells).encode()).hexdigest()[:10]}"
+            f"{date_value or 'unknown'}:{index}:{legacy_key_outcome}:"
+            f"{hashlib.sha1('|'.join(cells).encode()).hexdigest()[:10]}"
         )
         attempts.append({
             "player_name": player_name,
@@ -292,9 +327,15 @@ def parse_penalty_attempts(
     return attempts
 
 
-def _row_outcome(cells: list[str]) -> str | None:
+def _row_outcome(cells: list[str], *, default_outcome: str | None = None) -> str | None:
     text = " ".join(cells).lower()
-    if "missed" in text or "saved" in text or "off target" in text or "woodwork" in text:
+    if "saved" in text:
+        return "saved"
+    if "off target" in text:
+        return "off_target"
+    if "woodwork" in text:
+        return "woodwork"
+    if "missed" in text:
         return "missed"
     if "scored" in text or "goal" in text:
         return "scored"
@@ -302,7 +343,7 @@ def _row_outcome(cells: list[str]) -> str | None:
         # Transfermarkt's successful-penalty table often lacks an explicit
         # "scored" token; if the row has a match result and no miss token,
         # treat it as a made penalty.
-        return "scored"
+        return default_outcome or "scored"
     return None
 
 

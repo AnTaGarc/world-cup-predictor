@@ -1824,10 +1824,57 @@ class Repository:
                 "JOIN teams t ON t.id=p.team_id "
                 "WHERE pe.provider='transfermarkt' AND pe.entity_type='player'"
             ).fetchall()
-        return {
+        identities = {
             (str(row["player_name"]), canonical_team_name(str(row["team_name"]))): str(row["provider_id"])
             for row in rows
         }
+        with self.session() as con:
+            penalty_rows = con.execute(
+                "SELECT player_name, team_name, transfermarkt_player_id "
+                "FROM penalty_attempts WHERE transfermarkt_player_id IS NOT NULL "
+                "GROUP BY player_name, team_name, transfermarkt_player_id"
+            ).fetchall()
+        for row in penalty_rows:
+            identities.setdefault(
+                (
+                    str(row["player_name"]),
+                    canonical_team_name(str(row["team_name"] or "")),
+                ),
+                str(row["transfermarkt_player_id"]),
+            )
+        return identities
+
+    def save_transfermarkt_player_identity(
+        self,
+        player_name: str,
+        team_name: str,
+        transfermarkt_player_id: str,
+        metadata: dict | None = None,
+    ) -> None:
+        canonical_team = canonical_team_name(team_name)
+        team_id = self.upsert_team(canonical_team)
+        with self.session() as con:
+            con.execute(
+                "INSERT INTO players(name, team_id) VALUES(?, ?) "
+                "ON CONFLICT(name, team_id) DO NOTHING",
+                (player_name, team_id),
+            )
+            player_id = int(con.execute(
+                "SELECT id FROM players WHERE name=? AND team_id=?",
+                (player_name, team_id),
+            ).fetchone()[0])
+            con.execute(
+                "INSERT INTO provider_entities(provider, entity_type, provider_id, canonical_type, canonical_id, original_name, metadata_json) "
+                "VALUES('transfermarkt', 'player', ?, 'player', ?, ?, ?) "
+                "ON CONFLICT(provider, entity_type, provider_id) DO UPDATE SET "
+                "canonical_id=excluded.canonical_id, original_name=excluded.original_name, metadata_json=excluded.metadata_json",
+                (
+                    str(transfermarkt_player_id),
+                    player_id,
+                    player_name,
+                    json.dumps(metadata or {}, ensure_ascii=False, sort_keys=True),
+                ),
+            )
 
     def save_penalty_attempts(self, attempts: list[dict]) -> int:
         if not attempts:
@@ -2567,12 +2614,20 @@ class Repository:
                             teams = [*teams, existing]
                         team_ids.append(int(existing["id"]))
                     match_status = "finished" if row.get("goals_a") is not None and row.get("goals_b") is not None else (row.get("status") or "scheduled")
+                    incoming_stage = str(row.get("stage") or "FIFA World Cup 2026")
+                    specific_stage = (
+                        None
+                        if incoming_stage.casefold() in {
+                            "fifa world cup", "fifa world cup 2026"
+                        }
+                        else incoming_stage
+                    )
                     if reversed_seed:
                         # The seed already holds this pair with reversed home/away.
                         # Keep the seed's id and just update status/stage/venue.
                         con.execute(
                             "UPDATE matches SET stage=COALESCE(?, stage), status=?, venue=COALESCE(?, venue) WHERE id=?",
-                            (row.get("stage"), match_status, row.get("venue"), int(scheduled_match["id"])),
+                            (specific_stage, match_status, row.get("venue"), int(scheduled_match["id"])),
                         )
                     elif scheduled_match is None and seed_locked:
                         # Seed schedule is the source of truth; ignore extra
@@ -2584,8 +2639,10 @@ class Repository:
                             "INSERT INTO matches(competition, stage, kickoff_utc, team_a_id, team_b_id, status, venue, neutral_site) "
                             "VALUES('FIFA World Cup 2026', ?, ?, ?, ?, ?, ?, 1) "
                             "ON CONFLICT(competition, kickoff_utc, team_a_id, team_b_id) DO UPDATE SET "
-                            "stage=excluded.stage, status=excluded.status, venue=COALESCE(excluded.venue, matches.venue)",
-                            (row.get("stage") or "FIFA World Cup 2026", kickoff, team_ids[0], team_ids[1], match_status, row.get("venue")),
+                            "stage=CASE WHEN lower(excluded.stage) IN ('fifa world cup', 'fifa world cup 2026') "
+                            "THEN matches.stage ELSE excluded.stage END, "
+                            "status=excluded.status, venue=COALESCE(excluded.venue, matches.venue)",
+                            (incoming_stage, kickoff, team_ids[0], team_ids[1], match_status, row.get("venue")),
                         )
                         if scheduled_match is None:
                             scheduled = con.execute(

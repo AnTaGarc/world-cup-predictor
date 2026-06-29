@@ -1,5 +1,6 @@
 ﻿from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
+from dataclasses import replace
 from pathlib import Path
 from hashlib import sha256
 from html import escape
@@ -37,7 +38,8 @@ from wcpredict.knockout_bracket import (
     seed_knockout_bracket,
 )
 from wcpredict.knockout_model import predict_knockout_match
-from wcpredict.penalty_history_model import build_penalty_match_context
+from wcpredict.penalty_history_model import PENALTY_MODEL_VERSION, build_penalty_match_context
+from wcpredict.penalty_context_cache import load_precomputed_context
 from wcpredict.services import MarketPrediction, predict_match_markets
 from wcpredict.source_catalog import default_source_catalog
 from wcpredict.daily_refresh import DEFAULT_PROVIDERS, DatasetDownload, ensure_current_world_cup_data
@@ -116,6 +118,7 @@ SPORTS_DB_PATH = SPORTS_DATA_DIR / "sports.db"
 OUTCOME_MODEL_PATH = DATA_DIR / "models" / "outcome_ml.joblib"
 DEEP_OUTCOME_MODEL_PATH = DATA_DIR / "models" / "outcome_ml_deep.joblib"
 OPEN_SCHEDULE_PATH = DATA_DIR / "open" / "martj42-results.csv"
+PRECOMPUTED_PENALTY_DIR = DATA_DIR / "precomputed" / "penalties"
 DAILY_PROVIDERS = (*DEFAULT_PROVIDERS, "martj42_world_schedule")
 HOST_TEAMS = {"USA", "Canada", "Mexico"}
 PREDICTION_ENGINE_VERSION = "2026-06-25-draw-incentive-v1"
@@ -797,8 +800,43 @@ def _is_knockout_stage(stage: str | None) -> bool:
     return any(stage.startswith(s) for s in KNOCKOUT_STAGES)
 
 
-def _penalty_attempts_for_match(repo: Repository, team_a: str, team_b: str) -> list[dict]:
-    return repo.list_penalty_attempts(team_a) + repo.list_penalty_attempts(team_b)
+@st.cache_resource(show_spinner=False)
+def _penalty_match_context_cached(
+    match_id: int,
+    db_sig: tuple[int, int],
+    model_version: str,
+):
+    repo = _repo()
+    match = repo.get_match(match_id)
+    team_a, team_b = match.team_a.name, match.team_b.name
+    precomputed = load_precomputed_context(
+        PRECOMPUTED_PENALTY_DIR,
+        team_a,
+        team_b,
+        model_version=model_version,
+    )
+    if precomputed is not None:
+        return precomputed
+    fallback = build_penalty_match_context(
+        team_a,
+        team_b,
+        repo.list_penalty_attempts(team_a) + repo.list_penalty_attempts(team_b),
+    )
+    return replace(
+        fallback,
+        explanation=(
+            fallback.explanation
+            + " Cálculo detallado pendiente de precálculo tras cerrar la fase de grupos."
+        ),
+    )
+
+
+def _penalty_match_context(match):
+    return _penalty_match_context_cached(
+        match.id,
+        _db_signature(),
+        PENALTY_MODEL_VERSION,
+    )
 
 
 def _knockout_prediction_for_match(match, bundle, repo: Repository | None = None):
@@ -812,11 +850,7 @@ def _knockout_prediction_for_match(match, bundle, repo: Repository | None = None
         return None
     penalty_context = None
     if repo is not None:
-        penalty_context = build_penalty_match_context(
-            match.team_a.name,
-            match.team_b.name,
-            _penalty_attempts_for_match(repo, match.team_a.name, match.team_b.name),
-        )
+        penalty_context = _penalty_match_context(match)
     return predict_knockout_match(
         xa, xb,
         dispersion=0.08,    # matches DEFAULT_NB_DISPERSION in services.py
@@ -3064,7 +3098,7 @@ def render_prediction_lab() -> None:
             f"Cruce siguiente para el ganador: {next_fixture}"
             if next_fixture else None
         )
-        # Penalty model is still WIP — show 50/50 placeholder with a hint.
+        penalty_context = _penalty_match_context(match)
         st.markdown(
             knockout_advance_html(
                 team_a=team_a,
@@ -3077,12 +3111,12 @@ def render_prediction_lab() -> None:
                 cond_home_et=knockout_prediction.cond_home_wins_et_given_draw_90,
                 cond_draw_et=knockout_prediction.cond_draw_after_et_given_draw_90,
                 cond_away_et=knockout_prediction.cond_away_wins_et_given_draw_90,
-                cond_home_pen=0.5,
-                cond_away_pen=0.5,
+                cond_home_pen=knockout_prediction.cond_home_wins_penalties_given_draw_after_et,
+                cond_away_pen=knockout_prediction.cond_away_wins_penalties_given_draw_after_et,
                 crest_a=crest_html(team_a, size=28),
                 crest_b=crest_html(team_b, size=28),
                 next_fixture=next_caption,
-                pen_pending=True,
+                pen_pending=penalty_context.simulations == 0,
             ),
             unsafe_allow_html=True,
         )
@@ -3115,14 +3149,55 @@ def render_prediction_lab() -> None:
             xg_cols[1].metric(f"xG {team_b} (90')", f"{xb:.2f}")
             xg_cols[2].metric(f"xG {team_a} (prórroga)", f"{et_a:.2f}", help="xG_90 × 0.30 (30 min de tiempo extra)")
             xg_cols[3].metric(f"xG {team_b} (prórroga)", f"{et_b:.2f}", help="xG_90 × 0.30 (30 min de tiempo extra)")
-        try:
-            penalty_context = build_penalty_match_context(
-                team_a, team_b, _penalty_attempts_for_match(repo, team_a, team_b),
+        if getattr(penalty_context, "explanation", ""):
+            callout(penalty_context.explanation, tone="blue", title="Contexto de penaltis")
+        if penalty_context.player_rows:
+            st.markdown("**Probables al minuto 120**")
+            penalty_rows = [
+                {
+                    "Jugador": row.player_name,
+                    "Selección": row.team_name,
+                    "Rol": row.role,
+                    "Probable al minuto 120": row.on_field_probability * 100,
+                    "Prob. entre los 5 primeros": row.first_five_probability * 100,
+                    "Conversión estimada": row.conversion * 100,
+                    "Penaltis registrados": row.attempts,
+                    "Confianza": row.confidence,
+                }
+                for row in penalty_context.player_rows
+                if row.on_field_probability >= 0.02
+            ]
+            st.dataframe(
+                pd.DataFrame(penalty_rows),
+                width="stretch",
+                hide_index=True,
+                column_config={
+                    label: st.column_config.ProgressColumn(
+                        format="%.1f%%", min_value=0, max_value=100,
+                    )
+                    for label in (
+                        "Probable al minuto 120",
+                        "Prob. entre los 5 primeros",
+                        "Conversión estimada",
+                    )
+                },
             )
-            if penalty_context and getattr(penalty_context, "explanation", ""):
-                callout(penalty_context.explanation, tone="blue", title="Contexto de penaltis")
-        except Exception:
-            pass
+            coverage = penalty_context.coverage
+            st.caption(
+                "Cobertura penalty_history: "
+                f"{coverage.players_with_history}/{coverage.squad_players} jugadores · "
+                f"{coverage.attempts} penaltis · error Monte Carlo ±{1.96 * penalty_context.standard_error:.2%}."
+            )
+            with st.expander("Supuestos de sustituciones y tanda"):
+                st.write(
+                    "Simulación prepartido condicionada a empate tras 120 minutos: "
+                    "cinco cambios reglamentarios, uno adicional en prórroga, cambios "
+                    "preferentemente por roles próximos y ajuste ofensivo/defensivo según marcador."
+                )
+                st.write(
+                    "Solo lanzan los futbolistas que siguen en el campo. Los cinco primeros "
+                    "se eligen sin reemplazo; en muerte súbita nadie repite hasta completar los once."
+                )
 
         with st.expander("Ver cálculo y jugadores usados"):
             st.caption(best.explanation)

@@ -215,6 +215,51 @@ class AppContractTests(unittest.TestCase):
         self.assertIn('st.subheader("Probabilidad 1X2")', source)
         self.assertIn('if is_knockout:', source)
 
+    def test_knockout_penalty_context_is_cached_separately(self):
+        source = (Path(__file__).parents[1] / "src" / "wcpredict" / "ui" / "pages.py").read_text(encoding="utf-8")
+        self.assertIn("def _penalty_match_context_cached", source)
+        self.assertIn("PENALTY_MODEL_VERSION", source)
+        self.assertNotIn("_penalty_attempts_for_match(repo", source)
+        section = source[
+            source.index("def _penalty_match_context_cached"):
+            source.index("def _penalty_match_context(match)")
+        ]
+        self.assertIn("load_precomputed_context", section)
+        self.assertNotIn("squads=", section)
+        self.assertIn("pendiente de precálculo", section)
+
+    def test_knockout_panel_explains_minute_120_player_pool(self):
+        source = (Path(__file__).parents[1] / "src" / "wcpredict" / "ui" / "pages.py").read_text(encoding="utf-8")
+        self.assertIn("Probables al minuto 120", source)
+        self.assertIn("Prob. entre los 5 primeros", source)
+        self.assertIn("Cobertura penalty_history", source)
+
+    def test_knockout_redesign_uses_theme_helpers_instead_of_loose_widgets(self):
+        from wcpredict.ui import theme
+
+        for helper in (
+            "knockout_badge_html",
+            "knockout_advance_html",
+            "knockout_via_table_html",
+            "knockout_section_head",
+        ):
+            self.assertTrue(callable(getattr(theme, helper, None)), helper)
+        for selector in (".ko-badge", ".ko-advance", ".ko-funnel", ".ko-via-table", ".ko-section-head"):
+            self.assertIn(selector, theme.CSS)
+
+        source = (Path(__file__).parents[1] / "src" / "wcpredict" / "ui" / "pages.py").read_text(encoding="utf-8")
+        lab = source[source.index("def render_prediction_lab"):source.index("def _render_global_bias_panel")]
+        knockout_block = lab[lab.index("if is_knockout:"):lab.index("    else:", lab.index("if is_knockout:"))]
+        self.assertIn("knockout_badge_html(", knockout_block)
+        self.assertIn("knockout_advance_html(", knockout_block)
+        self.assertIn('title="Contexto de penaltis"', knockout_block)
+        self.assertIn(
+            "cond_home_pen=knockout_prediction.cond_home_wins_penalties_given_draw_after_et",
+            knockout_block,
+        )
+        self.assertNotIn("cond_home_pen=0.5", knockout_block)
+        self.assertNotIn("st.subheader(", knockout_block)
+
     def test_volume_markets_render_without_manual_button(self):
         source = (Path(__file__).parents[1] / "src" / "wcpredict" / "ui" / "pages.py").read_text(encoding="utf-8")
         self.assertNotIn('st.button("Calcular mercados de volumen"', source)

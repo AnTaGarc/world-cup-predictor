@@ -6,16 +6,79 @@ import unittest
 from wcpredict.repository import Repository
 from wcpredict.transfermarkt_penalties import (
     eligible_penalty_teams,
+    load_penalty_team_snapshot,
     parse_penalty_attempts,
+    penalty_url,
     player_targets_for_teams,
+    reconcile_penalty_teams,
     slugify_player_name,
 )
 
 
 class TransfermarktPenaltyTests(unittest.TestCase):
+    def test_fetch_script_configures_utf8_console_output(self):
+        source = (
+            Path(__file__).parents[1] / "scripts" / "fetch_transfermarkt_penalties.py"
+        ).read_text(encoding="utf-8")
+        self.assertIn('sys.stdout.reconfigure(encoding="utf-8", errors="replace")', source)
+
+    def test_penalty_snapshot_contains_exactly_the_confirmed_32(self):
+        teams = load_penalty_team_snapshot(
+            Path(__file__).parents[1]
+            / "data"
+            / "fixtures"
+            / "world_cup_2026_penalty_teams.csv"
+        )
+        self.assertEqual(32, len(teams))
+        self.assertEqual(32, len(set(teams)))
+        for team in (
+            "USA",
+            "Bosnia and Herzegovina",
+            "Cote d'Ivoire",
+            "Congo DR",
+            "Cape Verde",
+        ):
+            self.assertIn(team, teams)
+
+    def test_reconciliation_reports_incomplete_dynamic_bracket(self):
+        result = reconcile_penalty_teams(
+            ["USA", "Spain", "Cape Verde"], ["United States", "Spain"]
+        )
+        self.assertEqual(["Cape Verde"], result["missing_from_bracket"])
+        self.assertEqual([], result["unexpected_in_bracket"])
+
     def test_slugify_player_name_for_transfermarkt_url(self):
         self.assertEqual("harry-kane", slugify_player_name("Harry Kane"))
         self.assertEqual("matej-kovar", slugify_player_name("Matej Kovar"))
+
+    def test_penalty_url_contains_both_scored_and_missed_tables(self):
+        self.assertEqual(
+            "https://www.transfermarkt.com/harry-kane/elfmetertore/spieler/132098",
+            penalty_url("Harry Kane", "132098"),
+        )
+
+    def test_parser_uses_scored_and_missed_table_headings(self):
+        html = """
+        <h2>Total penalties scored - 2</h2>
+        <table>
+          <tr><th>Date</th><th>Competition</th><th>Final result</th><th>Goalkeepers</th></tr>
+          <tr><td>Jun 20, 2026</td><td>World Cup</td><td>2:1</td><td>Keeper One</td></tr>
+        </table>
+        <h2>Total penalties missed - 1</h2>
+        <table>
+          <tr><th>Date</th><th>Competition</th><th>Final result</th><th>Goalkeepers</th></tr>
+          <tr><td>Jun 21, 2026</td><td>World Cup</td><td>1:1</td><td>Keeper Two</td></tr>
+        </table>
+        """
+        attempts = parse_penalty_attempts(
+            html,
+            player_name="Taker",
+            team_name="Test",
+            transfermarkt_player_id="1",
+            source_url="https://example.test/elfmetertore/spieler/1",
+            fetched_at_utc=datetime(2026, 6, 25, tzinfo=timezone.utc),
+        )
+        self.assertEqual(["scored", "missed"], [row["outcome"] for row in attempts])
 
     def test_parse_penalty_attempts_from_cached_html(self):
         html = """
@@ -39,6 +102,62 @@ class TransfermarktPenaltyTests(unittest.TestCase):
         self.assertEqual("2026-06-20", attempts[0]["attempted_on"])
         self.assertEqual("World Cup", attempts[0]["competition"])
         self.assertEqual("Keeper One", attempts[0]["goalkeeper_name"])
+
+    def test_parser_keeps_saved_separate_from_off_target(self):
+        html = """
+        <table>
+          <tr><th>Date</th><th>Result</th><th>Goalkeeper</th></tr>
+          <tr><td>Jun 20, 2026</td><td>Saved</td><td>Keeper One</td></tr>
+          <tr><td>Jun 21, 2026</td><td>Off target</td><td>Keeper Two</td></tr>
+          <tr><td>Jun 22, 2026</td><td>Woodwork</td><td>Keeper Three</td></tr>
+        </table>
+        """
+        attempts = parse_penalty_attempts(
+            html,
+            player_name="Taker",
+            team_name="Test",
+            transfermarkt_player_id="1",
+            source_url="https://example.test",
+            fetched_at_utc=datetime(2026, 6, 25, tzinfo=timezone.utc),
+        )
+        self.assertEqual(
+            ["saved", "off_target", "woodwork"],
+            [row["outcome"] for row in attempts],
+        )
+
+    def test_missed_page_uses_missed_default_when_rows_only_contain_match_scores(self):
+        html = """
+        <table>
+          <tr><th>Date</th><th>Competition</th><th>Result</th><th>Goalkeeper</th></tr>
+          <tr><td>Jun 20, 2026</td><td>World Cup</td><td>2:1</td><td>Keeper</td></tr>
+        </table>
+        """
+        attempts = parse_penalty_attempts(
+            html,
+            player_name="Taker",
+            team_name="Test",
+            transfermarkt_player_id="1",
+            source_url="https://example.test/elfmeterstatistik/spieler/1",
+            fetched_at_utc=datetime(2026, 6, 25, tzinfo=timezone.utc),
+            default_outcome="missed",
+        )
+        self.assertEqual("missed", attempts[0]["outcome"])
+
+    def test_source_row_key_is_stable_when_section_corrects_legacy_outcome(self):
+        html = """
+        <table><tr><td>Jun 20, 2026</td><td>World Cup</td><td>2:1</td><td>Keeper</td></tr></table>
+        """
+        common = dict(
+            player_name="Taker",
+            team_name="Test",
+            transfermarkt_player_id="1",
+            source_url="https://example.test/elfmetertore/spieler/1",
+            fetched_at_utc=datetime(2026, 6, 25, tzinfo=timezone.utc),
+        )
+        old = parse_penalty_attempts(html, default_outcome="scored", **common)[0]
+        corrected = parse_penalty_attempts(html, default_outcome="missed", **common)[0]
+        self.assertEqual(old["source_row_key"], corrected["source_row_key"])
+        self.assertNotEqual(old["outcome"], corrected["outcome"])
 
     def test_repository_saves_penalty_attempts_idempotently(self):
         with tempfile.TemporaryDirectory() as directory:
@@ -111,6 +230,48 @@ class TransfermarktPenaltyTests(unittest.TestCase):
         self.assertIn("South Africa", teams)
         self.assertNotIn("Spain", {target.team_name for target in targets})
         self.assertEqual({"Player Mexico", "Player SA"}, {target.player_name for target in targets})
+
+    def test_targets_include_zero_minutes_and_reuse_ids_from_attempts(self):
+        with tempfile.TemporaryDirectory() as directory:
+            repo = Repository(Path(directory) / "app.sqlite")
+            repo.initialize()
+            now = datetime.now(timezone.utc)
+            repo.replace_current_world_cup_players(
+                "test",
+                [
+                    {"player_name": "Starter", "team_name": "United States", "position": "FW", "minutes": 180},
+                    {"player_name": "Unused", "team_name": "United States", "position": "MF", "minutes": 0},
+                ],
+                now,
+            )
+            repo.save_penalty_attempts([{
+                "player_name": "Unused", "team_name": "USA",
+                "transfermarkt_player_id": "999", "attempted_on": "2026-01-01",
+                "competition": "Test", "phase": "regular", "outcome": "scored",
+                "goalkeeper_name": "Keeper", "opponent_team": "Test", "minute": "70'",
+                "match_label": "Test", "source_provider": "transfermarkt",
+                "source_url": "https://example.test/999",
+                "source_row_key": "transfermarkt:999:test", "fetched_at_utc": now.isoformat(),
+                "raw": {},
+            }])
+            targets = player_targets_for_teams(repo, ["USA"])
+
+        self.assertEqual({"Starter", "Unused"}, {row.player_name for row in targets})
+        self.assertEqual(
+            "999",
+            next(row.transfermarkt_player_id for row in targets if row.player_name == "Unused"),
+        )
+
+    def test_repository_persists_resolved_identity_even_without_attempts(self):
+        with tempfile.TemporaryDirectory() as directory:
+            repo = Repository(Path(directory) / "app.sqlite")
+            repo.initialize()
+            repo.save_transfermarkt_player_identity(
+                "No Penalties Yet", "United States", "12345",
+                {"confidence": 0.98, "reason": "exact_name"},
+            )
+            identities = repo.list_transfermarkt_player_ids()
+        self.assertEqual("12345", identities[("No Penalties Yet", "USA")])
 
 
 if __name__ == "__main__":

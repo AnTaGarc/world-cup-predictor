@@ -4,7 +4,7 @@
 
 **Goal:** Predict each knockout team's conditional probability of winning a penalty shootout by simulating logical pre-match lineups, role-compatible substitutions, extra time, taker selection, goalkeeper effects, and sudden death across the full registered squads.
 
-**Architecture:** A canonical 32-team snapshot drives complete history collection while the bracket catches up. Pure modules build Bayesian player/goalkeeper profiles, simulate match-state-aware substitution paths to minute 120, and simulate shootouts; `penalty_history_model.py` orchestrates them behind its existing public API, and Streamlit caches the resulting match context.
+**Architecture:** A canonical 32-team snapshot drives complete history collection while the bracket catches up. Pure modules build Bayesian player/goalkeeper profiles, simulate match-state-aware substitution paths to minute 120, and simulate shootouts; `penalty_history_model.py` orchestrates them behind its existing public API. An external script runs the expensive model after both teams complete the group stage, stores a versioned JSON artifact, and both desktop and online Streamlit only deserialize that artifact.
 
 **Tech Stack:** Python 3.12, standard-library `random`/`math`/`csv`, SQLite repository, existing Streamlit cache/fragment boundaries, `unittest` and Streamlit `AppTest`.
 
@@ -17,7 +17,8 @@
 - Preserve the existing regulation and extra-time probability formulas.
 - Missing history uses a global prior, never a zero conversion rate.
 - General goalkeeper save percentage is only a weak fallback, not penalty save percentage.
-- Simulations are deterministic for the same match/model seed and cached on warm UI reruns.
+- Simulations are deterministic for the same match/model seed, run outside Streamlit, and persist as deployable JSON.
+- Normal desktop/web rendering never launches the 25,000-simulation Monte Carlo; missing artifacts use the fast legacy fallback and report the detailed model as pending.
 - Ambiguous Transfermarkt identities require review and are never auto-accepted.
 - Do not commit the user's changing `data/worldcup.sqlite` or unrelated cache/output artifacts.
 
@@ -59,7 +60,7 @@ def test_penalty_snapshot_contains_exactly_the_user_confirmed_32(self):
     )
     self.assertEqual(32, len(teams))
     self.assertEqual(32, len(set(teams)))
-    for team in ("USA", "Bosnia and Herzegovina", "Cote d'Ivoire", "DR Congo", "Cape Verde"):
+    for team in ("USA", "Bosnia and Herzegovina", "Cote d'Ivoire", "Congo DR", "Cape Verde"):
         self.assertIn(team, teams)
 
 def test_full_squad_targets_include_zero_minute_players_and_reuse_attempt_ids(self):
@@ -118,7 +119,7 @@ Norway
 Mexico
 Ecuador
 England
-DR Congo
+Congo DR
 Argentina
 Cape Verde
 Australia
@@ -432,11 +433,15 @@ git commit -m "feat(penalties): orchestrate pre-match path simulation"
 ### Task 6: Cache and integrate the full context into knockout predictions
 
 **Files:**
+- Create: `src/wcpredict/penalty_context_cache.py`
+- Create: `scripts/precompute_penalty_contexts.py`
+- Create: `tests/test_penalty_context_cache.py`
 - Modify: `src/wcpredict/ui/pages.py`
 - Modify: `tests/test_app_contract.py`
 - Modify: `tests/test_streamlit_smoke.py`
 
 **Interfaces:**
+- Produces `save_precomputed_context(...)`, `load_precomputed_context(...)`, `group_stage_complete(...)`, and `build_repository_penalty_context(...)`.
 - Produces `_penalty_match_context_cached(match_id, db_sig, model_version) -> PenaltyMatchContext`.
 - Feeds its conditional probability to `predict_knockout_match`.
 
@@ -460,24 +465,32 @@ def test_knockout_panel_explains_minute_120_player_pool(self):
 
 Run the two app contracts; expect missing cache/UI labels.
 
-- [ ] **Step 3: Build the cached repository context**
+- [ ] **Step 3: Add failing persistence and completeness-gate tests**
 
-Load both full squad banks using canonical-name matching, imported lineups, active squad events, penalty attempts, and deep goalkeeper baselines before kickoff. Cache by match ID, DB signature, model version, and confirmed-lineup signature. Use a seed derived from `sha256(f"{match_id}:{model_version}")`.
+Verify that a context round-trips through JSON, a version/team mismatch returns `None`, writes are atomic, and `group_stage_complete()` is false until three group results exist.
 
-- [ ] **Step 4: Wire conditional shootout probability into advancement**
+- [ ] **Step 4: Build the repository context and external precompute script**
+
+Load both full squad banks using canonical-name matching, imported lineups, active squad events, penalty attempts, and deep goalkeeper baselines before kickoff. Use a seed derived from `sha256(f"{match_id}:{model_version}")`. The script refuses incomplete teams by default, accepts an explicit match selector, writes via a temporary sibling file plus `Path.replace()`, and records an input fingerprint.
+
+- [ ] **Step 5: Make Streamlit read-only for the expensive model**
+
+`_penalty_match_context_cached` loads the versioned artifact. On a cache miss it builds only the fast team-level compatibility context and adds a pending explanation; it must not pass squads to `build_penalty_match_context`.
+
+- [ ] **Step 6: Wire conditional shootout probability into advancement**
 
 Call `predict_knockout_match(..., home_penalty_win_probability=context.team_a_shootout_win_probability)`. Ensure the same cached context is reused by the knockout summary and details panel.
 
-- [ ] **Step 5: Render player and coverage explanations**
+- [ ] **Step 7: Render player and coverage explanations**
 
 Under `Si se resuelve en penaltis`, render a compact table with player, team, role, probability on field at 120, probability among first five, posterior conversion, attempts, and confidence. Add likely goalkeeper/source and coverage counts. Collapse detailed scenario assumptions in an expander.
 
-- [ ] **Step 6: Verify and commit Task 6**
+- [ ] **Step 8: Verify and commit Task 6**
 
 Run app contracts, Streamlit smoke, knockout, and penalty tests, then:
 
 ```powershell
-git add src/wcpredict/ui/pages.py tests/test_app_contract.py tests/test_streamlit_smoke.py
+git add src/wcpredict/penalty_context_cache.py scripts/precompute_penalty_contexts.py tests/test_penalty_context_cache.py src/wcpredict/ui/pages.py tests/test_app_contract.py tests/test_streamlit_smoke.py docs/superpowers/specs/2026-06-28-pre-match-penalty-shootout-design.md docs/superpowers/plans/2026-06-28-pre-match-penalty-shootout.md
 git commit -m "feat(ui): explain simulated penalty shootout paths"
 ```
 
