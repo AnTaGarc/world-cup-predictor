@@ -17,6 +17,13 @@ from wcpredict.source_catalog import SourceDefinition
 from wcpredict.names import canonical_team_name, same_team
 from wcpredict.deep_match_import import DeepImportResult, DeepMatchCollection, flatten_team_metrics
 from wcpredict.discipline import CardRecord, PlayerDisciplineSnapshot, snapshot_suspensions, suspension_events_for_records
+from wcpredict.match_phases import (
+    ADDITIVE_METRICS,
+    ALL_PERIODS,
+    PhaseValidationIssue,
+    regulation_projection,
+    validate_period_totals,
+)
 
 
 def _is_goalkeeper_position(position: str | None) -> bool:
@@ -810,6 +817,208 @@ class Repository:
                 )
                 imported += 1
         return DeepImportResult(imported, unchanged, ambiguous, unmatched, observation_count)
+
+    def import_deep_match_period(
+        self,
+        collection: DeepMatchCollection,
+        imported_at_utc: datetime,
+        intended_match_id: int,
+        period: str,
+    ) -> DeepImportResult:
+        """Persist reviewed team statistics for one canonical match period.
+
+        Unlike ``import_deep_match_collection``, this path never writes the
+        normal 90-minute aggregate. Projection happens explicitly after both
+        regulation halves have been reviewed.
+        """
+        if period not in ALL_PERIODS:
+            raise ValueError(f"Periodo de partido no válido: {period}")
+        scheduled = self.list_matches()
+        intended = next((item for item in scheduled if item.id == intended_match_id), None)
+        if intended is None:
+            return DeepImportResult(0, 0, 0, len(collection.matches), 0)
+        source_id = f"deep-phase-{period}-{collection.sha256[:16]}"
+        imported = unchanged = ambiguous = unmatched = observation_count = 0
+        primary = {
+            "resumen_del_partido.goles": "goals",
+            "resumen_del_partido.goles_marcados": "goals",
+            "resumen_del_partido.goles_esperados_xg": "xg",
+            "resumen_del_partido.tiros_totales": "shots",
+            "tiros.tiros_a_puerta": "shots_on_target",
+            "resumen_del_partido.posesion_de_balon_pct": "possession",
+            "resumen_del_partido.saques_de_esquina": "corners",
+            "resumen_del_partido.tarjetas_amarillas": "yellow_cards",
+            "resumen_del_partido.tarjetas_rojas": "red_cards",
+            "porteria.paradas": "saves",
+            "resumen_del_partido.paradas": "saves",
+        }
+        with self.session() as con:
+            con.execute(
+                "INSERT INTO sources(id, source_type, source_name, source_url, retrieved_at_utc, status, notes) "
+                "VALUES(?, 'reviewed_json_period', 'Estadísticas profundas por periodo', ?, ?, 'verified', ?) "
+                "ON CONFLICT(id) DO UPDATE SET retrieved_at_utc=excluded.retrieved_at_utc, notes=excluded.notes",
+                (
+                    source_id,
+                    str(collection.path),
+                    imported_at_utc.isoformat(),
+                    f"period={period} sha256={collection.sha256} partidos={len(collection.matches)}",
+                ),
+            )
+            for record in collection.matches:
+                if not (
+                    (same_team(intended.team_a.name, record.team_a) and same_team(intended.team_b.name, record.team_b))
+                    or (same_team(intended.team_a.name, record.team_b) and same_team(intended.team_b.name, record.team_a))
+                ):
+                    unmatched += 1
+                    continue
+                event_id = f"deep-phase:{period}:{collection.sha256}:{record.source_match_id}"
+                if con.execute(
+                    "SELECT 1 FROM import_runs WHERE match_id=? AND source_event_id=?",
+                    (intended.id, event_id),
+                ).fetchone():
+                    unchanged += 1
+                    continue
+                team_ids = {
+                    intended.team_a.name: intended.team_a.id,
+                    intended.team_b.name: intended.team_b.id,
+                }
+                values_by_team: dict[int, dict[str, float]] = {
+                    intended.team_a.id: {},
+                    intended.team_b.id: {},
+                }
+                for metric in flatten_team_metrics(record):
+                    canonical_subject = next(
+                        name for name in team_ids if same_team(name, metric.team_name)
+                    )
+                    context = json.dumps(
+                        {
+                            **metric.context,
+                            "period": period,
+                            "source_match_id": record.source_match_id,
+                            "source_files": record.sources,
+                        },
+                        ensure_ascii=False,
+                        sort_keys=True,
+                    )
+                    con.execute(
+                        "INSERT INTO observations(match_id, subject_type, subject_name, metric, value_number, value_text, unit, context_json, source_id, evidence_status, sample_size, observed_at_utc, period) "
+                        "VALUES(?, 'team', ?, ?, ?, NULL, ?, ?, ?, 'verified_user_json', 1, ?, ?) "
+                        "ON CONFLICT(match_id, subject_type, subject_name, metric, context_json, source_id) DO UPDATE SET "
+                        "value_number=excluded.value_number, unit=excluded.unit, observed_at_utc=excluded.observed_at_utc, period=excluded.period",
+                        (
+                            intended.id,
+                            canonical_subject,
+                            metric.metric,
+                            metric.value,
+                            metric.unit,
+                            context,
+                            source_id,
+                            imported_at_utc.isoformat(),
+                            period,
+                        ),
+                    )
+                    observation_count += 1
+                    column = primary.get(metric.metric)
+                    if column and column not in values_by_team[team_ids[canonical_subject]]:
+                        values_by_team[team_ids[canonical_subject]][column] = metric.value
+                columns = (
+                    "goals", "xg", "shots", "shots_on_target", "possession",
+                    "corners", "yellow_cards", "red_cards", "saves", "goals_conceded",
+                )
+                for team_id, values in values_by_team.items():
+                    if not values:
+                        continue
+                    con.execute(
+                        "INSERT INTO team_match_period_stats("
+                        "match_id, team_id, period, goals, xg, shots, shots_on_target, possession, "
+                        "corners, yellow_cards, red_cards, saves, goals_conceded, source_id, content_sha256, manual_edit, observed_at_utc"
+                        ") VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?) "
+                        "ON CONFLICT(match_id, team_id, period, source_id) DO UPDATE SET "
+                        "goals=excluded.goals, xg=excluded.xg, shots=excluded.shots, shots_on_target=excluded.shots_on_target, "
+                        "possession=excluded.possession, corners=excluded.corners, yellow_cards=excluded.yellow_cards, "
+                        "red_cards=excluded.red_cards, saves=excluded.saves, goals_conceded=excluded.goals_conceded, "
+                        "content_sha256=excluded.content_sha256, observed_at_utc=excluded.observed_at_utc",
+                        (
+                            intended.id,
+                            team_id,
+                            period,
+                            *(values.get(column) for column in columns),
+                            source_id,
+                            collection.sha256,
+                            imported_at_utc.isoformat(),
+                        ),
+                    )
+                con.execute(
+                    "INSERT INTO import_runs(match_id, source_event_id, status, imported_at_utc, missing_critical_json, missing_optional_json) "
+                    "VALUES(?, ?, 'complete', ?, '[]', '[]')",
+                    (intended.id, event_id, imported_at_utc.isoformat()),
+                )
+                imported += 1
+        return DeepImportResult(imported, unchanged, ambiguous, unmatched, observation_count)
+
+    def list_team_match_period_stats(
+        self, match_id: int, include_history: bool = False
+    ) -> list[dict]:
+        if include_history:
+            query = (
+                "SELECT s.*, t.name AS team_name FROM team_match_period_stats s "
+                "JOIN teams t ON t.id=s.team_id WHERE s.match_id=? "
+                "ORDER BY s.period, t.name, s.observed_at_utc DESC, s.source_id DESC"
+            )
+        else:
+            query = (
+                "WITH ranked AS ("
+                " SELECT s.*, ROW_NUMBER() OVER ("
+                "  PARTITION BY s.match_id, s.team_id, s.period "
+                "  ORDER BY s.observed_at_utc DESC, s.source_id DESC"
+                " ) AS row_rank FROM team_match_period_stats s WHERE s.match_id=?"
+                ") SELECT ranked.*, t.name AS team_name FROM ranked "
+                "JOIN teams t ON t.id=ranked.team_id WHERE ranked.row_rank=1 "
+                "ORDER BY ranked.period, t.name"
+            )
+        with self.session() as con:
+            rows = con.execute(query, (match_id,)).fetchall()
+        return [dict(row) for row in rows]
+
+    def validate_match_period_stats(self, match_id: int) -> list[PhaseValidationIssue]:
+        return validate_period_totals(self.list_team_match_period_stats(match_id))
+
+    def project_regulation_stats(
+        self, match_id: int, observed_at_utc: datetime
+    ) -> None:
+        rows = self.list_team_match_period_stats(match_id)
+        issues = self.validate_match_period_stats(match_id)
+        blocking = [issue for issue in issues if issue.severity == "blocking"]
+        if blocking:
+            raise ValueError("; ".join(issue.message for issue in blocking))
+        projected = regulation_projection(rows)
+        columns = (
+            "goals", "xg", "shots", "shots_on_target", "possession",
+            "corners", "yellow_cards", "red_cards", "saves", "goals_conceded",
+        )
+        with self.session() as con:
+            for team_id, values in projected.items():
+                if not any(values.get(column) is not None for column in columns):
+                    continue
+                con.execute(
+                    "INSERT INTO team_match_stats("
+                    "match_id, team_id, goals, xg, shots, shots_on_target, possession, corners, "
+                    "yellow_cards, red_cards, saves, goals_conceded, source_id, manual_edit"
+                    ") VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'derived-regulation-periods', 0) "
+                    "ON CONFLICT(match_id, team_id) DO UPDATE SET "
+                    "goals=CASE WHEN team_match_stats.manual_edit=0 THEN excluded.goals ELSE team_match_stats.goals END, "
+                    "xg=CASE WHEN team_match_stats.manual_edit=0 THEN excluded.xg ELSE team_match_stats.xg END, "
+                    "shots=CASE WHEN team_match_stats.manual_edit=0 THEN excluded.shots ELSE team_match_stats.shots END, "
+                    "shots_on_target=CASE WHEN team_match_stats.manual_edit=0 THEN excluded.shots_on_target ELSE team_match_stats.shots_on_target END, "
+                    "possession=CASE WHEN team_match_stats.manual_edit=0 THEN excluded.possession ELSE team_match_stats.possession END, "
+                    "corners=CASE WHEN team_match_stats.manual_edit=0 THEN excluded.corners ELSE team_match_stats.corners END, "
+                    "yellow_cards=CASE WHEN team_match_stats.manual_edit=0 THEN excluded.yellow_cards ELSE team_match_stats.yellow_cards END, "
+                    "red_cards=CASE WHEN team_match_stats.manual_edit=0 THEN excluded.red_cards ELSE team_match_stats.red_cards END, "
+                    "saves=CASE WHEN team_match_stats.manual_edit=0 THEN excluded.saves ELSE team_match_stats.saves END, "
+                    "goals_conceded=CASE WHEN team_match_stats.manual_edit=0 THEN excluded.goals_conceded ELSE team_match_stats.goals_conceded END, "
+                    "source_id=CASE WHEN team_match_stats.manual_edit=0 THEN excluded.source_id ELSE team_match_stats.source_id END",
+                    (match_id, team_id, *(values.get(column) for column in columns)),
+                )
 
     # Extended observation metrics that complement the structured columns when
     # available. The mapping is intentionally small and curated: extra metrics
