@@ -677,20 +677,19 @@ def resolve_knockout_bracket(repo: Repository, now: datetime | None = None) -> d
                     # pass even when the linked teams have not changed.
                     con.execute(
                         "UPDATE matches SET competition=?, stage=?, kickoff_utc=?, "
-                        "venue=COALESCE(?, venue), neutral_site=1 WHERE id=?",
+                        "team_a_id=?, team_b_id=?, venue=COALESCE(?, venue), "
+                        "neutral_site=1 WHERE id=?",
                         (
                             COMPETITION,
                             slot.stage,
                             slot.kickoff_utc,
+                            home_id,
+                            away_id,
                             slot.venue,
                             slot.match_id,
                         ),
                     )
                     if side_changed:
-                        con.execute(
-                            "UPDATE matches SET team_a_id=?, team_b_id=? WHERE id=?",
-                            (home_id, away_id, slot.match_id),
-                        )
                         summary["matches_updated"] += 1
                 if (home_id, away_id) == (slot.home_team_id, slot.away_team_id) and slot.match_id is not None:
                     continue

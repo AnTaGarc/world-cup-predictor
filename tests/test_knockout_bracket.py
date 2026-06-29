@@ -441,6 +441,17 @@ class AnnexCAssignmentTests(unittest.TestCase):
             self.assertEqual(expected_m82, repo.get_match(m82.match_id).team_b.name)
             self.assertEqual(expected_m85, repo.get_match(m85.match_id).team_b.name)
 
+            # A prior resolver version could fix the slot but leave only the
+            # linked match stale. A later pass must repair that state too.
+            with sqlite3.connect(repo.path) as con:
+                con.execute(
+                    "UPDATE matches SET team_b_id=? WHERE id=?",
+                    (m85.away_team_id, m82.match_id),
+                )
+                con.commit()
+            resolve_knockout_bracket(repo)
+            self.assertEqual(expected_m82, repo.get_match(m82.match_id).team_b.name)
+
 
 class KnockoutModelTests(unittest.TestCase):
     def test_advance_probabilities_sum_to_one(self):
