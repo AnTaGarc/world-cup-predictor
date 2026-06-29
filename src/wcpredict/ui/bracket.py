@@ -141,8 +141,14 @@ def _card_html(slot: dict) -> str:
     if stadium:
         h += f'<div class="bracket-slot-venue"><span class="bracket-venue-pin">\U0001F4CD</span>{escape(stadium)}</div>'
 
-    home_win = closed and sh is not None and sa is not None and sh > sa
-    away_win = closed and sh is not None and sa is not None and sa > sh
+    winner = slot.get("winner")  # "home" | "away" | None — wins out over score
+    if winner == "home":
+        home_win, away_win = True, False
+    elif winner == "away":
+        home_win, away_win = False, True
+    else:
+        home_win = closed and sh is not None and sa is not None and sh > sa
+        away_win = closed and sh is not None and sa is not None and sa > sh
 
     h += _team_row(slot.get("home", {}), sh if show_score else None, home_win)
     h += '<div class="bracket-vs">vs</div>'

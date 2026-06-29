@@ -2298,6 +2298,59 @@ def _render_bracket_section(repo: Repository) -> None:
         return
     st.subheader("Bracket eliminatorio")
 
+    # Bulk-fetch results for all knockout match_ids — used to label the cards
+    # as "closed" (with score) or "live" instead of always "pending".
+    match_ids = [int(s["match_id"]) for s in slots if s.get("match_id")]
+    results_by_match: dict[int, tuple[int, int, int | None, int | None, int | None, int | None]] = {}
+    if match_ids:
+        with sqlite3.connect(repo.path, timeout=30) as con:
+            placeholders = ",".join("?" * len(match_ids))
+            rows = con.execute(
+                f"SELECT match_id, goals_a, goals_b, extra_time_team_a_goals, "
+                f"extra_time_team_b_goals, penalty_team_a, penalty_team_b "
+                f"FROM match_results WHERE match_id IN ({placeholders})",
+                match_ids,
+            ).fetchall()
+        for r in rows:
+            results_by_match[int(r[0])] = (
+                int(r[1]), int(r[2]),
+                r[3] if r[3] is None else int(r[3]),
+                r[4] if r[4] is None else int(r[4]),
+                r[5] if r[5] is None else int(r[5]),
+                r[6] if r[6] is None else int(r[6]),
+            )
+
+    today_utc = datetime.now(timezone.utc).date()
+
+    def _slot_status_score_winner(slot: dict) -> tuple[str, list[int] | None, str | None]:
+        """Returns (status, [ga, gb], winner). Score aggregates 90'+ET goals.
+        ``winner`` is "home"/"away"/None and is used by the renderer to bold
+        the winning row even when the aggregate is a draw (penalty shoot-out)."""
+        mid = slot.get("match_id")
+        if mid is not None:
+            res = results_by_match.get(int(mid))
+            if res is not None:
+                g90a, g90b, eta, etb, pena, penb = res
+                ga = g90a + (eta or 0)
+                gb = g90b + (etb or 0)
+                if ga > gb:
+                    winner = "home"
+                elif gb > ga:
+                    winner = "away"
+                elif pena is not None and penb is not None and pena != penb:
+                    winner = "home" if pena > penb else "away"
+                else:
+                    winner = None
+                return "closed", [ga, gb], winner
+        kickoff = slot.get("kickoff_utc") or ""
+        try:
+            kickoff_date = datetime.fromisoformat(kickoff.replace("Z", "+00:00")).date()
+            if kickoff_date == today_utc:
+                return "live", None, None
+        except (TypeError, ValueError):
+            pass
+        return "pending", None, None
+
     # Sort by bracket position (not slot_id) so the CSS connectors visually
     # match the actual pairings — see _BRACKET_POSITION_ORDER for the why.
     def _position_key(slot: dict) -> tuple[int, int]:
@@ -2332,6 +2385,7 @@ def _render_bracket_section(repo: Repository) -> None:
 
         match_id = slot.get("match_id")
         href = f"?page=lab&match_id={int(match_id)}" if match_id else None
+        status, score, winner = _slot_status_score_winner(slot)
         rendered_slots.append({
             "match_id": slot.get("slot_id", ""),
             "round": round_key,
@@ -2339,8 +2393,9 @@ def _render_bracket_section(repo: Repository) -> None:
             "stadium": slot.get("venue") or "",
             "home": _team(slot.get("home", ""), bool(slot.get("home_pending"))),
             "away": _team(slot.get("away", ""), bool(slot.get("away_pending"))),
-            "status": "pending",
-            "score": None,
+            "status": status,
+            "score": score,
+            "winner": winner,
             "advances_to": None,
             "href": href,
         })
