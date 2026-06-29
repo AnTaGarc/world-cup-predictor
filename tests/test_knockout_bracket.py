@@ -397,6 +397,48 @@ class AnnexCAssignmentTests(unittest.TestCase):
                 self.assertFalse(slot["away_pending"],
                                  f"{slot_id} away unresolved after all groups finished")
 
+    def test_resolution_repairs_stale_persisted_third_place_assignment(self):
+        with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as tmp:
+            repo = Repository(Path(tmp) / "app.sqlite")
+            repo.initialize()
+            seed_knockout_bracket(repo, KNOCKOUT_CSV)
+            for letter in "ABCDEFGHIJKL":
+                _seed_group(
+                    repo,
+                    letter,
+                    [f"{letter}1", f"{letter}2", f"{letter}3", f"{letter}4"],
+                )
+            resolve_knockout_bracket(repo)
+            slots = {row.slot_id: row for row in list_bracket_slots(repo)}
+            original_view = {row["slot_id"]: row for row in bracket_view(repo)}
+            expected_m82 = original_view["M82"]["away"]
+            expected_m85 = original_view["M85"]["away"]
+            m82, m85 = slots["M82"], slots["M85"]
+            with sqlite3.connect(repo.path) as con:
+                con.execute(
+                    "UPDATE knockout_bracket SET away_team_id=? WHERE id=?",
+                    (m85.away_team_id, m82.id),
+                )
+                con.execute(
+                    "UPDATE knockout_bracket SET away_team_id=? WHERE id=?",
+                    (m82.away_team_id, m85.id),
+                )
+                con.execute(
+                    "UPDATE matches SET team_b_id=? WHERE id=?",
+                    (m85.away_team_id, m82.match_id),
+                )
+                con.execute(
+                    "UPDATE matches SET team_b_id=? WHERE id=?",
+                    (m82.away_team_id, m85.match_id),
+                )
+                con.commit()
+
+            resolve_knockout_bracket(repo)
+
+            view = {row["slot_id"]: row for row in bracket_view(repo)}
+            self.assertEqual(expected_m82, view["M82"]["away"])
+            self.assertEqual(expected_m85, view["M85"]["away"])
+
 
 class KnockoutModelTests(unittest.TestCase):
     def test_advance_probabilities_sum_to_one(self):

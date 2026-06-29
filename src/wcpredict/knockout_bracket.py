@@ -634,12 +634,21 @@ def resolve_knockout_bracket(repo: Repository, now: datetime | None = None) -> d
         # Iterate stages in order so winners are known before resolving the next round.
         for stage in STAGES:
             for slot in [s for s in slots if s.stage == stage]:
-                home_id = slot.home_team_id or _resolve_source(
-                    con, slot.home_source, slots_by_id, third_assignment, slot.slot_id,
-                )
-                away_id = slot.away_team_id or _resolve_source(
-                    con, slot.away_source, slots_by_id, third_assignment, slot.slot_id,
-                )
+                def resolved_side(existing_id: int | None, source: str) -> int | None:
+                    # Third-place assignment is table-driven and may be
+                    # corrected after a provisional/fallback resolution. It
+                    # must therefore be recalculated even when an id is already
+                    # persisted; other source types retain their stable id.
+                    if _parse_third_allowed(source) is not None:
+                        return _resolve_source(
+                            con, source, slots_by_id, third_assignment, slot.slot_id,
+                        )
+                    return existing_id or _resolve_source(
+                        con, source, slots_by_id, third_assignment, slot.slot_id,
+                    )
+
+                home_id = resolved_side(slot.home_team_id, slot.home_source)
+                away_id = resolved_side(slot.away_team_id, slot.away_source)
                 side_changed = (
                     home_id != slot.home_team_id
                     or away_id != slot.away_team_id
