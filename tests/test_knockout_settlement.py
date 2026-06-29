@@ -1,5 +1,6 @@
 import tempfile
 import unittest
+import json
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
@@ -116,6 +117,51 @@ class KnockoutSettlementTests(unittest.TestCase):
         }
 
         self.assertEqual(self.team_a, _decide_winner(row))
+
+    def test_settlement_persists_phase_audit_from_frozen_snapshot(self):
+        snapshot = {
+            "team_a": "Spain",
+            "team_b": "Germany",
+            "primary": [
+                {"selection_name": "Spain", "probability": 0.40},
+                {"selection_name": "Draw", "probability": 0.35},
+                {"selection_name": "Germany", "probability": 0.25},
+            ],
+            "knockout": {
+                "extra_time": {
+                    "expected_xg": [0.50, 0.30],
+                    "mode_score": "0-0",
+                    "conditional": {"home": 0.42, "draw": 0.38, "away": 0.20},
+                    "reach_shootout": 0.133,
+                },
+                "shootout": {"conditional": {"home": 0.55, "away": 0.45}, "players": []},
+            },
+        }
+        self.repo.save_prediction_snapshot(
+            self.match_id,
+            snapshot,
+            self.kickoff - timedelta(minutes=30),
+            "phase-test-v1",
+            self.kickoff - timedelta(minutes=30),
+        )
+
+        self.repo.settle_knockout_match_versioned(
+            self.match_id,
+            MatchPhaseResultInput(1, 1, 1, 0, None, None, "extra_time"),
+            (),
+            None,
+            self.now,
+        )
+
+        with self.repo.session() as con:
+            rows = con.execute(
+                "SELECT market, selection, prob_predicted, outcome_observed, extra_json "
+                "FROM backtest_runs WHERE run_label='live-wc2026-knockout-phase-v1' "
+                "AND match_id=? ORDER BY market",
+                (self.match_id,),
+            ).fetchall()
+        self.assertTrue(any(row["market"] == "ET_OUTCOME" and row["selection"] == "home" for row in rows))
+        self.assertTrue(all(json.loads(row["extra_json"])["settlement_version_id"] > 0 for row in rows))
 
 
 if __name__ == "__main__":

@@ -41,6 +41,7 @@ from wcpredict.knockout_model import predict_knockout_match
 from wcpredict.penalty_history_model import PENALTY_MODEL_VERSION, build_penalty_match_context
 from wcpredict.penalty_context_cache import load_precomputed_context
 from wcpredict.extra_time_model import adjust_extra_time_xg
+from wcpredict.knockout_audit import build_knockout_snapshot_section
 from wcpredict.services import MarketPrediction, predict_match_markets
 from wcpredict.source_catalog import default_source_catalog
 from wcpredict.daily_refresh import DEFAULT_PROVIDERS, DatasetDownload, ensure_current_world_cup_data
@@ -1658,25 +1659,6 @@ def _match_analysis_bundle_cached(
         deep_ml_probabilities=deep_ml_probabilities,
         deep_outcome_weight=deep_weight,
     )
-    # Persist a frozen pre-kickoff snapshot of this prediction. Only fires
-    # for matches whose kickoff is still in the future so post-match cache
-    # rebuilds don't pollute the historical record. Idempotent on
-    # (match_id, model_version, data_as_of_utc).
-    try:
-        now_utc = datetime.now(timezone.utc)
-        if match.kickoff_utc > now_utc:
-            payload = _bundle_snapshot_payload(team_a, team_b, predictions, primary,
-                                               expected_xg, deep_count, prior_deep_samples)
-            repo.save_prediction_snapshot(
-                match_id=match.id,
-                payload=payload,
-                data_as_of_utc=now_utc,
-                model_version=engine_version,
-                generated_at_utc=now_utc,
-            )
-    except Exception:
-        # Snapshot persistence must never block prediction rendering.
-        pass
     return bundle
 
 
@@ -1708,6 +1690,50 @@ def _bundle_snapshot_payload(
         "primary": [_row(p) for p in primary],
         "predictions": [_row(p) for p in predictions],
     }
+
+
+def _persist_pre_match_snapshot(
+    match,
+    bundle: MatchAnalysisBundle,
+    repo: Repository,
+    knockout_prediction,
+) -> None:
+    """Persist one complete immutable payload after every model branch exists."""
+    now_utc = datetime.now(timezone.utc)
+    if match.kickoff_utc <= now_utc:
+        return
+    payload = _bundle_snapshot_payload(
+        match.team_a.name,
+        match.team_b.name,
+        bundle.predictions,
+        bundle.primary,
+        bundle.expected_xg,
+        bundle.deep_count,
+        bundle.prior_deep_samples,
+    )
+    if knockout_prediction is not None and bundle.expected_xg:
+        xa, xb = float(bundle.expected_xg[0]), float(bundle.expected_xg[1])
+        adjustment = adjust_extra_time_xg(
+            match.team_a.name,
+            match.team_b.name,
+            xa,
+            xb,
+            repo.list_extra_time_training_rows_before(match.kickoff_utc),
+            match.kickoff_utc,
+        )
+        penalty_context = _penalty_match_context(match)
+        payload["knockout"] = build_knockout_snapshot_section(
+            knockout_prediction,
+            adjustment.adjusted_xg,
+            penalty_context,
+        )
+    repo.save_prediction_snapshot(
+        match_id=match.id,
+        payload=payload,
+        data_as_of_utc=now_utc,
+        model_version=PREDICTION_ENGINE_VERSION,
+        generated_at_utc=now_utc,
+    )
 
 
 @st.cache_resource(show_spinner=False)
@@ -3088,6 +3114,11 @@ def render_prediction_lab() -> None:
     if bundle.corrections is not None and corrections_active(bundle.corrections):
         callout(describe_corrections(bundle.corrections), tone="blue", title="Corrección automática activa")
     knockout_prediction = _knockout_prediction_for_match(match, bundle, repo)
+    try:
+        _persist_pre_match_snapshot(match, bundle, repo, knockout_prediction)
+    except Exception:
+        # Snapshot persistence must never block prediction rendering.
+        pass
     is_knockout = knockout_prediction is not None
     best = max(primary, key=lambda row: row.probability)
     exact_score = next(row for row in predictions if row.market_name == "Exact Score")

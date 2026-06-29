@@ -2686,6 +2686,9 @@ class Repository:
                 (official_a, official_b, recorded, match_id),
             )
         self.project_regulation_stats(match_id, evaluated_at_utc)
+        self._record_knockout_phase_audit(
+            match_id, settlement_id, evaluated_at_utc
+        )
         return settlement_id
 
     def get_active_match_phase_result(self, match_id: int) -> dict | None:
@@ -2701,12 +2704,129 @@ class Repository:
     def list_active_shootout_kicks(self, match_id: int) -> list[dict]:
         with self.session() as con:
             rows = con.execute(
-                "SELECT sk.* FROM shootout_kicks sk "
+                "SELECT sk.*, taker.name AS player_name, taker_team.name AS team_name, "
+                "keeper.name AS goalkeeper_name FROM shootout_kicks sk "
                 "JOIN settlement_versions sv ON sv.id=sk.settlement_version_id "
+                "JOIN players taker ON taker.id=sk.taker_player_id "
+                "JOIN teams taker_team ON taker_team.id=sk.team_id "
+                "JOIN players keeper ON keeper.id=sk.goalkeeper_player_id "
                 "WHERE sk.match_id=? AND sv.active=1 ORDER BY sk.sequence_number",
                 (match_id,),
             ).fetchall()
         return [dict(row) for row in rows]
+
+    def _record_knockout_phase_audit(
+        self,
+        match_id: int,
+        settlement_version_id: int,
+        recorded_at_utc: datetime,
+    ) -> None:
+        from wcpredict.knockout_audit import evaluate_knockout_snapshot
+
+        with self.session() as con:
+            snapshot_row = con.execute(
+                "SELECT payload_json, model_version FROM prediction_snapshots "
+                "WHERE match_id=? ORDER BY generated_at_utc DESC LIMIT 1",
+                (match_id,),
+            ).fetchone()
+        if snapshot_row is None:
+            return
+        try:
+            snapshot = json.loads(snapshot_row["payload_json"])
+        except (TypeError, ValueError, json.JSONDecodeError):
+            return
+        if not snapshot.get("knockout"):
+            return
+        phase = self.get_active_match_phase_result(match_id)
+        if phase is None:
+            return
+        kicks = self.list_active_shootout_kicks(match_id)
+        audit = evaluate_knockout_snapshot(snapshot, phase, kicks)
+        self.save_knockout_phase_backtest_rows(
+            match_id,
+            settlement_version_id,
+            audit,
+            snapshot,
+            str(snapshot_row["model_version"]),
+            recorded_at_utc,
+        )
+
+    def save_knockout_phase_backtest_rows(
+        self,
+        match_id: int,
+        settlement_version_id: int,
+        audit,
+        snapshot: dict,
+        model_version: str,
+        recorded_at_utc: datetime,
+    ) -> None:
+        import math
+
+        run_label = "live-wc2026-knockout-phase-v1"
+        recorded = recorded_at_utc.isoformat()
+
+        def row_payload(market: str, selection: str, probability: float, observed: int, extra: dict):
+            probability = max(1e-6, min(1.0 - 1e-6, float(probability)))
+            return (
+                run_label,
+                model_version,
+                match_id,
+                market,
+                selection,
+                probability,
+                observed,
+                (probability - observed) ** 2,
+                -math.log(probability if observed else 1.0 - probability),
+                json.dumps({"settlement_version_id": settlement_version_id, **extra}, ensure_ascii=False, sort_keys=True),
+                recorded,
+            )
+
+        rows = []
+        reach_probability = snapshot.get("knockout", {}).get("extra_time", {}).get("reach_shootout")
+        if reach_probability is not None:
+            rows.append(row_payload(
+                "REACH_SHOOTOUT",
+                "yes",
+                float(reach_probability),
+                int(audit.shootout.status == "played"),
+                {},
+            ))
+        if audit.extra_time.status == "played" and audit.extra_time.observed_probability is not None:
+            rows.append(row_payload(
+                "ET_OUTCOME",
+                str(audit.extra_time.actual_outcome),
+                float(audit.extra_time.observed_probability),
+                1,
+                {"actual_score": audit.extra_time.actual_score},
+            ))
+        if audit.shootout.status == "played" and audit.shootout.observed_probability is not None:
+            rows.append(row_payload(
+                "SHOOTOUT_WINNER",
+                str(audit.shootout.actual_outcome),
+                float(audit.shootout.observed_probability),
+                1,
+                {"actual_score": audit.shootout.actual_score},
+            ))
+            for index, kick in enumerate(audit.shootout.rows, start=1):
+                rows.append(row_payload(
+                    "SHOOTOUT_KICK",
+                    f"{index}:{kick['player_name']}",
+                    float(kick["predicted_conversion"]),
+                    int(kick["outcome"] == "scored"),
+                    dict(kick),
+                ))
+        with self.session() as con:
+            con.execute(
+                "DELETE FROM backtest_runs WHERE run_label=? AND match_id=?",
+                (run_label, match_id),
+            )
+            con.executemany(
+                "INSERT INTO backtest_runs("
+                "run_label, model_version, match_id, market, selection, prob_predicted, "
+                "outcome_observed, brier, log_loss, extra_json, recorded_at_utc"
+                ") VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                rows,
+            )
 
     def list_extra_time_training_rows_before(
         self, as_of_utc: datetime

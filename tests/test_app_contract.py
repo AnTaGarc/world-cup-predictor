@@ -213,6 +213,12 @@ class AppContractTests(unittest.TestCase):
     def test_knockout_prediction_header_prioritizes_advancement(self):
         source = (Path(__file__).parents[1] / "src" / "wcpredict" / "ui" / "pages.py").read_text(encoding="utf-8")
         self.assertIn("knockout_prediction = _knockout_prediction_for_match(match, bundle, repo)", source)
+
+    def test_pre_match_snapshot_persists_knockout_phase_payload(self):
+        source = (Path(__file__).parents[1] / "src" / "wcpredict" / "ui" / "pages.py").read_text(encoding="utf-8")
+        self.assertIn("def _persist_pre_match_snapshot(", source)
+        self.assertIn('payload["knockout"] = build_knockout_snapshot_section(', source)
+        self.assertIn("_persist_pre_match_snapshot(match, bundle, repo, knockout_prediction)", source)
         # The knockout header now uses a dedicated panel (badge + advance card
         # + conditional funnel) instead of the generic 1X2 layout. Sanity-check
         # that the KO branch is reached and that the advance metric is shown.
