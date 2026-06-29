@@ -95,7 +95,52 @@ def _parse_score(score: Any) -> tuple[int | None, int | None]:
     return None, None
 
 
-def _team_row(team: dict, score_val: int | None, is_winner: bool) -> str:
+def bracket_result_display(row: dict) -> dict:
+    """Normalize current phase-aware and legacy knockout result storage."""
+    has_phase_result = row.get("regulation_goals_a") is not None
+    if has_phase_result:
+        score_a = int(row["regulation_goals_a"]) + int(row.get("phase_extra_time_goals_a") or 0)
+        score_b = int(row["regulation_goals_b"]) + int(row.get("phase_extra_time_goals_b") or 0)
+        penalty_a = row.get("shootout_goals_a")
+        penalty_b = row.get("shootout_goals_b")
+        decided_in = row.get("decided_in")
+    else:
+        score_a = int(row["goals_a"]) + int(row.get("legacy_extra_time_goals_a") or 0)
+        score_b = int(row["goals_b"]) + int(row.get("legacy_extra_time_goals_b") or 0)
+        penalty_a = row.get("legacy_penalty_goals_a")
+        penalty_b = row.get("legacy_penalty_goals_b")
+        if penalty_a is not None and penalty_b is not None:
+            decided_in = "shootout"
+        elif row.get("legacy_extra_time_goals_a") is not None or row.get("legacy_extra_time_goals_b") is not None:
+            decided_in = "extra_time"
+        else:
+            decided_in = "regulation"
+
+    penalty_score = None
+    if penalty_a is not None and penalty_b is not None:
+        penalty_score = [int(penalty_a), int(penalty_b)]
+    if score_a > score_b:
+        winner = "home"
+    elif score_b > score_a:
+        winner = "away"
+    elif penalty_score and penalty_score[0] != penalty_score[1]:
+        winner = "home" if penalty_score[0] > penalty_score[1] else "away"
+    else:
+        winner = None
+    return {
+        "score": [score_a, score_b],
+        "penalty_score": penalty_score,
+        "winner": winner,
+        "decided_in": decided_in,
+    }
+
+
+def _team_row(
+    team: dict,
+    score_val: int | None,
+    penalty_score_val: int | None,
+    is_winner: bool,
+) -> str:
     cls = "bracket-slot-team"
     if is_winner:
         cls += " bracket-slot-winner"
@@ -109,6 +154,8 @@ def _team_row(team: dict, score_val: int | None, is_winner: bool) -> str:
     h += f'<span class="{name_cls}">{name}</span>'
     if score_val is not None:
         h += f'<span class="bracket-team-score">{score_val}</span>'
+    if penalty_score_val is not None:
+        h += f'<span class="bracket-team-penalty-score">({penalty_score_val})</span>'
     h += "</div>"
     return h
 
@@ -119,6 +166,7 @@ def _card_html(slot: dict) -> str:
     closed = status == "closed"
     show_score = live or closed
     sh, sa = _parse_score(slot.get("score"))
+    ph, pa = _parse_score(slot.get("penalty_score"))
 
     cls = "bracket-slot"
     if live:
@@ -150,9 +198,25 @@ def _card_html(slot: dict) -> str:
         home_win = closed and sh is not None and sa is not None and sh > sa
         away_win = closed and sh is not None and sa is not None and sa > sh
 
-    h += _team_row(slot.get("home", {}), sh if show_score else None, home_win)
+    h += _team_row(
+        slot.get("home", {}),
+        sh if show_score else None,
+        ph if show_score else None,
+        home_win,
+    )
     h += '<div class="bracket-vs">vs</div>'
-    h += _team_row(slot.get("away", {}), sa if show_score else None, away_win)
+    h += _team_row(
+        slot.get("away", {}),
+        sa if show_score else None,
+        pa if show_score else None,
+        away_win,
+    )
+    decision_label = {
+        "extra_time": "Prórroga",
+        "shootout": "Penaltis",
+    }.get(slot.get("decided_in"))
+    if closed and decision_label:
+        h += f'<span class="bracket-decision-label">{decision_label}</span>'
     h += f"</div>{close_tag}"
     return h
 

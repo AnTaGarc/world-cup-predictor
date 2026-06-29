@@ -808,11 +808,19 @@ div[data-testid="stDataEditor"] tbody tr:hover {
   font-weight: 800; font-variant-numeric: tabular-nums; font-size: 15px;
   min-width: 18px; text-align: center;
 }
+.bracket-team-penalty-score {
+  color: var(--muted); font-size: 11px; font-weight: 700;
+  font-variant-numeric: tabular-nums; min-width: 20px; text-align: left;
+}
 .bracket-slot-winner .bracket-team-name { font-weight: 800; }
 .bracket-slot-winner .bracket-team-score { color: var(--blue-500); }
 .bracket-placeholder { color: var(--muted); font-weight: 500; font-size: 12.5px; }
 .bracket-placeholder::before { content: '? '; font-weight: 700; opacity: .6; }
 .bracket-vs { text-align: center; font-size: 11px; font-weight: 600; color: var(--muted); padding: 1px 0; letter-spacing: .04em; text-transform: uppercase; }
+.bracket-decision-label {
+  display: block; margin: 0 12px 7px; color: var(--muted); font-size: 9.5px;
+  font-weight: 700; letter-spacing: .05em; text-align: right; text-transform: uppercase;
+}
 
 /* Live match */
 .bracket-live .bracket-slot-head { background: linear-gradient(135deg, #8a1c1c, #c63c3c) !important; }
