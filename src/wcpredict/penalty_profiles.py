@@ -165,14 +165,21 @@ def build_goalkeeper_profile(
         row for row in attempts
         if _name_key(row.get("goalkeeper_name")) == player_key
     ]
-    observed_saves = [row for row in matching if _is_goalkeeper_save(row)]
+    tournament = [
+        row for row in matching
+        if str(row.get("source_provider") or "") == "world_cup_2026_manual"
+        and _outcome(row) in {"scored", "saved", "off_target", "woodwork"}
+    ]
+    historical = [row for row in matching if row not in tournament]
+    observed_saves = [row for row in historical if _is_goalkeeper_save(row)]
     # Transfermarkt's generic missed-penalty page does not always say whether
     # the goalkeeper saved it or the taker missed. Avoid a one-sided sample of
     # scored penalties unless at least one save is explicitly identified.
-    relevant = (
-        [row for row in matching if _outcome(row) == "scored" or _is_goalkeeper_save(row)]
+    historical_relevant = (
+        [row for row in historical if _outcome(row) == "scored" or _is_goalkeeper_save(row)]
         if observed_saves else []
     )
+    relevant = historical_relevant + tournament
     saves = sum(_is_goalkeeper_save(row) for row in relevant)
     faced = len(relevant)
     history_weight = faced / (PRIOR_ATTEMPTS + faced)

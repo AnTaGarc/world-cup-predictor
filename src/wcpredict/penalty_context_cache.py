@@ -175,7 +175,9 @@ def _repository_inputs(repo: Repository, match) -> tuple[dict, dict, dict, list[
         for player in squads[team]:
             if is_goalkeeper(player):
                 deep_rates[str(player.get("player_name") or "")] = baseline.save_rate
-    return squads, lineups, deep_rates, repo.list_penalty_attempts()
+    return squads, lineups, deep_rates, repo.list_penalty_evidence(
+        team_names, match.kickoff_utc
+    )
 
 
 def _group_results_for_fingerprint(repo: Repository, match) -> list[dict]:

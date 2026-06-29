@@ -2155,6 +2155,61 @@ class Repository:
             rows = con.execute(query, tuple(params)).fetchall()
         return [dict(row) for row in rows]
 
+    def list_penalty_evidence(
+        self, team_names: tuple[str, ...], before_utc: datetime
+    ) -> list[dict]:
+        """Return historical plus active reviewed tournament penalty evidence."""
+        canonical = {canonical_team_name(team) for team in team_names}
+        cutoff_date = before_utc.date().isoformat()
+        historical = []
+        for row in self.list_penalty_attempts():
+            if canonical_team_name(str(row.get("team_name") or "")) not in canonical:
+                continue
+            attempted_on = str(row.get("attempted_on") or "")[:10]
+            if attempted_on and attempted_on >= cutoff_date:
+                continue
+            historical.append(row)
+        with self.session() as con:
+            rows = con.execute(
+                "SELECT sk.id, sk.sequence_number, sk.outcome, sk.source_provider, "
+                "m.kickoff_utc, m.competition, taker.name AS player_name, "
+                "taker_team.name AS team_name, keeper.name AS goalkeeper_name, "
+                "keeper_team.name AS opponent_team "
+                "FROM shootout_kicks sk "
+                "JOIN settlement_versions sv ON sv.id=sk.settlement_version_id AND sv.active=1 "
+                "JOIN matches m ON m.id=sk.match_id "
+                "JOIN players taker ON taker.id=sk.taker_player_id "
+                "JOIN teams taker_team ON taker_team.id=sk.team_id "
+                "JOIN players keeper ON keeper.id=sk.goalkeeper_player_id "
+                "JOIN teams keeper_team ON keeper_team.id=keeper.team_id "
+                "WHERE m.kickoff_utc < ? ORDER BY m.kickoff_utc, sk.sequence_number",
+                (before_utc.isoformat(),),
+            ).fetchall()
+        tournament = []
+        for raw in rows:
+            row = dict(raw)
+            if canonical_team_name(str(row["team_name"])) not in canonical:
+                continue
+            outcome = (
+                "off_target"
+                if row["outcome"] == "off_target_or_woodwork"
+                else str(row["outcome"])
+            )
+            tournament.append({
+                "player_name": row["player_name"],
+                "team_name": row["team_name"],
+                "attempted_on": str(row["kickoff_utc"])[:10],
+                "competition": row["competition"],
+                "phase": "shootout",
+                "outcome": outcome,
+                "goalkeeper_name": row["goalkeeper_name"],
+                "opponent_team": row["opponent_team"],
+                "source_provider": row["source_provider"],
+                "source_row_key": f"shootout-kick-{row['id']}",
+                "raw_json": json.dumps({"sequence_number": row["sequence_number"]}),
+            })
+        return historical + tournament
+
     def create_screenshot_batch(
         self,
         match_id: int,
