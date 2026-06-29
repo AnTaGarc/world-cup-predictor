@@ -575,8 +575,14 @@ def _resolve_source(
         result = con.execute(
             "SELECT m.team_a_id, m.team_b_id, m.status, mr.goals_a, mr.goals_b, "
             "  mr.extra_time_team_a_goals, mr.extra_time_team_b_goals, "
-            "  mr.penalty_team_a, mr.penalty_team_b "
+            "  mr.penalty_team_a, mr.penalty_team_b, "
+            "  pr.decided_in, pr.regulation_goals_a, pr.regulation_goals_b, "
+            "  pr.extra_time_goals_a AS phase_extra_time_goals_a, "
+            "  pr.extra_time_goals_b AS phase_extra_time_goals_b, "
+            "  pr.shootout_goals_a, pr.shootout_goals_b "
             "FROM matches m LEFT JOIN match_results mr ON mr.match_id=m.id "
+            "LEFT JOIN settlement_versions sv ON sv.match_id=m.id AND sv.active=1 "
+            "LEFT JOIN match_phase_results pr ON pr.settlement_version_id=sv.id "
             "WHERE m.id=?",
             (int(slot.match_id),),
         ).fetchone()
@@ -595,6 +601,18 @@ def _resolve_source(
 
 def _decide_winner(row: sqlite3.Row) -> int | None:
     """Decide the advancing team from a finished match result row."""
+    if row["decided_in"] is not None:
+        regulation_a = int(row["regulation_goals_a"])
+        regulation_b = int(row["regulation_goals_b"])
+        total_a = regulation_a + int(row["phase_extra_time_goals_a"] or 0)
+        total_b = regulation_b + int(row["phase_extra_time_goals_b"] or 0)
+        if total_a != total_b:
+            return int(row["team_a_id"]) if total_a > total_b else int(row["team_b_id"])
+        penalty_a = int(row["shootout_goals_a"] or 0)
+        penalty_b = int(row["shootout_goals_b"] or 0)
+        if penalty_a != penalty_b:
+            return int(row["team_a_id"]) if penalty_a > penalty_b else int(row["team_b_id"])
+        return None
     ga = row["goals_a"]
     gb = row["goals_b"]
     if ga is None or gb is None:

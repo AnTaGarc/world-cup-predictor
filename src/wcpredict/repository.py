@@ -20,9 +20,13 @@ from wcpredict.discipline import CardRecord, PlayerDisciplineSnapshot, snapshot_
 from wcpredict.match_phases import (
     ADDITIVE_METRICS,
     ALL_PERIODS,
+    MatchPhaseResultInput,
     PhaseValidationIssue,
+    ShootoutKickInput,
     regulation_projection,
+    validate_phase_result,
     validate_period_totals,
+    validate_shootout_sequence,
 )
 
 
@@ -1896,9 +1900,13 @@ class Repository:
     def list_match_results_before(self, as_of_utc: datetime) -> list[MatchResult]:
         with self.session() as con:
             rows = con.execute(
-                "SELECT m.kickoff_utc, ta.name AS team_a, tb.name AS team_b, r.goals_a, r.goals_b "
+                "SELECT m.kickoff_utc, ta.name AS team_a, tb.name AS team_b, "
+                "COALESCE(pr.regulation_goals_a, r.goals_a) AS goals_a, "
+                "COALESCE(pr.regulation_goals_b, r.goals_b) AS goals_b "
                 "FROM match_results r JOIN matches m ON m.id=r.match_id "
                 "JOIN teams ta ON ta.id=m.team_a_id JOIN teams tb ON tb.id=m.team_b_id "
+                "LEFT JOIN settlement_versions sv ON sv.match_id=m.id AND sv.active=1 "
+                "LEFT JOIN match_phase_results pr ON pr.settlement_version_id=sv.id "
                 "WHERE m.kickoff_utc < ? ORDER BY m.kickoff_utc",
                 (as_of_utc.isoformat(),),
             ).fetchall()
@@ -2370,6 +2378,8 @@ class Repository:
         goals_b: int,
         batch_id: int | None,
         evaluated_at_utc: datetime,
+        *,
+        force_new: bool = False,
     ) -> int:
         match = self.get_match(match_id)
         evaluated = evaluated_at_utc.isoformat()
@@ -2379,6 +2389,8 @@ class Repository:
                 (match_id,),
             ).fetchone()
             if (
+                not force_new
+                and
                 active is not None
                 and int(active["goals_a"]) == goals_a
                 and int(active["goals_b"]) == goals_b
@@ -2493,6 +2505,153 @@ class Repository:
                 con, match, match_id, goals_a, goals_b, evaluated_at_utc,
             )
             return settlement_id
+
+    def settle_knockout_match_versioned(
+        self,
+        match_id: int,
+        phase_result: MatchPhaseResultInput,
+        kicks: tuple[ShootoutKickInput, ...],
+        batch_id: int | None,
+        evaluated_at_utc: datetime,
+    ) -> int:
+        """Close a knockout match while keeping regulation training isolated."""
+        errors = list(validate_phase_result(phase_result))
+        match = self.get_match(match_id)
+        kick_summary = None
+        if phase_result.decided_in == "shootout":
+            kick_summary = validate_shootout_sequence(kicks)
+            errors.extend(kick_summary.errors)
+            expected_teams = {match.team_a.id, match.team_b.id}
+            if {kick.team_id for kick in kicks} != expected_teams:
+                errors.append("Los lanzamientos no pertenecen a las dos selecciones del partido.")
+            expected_score = {
+                match.team_a.id: int(phase_result.shootout_goals_a or 0),
+                match.team_b.id: int(phase_result.shootout_goals_b or 0),
+            }
+            if kick_summary.goals_by_team != expected_score:
+                errors.append("El marcador de la tanda no coincide con los lanzamientos.")
+        elif kicks:
+            errors.append("Solo se pueden registrar lanzamientos si el partido llegó a penaltis.")
+        blocking_stats = [
+            issue for issue in self.validate_match_period_stats(match_id)
+            if issue.severity == "blocking"
+        ]
+        errors.extend(issue.message for issue in blocking_stats)
+        if errors:
+            raise ValueError("; ".join(dict.fromkeys(errors)))
+
+        active_phase = self.get_active_match_phase_result(match_id)
+        active_kicks = self.list_active_shootout_kicks(match_id)
+        desired_phase = (
+            phase_result.regulation_goals_a,
+            phase_result.regulation_goals_b,
+            phase_result.extra_time_goals_a,
+            phase_result.extra_time_goals_b,
+            phase_result.shootout_goals_a,
+            phase_result.shootout_goals_b,
+            phase_result.decided_in,
+        )
+        stored_phase = None if active_phase is None else (
+            active_phase["regulation_goals_a"],
+            active_phase["regulation_goals_b"],
+            active_phase["extra_time_goals_a"],
+            active_phase["extra_time_goals_b"],
+            active_phase["shootout_goals_a"],
+            active_phase["shootout_goals_b"],
+            active_phase["decided_in"],
+        )
+        desired_kicks = [
+            (kick.sequence_number, kick.team_id, kick.taker_player_id, kick.goalkeeper_player_id, kick.outcome)
+            for kick in kicks
+        ]
+        stored_kicks = [
+            (row["sequence_number"], row["team_id"], row["taker_player_id"], row["goalkeeper_player_id"], row["outcome"])
+            for row in active_kicks
+        ]
+        if stored_phase == desired_phase and stored_kicks == desired_kicks:
+            return int(active_phase["settlement_version_id"])
+
+        with self.session() as con:
+            already_settled = con.execute(
+                "SELECT 1 FROM settlement_versions WHERE match_id=? AND active=1",
+                (match_id,),
+            ).fetchone() is not None
+        settlement_id = self.settle_match_versioned(
+            match_id,
+            phase_result.regulation_goals_a,
+            phase_result.regulation_goals_b,
+            batch_id,
+            evaluated_at_utc,
+            force_new=already_settled,
+        )
+        official_a = phase_result.regulation_goals_a + int(phase_result.extra_time_goals_a or 0)
+        official_b = phase_result.regulation_goals_b + int(phase_result.extra_time_goals_b or 0)
+        recorded = evaluated_at_utc.isoformat()
+        with self.session() as con:
+            con.execute(
+                "INSERT INTO match_phase_results("
+                "match_id, settlement_version_id, regulation_goals_a, regulation_goals_b, "
+                "extra_time_goals_a, extra_time_goals_b, shootout_goals_a, shootout_goals_b, "
+                "decided_in, source_id, recorded_at_utc"
+                ") VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, 'world_cup_2026_manual', ?)",
+                (
+                    match_id,
+                    settlement_id,
+                    phase_result.regulation_goals_a,
+                    phase_result.regulation_goals_b,
+                    phase_result.extra_time_goals_a,
+                    phase_result.extra_time_goals_b,
+                    phase_result.shootout_goals_a,
+                    phase_result.shootout_goals_b,
+                    phase_result.decided_in,
+                    recorded,
+                ),
+            )
+            for kick in kicks:
+                con.execute(
+                    "INSERT INTO shootout_kicks("
+                    "match_id, settlement_version_id, sequence_number, team_id, taker_player_id, "
+                    "goalkeeper_player_id, outcome, source_provider, recorded_at_utc"
+                    ") VALUES(?, ?, ?, ?, ?, ?, ?, 'world_cup_2026_manual', ?)",
+                    (
+                        match_id,
+                        settlement_id,
+                        kick.sequence_number,
+                        kick.team_id,
+                        kick.taker_player_id,
+                        kick.goalkeeper_player_id,
+                        kick.outcome,
+                        recorded,
+                    ),
+                )
+            con.execute(
+                "UPDATE match_results SET goals_a=?, goals_b=?, "
+                "extra_time_team_a_goals=NULL, extra_time_team_b_goals=NULL, "
+                "penalty_team_a=NULL, penalty_team_b=NULL, recorded_at_utc=? WHERE match_id=?",
+                (official_a, official_b, recorded, match_id),
+            )
+        self.project_regulation_stats(match_id, evaluated_at_utc)
+        return settlement_id
+
+    def get_active_match_phase_result(self, match_id: int) -> dict | None:
+        with self.session() as con:
+            row = con.execute(
+                "SELECT pr.* FROM match_phase_results pr "
+                "JOIN settlement_versions sv ON sv.id=pr.settlement_version_id "
+                "WHERE pr.match_id=? AND sv.active=1",
+                (match_id,),
+            ).fetchone()
+        return dict(row) if row else None
+
+    def list_active_shootout_kicks(self, match_id: int) -> list[dict]:
+        with self.session() as con:
+            rows = con.execute(
+                "SELECT sk.* FROM shootout_kicks sk "
+                "JOIN settlement_versions sv ON sv.id=sk.settlement_version_id "
+                "WHERE sk.match_id=? AND sv.active=1 ORDER BY sk.sequence_number",
+                (match_id,),
+            ).fetchall()
+        return [dict(row) for row in rows]
 
     def _record_live_residual(
         self,
