@@ -53,6 +53,44 @@ class DatabaseRepositoryTests(unittest.TestCase):
                 tables = {row[0] for row in con.execute("SELECT name FROM sqlite_master WHERE type='table'")}
             self.assertTrue({"teams", "players", "matches", "team_match_stats", "manual_odds", "predictions", "sources"}.issubset(tables))
 
+    def test_phase_schema_migrates_without_changing_existing_result(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            db_path = Path(tmp) / "worldcup.sqlite"
+            initialize_database(db_path)
+            with closing(sqlite3.connect(db_path)) as con:
+                con.execute("INSERT INTO teams(name) VALUES('Spain')")
+                con.execute("INSERT INTO teams(name) VALUES('Germany')")
+                team_ids = [row[0] for row in con.execute("SELECT id FROM teams ORDER BY id")]
+                con.execute(
+                    "INSERT INTO matches(competition, stage, kickoff_utc, team_a_id, team_b_id, status) "
+                    "VALUES('World Cup', 'Round of 32', '2026-06-30T18:00:00+00:00', ?, ?, 'finished')",
+                    team_ids,
+                )
+                match_id = con.execute("SELECT id FROM matches").fetchone()[0]
+                con.execute(
+                    "INSERT INTO match_results(match_id, goals_a, goals_b, source_type, recorded_at_utc) "
+                    "VALUES(?, 2, 1, 'manual', '2026-06-30T21:00:00+00:00')",
+                    (match_id,),
+                )
+                con.commit()
+
+            initialize_database(db_path)
+
+            with closing(sqlite3.connect(db_path)) as con:
+                tables = {row[0] for row in con.execute("SELECT name FROM sqlite_master WHERE type='table'")}
+                score = con.execute(
+                    "SELECT goals_a, goals_b FROM match_results WHERE match_id=?", (match_id,)
+                ).fetchone()
+                observation_columns = {
+                    row[1] for row in con.execute("PRAGMA table_info(observations)")
+                }
+
+        self.assertTrue(
+            {"match_phase_results", "team_match_period_stats", "shootout_kicks"}.issubset(tables)
+        )
+        self.assertEqual((2, 1), score)
+        self.assertIn("period", observation_columns)
+
     def test_upsert_team_and_match_roundtrip(self):
         with tempfile.TemporaryDirectory() as tmp:
             repo = Repository(Path(tmp) / "worldcup.sqlite")

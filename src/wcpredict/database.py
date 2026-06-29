@@ -294,6 +294,70 @@ CREATE TABLE IF NOT EXISTS prediction_evaluations (
     UNIQUE(prediction_id, settlement_version_id)
 );
 
+CREATE TABLE IF NOT EXISTS match_phase_results (
+    id INTEGER PRIMARY KEY,
+    match_id INTEGER NOT NULL REFERENCES matches(id),
+    settlement_version_id INTEGER NOT NULL UNIQUE REFERENCES settlement_versions(id),
+    regulation_goals_a INTEGER NOT NULL,
+    regulation_goals_b INTEGER NOT NULL,
+    extra_time_goals_a INTEGER,
+    extra_time_goals_b INTEGER,
+    shootout_goals_a INTEGER,
+    shootout_goals_b INTEGER,
+    decided_in TEXT NOT NULL CHECK(decided_in IN ('regulation', 'extra_time', 'shootout')),
+    source_id TEXT NOT NULL,
+    recorded_at_utc TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS team_match_period_stats (
+    match_id INTEGER NOT NULL REFERENCES matches(id),
+    team_id INTEGER NOT NULL REFERENCES teams(id),
+    period TEXT NOT NULL CHECK(period IN (
+        'first_half', 'second_half', 'extra_time_first', 'extra_time_second',
+        'regulation_total', 'extra_time_total', 'full_match_total'
+    )),
+    goals INTEGER,
+    xg REAL,
+    shots INTEGER,
+    shots_on_target INTEGER,
+    possession REAL,
+    corners INTEGER,
+    yellow_cards INTEGER,
+    red_cards INTEGER,
+    saves INTEGER,
+    goals_conceded INTEGER,
+    source_id TEXT NOT NULL,
+    content_sha256 TEXT NOT NULL,
+    manual_edit INTEGER NOT NULL DEFAULT 0,
+    observed_at_utc TEXT NOT NULL,
+    PRIMARY KEY(match_id, team_id, period, source_id)
+);
+
+CREATE TABLE IF NOT EXISTS shootout_kicks (
+    id INTEGER PRIMARY KEY,
+    match_id INTEGER NOT NULL REFERENCES matches(id),
+    settlement_version_id INTEGER NOT NULL REFERENCES settlement_versions(id),
+    sequence_number INTEGER NOT NULL,
+    team_id INTEGER NOT NULL REFERENCES teams(id),
+    taker_player_id INTEGER NOT NULL REFERENCES players(id),
+    goalkeeper_player_id INTEGER NOT NULL REFERENCES players(id),
+    outcome TEXT NOT NULL CHECK(outcome IN ('scored', 'saved', 'off_target_or_woodwork')),
+    source_provider TEXT NOT NULL,
+    recorded_at_utc TEXT NOT NULL,
+    UNIQUE(settlement_version_id, sequence_number)
+);
+
+CREATE INDEX IF NOT EXISTS idx_phase_results_match
+ON match_phase_results(match_id, settlement_version_id);
+CREATE INDEX IF NOT EXISTS idx_period_stats_match_period
+ON team_match_period_stats(match_id, period);
+CREATE INDEX IF NOT EXISTS idx_shootout_kicks_settlement
+ON shootout_kicks(settlement_version_id, sequence_number);
+CREATE INDEX IF NOT EXISTS idx_shootout_kicks_taker
+ON shootout_kicks(taker_player_id);
+CREATE INDEX IF NOT EXISTS idx_shootout_kicks_goalkeeper
+ON shootout_kicks(goalkeeper_player_id);
+
 CREATE TABLE IF NOT EXISTS source_catalog (
     provider_id TEXT PRIMARY KEY,
     label TEXT NOT NULL,
@@ -513,6 +577,9 @@ ON penalty_attempts(team_name);
 # Additional columns added after the original schema was defined. They are
 # applied with ALTER TABLE so existing DBs upgrade in place without losing data.
 _OPTIONAL_COLUMNS = {
+    "observations": [
+        ("period", "TEXT NOT NULL DEFAULT 'full_match'"),
+    ],
     "team_match_stats": [
         ("saves", "INTEGER"),
         ("goals_conceded", "INTEGER"),
