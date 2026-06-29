@@ -7,6 +7,7 @@ from pathlib import Path
 from wcpredict.knockout_bracket import (
     COMPETITION,
     _group_standings,
+    _load_annex_c_table,
     bracket_view,
     list_bracket_slots,
     resolve_knockout_bracket,
@@ -355,6 +356,14 @@ class KnockoutBracketTests(unittest.TestCase):
 class AnnexCAssignmentTests(unittest.TestCase):
     """Verify the bipartite assignment of the 8 best 3rd-placed teams to the
     eight specific slots that take a third (M74/M77/M79/M80/M81/M82/M85/M87)."""
+
+    def test_current_bdefijkl_combo_pairs_belgium_with_i_and_switzerland_with_j(self):
+        table = _load_annex_c_table()
+        combo = frozenset("BDEFIJKL")
+        self.assertIn(combo, table)
+        mapping = table[combo]
+        self.assertEqual("I", mapping["1G"])
+        self.assertEqual("J", mapping["1B"])
 
     def test_assignment_returns_empty_until_all_twelve_groups_finish(self):
         with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as tmp:

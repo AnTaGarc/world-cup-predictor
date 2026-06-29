@@ -140,6 +140,36 @@ class WorldCupDataTests(unittest.TestCase):
             self.assertEqual("Group stage", matches[0].stage)
             self.assertEqual("Atlanta", matches[0].venue)
 
+    def test_generic_tournament_label_does_not_overwrite_seeded_group_stage(self):
+        with tempfile.TemporaryDirectory() as directory:
+            repo = Repository(Path(directory) / "app.sqlite")
+            repo.initialize()
+            team_a = repo.upsert_team("Algeria")
+            team_b = repo.upsert_team("Austria")
+            kickoff = datetime(2026, 6, 28, 12, tzinfo=timezone.utc)
+            match_id = repo.upsert_match(
+                "FIFA World Cup 2026",
+                "Group stage - Group J",
+                kickoff,
+                team_a,
+                team_b,
+                "scheduled",
+            )
+            download = DatasetDownload(
+                "swaptr_wc2026_matches",
+                "v-generic",
+                b"date,time,tournament,home_team,away_team,home_score,away_score\n"
+                b"2026-06-28,12:00,FIFA World Cup,Algeria,Austria,3,3\n",
+                datetime(2026, 6, 29, tzinfo=timezone.utc),
+                1,
+            )
+
+            import_world_cup_download(
+                repo, download, datetime(2026, 6, 29, 8, tzinfo=timezone.utc)
+            )
+
+            self.assertEqual("Group stage - Group J", repo.get_match(match_id).stage)
+
     def test_parser_keeps_fixture_time_stage_and_status(self):
         row = parse_match_rows(
             "date,kickoff_time,round,home_team,away_team,status\n"
