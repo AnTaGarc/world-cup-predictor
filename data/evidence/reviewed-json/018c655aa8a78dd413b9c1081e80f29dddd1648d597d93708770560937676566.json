@@ -1,0 +1,278 @@
+{
+  "descripcion": "Estadísticas profundas revisadas manualmente a partir de capturas de SofaScore.",
+  "numero_de_partidos": 1,
+  "partidos": [
+    {
+      "id": "rd_congo_uzbekistan",
+      "nombre": "RD Congo vs Uzbekistán",
+      "equipos": {
+        "izquierda_verde": "RD Congo",
+        "derecha_azul": "Uzbekistán"
+      },
+      "estadisticas": {
+        "resumen_del_partido": {
+          "posesion_de_balon_pct": {
+            "RD Congo": 58,
+            "Uzbekistán": 42
+          },
+          "goles_esperados_xg": {
+            "RD Congo": 2.18,
+            "Uzbekistán": 0.2
+          },
+          "ocasiones_claras": {
+            "RD Congo": 3,
+            "Uzbekistán": 0
+          },
+          "tiros_totales": {
+            "RD Congo": 19,
+            "Uzbekistán": 3
+          },
+          "paradas": {
+            "RD Congo": 1,
+            "Uzbekistán": 1
+          },
+          "saques_de_esquina": {
+            "RD Congo": 2,
+            "Uzbekistán": 4
+          },
+          "faltas": {
+            "RD Congo": 6,
+            "Uzbekistán": 16
+          },
+          "pases": {
+            "RD Congo": 485,
+            "Uzbekistán": 355
+          },
+          "entradas": {
+            "RD Congo": 20,
+            "Uzbekistán": 29
+          },
+          "tiros_libres": {
+            "RD Congo": 15,
+            "Uzbekistán": 6
+          },
+          "tarjetas_amarillas": {
+            "RD Congo": 3,
+            "Uzbekistán": 2
+          }
+        },
+        "tiros": {
+          "tiros_totales": {
+            "RD Congo": 19,
+            "Uzbekistán": 3
+          },
+          "tiros_a_puerta": {
+            "RD Congo": 4,
+            "Uzbekistán": 1
+          },
+          "tiros_al_palo": {
+            "RD Congo": 0,
+            "Uzbekistán": 0
+          },
+          "tiros_fuera": {
+            "RD Congo": 14,
+            "Uzbekistán": 2
+          },
+          "tiros_bloqueados": {
+            "RD Congo": 1,
+            "Uzbekistán": 0
+          },
+          "tiros_dentro_del_area_penal": {
+            "RD Congo": 11,
+            "Uzbekistán": 2
+          },
+          "tiros_fuera_del_area": {
+            "RD Congo": 8,
+            "Uzbekistán": 1
+          }
+        },
+        "ataque": {
+          "ocasiones_claras_realizadas": {
+            "RD Congo": 2,
+            "Uzbekistán": 0
+          },
+          "ocasiones_claras_falladas": {
+            "RD Congo": 1,
+            "Uzbekistán": 0
+          },
+          "toques_dentro_del_area": {
+            "RD Congo": 30,
+            "Uzbekistán": 7
+          },
+          "faltas_recibidas_en_el_tercio_final": {
+            "RD Congo": 3,
+            "Uzbekistán": 1
+          },
+          "fueras_de_juego": {
+            "RD Congo": 3,
+            "Uzbekistán": 1
+          }
+        },
+        "duelos": {
+          "duelos_pct": {
+            "RD Congo": 48,
+            "Uzbekistán": 52
+          },
+          "perdidas": {
+            "RD Congo": 17,
+            "Uzbekistán": 9
+          },
+          "duelos_en_el_suelo": {
+            "RD Congo": {
+              "ganados": 46,
+              "totales": 86,
+              "porcentaje": 53
+            },
+            "Uzbekistán": {
+              "ganados": 40,
+              "totales": 86,
+              "porcentaje": 47
+            }
+          },
+          "duelos_aereos": {
+            "RD Congo": {
+              "ganados": 12,
+              "totales": 35,
+              "porcentaje": 34
+            },
+            "Uzbekistán": {
+              "ganados": 23,
+              "totales": 35,
+              "porcentaje": 66
+            }
+          },
+          "regates": {
+            "RD Congo": {
+              "completados": 11,
+              "intentados": 23,
+              "porcentaje": 48
+            },
+            "Uzbekistán": {
+              "completados": 5,
+              "intentados": 16,
+              "porcentaje": 31
+            }
+          }
+        },
+        "pases": {
+          "pases_precisos": {
+            "RD Congo": 400,
+            "Uzbekistán": 269
+          },
+          "saques_de_banda": {
+            "RD Congo": 26,
+            "Uzbekistán": 23
+          },
+          "pases_al_ultimo_tercio": {
+            "RD Congo": 63,
+            "Uzbekistán": 51
+          },
+          "pases_en_el_ultimo_tercio": {
+            "RD Congo": {
+              "completados": 90,
+              "intentados": 127,
+              "porcentaje": 71
+            },
+            "Uzbekistán": {
+              "completados": 61,
+              "intentados": 99,
+              "porcentaje": 62
+            }
+          },
+          "pases_largos": {
+            "RD Congo": {
+              "completados": 28,
+              "intentados": 60,
+              "porcentaje": 47
+            },
+            "Uzbekistán": {
+              "completados": 21,
+              "intentados": 59,
+              "porcentaje": 36
+            }
+          },
+          "centros": {
+            "RD Congo": {
+              "completados": 6,
+              "intentados": 22,
+              "porcentaje": 27
+            },
+            "Uzbekistán": {
+              "completados": 2,
+              "intentados": 16,
+              "porcentaje": 13
+            }
+          }
+        },
+        "defensa": {
+          "entradas_ganadas_pct": {
+            "RD Congo": 65,
+            "Uzbekistán": 62
+          },
+          "tackles_totales": {
+            "RD Congo": 20,
+            "Uzbekistán": 29
+          },
+          "intercepciones": {
+            "RD Congo": 7,
+            "Uzbekistán": 12
+          },
+          "recuperaciones": {
+            "RD Congo": 64,
+            "Uzbekistán": 51
+          },
+          "despejes": {
+            "RD Congo": 25,
+            "Uzbekistán": 38
+          },
+          "errores_que_llevan_a_disparo": {
+            "RD Congo": 0,
+            "Uzbekistán": 1
+          }
+        },
+        "porteria": {
+          "paradas": {
+            "RD Congo": 1,
+            "Uzbekistán": 1
+          },
+          "goles_evitados": {
+            "RD Congo": -0.71,
+            "Uzbekistán": -0.65
+          },
+          "grandes_paradas": {
+            "RD Congo": 1,
+            "Uzbekistán": 0
+          },
+          "despejes_por_alto": {
+            "RD Congo": 0,
+            "Uzbekistán": 1
+          },
+          "con_los_punos": {
+            "RD Congo": 0,
+            "Uzbekistán": 1
+          },
+          "saques_de_puerta": {
+            "RD Congo": 7,
+            "Uzbekistán": 15
+          }
+        },
+        "mapa_de_ataques": {
+          "equipo_mostrado": "RD Congo",
+          "direccion_de_ataque": "hacia_la_derecha",
+          "descripcion": "Mapa de ataques mostrado para RD Congo."
+        },
+        "mapa_de_pases": {
+          "tipo_de_dato": "distribucion_global_no_atribuible_por_equipo",
+          "tercio_defensivo_pct": 26,
+          "tercio_central_pct": 45,
+          "tercio_ofensivo_pct": 29
+        }
+      },
+      "fuentes": [
+        "Captura de pantalla 2026-06-28 114022.png",
+        "Captura de pantalla 2026-06-28 114033.png",
+        "Captura de pantalla 2026-06-28 114046.png"
+      ]
+    }
+  ]
+}

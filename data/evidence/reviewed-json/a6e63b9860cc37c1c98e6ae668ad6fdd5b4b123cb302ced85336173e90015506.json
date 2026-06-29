@@ -1,0 +1,286 @@
+{
+  "descripcion": "Estadísticas profundas revisadas manualmente a partir de capturas de SofaScore.",
+  "numero_de_partidos": 1,
+  "partidos": [
+    {
+      "id": "egipto_iran",
+      "nombre": "Egipto vs Irán",
+      "equipos": {
+        "izquierda_verde": "Egipto",
+        "derecha_azul": "Irán"
+      },
+      "estadisticas": {
+        "resumen_del_partido": {
+          "posesion_de_balon_pct": {
+            "Egipto": 61,
+            "Irán": 39
+          },
+          "goles_esperados_xg": {
+            "Egipto": 0.84,
+            "Irán": 1.97
+          },
+          "ocasiones_claras": {
+            "Egipto": 0,
+            "Irán": 5
+          },
+          "tiros_totales": {
+            "Egipto": 15,
+            "Irán": 13
+          },
+          "paradas": {
+            "Egipto": 2,
+            "Irán": 2
+          },
+          "saques_de_esquina": {
+            "Egipto": 8,
+            "Irán": 2
+          },
+          "faltas": {
+            "Egipto": 11,
+            "Irán": 16
+          },
+          "pases": {
+            "Egipto": 589,
+            "Irán": 367
+          },
+          "entradas": {
+            "Egipto": 17,
+            "Irán": 22
+          },
+          "tiros_libres": {
+            "Egipto": 16,
+            "Irán": 10
+          },
+          "tarjetas_amarillas": {
+            "Egipto": 3,
+            "Irán": 4
+          }
+        },
+        "tiros": {
+          "tiros_totales": {
+            "Egipto": 15,
+            "Irán": 13
+          },
+          "tiros_a_puerta": {
+            "Egipto": 3,
+            "Irán": 4
+          },
+          "tiros_al_palo": {
+            "Egipto": 0,
+            "Irán": 1
+          },
+          "tiros_fuera": {
+            "Egipto": 6,
+            "Irán": 6
+          },
+          "tiros_bloqueados": {
+            "Egipto": 6,
+            "Irán": 3
+          },
+          "tiros_dentro_del_area_penal": {
+            "Egipto": 8,
+            "Irán": 10
+          },
+          "tiros_fuera_del_area": {
+            "Egipto": 7,
+            "Irán": 3
+          }
+        },
+        "ataque": {
+          "ocasiones_claras_realizadas": {
+            "Egipto": 0,
+            "Irán": 1
+          },
+          "ocasiones_claras_falladas": {
+            "Egipto": 0,
+            "Irán": 4
+          },
+          "pases_en_profundidad": {
+            "Egipto": 0,
+            "Irán": 1
+          },
+          "toques_dentro_del_area": {
+            "Egipto": 28,
+            "Irán": 26
+          },
+          "faltas_recibidas_en_el_tercio_final": {
+            "Egipto": 2,
+            "Irán": 1
+          },
+          "fueras_de_juego": {
+            "Egipto": 0,
+            "Irán": 3
+          }
+        },
+        "duelos": {
+          "duelos_pct": {
+            "Egipto": 47,
+            "Irán": 53
+          },
+          "perdidas": {
+            "Egipto": 10,
+            "Irán": 10
+          },
+          "duelos_en_el_suelo": {
+            "Egipto": {
+              "ganados": 40,
+              "totales": 80,
+              "porcentaje": 50
+            },
+            "Irán": {
+              "ganados": 40,
+              "totales": 80,
+              "porcentaje": 50
+            }
+          },
+          "duelos_aereos": {
+            "Egipto": {
+              "ganados": 23,
+              "totales": 54,
+              "porcentaje": 43
+            },
+            "Irán": {
+              "ganados": 31,
+              "totales": 54,
+              "porcentaje": 57
+            }
+          },
+          "regates": {
+            "Egipto": {
+              "completados": 10,
+              "intentados": 22,
+              "porcentaje": 45
+            },
+            "Irán": {
+              "completados": 8,
+              "intentados": 15,
+              "porcentaje": 53
+            }
+          }
+        },
+        "pases": {
+          "pases_precisos": {
+            "Egipto": 513,
+            "Irán": 281
+          },
+          "saques_de_banda": {
+            "Egipto": 14,
+            "Irán": 15
+          },
+          "pases_al_ultimo_tercio": {
+            "Egipto": 61,
+            "Irán": 57
+          },
+          "pases_en_el_ultimo_tercio": {
+            "Egipto": {
+              "completados": 91,
+              "intentados": 130,
+              "porcentaje": 70
+            },
+            "Irán": {
+              "completados": 51,
+              "intentados": 98,
+              "porcentaje": 52
+            }
+          },
+          "pases_largos": {
+            "Egipto": {
+              "completados": 18,
+              "intentados": 44,
+              "porcentaje": 41
+            },
+            "Irán": {
+              "completados": 29,
+              "intentados": 66,
+              "porcentaje": 44
+            }
+          },
+          "centros": {
+            "Egipto": {
+              "completados": 4,
+              "intentados": 15,
+              "porcentaje": 27
+            },
+            "Irán": {
+              "completados": 1,
+              "intentados": 10,
+              "porcentaje": 10
+            }
+          }
+        },
+        "defensa": {
+          "entradas_ganadas_pct": {
+            "Egipto": 59,
+            "Irán": 77
+          },
+          "tackles_totales": {
+            "Egipto": 17,
+            "Irán": 22
+          },
+          "intercepciones": {
+            "Egipto": 7,
+            "Irán": 8
+          },
+          "recuperaciones": {
+            "Egipto": 39,
+            "Irán": 36
+          },
+          "despejes": {
+            "Egipto": 38,
+            "Irán": 32
+          },
+          "errores_que_llevan_a_disparo": {
+            "Egipto": 1,
+            "Irán": 1
+          }
+        },
+        "porteria": {
+          "paradas": {
+            "Egipto": 2,
+            "Irán": 2
+          },
+          "goles_evitados": {
+            "Egipto": 0.23,
+            "Irán": -0.53
+          },
+          "grandes_paradas": {
+            "Egipto": 1,
+            "Irán": 0
+          },
+          "despejes_por_alto": {
+            "Egipto": 0,
+            "Irán": 1
+          },
+          "con_los_punos": {
+            "Egipto": 3,
+            "Irán": 1
+          },
+          "saques_de_puerta": {
+            "Egipto": 9,
+            "Irán": 10
+          },
+          "paradas_de_penalti": {
+            "Egipto": 1,
+            "Irán": 0
+          }
+        },
+        "mapa_de_ataques": {
+          "equipo_mostrado": "Egipto",
+          "direccion_de_ataque": "hacia_la_derecha",
+          "descripcion": "Mapa de ataques mostrado para Egipto."
+        },
+        "mapa_de_pases": {
+          "tipo_de_dato": "distribucion_global_no_atribuible_por_equipo",
+          "tercio_defensivo_pct": 26,
+          "tercio_central_pct": 49,
+          "tercio_ofensivo_pct": 25
+        }
+      },
+      "fuentes": [
+        "Captura de pantalla 2026-06-27 114827.png",
+        "Captura de pantalla 2026-06-27 114836.png",
+        "Captura de pantalla 2026-06-27 114851.png"
+      ]
+    }
+  ]
+}

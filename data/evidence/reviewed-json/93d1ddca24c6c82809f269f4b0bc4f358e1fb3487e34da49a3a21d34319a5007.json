@@ -1,0 +1,278 @@
+{
+  "descripcion": "Estadísticas profundas revisadas manualmente a partir de capturas de SofaScore.",
+  "numero_de_partidos": 1,
+  "partidos": [
+    {
+      "id": "croacia_ghana",
+      "nombre": "Croacia vs Ghana",
+      "equipos": {
+        "izquierda_verde": "Croacia",
+        "derecha_azul": "Ghana"
+      },
+      "estadisticas": {
+        "resumen_del_partido": {
+          "posesion_de_balon_pct": {
+            "Croacia": 53,
+            "Ghana": 47
+          },
+          "goles_esperados_xg": {
+            "Croacia": 0.42,
+            "Ghana": 0.64
+          },
+          "ocasiones_claras": {
+            "Croacia": 0,
+            "Ghana": 2
+          },
+          "tiros_totales": {
+            "Croacia": 8,
+            "Ghana": 6
+          },
+          "paradas": {
+            "Croacia": 0,
+            "Ghana": 2
+          },
+          "saques_de_esquina": {
+            "Croacia": 3,
+            "Ghana": 2
+          },
+          "faltas": {
+            "Croacia": 9,
+            "Ghana": 13
+          },
+          "pases": {
+            "Croacia": 523,
+            "Ghana": 455
+          },
+          "entradas": {
+            "Croacia": 14,
+            "Ghana": 13
+          },
+          "tiros_libres": {
+            "Croacia": 13,
+            "Ghana": 9
+          },
+          "tarjetas_amarillas": {
+            "Croacia": 1,
+            "Ghana": 1
+          }
+        },
+        "tiros": {
+          "tiros_totales": {
+            "Croacia": 8,
+            "Ghana": 6
+          },
+          "tiros_a_puerta": {
+            "Croacia": 4,
+            "Ghana": 1
+          },
+          "tiros_al_palo": {
+            "Croacia": 1,
+            "Ghana": 0
+          },
+          "tiros_fuera": {
+            "Croacia": 2,
+            "Ghana": 3
+          },
+          "tiros_bloqueados": {
+            "Croacia": 2,
+            "Ghana": 2
+          },
+          "tiros_dentro_del_area_penal": {
+            "Croacia": 3,
+            "Ghana": 3
+          },
+          "tiros_fuera_del_area": {
+            "Croacia": 5,
+            "Ghana": 3
+          }
+        },
+        "ataque": {
+          "ocasiones_claras_realizadas": {
+            "Croacia": 0,
+            "Ghana": 1
+          },
+          "ocasiones_claras_falladas": {
+            "Croacia": 0,
+            "Ghana": 1
+          },
+          "toques_dentro_del_area": {
+            "Croacia": 9,
+            "Ghana": 9
+          },
+          "faltas_recibidas_en_el_tercio_final": {
+            "Croacia": 2,
+            "Ghana": 1
+          },
+          "fueras_de_juego": {
+            "Croacia": 1,
+            "Ghana": 2
+          }
+        },
+        "duelos": {
+          "duelos_pct": {
+            "Croacia": 53,
+            "Ghana": 47
+          },
+          "perdidas": {
+            "Croacia": 7,
+            "Ghana": 4
+          },
+          "duelos_en_el_suelo": {
+            "Croacia": {
+              "ganados": 34,
+              "totales": 63,
+              "porcentaje": 54
+            },
+            "Ghana": {
+              "ganados": 29,
+              "totales": 63,
+              "porcentaje": 46
+            }
+          },
+          "duelos_aereos": {
+            "Croacia": {
+              "ganados": 8,
+              "totales": 17,
+              "porcentaje": 47
+            },
+            "Ghana": {
+              "ganados": 9,
+              "totales": 17,
+              "porcentaje": 53
+            }
+          },
+          "regates": {
+            "Croacia": {
+              "completados": 7,
+              "intentados": 13,
+              "porcentaje": 54
+            },
+            "Ghana": {
+              "completados": 8,
+              "intentados": 18,
+              "porcentaje": 44
+            }
+          }
+        },
+        "pases": {
+          "pases_precisos": {
+            "Croacia": 477,
+            "Ghana": 402
+          },
+          "saques_de_banda": {
+            "Croacia": 16,
+            "Ghana": 10
+          },
+          "pases_al_ultimo_tercio": {
+            "Croacia": 49,
+            "Ghana": 60
+          },
+          "pases_en_el_ultimo_tercio": {
+            "Croacia": {
+              "completados": 75,
+              "intentados": 96,
+              "porcentaje": 78
+            },
+            "Ghana": {
+              "completados": 45,
+              "intentados": 82,
+              "porcentaje": 55
+            }
+          },
+          "pases_largos": {
+            "Croacia": {
+              "completados": 16,
+              "intentados": 38,
+              "porcentaje": 42
+            },
+            "Ghana": {
+              "completados": 18,
+              "intentados": 39,
+              "porcentaje": 46
+            }
+          },
+          "centros": {
+            "Croacia": {
+              "completados": 3,
+              "intentados": 15,
+              "porcentaje": 20
+            },
+            "Ghana": {
+              "completados": 3,
+              "intentados": 12,
+              "porcentaje": 25
+            }
+          }
+        },
+        "defensa": {
+          "entradas_ganadas_pct": {
+            "Croacia": 57,
+            "Ghana": 54
+          },
+          "tackles_totales": {
+            "Croacia": 14,
+            "Ghana": 13
+          },
+          "intercepciones": {
+            "Croacia": 4,
+            "Ghana": 9
+          },
+          "recuperaciones": {
+            "Croacia": 39,
+            "Ghana": 38
+          },
+          "despejes": {
+            "Croacia": 23,
+            "Ghana": 11
+          },
+          "errores_que_llevan_a_disparo": {
+            "Croacia": 0,
+            "Ghana": 2
+          }
+        },
+        "porteria": {
+          "paradas": {
+            "Croacia": 0,
+            "Ghana": 2
+          },
+          "goles_evitados": {
+            "Croacia": -0.04,
+            "Ghana": -1.13
+          },
+          "grandes_paradas": {
+            "Croacia": 0,
+            "Ghana": 1
+          },
+          "despejes_por_alto": {
+            "Croacia": 0,
+            "Ghana": 2
+          },
+          "con_los_punos": {
+            "Croacia": 1,
+            "Ghana": 0
+          },
+          "saques_de_puerta": {
+            "Croacia": 7,
+            "Ghana": 5
+          }
+        },
+        "mapa_de_ataques": {
+          "equipo_mostrado": "Croacia",
+          "direccion_de_ataque": "hacia_la_derecha",
+          "descripcion": "Mapa de ataques mostrado para Croacia."
+        },
+        "mapa_de_pases": {
+          "tipo_de_dato": "distribucion_global_no_atribuible_por_equipo",
+          "tercio_defensivo_pct": 23,
+          "tercio_central_pct": 57,
+          "tercio_ofensivo_pct": 20
+        }
+      },
+      "fuentes": [
+        "Captura de pantalla 2026-06-28 113524.png",
+        "Captura de pantalla 2026-06-28 113532.png",
+        "Captura de pantalla 2026-06-28 113544.png"
+      ]
+    }
+  ]
+}

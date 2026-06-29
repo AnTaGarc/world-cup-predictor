@@ -1,0 +1,274 @@
+{
+  "descripcion": "Estadísticas profundas revisadas manualmente a partir de capturas de SofaScore.",
+  "numero_de_partidos": 1,
+  "partidos": [
+    {
+      "id": "colombia_portugal",
+      "nombre": "Colombia vs Portugal",
+      "equipos": {
+        "izquierda_verde": "Colombia",
+        "derecha_azul": "Portugal"
+      },
+      "estadisticas": {
+        "resumen_del_partido": {
+          "posesion_de_balon_pct": {
+            "Colombia": 55,
+            "Portugal": 45
+          },
+          "goles_esperados_xg": {
+            "Colombia": 1.7,
+            "Portugal": 0.93
+          },
+          "ocasiones_claras": {
+            "Colombia": 2,
+            "Portugal": 2
+          },
+          "tiros_totales": {
+            "Colombia": 24,
+            "Portugal": 13
+          },
+          "paradas": {
+            "Colombia": 2,
+            "Portugal": 6
+          },
+          "saques_de_esquina": {
+            "Colombia": 5,
+            "Portugal": 2
+          },
+          "faltas": {
+            "Colombia": 12,
+            "Portugal": 6
+          },
+          "pases": {
+            "Colombia": 544,
+            "Portugal": 446
+          },
+          "entradas": {
+            "Colombia": 15,
+            "Portugal": 9
+          },
+          "tiros_libres": {
+            "Colombia": 6,
+            "Portugal": 12
+          },
+          "tarjetas_amarillas": {
+            "Colombia": 1,
+            "Portugal": 0
+          }
+        },
+        "tiros": {
+          "tiros_totales": {
+            "Colombia": 24,
+            "Portugal": 13
+          },
+          "tiros_a_puerta": {
+            "Colombia": 6,
+            "Portugal": 2
+          },
+          "tiros_al_palo": {
+            "Colombia": 0,
+            "Portugal": 0
+          },
+          "tiros_fuera": {
+            "Colombia": 11,
+            "Portugal": 7
+          },
+          "tiros_bloqueados": {
+            "Colombia": 7,
+            "Portugal": 4
+          },
+          "tiros_dentro_del_area_penal": {
+            "Colombia": 15,
+            "Portugal": 5
+          },
+          "tiros_fuera_del_area": {
+            "Colombia": 9,
+            "Portugal": 8
+          }
+        },
+        "ataque": {
+          "ocasiones_claras_falladas": {
+            "Colombia": 2,
+            "Portugal": 2
+          },
+          "pases_en_profundidad": {
+            "Colombia": 0,
+            "Portugal": 1
+          },
+          "toques_dentro_del_area": {
+            "Colombia": 34,
+            "Portugal": 13
+          },
+          "faltas_recibidas_en_el_tercio_final": {
+            "Colombia": 0,
+            "Portugal": 2
+          },
+          "fueras_de_juego": {
+            "Colombia": 3,
+            "Portugal": 2
+          }
+        },
+        "duelos": {
+          "duelos_pct": {
+            "Colombia": 44,
+            "Portugal": 56
+          },
+          "perdidas": {
+            "Colombia": 7,
+            "Portugal": 7
+          },
+          "duelos_en_el_suelo": {
+            "Colombia": {
+              "ganados": 24,
+              "totales": 53,
+              "porcentaje": 45
+            },
+            "Portugal": {
+              "ganados": 29,
+              "totales": 53,
+              "porcentaje": 55
+            }
+          },
+          "duelos_aereos": {
+            "Colombia": {
+              "ganados": 5,
+              "totales": 13,
+              "porcentaje": 38
+            },
+            "Portugal": {
+              "ganados": 8,
+              "totales": 13,
+              "porcentaje": 62
+            }
+          },
+          "regates": {
+            "Colombia": {
+              "completados": 4,
+              "intentados": 6,
+              "porcentaje": 67
+            },
+            "Portugal": {
+              "completados": 8,
+              "intentados": 16,
+              "porcentaje": 50
+            }
+          }
+        },
+        "pases": {
+          "pases_precisos": {
+            "Colombia": 485,
+            "Portugal": 405
+          },
+          "saques_de_banda": {
+            "Colombia": 10,
+            "Portugal": 9
+          },
+          "pases_al_ultimo_tercio": {
+            "Colombia": 57,
+            "Portugal": 50
+          },
+          "pases_en_el_ultimo_tercio": {
+            "Colombia": {
+              "completados": 167,
+              "intentados": 195,
+              "porcentaje": 86
+            },
+            "Portugal": {
+              "completados": 94,
+              "intentados": 110,
+              "porcentaje": 85
+            }
+          },
+          "pases_largos": {
+            "Colombia": {
+              "completados": 25,
+              "intentados": 46,
+              "porcentaje": 54
+            },
+            "Portugal": {
+              "completados": 20,
+              "intentados": 29,
+              "porcentaje": 69
+            }
+          },
+          "centros": {
+            "Colombia": {
+              "completados": 3,
+              "intentados": 11,
+              "porcentaje": 27
+            },
+            "Portugal": {
+              "completados": 2,
+              "intentados": 13,
+              "porcentaje": 15
+            }
+          }
+        },
+        "defensa": {
+          "entradas_ganadas_pct": {
+            "Colombia": 53,
+            "Portugal": 56
+          },
+          "tackles_totales": {
+            "Colombia": 15,
+            "Portugal": 9
+          },
+          "intercepciones": {
+            "Colombia": 6,
+            "Portugal": 13
+          },
+          "recuperaciones": {
+            "Colombia": 34,
+            "Portugal": 39
+          },
+          "despejes": {
+            "Colombia": 16,
+            "Portugal": 22
+          },
+          "errores_que_llevan_a_disparo": {
+            "Colombia": 1,
+            "Portugal": 0
+          }
+        },
+        "porteria": {
+          "paradas": {
+            "Colombia": 2,
+            "Portugal": 6
+          },
+          "goles_evitados": {
+            "Colombia": 0.47,
+            "Portugal": 0.61
+          },
+          "grandes_paradas": {
+            "Colombia": 0,
+            "Portugal": 2
+          },
+          "con_los_punos": {
+            "Colombia": 0,
+            "Portugal": 1
+          },
+          "saques_de_puerta": {
+            "Colombia": 14,
+            "Portugal": 9
+          }
+        },
+        "mapa_de_ataques": {
+          "equipo_mostrado": "Colombia",
+          "direccion_de_ataque": "hacia_la_derecha",
+          "descripcion": "Mapa de ataques mostrado para Colombia."
+        },
+        "mapa_de_pases": {
+          "tipo_de_dato": "distribucion_global_no_atribuible_por_equipo",
+          "tercio_defensivo_pct": 25,
+          "tercio_central_pct": 42,
+          "tercio_ofensivo_pct": 33
+        }
+      },
+      "fuentes": [
+        "Captura de pantalla 2026-06-28 113835.png",
+        "Captura de pantalla 2026-06-28 113845.png",
+        "Captura de pantalla 2026-06-28 113857.png"
+      ]
+    }
+  ]
+}

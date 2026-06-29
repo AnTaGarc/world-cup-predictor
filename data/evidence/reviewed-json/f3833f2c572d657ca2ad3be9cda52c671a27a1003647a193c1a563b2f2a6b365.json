@@ -1,0 +1,266 @@
+{
+  "descripcion": "Estadísticas profundas revisadas manualmente a partir de capturas de SofaScore.",
+  "numero_de_partidos": 1,
+  "partidos": [
+    {
+      "id": "jordania_argentina",
+      "nombre": "Jordania vs Argentina",
+      "equipos": {
+        "izquierda_verde": "Jordania",
+        "derecha_azul": "Argentina"
+      },
+      "estadisticas": {
+        "resumen_del_partido": {
+          "posesion_de_balon_pct": {
+            "Jordania": 27,
+            "Argentina": 73
+          },
+          "goles_esperados_xg": {
+            "Jordania": 0.76,
+            "Argentina": 2.13
+          },
+          "ocasiones_claras": {
+            "Jordania": 1,
+            "Argentina": 3
+          },
+          "tiros_totales": {
+            "Jordania": 5,
+            "Argentina": 12
+          },
+          "paradas": {
+            "Jordania": 1,
+            "Argentina": 0
+          },
+          "saques_de_esquina": {
+            "Jordania": 2,
+            "Argentina": 6
+          },
+          "faltas": {
+            "Jordania": 13,
+            "Argentina": 7
+          },
+          "pases": {
+            "Jordania": 285,
+            "Argentina": 801
+          },
+          "entradas": {
+            "Jordania": 16,
+            "Argentina": 14
+          },
+          "tiros_libres": {
+            "Jordania": 7,
+            "Argentina": 12
+          },
+          "tarjetas_amarillas": {
+            "Jordania": 3,
+            "Argentina": 0
+          }
+        },
+        "tiros": {
+          "tiros_totales": {
+            "Jordania": 5,
+            "Argentina": 12
+          },
+          "tiros_a_puerta": {
+            "Jordania": 1,
+            "Argentina": 4
+          },
+          "tiros_al_palo": {
+            "Jordania": 0,
+            "Argentina": 2
+          },
+          "tiros_fuera": {
+            "Jordania": 2,
+            "Argentina": 7
+          },
+          "tiros_bloqueados": {
+            "Jordania": 2,
+            "Argentina": 1
+          },
+          "tiros_dentro_del_area_penal": {
+            "Jordania": 2,
+            "Argentina": 6
+          },
+          "tiros_fuera_del_area": {
+            "Jordania": 3,
+            "Argentina": 6
+          }
+        },
+        "ataque": {
+          "ocasiones_claras_realizadas": {
+            "Jordania": 1,
+            "Argentina": 1
+          },
+          "ocasiones_claras_falladas": {
+            "Jordania": 0,
+            "Argentina": 2
+          },
+          "toques_dentro_del_area": {
+            "Jordania": 4,
+            "Argentina": 15
+          },
+          "faltas_recibidas_en_el_tercio_final": {
+            "Jordania": 1,
+            "Argentina": 6
+          },
+          "fueras_de_juego": {
+            "Jordania": 1,
+            "Argentina": 3
+          }
+        },
+        "duelos": {
+          "duelos_pct": {
+            "Jordania": 52,
+            "Argentina": 48
+          },
+          "perdidas": {
+            "Jordania": 7,
+            "Argentina": 10
+          },
+          "duelos_en_el_suelo": {
+            "Jordania": {
+              "ganados": 32,
+              "totales": 61,
+              "porcentaje": 52
+            },
+            "Argentina": {
+              "ganados": 29,
+              "totales": 61,
+              "porcentaje": 48
+            }
+          },
+          "duelos_aereos": {
+            "Jordania": {
+              "ganados": 2,
+              "totales": 5,
+              "porcentaje": 40
+            },
+            "Argentina": {
+              "ganados": 3,
+              "totales": 5,
+              "porcentaje": 60
+            }
+          },
+          "regates": {
+            "Jordania": {
+              "completados": 9,
+              "intentados": 16,
+              "porcentaje": 56
+            },
+            "Argentina": {
+              "completados": 3,
+              "intentados": 9,
+              "porcentaje": 33
+            }
+          }
+        },
+        "pases": {
+          "pases_precisos": {
+            "Jordania": 228,
+            "Argentina": 737
+          },
+          "saques_de_banda": {
+            "Jordania": 11,
+            "Argentina": 19
+          },
+          "pases_al_ultimo_tercio": {
+            "Jordania": 36,
+            "Argentina": 60
+          },
+          "pases_en_el_ultimo_tercio": {
+            "Jordania": {
+              "completados": 44,
+              "intentados": 69,
+              "porcentaje": 64
+            },
+            "Argentina": {
+              "completados": 115,
+              "intentados": 156,
+              "porcentaje": 74
+            }
+          },
+          "pases_largos": {
+            "Jordania": {
+              "completados": 14,
+              "intentados": 36,
+              "porcentaje": 39
+            },
+            "Argentina": {
+              "completados": 15,
+              "intentados": 25,
+              "porcentaje": 60
+            }
+          },
+          "centros": {
+            "Jordania": {
+              "completados": 2,
+              "intentados": 7,
+              "porcentaje": 29
+            },
+            "Argentina": {
+              "completados": 3,
+              "intentados": 5,
+              "porcentaje": 60
+            }
+          }
+        },
+        "defensa": {
+          "entradas_ganadas_pct": {
+            "Jordania": 50,
+            "Argentina": 36
+          },
+          "tackles_totales": {
+            "Jordania": 16,
+            "Argentina": 14
+          },
+          "intercepciones": {
+            "Jordania": 19,
+            "Argentina": 12
+          },
+          "recuperaciones": {
+            "Jordania": 41,
+            "Argentina": 38
+          },
+          "despejes": {
+            "Jordania": 13,
+            "Argentina": 9
+          },
+          "errores_que_llevan_a_disparo": {
+            "Jordania": 1,
+            "Argentina": 1
+          }
+        },
+        "porteria": {
+          "paradas": {
+            "Jordania": 1,
+            "Argentina": 0
+          },
+          "goles_evitados": {
+            "Jordania": -1.55,
+            "Argentina": -0.28
+          },
+          "saques_de_puerta": {
+            "Jordania": 9,
+            "Argentina": 4
+          }
+        },
+        "mapa_de_ataques": {
+          "equipo_mostrado": "Jordania",
+          "direccion_de_ataque": "hacia_la_derecha",
+          "descripcion": "Mapa de ataques mostrado para Jordania."
+        },
+        "mapa_de_pases": {
+          "tipo_de_dato": "distribucion_global_no_atribuible_por_equipo",
+          "tercio_defensivo_pct": 25,
+          "tercio_central_pct": 54,
+          "tercio_ofensivo_pct": 21
+        }
+      },
+      "fuentes": [
+        "Captura de pantalla 2026-06-28 114359.png",
+        "Captura de pantalla 2026-06-28 114408.png",
+        "Captura de pantalla 2026-06-28 114416.png"
+      ]
+    }
+  ]
+}

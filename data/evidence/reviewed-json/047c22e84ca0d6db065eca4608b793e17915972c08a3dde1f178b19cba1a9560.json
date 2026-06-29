@@ -1,0 +1,270 @@
+{
+  "descripcion": "Estadísticas profundas revisadas manualmente a partir de capturas de SofaScore.",
+  "numero_de_partidos": 1,
+  "partidos": [
+    {
+      "id": "sudafrica_canada",
+      "nombre": "Sudáfrica vs Canadá",
+      "equipos": {
+        "izquierda_verde": "Sudáfrica",
+        "derecha_azul": "Canadá"
+      },
+      "estadisticas": {
+        "resumen_del_partido": {
+          "posesion_de_balon_pct": {
+            "Sudáfrica": 58,
+            "Canadá": 42
+          },
+          "goles_esperados_xg": {
+            "Sudáfrica": 0.13,
+            "Canadá": 1.32
+          },
+          "ocasiones_claras": {
+            "Sudáfrica": 0,
+            "Canadá": 4
+          },
+          "tiros_totales": {
+            "Sudáfrica": 6,
+            "Canadá": 12
+          },
+          "paradas": {
+            "Sudáfrica": 5,
+            "Canadá": 1
+          },
+          "saques_de_esquina": {
+            "Sudáfrica": 1,
+            "Canadá": 4
+          },
+          "faltas": {
+            "Sudáfrica": 10,
+            "Canadá": 16
+          },
+          "pases": {
+            "Sudáfrica": 550,
+            "Canadá": 381
+          },
+          "entradas": {
+            "Sudáfrica": 23,
+            "Canadá": 20
+          },
+          "tiros_libres": {
+            "Sudáfrica": 16,
+            "Canadá": 10
+          },
+          "tarjetas_amarillas": {
+            "Sudáfrica": 0,
+            "Canadá": 2
+          }
+        },
+        "tiros": {
+          "tiros_totales": {
+            "Sudáfrica": 6,
+            "Canadá": 12
+          },
+          "tiros_a_puerta": {
+            "Sudáfrica": 1,
+            "Canadá": 7
+          },
+          "tiros_al_palo": {
+            "Sudáfrica": 0,
+            "Canadá": 0
+          },
+          "tiros_fuera": {
+            "Sudáfrica": 4,
+            "Canadá": 5
+          },
+          "tiros_bloqueados": {
+            "Sudáfrica": 1,
+            "Canadá": 0
+          },
+          "tiros_dentro_del_area_penal": {
+            "Sudáfrica": 1,
+            "Canadá": 9
+          },
+          "tiros_fuera_del_area": {
+            "Sudáfrica": 5,
+            "Canadá": 3
+          }
+        },
+        "ataque": {
+          "ocasiones_claras_falladas": {
+            "Sudáfrica": 0,
+            "Canadá": 4
+          },
+          "pases_en_profundidad": {
+            "Sudáfrica": 1,
+            "Canadá": 1
+          },
+          "toques_dentro_del_area": {
+            "Sudáfrica": 9,
+            "Canadá": 28
+          },
+          "faltas_recibidas_en_el_tercio_final": {
+            "Sudáfrica": 0,
+            "Canadá": 2
+          },
+          "fueras_de_juego": {
+            "Sudáfrica": 1,
+            "Canadá": 0
+          }
+        },
+        "duelos": {
+          "duelos_pct": {
+            "Sudáfrica": 52,
+            "Canadá": 48
+          },
+          "perdidas": {
+            "Sudáfrica": 13,
+            "Canadá": 8
+          },
+          "duelos_en_el_suelo": {
+            "Sudáfrica": {
+              "ganados": 51,
+              "totales": 85,
+              "porcentaje": 60
+            },
+            "Canadá": {
+              "ganados": 34,
+              "totales": 85,
+              "porcentaje": 40
+            }
+          },
+          "duelos_aereos": {
+            "Sudáfrica": {
+              "ganados": 10,
+              "totales": 32,
+              "porcentaje": 31
+            },
+            "Canadá": {
+              "ganados": 22,
+              "totales": 32,
+              "porcentaje": 69
+            }
+          },
+          "regates": {
+            "Sudáfrica": {
+              "completados": 12,
+              "intentados": 19,
+              "porcentaje": 63
+            },
+            "Canadá": {
+              "completados": 6,
+              "intentados": 21,
+              "porcentaje": 29
+            }
+          }
+        },
+        "pases": {
+          "pases_precisos": {
+            "Sudáfrica": 466,
+            "Canadá": 298
+          },
+          "saques_de_banda": {
+            "Sudáfrica": 17,
+            "Canadá": 21
+          },
+          "pases_al_ultimo_tercio": {
+            "Sudáfrica": 58,
+            "Canadá": 63
+          },
+          "pases_en_el_ultimo_tercio": {
+            "Sudáfrica": {
+              "completados": 54,
+              "intentados": 90,
+              "porcentaje": 60
+            },
+            "Canadá": {
+              "completados": 78,
+              "intentados": 128,
+              "porcentaje": 61
+            }
+          },
+          "pases_largos": {
+            "Sudáfrica": {
+              "completados": 31,
+              "intentados": 70,
+              "porcentaje": 44
+            },
+            "Canadá": {
+              "completados": 15,
+              "intentados": 31,
+              "porcentaje": 48
+            }
+          },
+          "centros": {
+            "Sudáfrica": {
+              "completados": 2,
+              "intentados": 8,
+              "porcentaje": 25
+            },
+            "Canadá": {
+              "completados": 5,
+              "intentados": 12,
+              "porcentaje": 42
+            }
+          }
+        },
+        "defensa": {
+          "entradas_ganadas_pct": {
+            "Sudáfrica": 61,
+            "Canadá": 75
+          },
+          "tackles_totales": {
+            "Sudáfrica": 23,
+            "Canadá": 20
+          },
+          "intercepciones": {
+            "Sudáfrica": 16,
+            "Canadá": 8
+          },
+          "recuperaciones": {
+            "Sudáfrica": 47,
+            "Canadá": 55
+          },
+          "despejes": {
+            "Sudáfrica": 34,
+            "Canadá": 14
+          },
+          "errores_que_llevan_a_disparo": {
+            "Sudáfrica": 1,
+            "Canadá": 0
+          }
+        },
+        "porteria": {
+          "paradas": {
+            "Sudáfrica": 5,
+            "Canadá": 1
+          },
+          "goles_evitados": {
+            "Sudáfrica": 0.63,
+            "Canadá": 0.04
+          },
+          "despejes_por_alto": {
+            "Sudáfrica": 0,
+            "Canadá": 1
+          },
+          "saques_de_puerta": {
+            "Sudáfrica": 12,
+            "Canadá": 4
+          }
+        },
+        "mapa_de_ataques": {
+          "equipo_mostrado": "Sudáfrica",
+          "direccion_de_ataque": "hacia_la_derecha",
+          "descripcion": "Mapa de ataques mostrado para Sudáfrica."
+        },
+        "mapa_de_pases": {
+          "tipo_de_dato": "distribucion_global_no_atribuible_por_equipo",
+          "tercio_defensivo_pct": 41,
+          "tercio_central_pct": 43,
+          "tercio_ofensivo_pct": 16
+        }
+      },
+      "fuentes": [
+        "Captura de pantalla 2026-06-29 013030.png",
+        "Captura de pantalla 2026-06-29 013047.png",
+        "Captura de pantalla 2026-06-29 013057.png"
+      ]
+    }
+  ]
+}

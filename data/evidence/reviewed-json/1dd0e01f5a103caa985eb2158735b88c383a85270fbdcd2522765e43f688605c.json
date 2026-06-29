@@ -1,0 +1,274 @@
+{
+  "descripcion": "Estadísticas profundas revisadas manualmente a partir de capturas de SofaScore.",
+  "numero_de_partidos": 1,
+  "partidos": [
+    {
+      "id": "argelia_austria",
+      "nombre": "Argelia vs Austria",
+      "equipos": {
+        "izquierda_verde": "Argelia",
+        "derecha_azul": "Austria"
+      },
+      "estadisticas": {
+        "resumen_del_partido": {
+          "posesion_de_balon_pct": {
+            "Argelia": 65,
+            "Austria": 35
+          },
+          "goles_esperados_xg": {
+            "Argelia": 1.67,
+            "Austria": 1.49
+          },
+          "ocasiones_claras": {
+            "Argelia": 3,
+            "Austria": 3
+          },
+          "tiros_totales": {
+            "Argelia": 12,
+            "Austria": 10
+          },
+          "paradas": {
+            "Argelia": 0,
+            "Austria": 2
+          },
+          "saques_de_esquina": {
+            "Argelia": 0,
+            "Austria": 3
+          },
+          "faltas": {
+            "Argelia": 3,
+            "Austria": 7
+          },
+          "pases": {
+            "Argelia": 754,
+            "Austria": 396
+          },
+          "entradas": {
+            "Argelia": 11,
+            "Austria": 11
+          },
+          "tiros_libres": {
+            "Argelia": 7,
+            "Austria": 3
+          },
+          "tarjetas_amarillas": {
+            "Argelia": 0,
+            "Austria": 1
+          }
+        },
+        "tiros": {
+          "tiros_totales": {
+            "Argelia": 12,
+            "Austria": 10
+          },
+          "tiros_a_puerta": {
+            "Argelia": 5,
+            "Austria": 3
+          },
+          "tiros_al_palo": {
+            "Argelia": 1,
+            "Austria": 0
+          },
+          "tiros_fuera": {
+            "Argelia": 5,
+            "Austria": 6
+          },
+          "tiros_bloqueados": {
+            "Argelia": 2,
+            "Austria": 1
+          },
+          "tiros_dentro_del_area_penal": {
+            "Argelia": 6,
+            "Austria": 6
+          },
+          "tiros_fuera_del_area": {
+            "Argelia": 6,
+            "Austria": 4
+          }
+        },
+        "ataque": {
+          "ocasiones_claras_realizadas": {
+            "Argelia": 2,
+            "Austria": 2
+          },
+          "ocasiones_claras_falladas": {
+            "Argelia": 1,
+            "Austria": 1
+          },
+          "pases_en_profundidad": {
+            "Argelia": 1,
+            "Austria": 1
+          },
+          "toques_dentro_del_area": {
+            "Argelia": 22,
+            "Austria": 18
+          },
+          "faltas_recibidas_en_el_tercio_final": {
+            "Argelia": 1,
+            "Austria": 0
+          },
+          "fueras_de_juego": {
+            "Argelia": 1,
+            "Austria": 3
+          }
+        },
+        "duelos": {
+          "duelos_pct": {
+            "Argelia": 55,
+            "Austria": 45
+          },
+          "perdidas": {
+            "Argelia": 5,
+            "Austria": 8
+          },
+          "duelos_en_el_suelo": {
+            "Argelia": {
+              "ganados": 30,
+              "totales": 48,
+              "porcentaje": 63
+            },
+            "Austria": {
+              "ganados": 18,
+              "totales": 48,
+              "porcentaje": 38
+            }
+          },
+          "duelos_aereos": {
+            "Argelia": {
+              "ganados": 4,
+              "totales": 14,
+              "porcentaje": 29
+            },
+            "Austria": {
+              "ganados": 10,
+              "totales": 14,
+              "porcentaje": 71
+            }
+          },
+          "regates": {
+            "Argelia": {
+              "completados": 13,
+              "intentados": 19,
+              "porcentaje": 68
+            },
+            "Austria": {
+              "completados": 4,
+              "intentados": 7,
+              "porcentaje": 57
+            }
+          }
+        },
+        "pases": {
+          "pases_precisos": {
+            "Argelia": 706,
+            "Austria": 346
+          },
+          "saques_de_banda": {
+            "Argelia": 16,
+            "Austria": 10
+          },
+          "pases_al_ultimo_tercio": {
+            "Argelia": 62,
+            "Austria": 39
+          },
+          "pases_en_el_ultimo_tercio": {
+            "Argelia": {
+              "completados": 112,
+              "intentados": 135,
+              "porcentaje": 83
+            },
+            "Austria": {
+              "completados": 75,
+              "intentados": 98,
+              "porcentaje": 77
+            }
+          },
+          "pases_largos": {
+            "Argelia": {
+              "completados": 26,
+              "intentados": 44,
+              "porcentaje": 59
+            },
+            "Austria": {
+              "completados": 14,
+              "intentados": 32,
+              "porcentaje": 44
+            }
+          },
+          "centros": {
+            "Argelia": {
+              "completados": 0,
+              "intentados": 5,
+              "porcentaje": 0
+            },
+            "Austria": {
+              "completados": 3,
+              "intentados": 13,
+              "porcentaje": 23
+            }
+          }
+        },
+        "defensa": {
+          "entradas_ganadas_pct": {
+            "Argelia": 45,
+            "Austria": 36
+          },
+          "tackles_totales": {
+            "Argelia": 11,
+            "Austria": 11
+          },
+          "intercepciones": {
+            "Argelia": 4,
+            "Austria": 10
+          },
+          "recuperaciones": {
+            "Argelia": 28,
+            "Austria": 37
+          },
+          "despejes": {
+            "Argelia": 18,
+            "Austria": 19
+          },
+          "errores_que_llevan_a_disparo": {
+            "Argelia": 0,
+            "Austria": 1
+          },
+          "errores_que_llevan_a_gol": {
+            "Argelia": 1,
+            "Austria": 0
+          }
+        },
+        "porteria": {
+          "paradas": {
+            "Argelia": 0,
+            "Austria": 2
+          },
+          "goles_evitados": {
+            "Argelia": -1.68,
+            "Austria": -0.21
+          },
+          "saques_de_puerta": {
+            "Argelia": 9,
+            "Austria": 6
+          }
+        },
+        "mapa_de_ataques": {
+          "equipo_mostrado": "Argelia",
+          "direccion_de_ataque": "hacia_la_derecha",
+          "descripcion": "Mapa de ataques mostrado para Argelia."
+        },
+        "mapa_de_pases": {
+          "tipo_de_dato": "distribucion_global_no_atribuible_por_equipo",
+          "tercio_defensivo_pct": 21,
+          "tercio_central_pct": 56,
+          "tercio_ofensivo_pct": 23
+        }
+      },
+      "fuentes": [
+        "Captura de pantalla 2026-06-28 114212.png",
+        "Captura de pantalla 2026-06-28 114222.png",
+        "Captura de pantalla 2026-06-28 114231.png"
+      ]
+    }
+  ]
+}

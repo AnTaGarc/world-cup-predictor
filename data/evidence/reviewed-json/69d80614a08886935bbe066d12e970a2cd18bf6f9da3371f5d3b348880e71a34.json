@@ -1,0 +1,278 @@
+{
+  "descripcion": "Estadísticas profundas revisadas manualmente a partir de capturas de SofaScore.",
+  "numero_de_partidos": 1,
+  "partidos": [
+    {
+      "id": "panama_inglaterra",
+      "nombre": "Panamá vs Inglaterra",
+      "equipos": {
+        "izquierda_verde": "Panamá",
+        "derecha_azul": "Inglaterra"
+      },
+      "estadisticas": {
+        "resumen_del_partido": {
+          "posesion_de_balon_pct": {
+            "Panamá": 33,
+            "Inglaterra": 67
+          },
+          "goles_esperados_xg": {
+            "Panamá": 0.66,
+            "Inglaterra": 1.56
+          },
+          "ocasiones_claras": {
+            "Panamá": 0,
+            "Inglaterra": 4
+          },
+          "tiros_totales": {
+            "Panamá": 13,
+            "Inglaterra": 17
+          },
+          "paradas": {
+            "Panamá": 4,
+            "Inglaterra": 2
+          },
+          "saques_de_esquina": {
+            "Panamá": 3,
+            "Inglaterra": 7
+          },
+          "faltas": {
+            "Panamá": 16,
+            "Inglaterra": 13
+          },
+          "pases": {
+            "Panamá": 268,
+            "Inglaterra": 558
+          },
+          "entradas": {
+            "Panamá": 16,
+            "Inglaterra": 18
+          },
+          "tiros_libres": {
+            "Panamá": 13,
+            "Inglaterra": 16
+          },
+          "tarjetas_amarillas": {
+            "Panamá": 2,
+            "Inglaterra": 1
+          }
+        },
+        "tiros": {
+          "tiros_totales": {
+            "Panamá": 13,
+            "Inglaterra": 17
+          },
+          "tiros_a_puerta": {
+            "Panamá": 2,
+            "Inglaterra": 6
+          },
+          "tiros_al_palo": {
+            "Panamá": 0,
+            "Inglaterra": 0
+          },
+          "tiros_fuera": {
+            "Panamá": 8,
+            "Inglaterra": 8
+          },
+          "tiros_bloqueados": {
+            "Panamá": 3,
+            "Inglaterra": 3
+          },
+          "tiros_dentro_del_area_penal": {
+            "Panamá": 8,
+            "Inglaterra": 12
+          },
+          "tiros_fuera_del_area": {
+            "Panamá": 5,
+            "Inglaterra": 5
+          }
+        },
+        "ataque": {
+          "ocasiones_claras_realizadas": {
+            "Panamá": 0,
+            "Inglaterra": 2
+          },
+          "ocasiones_claras_falladas": {
+            "Panamá": 0,
+            "Inglaterra": 2
+          },
+          "pases_en_profundidad": {
+            "Panamá": 0,
+            "Inglaterra": 6
+          },
+          "toques_dentro_del_area": {
+            "Panamá": 14,
+            "Inglaterra": 39
+          },
+          "faltas_recibidas_en_el_tercio_final": {
+            "Panamá": 2,
+            "Inglaterra": 1
+          },
+          "fueras_de_juego": {
+            "Panamá": 4,
+            "Inglaterra": 4
+          }
+        },
+        "duelos": {
+          "duelos_pct": {
+            "Panamá": 41,
+            "Inglaterra": 59
+          },
+          "perdidas": {
+            "Panamá": 9,
+            "Inglaterra": 8
+          },
+          "duelos_en_el_suelo": {
+            "Panamá": {
+              "ganados": 32,
+              "totales": 76,
+              "porcentaje": 42
+            },
+            "Inglaterra": {
+              "ganados": 44,
+              "totales": 76,
+              "porcentaje": 58
+            }
+          },
+          "duelos_aereos": {
+            "Panamá": {
+              "ganados": 11,
+              "totales": 28,
+              "porcentaje": 39
+            },
+            "Inglaterra": {
+              "ganados": 17,
+              "totales": 28,
+              "porcentaje": 61
+            }
+          },
+          "regates": {
+            "Panamá": {
+              "completados": 6,
+              "intentados": 15,
+              "porcentaje": 40
+            },
+            "Inglaterra": {
+              "completados": 10,
+              "intentados": 18,
+              "porcentaje": 56
+            }
+          }
+        },
+        "pases": {
+          "pases_precisos": {
+            "Panamá": 202,
+            "Inglaterra": 490
+          },
+          "saques_de_banda": {
+            "Panamá": 24,
+            "Inglaterra": 14
+          },
+          "pases_al_ultimo_tercio": {
+            "Panamá": 38,
+            "Inglaterra": 68
+          },
+          "pases_en_el_ultimo_tercio": {
+            "Panamá": {
+              "completados": 29,
+              "intentados": 54,
+              "porcentaje": 54
+            },
+            "Inglaterra": {
+              "completados": 139,
+              "intentados": 182,
+              "porcentaje": 76
+            }
+          },
+          "pases_largos": {
+            "Panamá": {
+              "completados": 25,
+              "intentados": 54,
+              "porcentaje": 46
+            },
+            "Inglaterra": {
+              "completados": 20,
+              "intentados": 36,
+              "porcentaje": 56
+            }
+          },
+          "centros": {
+            "Panamá": {
+              "completados": 3,
+              "intentados": 9,
+              "porcentaje": 33
+            },
+            "Inglaterra": {
+              "completados": 4,
+              "intentados": 25,
+              "porcentaje": 16
+            }
+          }
+        },
+        "defensa": {
+          "entradas_ganadas_pct": {
+            "Panamá": 69,
+            "Inglaterra": 94
+          },
+          "tackles_totales": {
+            "Panamá": 16,
+            "Inglaterra": 18
+          },
+          "intercepciones": {
+            "Panamá": 6,
+            "Inglaterra": 5
+          },
+          "recuperaciones": {
+            "Panamá": 48,
+            "Inglaterra": 49
+          },
+          "despejes": {
+            "Panamá": 34,
+            "Inglaterra": 20
+          },
+          "errores_que_llevan_a_disparo": {
+            "Panamá": 0,
+            "Inglaterra": 3
+          }
+        },
+        "porteria": {
+          "paradas": {
+            "Panamá": 4,
+            "Inglaterra": 2
+          },
+          "goles_evitados": {
+            "Panamá": 0.01,
+            "Inglaterra": 0.21
+          },
+          "grandes_paradas": {
+            "Panamá": 1,
+            "Inglaterra": 1
+          },
+          "con_los_punos": {
+            "Panamá": 0,
+            "Inglaterra": 1
+          },
+          "saques_de_puerta": {
+            "Panamá": 12,
+            "Inglaterra": 8
+          }
+        },
+        "mapa_de_ataques": {
+          "equipo_mostrado": "Panamá",
+          "direccion_de_ataque": "hacia_la_derecha",
+          "descripcion": "Mapa de ataques mostrado para Panamá."
+        },
+        "mapa_de_pases": {
+          "tipo_de_dato": "distribucion_global_no_atribuible_por_equipo",
+          "tercio_defensivo_pct": 38,
+          "tercio_central_pct": 41,
+          "tercio_ofensivo_pct": 21
+        }
+      },
+      "fuentes": [
+        "Captura de pantalla 2026-06-28 113718.png",
+        "Captura de pantalla 2026-06-28 113729.png",
+        "Captura de pantalla 2026-06-28 113738.png"
+      ]
+    }
+  ]
+}

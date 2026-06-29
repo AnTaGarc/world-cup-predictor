@@ -1,0 +1,286 @@
+{
+  "descripcion": "Estadísticas profundas revisadas manualmente a partir de capturas de SofaScore.",
+  "numero_de_partidos": 1,
+  "partidos": [
+    {
+      "id": "nueva_zelanda_belgica",
+      "nombre": "Nueva Zelanda vs Bélgica",
+      "equipos": {
+        "izquierda_verde": "Nueva Zelanda",
+        "derecha_azul": "Bélgica"
+      },
+      "estadisticas": {
+        "resumen_del_partido": {
+          "posesion_de_balon_pct": {
+            "Nueva Zelanda": 46,
+            "Bélgica": 54
+          },
+          "goles_esperados_xg": {
+            "Nueva Zelanda": 0.24,
+            "Bélgica": 3.64
+          },
+          "ocasiones_claras": {
+            "Nueva Zelanda": 0,
+            "Bélgica": 4
+          },
+          "tiros_totales": {
+            "Nueva Zelanda": 6,
+            "Bélgica": 35
+          },
+          "paradas": {
+            "Nueva Zelanda": 5,
+            "Bélgica": 1
+          },
+          "saques_de_esquina": {
+            "Nueva Zelanda": 5,
+            "Bélgica": 8
+          },
+          "faltas": {
+            "Nueva Zelanda": 10,
+            "Bélgica": 7
+          },
+          "pases": {
+            "Nueva Zelanda": 436,
+            "Bélgica": 525
+          },
+          "entradas": {
+            "Nueva Zelanda": 10,
+            "Bélgica": 13
+          },
+          "tiros_libres": {
+            "Nueva Zelanda": 7,
+            "Bélgica": 10
+          },
+          "tarjetas_amarillas": {
+            "Nueva Zelanda": 2,
+            "Bélgica": 0
+          }
+        },
+        "tiros": {
+          "tiros_totales": {
+            "Nueva Zelanda": 6,
+            "Bélgica": 35
+          },
+          "tiros_a_puerta": {
+            "Nueva Zelanda": 2,
+            "Bélgica": 10
+          },
+          "tiros_al_palo": {
+            "Nueva Zelanda": 0,
+            "Bélgica": 1
+          },
+          "tiros_fuera": {
+            "Nueva Zelanda": 3,
+            "Bélgica": 13
+          },
+          "tiros_bloqueados": {
+            "Nueva Zelanda": 1,
+            "Bélgica": 12
+          },
+          "tiros_dentro_del_area_penal": {
+            "Nueva Zelanda": 3,
+            "Bélgica": 23
+          },
+          "tiros_fuera_del_area": {
+            "Nueva Zelanda": 3,
+            "Bélgica": 12
+          }
+        },
+        "ataque": {
+          "ocasiones_claras_realizadas": {
+            "Nueva Zelanda": 0,
+            "Bélgica": 2
+          },
+          "ocasiones_claras_falladas": {
+            "Nueva Zelanda": 0,
+            "Bélgica": 2
+          },
+          "pases_en_profundidad": {
+            "Nueva Zelanda": 0,
+            "Bélgica": 1
+          },
+          "toques_dentro_del_area": {
+            "Nueva Zelanda": 6,
+            "Bélgica": 79
+          },
+          "faltas_recibidas_en_el_tercio_final": {
+            "Nueva Zelanda": 0,
+            "Bélgica": 2
+          },
+          "fueras_de_juego": {
+            "Nueva Zelanda": 1,
+            "Bélgica": 1
+          }
+        },
+        "duelos": {
+          "duelos_pct": {
+            "Nueva Zelanda": 45,
+            "Bélgica": 55
+          },
+          "perdidas": {
+            "Nueva Zelanda": 9,
+            "Bélgica": 6
+          },
+          "duelos_en_el_suelo": {
+            "Nueva Zelanda": {
+              "ganados": 24,
+              "totales": 54,
+              "porcentaje": 44
+            },
+            "Bélgica": {
+              "ganados": 30,
+              "totales": 54,
+              "porcentaje": 56
+            }
+          },
+          "duelos_aereos": {
+            "Nueva Zelanda": {
+              "ganados": 7,
+              "totales": 15,
+              "porcentaje": 47
+            },
+            "Bélgica": {
+              "ganados": 8,
+              "totales": 15,
+              "porcentaje": 53
+            }
+          },
+          "regates": {
+            "Nueva Zelanda": {
+              "completados": 8,
+              "intentados": 12,
+              "porcentaje": 67
+            },
+            "Bélgica": {
+              "completados": 7,
+              "intentados": 11,
+              "porcentaje": 64
+            }
+          }
+        },
+        "pases": {
+          "pases_precisos": {
+            "Nueva Zelanda": 369,
+            "Bélgica": 462
+          },
+          "saques_de_banda": {
+            "Nueva Zelanda": 17,
+            "Bélgica": 15
+          },
+          "pases_al_ultimo_tercio": {
+            "Nueva Zelanda": 37,
+            "Bélgica": 49
+          },
+          "pases_en_el_ultimo_tercio": {
+            "Nueva Zelanda": {
+              "completados": 58,
+              "intentados": 82,
+              "porcentaje": 71
+            },
+            "Bélgica": {
+              "completados": 153,
+              "intentados": 192,
+              "porcentaje": 80
+            }
+          },
+          "pases_largos": {
+            "Nueva Zelanda": {
+              "completados": 16,
+              "intentados": 38,
+              "porcentaje": 42
+            },
+            "Bélgica": {
+              "completados": 28,
+              "intentados": 46,
+              "porcentaje": 61
+            }
+          },
+          "centros": {
+            "Nueva Zelanda": {
+              "completados": 2,
+              "intentados": 17,
+              "porcentaje": 12
+            },
+            "Bélgica": {
+              "completados": 6,
+              "intentados": 16,
+              "porcentaje": 38
+            }
+          }
+        },
+        "defensa": {
+          "entradas_ganadas_pct": {
+            "Nueva Zelanda": 60,
+            "Bélgica": 62
+          },
+          "tackles_totales": {
+            "Nueva Zelanda": 10,
+            "Bélgica": 13
+          },
+          "intercepciones": {
+            "Nueva Zelanda": 6,
+            "Bélgica": 10
+          },
+          "recuperaciones": {
+            "Nueva Zelanda": 38,
+            "Bélgica": 48
+          },
+          "despejes": {
+            "Nueva Zelanda": 35,
+            "Bélgica": 27
+          },
+          "errores_que_llevan_a_disparo": {
+            "Nueva Zelanda": 1,
+            "Bélgica": 1
+          },
+          "errores_que_llevan_a_gol": {
+            "Nueva Zelanda": 2,
+            "Bélgica": 0
+          }
+        },
+        "porteria": {
+          "paradas": {
+            "Nueva Zelanda": 5,
+            "Bélgica": 1
+          },
+          "goles_evitados": {
+            "Nueva Zelanda": -1.86,
+            "Bélgica": -0.77
+          },
+          "grandes_paradas": {
+            "Nueva Zelanda": 2,
+            "Bélgica": 1
+          },
+          "despejes_por_alto": {
+            "Nueva Zelanda": 0,
+            "Bélgica": 2
+          },
+          "con_los_punos": {
+            "Nueva Zelanda": 1,
+            "Bélgica": 2
+          },
+          "saques_de_puerta": {
+            "Nueva Zelanda": 10,
+            "Bélgica": 3
+          }
+        },
+        "mapa_de_ataques": {
+          "equipo_mostrado": "Nueva Zelanda",
+          "direccion_de_ataque": "hacia_la_derecha",
+          "descripcion": "Mapa de ataques mostrado para Nueva Zelanda."
+        },
+        "mapa_de_pases": {
+          "tipo_de_dato": "distribucion_global_no_atribuible_por_equipo",
+          "tercio_defensivo_pct": 37,
+          "tercio_central_pct": 42,
+          "tercio_ofensivo_pct": 21
+        }
+      },
+      "fuentes": [
+        "Captura de pantalla 2026-06-27 114651.png",
+        "Captura de pantalla 2026-06-27 114659.png",
+        "Captura de pantalla 2026-06-27 114710.png"
+      ]
+    }
+  ]
+}
