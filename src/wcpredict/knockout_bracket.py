@@ -661,6 +661,22 @@ def resolve_knockout_bracket(repo: Repository, now: datetime | None = None) -> d
                     slots_by_id[slot.slot_id] = slot
                 if home_id is None or away_id is None:
                     continue
+                if slot.match_id is not None:
+                    # Daily schedule providers sometimes overwrite ``stage``
+                    # with the competition label. The bracket is authoritative
+                    # for knockout metadata, so repair it on every resolution
+                    # pass even when the linked teams have not changed.
+                    con.execute(
+                        "UPDATE matches SET competition=?, stage=?, kickoff_utc=?, "
+                        "venue=COALESCE(?, venue), neutral_site=1 WHERE id=?",
+                        (
+                            COMPETITION,
+                            slot.stage,
+                            slot.kickoff_utc,
+                            slot.venue,
+                            slot.match_id,
+                        ),
+                    )
                 if (home_id, away_id) == (slot.home_team_id, slot.away_team_id) and slot.match_id is not None:
                     continue
                 match_id = slot.match_id

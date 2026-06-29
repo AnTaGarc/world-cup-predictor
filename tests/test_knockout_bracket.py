@@ -294,6 +294,30 @@ class KnockoutBracketTests(unittest.TestCase):
             again = resolve_knockout_bracket(repo)
         self.assertEqual(0, again["matches_created"])
 
+    def test_resolution_repairs_stage_overwritten_by_schedule_provider(self):
+        with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as tmp:
+            repo = Repository(Path(tmp) / "app.sqlite")
+            repo.initialize()
+            seed_knockout_bracket(repo, KNOCKOUT_CSV)
+            _seed_group(repo, "A", ["Mexico", "South Africa", "Spain", "Korea Republic"])
+            _seed_group(repo, "B", ["Canada", "Bosnia and Herzegovina", "Germany", "Japan"])
+            resolve_knockout_bracket(repo)
+            slot = next(row for row in list_bracket_slots(repo) if row.slot_id == "M73")
+            with sqlite3.connect(repo.path) as con:
+                con.execute(
+                    "UPDATE matches SET competition='FIFA World Cup 2026', stage='FIFA World Cup' WHERE id=?",
+                    (slot.match_id,),
+                )
+                con.commit()
+
+            resolve_knockout_bracket(repo)
+
+            with sqlite3.connect(repo.path) as con:
+                repaired = con.execute(
+                    "SELECT competition, stage FROM matches WHERE id=?", (slot.match_id,)
+                ).fetchone()
+        self.assertEqual((COMPETITION, "Round of 32"), repaired)
+
     def test_group_standings_use_head_to_head_before_goal_difference(self):
         with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as tmp:
             repo = Repository(Path(tmp) / "app.sqlite")
