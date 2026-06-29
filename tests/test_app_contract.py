@@ -248,7 +248,8 @@ class AppContractTests(unittest.TestCase):
         source = (Path(__file__).parents[1] / "src" / "wcpredict" / "ui" / "pages.py").read_text(encoding="utf-8")
         self.assertIn("from wcpredict.audit import", source)
         self.assertIn("def _render_post_match_audit", source)
-        self.assertIn("_render_post_match_audit(bundle, _match_auxiliary_context(match), team_a, team_b)", source)
+        self.assertIn("_render_post_match_audit(", source)
+        self.assertIn("_match_auxiliary_context(match)", source)
         # The bundle must persist post-match data so the audit is cache-friendly.
         self.assertIn("match_result=dict(match_result)", source)
         self.assertIn("team_match_stats=team_match_stats", source)
@@ -258,6 +259,25 @@ class AppContractTests(unittest.TestCase):
         self.assertIn("Comparación por equipo (deep stats vs reales)", source)
         # The audit table must not depend on pandas.Styler (jinja2): we render HTML.
         self.assertNotIn("styler = frame.style", source)
+
+    def test_closed_knockout_audit_keeps_new_probability_bar_design(self):
+        source = (Path(__file__).parents[1] / "src" / "wcpredict" / "ui" / "pages.py").read_text(encoding="utf-8")
+        audit = source[source.index("def _render_post_match_audit"):source.index("def render_dashboard")]
+        self.assertIn("is_knockout: bool = False", audit)
+        self.assertIn("if not is_knockout:", audit)
+        self.assertIn('_render_audit_table(audit["outcome"])', audit)
+        self.assertIn(
+            "is_knockout=_is_knockout_stage(getattr(match, \"stage\", None))",
+            source,
+        )
+        # Percentages remain visible inside Claude's funnel bars.
+        from wcpredict.ui.theme import knockout_advance_html
+        html = knockout_advance_html(
+            "A", "B", 0.61, 0.39, 0.42, 0.31, 0.27,
+            0.36, 0.28, 0.36, 0.53, 0.47,
+        )
+        for percentage in ("42.0%", "31.0%", "27.0%", "53.0%", "47.0%"):
+            self.assertIn(f'<span class="pct">{percentage}</span>', html)
 
     def test_player_tab_lists_full_squad_table_for_the_selected_team(self):
         source = (Path(__file__).parents[1] / "src" / "wcpredict" / "ui" / "pages.py").read_text(encoding="utf-8")

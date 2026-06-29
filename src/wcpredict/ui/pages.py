@@ -2000,6 +2000,7 @@ def _render_post_match_audit(
     auxiliary: MatchAuxiliaryBundle,
     team_a: str,
     team_b: str,
+    is_knockout: bool = False,
 ) -> None:
     result = auxiliary.match_result
     if not result:
@@ -2083,7 +2084,11 @@ def _render_post_match_audit(
         len(auxiliary.team_match_stats),
         help="Filas de team_match_stats: alimentan automáticamente las predicciones de partidos posteriores.",
     )
-    _render_audit_table(audit["outcome"])
+    # The knockout header already renders these probabilities in Claude's
+    # advance/funnel bars. Do not reintroduce the group-stage 1X2 table when
+    # the match is closed; keep the score/deep-stat audit below the bars.
+    if not is_knockout:
+        _render_audit_table(audit["outcome"])
     _render_audit_table(audit["score"])
 
     # Per-team comparison using deep stats from team_match_stats: this is the
@@ -2428,7 +2433,13 @@ def _render_prediction_workspace(
     deep_weight = bundle.deep_outcome_weight
     if section == "Modelo":
         if match.status == "finished":
-            _render_post_match_audit(bundle, _match_auxiliary_context(match), team_a, team_b)
+            _render_post_match_audit(
+                bundle,
+                _match_auxiliary_context(match),
+                team_a,
+                team_b,
+                is_knockout=_is_knockout_stage(getattr(match, "stage", None)),
+            )
         with st.expander("Cómo se elige el modelo de cada mercado"):
             st.caption("Activo es lo que calcula hoy la app; challenger solo se promueve si gana una validación temporal.")
             st.dataframe(pd.DataFrame(model_policy_rows()), width="stretch", hide_index=True)
