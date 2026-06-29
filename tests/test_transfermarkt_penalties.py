@@ -8,7 +8,7 @@ from wcpredict.transfermarkt_penalties import (
     eligible_penalty_teams,
     load_penalty_team_snapshot,
     parse_penalty_attempts,
-    penalty_urls,
+    penalty_url,
     player_targets_for_teams,
     reconcile_penalty_teams,
     slugify_player_name,
@@ -51,14 +51,34 @@ class TransfermarktPenaltyTests(unittest.TestCase):
         self.assertEqual("harry-kane", slugify_player_name("Harry Kane"))
         self.assertEqual("matej-kovar", slugify_player_name("Matej Kovar"))
 
-    def test_penalty_urls_cover_scored_and_missed_pages(self):
+    def test_penalty_url_contains_both_scored_and_missed_tables(self):
         self.assertEqual(
-            [
-                ("scored", "https://www.transfermarkt.com/harry-kane/elfmetertore/spieler/132098"),
-                ("missed", "https://www.transfermarkt.com/harry-kane/elfmeterstatistik/spieler/132098"),
-            ],
-            penalty_urls("Harry Kane", "132098"),
+            "https://www.transfermarkt.com/harry-kane/elfmetertore/spieler/132098",
+            penalty_url("Harry Kane", "132098"),
         )
+
+    def test_parser_uses_scored_and_missed_table_headings(self):
+        html = """
+        <h2>Total penalties scored - 2</h2>
+        <table>
+          <tr><th>Date</th><th>Competition</th><th>Final result</th><th>Goalkeepers</th></tr>
+          <tr><td>Jun 20, 2026</td><td>World Cup</td><td>2:1</td><td>Keeper One</td></tr>
+        </table>
+        <h2>Total penalties missed - 1</h2>
+        <table>
+          <tr><th>Date</th><th>Competition</th><th>Final result</th><th>Goalkeepers</th></tr>
+          <tr><td>Jun 21, 2026</td><td>World Cup</td><td>1:1</td><td>Keeper Two</td></tr>
+        </table>
+        """
+        attempts = parse_penalty_attempts(
+            html,
+            player_name="Taker",
+            team_name="Test",
+            transfermarkt_player_id="1",
+            source_url="https://example.test/elfmetertore/spieler/1",
+            fetched_at_utc=datetime(2026, 6, 25, tzinfo=timezone.utc),
+        )
+        self.assertEqual(["scored", "missed"], [row["outcome"] for row in attempts])
 
     def test_parse_penalty_attempts_from_cached_html(self):
         html = """
@@ -122,6 +142,22 @@ class TransfermarktPenaltyTests(unittest.TestCase):
             default_outcome="missed",
         )
         self.assertEqual("missed", attempts[0]["outcome"])
+
+    def test_source_row_key_is_stable_when_section_corrects_legacy_outcome(self):
+        html = """
+        <table><tr><td>Jun 20, 2026</td><td>World Cup</td><td>2:1</td><td>Keeper</td></tr></table>
+        """
+        common = dict(
+            player_name="Taker",
+            team_name="Test",
+            transfermarkt_player_id="1",
+            source_url="https://example.test/elfmetertore/spieler/1",
+            fetched_at_utc=datetime(2026, 6, 25, tzinfo=timezone.utc),
+        )
+        old = parse_penalty_attempts(html, default_outcome="scored", **common)[0]
+        corrected = parse_penalty_attempts(html, default_outcome="missed", **common)[0]
+        self.assertEqual(old["source_row_key"], corrected["source_row_key"])
+        self.assertNotEqual(old["outcome"], corrected["outcome"])
 
     def test_repository_saves_penalty_attempts_idempotently(self):
         with tempfile.TemporaryDirectory() as directory:

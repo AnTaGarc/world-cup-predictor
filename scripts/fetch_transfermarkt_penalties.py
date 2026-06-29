@@ -21,7 +21,7 @@ from wcpredict.transfermarkt_penalties import (
     fetch_html,
     load_penalty_team_snapshot,
     parse_penalty_attempts,
-    penalty_urls,
+    penalty_url,
     player_targets_for_teams,
     reconcile_penalty_teams,
     search_transfermarkt_player,
@@ -118,29 +118,20 @@ def main() -> int:
 
         if transfermarkt_id is None:
             continue
-        attempts = []
-        failed_pages = 0
-        for default_outcome, url in penalty_urls(target.player_name, transfermarkt_id):
-            try:
-                html = fetch_html(url, cache_dir, refresh=args.refresh)
-            except Exception as exc:
-                failed_pages += 1
-                print(
-                    f"ERROR {target.player_name} ({target.team_name}, {default_outcome}): "
-                    f"{type(exc).__name__}: {exc}"
-                )
-                continue
-            attempts.extend(parse_penalty_attempts(
-                html,
-                player_name=target.player_name,
-                team_name=target.team_name,
-                transfermarkt_player_id=transfermarkt_id,
-                source_url=url,
-                fetched_at_utc=fetched_at,
-                default_outcome=default_outcome,
-            ))
-        if failed_pages == 2:
+        url = penalty_url(target.player_name, transfermarkt_id)
+        try:
+            html = fetch_html(url, cache_dir, refresh=args.refresh)
+        except Exception as exc:
+            print(f"ERROR {target.player_name} ({target.team_name}): {type(exc).__name__}: {exc}")
             continue
+        attempts = parse_penalty_attempts(
+            html,
+            player_name=target.player_name,
+            team_name=target.team_name,
+            transfermarkt_player_id=transfermarkt_id,
+            source_url=url,
+            fetched_at_utc=fetched_at,
+        )
         fetched_players += 1
         if not args.dry_run:
             saved_attempts += repo.save_penalty_attempts(attempts)

@@ -62,6 +62,8 @@ class TableParser(HTMLParser):
         self.current_cell: list[str] = []
         self.current_row: list[str] = []
         self.rows: list[list[str]] = []
+        self.row_default_outcomes: list[str | None] = []
+        self.penalty_section_outcome: str | None = None
         self.link_stack: list[str] = []
         self.links: list[tuple[str, str]] = []
 
@@ -87,6 +89,7 @@ class TableParser(HTMLParser):
         if self.in_table and tag == "tr":
             if any(cell for cell in self.current_row):
                 self.rows.append(self.current_row)
+                self.row_default_outcomes.append(self.penalty_section_outcome)
             self.current_row = []
         if tag == "table":
             self.in_table = False
@@ -94,6 +97,11 @@ class TableParser(HTMLParser):
             self.link_stack.pop()
 
     def handle_data(self, data: str) -> None:
+        normalized = " ".join(data.split()).casefold()
+        if "total penalties scored" in normalized:
+            self.penalty_section_outcome = "scored"
+        elif "total penalties missed" in normalized:
+            self.penalty_section_outcome = "missed"
         if self.in_cell:
             self.current_cell.append(data)
         if self.link_stack:
@@ -109,15 +117,6 @@ def slugify_player_name(player_name: str) -> str:
 
 def penalty_url(player_name: str, transfermarkt_player_id: str) -> str:
     return f"{TRANSFERMARKT_BASE}/{slugify_player_name(player_name)}/elfmetertore/spieler/{transfermarkt_player_id}"
-
-
-def penalty_urls(player_name: str, transfermarkt_player_id: str) -> list[tuple[str, str]]:
-    base = f"{TRANSFERMARKT_BASE}/{slugify_player_name(player_name)}"
-    suffix = f"/spieler/{transfermarkt_player_id}"
-    return [
-        ("scored", f"{base}/elfmetertore{suffix}"),
-        ("missed", f"{base}/elfmeterstatistik{suffix}"),
-    ]
 
 
 def load_penalty_team_snapshot(path: Path) -> list[str]:
@@ -279,14 +278,18 @@ def parse_penalty_attempts(
     parser = TableParser()
     parser.feed(html)
     attempts: list[dict] = []
-    for index, row in enumerate(parser.rows):
+    for index, (row, section_outcome) in enumerate(
+        zip(parser.rows, parser.row_default_outcomes)
+    ):
         cells = [cell for cell in row if cell]
         if len(cells) < 3:
             continue
         lowered = " | ".join(cells).lower()
         if any(header in lowered for header in ("date", "competition", "result", "goalkeeper")):
             continue
-        outcome = _row_outcome(cells, default_outcome=default_outcome)
+        outcome = _row_outcome(
+            cells, default_outcome=section_outcome or default_outcome
+        )
         if outcome is None:
             continue
         date_value = _first_date(cells)
@@ -294,9 +297,14 @@ def parse_penalty_attempts(
         minute = next((cell for cell in cells if re.match(r"^\d{1,3}'", cell)), None)
         goalkeeper = _goalkeeper_from_cells(cells)
         opponent = _opponent_from_cells(cells)
+        # Keep the identity key compatible with rows imported before table
+        # context was available. The corrected section outcome may change
+        # scored -> missed, but must update that row rather than duplicate it.
+        legacy_key_outcome = _row_outcome(cells) or outcome
         source_row_key = (
             f"transfermarkt:{transfermarkt_player_id}:"
-            f"{date_value or 'unknown'}:{index}:{outcome}:{hashlib.sha1('|'.join(cells).encode()).hexdigest()[:10]}"
+            f"{date_value or 'unknown'}:{index}:{legacy_key_outcome}:"
+            f"{hashlib.sha1('|'.join(cells).encode()).hexdigest()[:10]}"
         )
         attempts.append({
             "player_name": player_name,
