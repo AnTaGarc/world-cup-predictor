@@ -221,6 +221,49 @@ CREATE TABLE IF NOT EXISTS goalkeeper_penalty_attempts (
     UNIQUE(source_provider, source_row_key)
 );
 
+CREATE TABLE IF NOT EXISTS historical_shootout_coverage (
+    id INTEGER PRIMARY KEY,
+    team_name TEXT NOT NULL,
+    competition TEXT NOT NULL,
+    competition_edition TEXT NOT NULL,
+    competition_end_on TEXT NOT NULL,
+    source_provider TEXT NOT NULL,
+    source_url TEXT NOT NULL,
+    retrieved_at_utc TEXT NOT NULL,
+    UNIQUE(team_name, competition, competition_edition)
+);
+
+CREATE TABLE IF NOT EXISTS historical_shootouts (
+    id INTEGER PRIMARY KEY,
+    played_on TEXT NOT NULL,
+    competition TEXT NOT NULL,
+    competition_edition TEXT NOT NULL,
+    round_name TEXT,
+    team_a TEXT NOT NULL,
+    team_b TEXT NOT NULL,
+    winner_team TEXT NOT NULL,
+    source_provider TEXT NOT NULL,
+    source_url TEXT NOT NULL,
+    source_row_key TEXT NOT NULL,
+    retrieved_at_utc TEXT NOT NULL,
+    UNIQUE(source_provider, source_row_key)
+);
+
+CREATE TABLE IF NOT EXISTS historical_shootout_kicks (
+    id INTEGER PRIMARY KEY,
+    shootout_id INTEGER NOT NULL REFERENCES historical_shootouts(id),
+    sequence_number INTEGER NOT NULL,
+    team_name TEXT NOT NULL,
+    player_name TEXT,
+    goalkeeper_name TEXT,
+    outcome TEXT NOT NULL,
+    source_provider TEXT NOT NULL,
+    source_url TEXT NOT NULL,
+    source_row_key TEXT NOT NULL,
+    retrieved_at_utc TEXT NOT NULL,
+    UNIQUE(source_provider, source_row_key)
+);
+
 CREATE TABLE IF NOT EXISTS historical_matches (
     id INTEGER PRIMARY KEY,
     played_at_utc TEXT NOT NULL,

@@ -2226,6 +2226,133 @@ class Repository:
         )
         return eligible
 
+    def save_historical_shootout_coverage(self, rows: list[dict]) -> int:
+        written = 0
+        with self.session() as con:
+            for row in rows:
+                before = con.total_changes
+                con.execute(
+                    "INSERT INTO historical_shootout_coverage("
+                    "team_name, competition, competition_edition, competition_end_on, "
+                    "source_provider, source_url, retrieved_at_utc"
+                    ") VALUES(?, ?, ?, ?, ?, ?, ?) "
+                    "ON CONFLICT(team_name, competition, competition_edition) DO UPDATE SET "
+                    "competition_end_on=excluded.competition_end_on, "
+                    "source_provider=excluded.source_provider, source_url=excluded.source_url, "
+                    "retrieved_at_utc=excluded.retrieved_at_utc",
+                    (
+                        canonical_team_name(row["team_name"]),
+                        row["competition"],
+                        row["competition_edition"],
+                        row["competition_end_on"],
+                        row["source_provider"],
+                        row["source_url"],
+                        row["retrieved_at_utc"],
+                    ),
+                )
+                if con.total_changes > before:
+                    written += 1
+        return written
+
+    def list_historical_shootout_coverage(
+        self, team_name: str | None = None
+    ) -> list[dict]:
+        query = "SELECT * FROM historical_shootout_coverage"
+        params: tuple = ()
+        if team_name:
+            query += " WHERE team_name=?"
+            params = (canonical_team_name(team_name),)
+        query += " ORDER BY competition_end_on DESC, competition, competition_edition"
+        with self.session() as con:
+            rows = con.execute(query, params).fetchall()
+        return [dict(row) for row in rows]
+
+    def save_historical_shootouts(
+        self, shootouts: list[dict], kicks: list[dict]
+    ) -> tuple[int, int]:
+        written_shootouts = 0
+        written_kicks = 0
+        with self.session() as con:
+            for row in shootouts:
+                before = con.total_changes
+                con.execute(
+                    "INSERT INTO historical_shootouts("
+                    "played_on, competition, competition_edition, round_name, team_a, team_b, "
+                    "winner_team, source_provider, source_url, source_row_key, retrieved_at_utc"
+                    ") VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) "
+                    "ON CONFLICT(source_provider, source_row_key) DO UPDATE SET "
+                    "played_on=excluded.played_on, competition=excluded.competition, "
+                    "competition_edition=excluded.competition_edition, round_name=excluded.round_name, "
+                    "team_a=excluded.team_a, team_b=excluded.team_b, "
+                    "winner_team=excluded.winner_team, source_url=excluded.source_url, "
+                    "retrieved_at_utc=excluded.retrieved_at_utc",
+                    (
+                        row["played_on"], row["competition"], row["competition_edition"],
+                        row.get("round_name"), canonical_team_name(row["team_a"]),
+                        canonical_team_name(row["team_b"]),
+                        canonical_team_name(row["winner_team"]), row["source_provider"],
+                        row["source_url"], row["source_row_key"], row["retrieved_at_utc"],
+                    ),
+                )
+                if con.total_changes > before:
+                    written_shootouts += 1
+            for row in kicks:
+                shootout_id = con.execute(
+                    "SELECT id FROM historical_shootouts "
+                    "WHERE source_provider=? AND source_row_key=?",
+                    (row["shootout_source_provider"], row["shootout_source_row_key"]),
+                ).fetchone()
+                if shootout_id is None:
+                    raise ValueError("Historical kick references an unknown shootout")
+                before = con.total_changes
+                con.execute(
+                    "INSERT INTO historical_shootout_kicks("
+                    "shootout_id, sequence_number, team_name, player_name, goalkeeper_name, "
+                    "outcome, source_provider, source_url, source_row_key, retrieved_at_utc"
+                    ") VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?) "
+                    "ON CONFLICT(source_provider, source_row_key) DO UPDATE SET "
+                    "shootout_id=excluded.shootout_id, sequence_number=excluded.sequence_number, "
+                    "team_name=excluded.team_name, player_name=excluded.player_name, "
+                    "goalkeeper_name=excluded.goalkeeper_name, outcome=excluded.outcome, "
+                    "source_url=excluded.source_url, retrieved_at_utc=excluded.retrieved_at_utc",
+                    (
+                        int(shootout_id[0]), int(row["sequence_number"]),
+                        canonical_team_name(row["team_name"]), row.get("player_name"),
+                        row.get("goalkeeper_name"), row["outcome"], row["source_provider"],
+                        row["source_url"], row["source_row_key"], row["retrieved_at_utc"],
+                    ),
+                )
+                if con.total_changes > before:
+                    written_kicks += 1
+        return written_shootouts, written_kicks
+
+    def list_historical_shootout_kicks(
+        self, team_names: tuple[str, ...], before_utc: datetime
+    ) -> list[dict]:
+        from wcpredict.penalty_profiles import penalty_attempt_date
+
+        canonical = {canonical_team_name(team) for team in team_names}
+        with self.session() as con:
+            rows = con.execute(
+                "SELECT k.*, s.played_on, s.competition, s.competition_edition, "
+                "s.round_name, s.team_a, s.team_b, s.winner_team "
+                "FROM historical_shootout_kicks k "
+                "JOIN historical_shootouts s ON s.id=k.shootout_id "
+                "ORDER BY s.played_on, k.sequence_number"
+            ).fetchall()
+        cutoff = before_utc.date()
+        return [
+            dict(row) for row in rows
+            if (
+                canonical_team_name(str(row["team_a"])) in canonical
+                or canonical_team_name(str(row["team_b"])) in canonical
+            )
+            and (
+                penalty_attempt_date(row["played_on"]) is None
+                or penalty_attempt_date(row["played_on"]) < cutoff
+            )
+        ]
+
     def list_penalty_evidence(
         self, team_names: tuple[str, ...], before_utc: datetime
     ) -> list[dict]:

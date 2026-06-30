@@ -60,12 +60,15 @@ Toda consulta respetará el corte temporal del inicio del partido. Ningún dato 
 
 Se añadirán estructuras separadas para:
 
+- cobertura de las tres competiciones revisadas por selección, incluso cuando no hubo tandas;
 - tandas históricas internacionales;
 - lanzamientos históricos de esas tandas;
 - penaltis afrontados por porteros;
 - fuentes y estado de revisión.
 
 Las escrituras serán idempotentes mediante claves de proveedor. La procedencia incluirá URL, fecha de recuperación y contenido normalizado suficiente para auditar cada cálculo. Los datos reales ya existentes en `worldcup.sqlite` no se reemplazarán ni se borrarán durante la migración.
+
+Registrar una competición revisada sin tandas es obligatorio para distinguir evidencia negativa verificada de una ausencia de datos.
 
 ## Cálculo
 

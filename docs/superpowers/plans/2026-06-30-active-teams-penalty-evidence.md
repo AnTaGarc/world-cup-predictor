@@ -219,8 +219,10 @@ git commit -m "feat(penalties): collect goalkeeper penalty records"
 ### Task 4: Reviewed international shootout dataset
 
 **Files:**
+- Create: `data/fixtures/active_team_shootout_coverage.csv`
 - Create: `data/fixtures/active_team_shootout_kicks.csv`
 - Create: `scripts/import_historical_shootouts.py`
+- Create: `src/wcpredict/historical_shootouts.py`
 - Modify: `src/wcpredict/database.py`
 - Modify: `src/wcpredict/repository.py`
 - Create: `tests/test_historical_shootouts.py`
@@ -228,6 +230,7 @@ git commit -m "feat(penalties): collect goalkeeper penalty records"
 **Interfaces:**
 - Produces: `Repository.save_historical_shootouts(shootouts: list[dict], kicks: list[dict]) -> tuple[int, int]`
 - Produces: `Repository.list_historical_shootout_kicks(team_names: tuple[str, ...], before_utc: datetime) -> list[dict]`
+- Produces: explicit three-competition coverage rows even when a team played no shootout.
 
 - [ ] **Step 1: Write failing import, idempotency, scope, and cutoff tests**
 
@@ -279,7 +282,7 @@ CREATE TABLE IF NOT EXISTS historical_shootout_kicks (
 );
 ```
 
-The CSV columns are `played_on,competition,competition_edition,round_name,team_a,team_b,winner_team,sequence_number,team_name,player_name,goalkeeper_name,outcome,source_provider,source_url,source_row_key,retrieved_at_utc`. Populate it only from cited FIFA/UEFA/confederation or official match-report evidence for active teams.
+The coverage CSV columns are `team_name,competition,competition_edition,competition_end_on,senior,official,source_provider,source_url,retrieved_at_utc`. The kick CSV columns are `played_on,competition,competition_edition,round_name,team_a,team_b,winner_team,sequence_number,team_name,player_name,goalkeeper_name,outcome,source_provider,source_url,source_row_key,retrieved_at_utc`. Populate them only from cited FIFA/UEFA/confederation or official match-report evidence for active teams.
 
 - [ ] **Step 4: Validate fixture coverage and import GREEN**
 
@@ -292,7 +295,7 @@ Expected: tests pass; dry run reports active teams, competitions, shootouts, kic
 - [ ] **Step 5: Commit**
 
 ```powershell
-git add data/fixtures/active_team_shootout_kicks.csv scripts/import_historical_shootouts.py src/wcpredict/database.py src/wcpredict/repository.py tests/test_historical_shootouts.py
+git add data/fixtures/active_team_shootout_coverage.csv data/fixtures/active_team_shootout_kicks.csv scripts/import_historical_shootouts.py src/wcpredict/historical_shootouts.py src/wcpredict/database.py src/wcpredict/repository.py tests/test_historical_shootouts.py
 git commit -m "feat(data): add reviewed international shootouts"
 ```
 
