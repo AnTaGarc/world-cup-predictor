@@ -2,7 +2,11 @@ import unittest
 
 from wcpredict.knockout_model import predict_knockout_match
 from wcpredict.penalty_profiles import GoalkeeperPenaltyProfile
-from wcpredict.penalty_history_model import build_penalty_match_context
+from wcpredict.penalty_history_model import (
+    _starting_goalkeeper_profile,
+    build_penalty_match_context,
+)
+from wcpredict.penalty_substitution_model import SubstitutionConfig
 
 
 class PenaltyHistoryModelTests(unittest.TestCase):
@@ -75,6 +79,59 @@ class PenaltyHistoryModelTests(unittest.TestCase):
         )
         self.assertLess(context.team_a_shootout_win_probability, 0.43)
         self.assertGreater(context.coverage.squad_players, 22)
+
+    def test_starting_goalkeeper_is_fixed_from_confirmed_lineup(self):
+        squad = [
+            {"player_name": "Usual Starter", "position": "GK", "starter_probability": 0.9},
+            {"player_name": "Confirmed Starter", "position": "GK", "starter_probability": 0.1},
+        ]
+
+        profile = _starting_goalkeeper_profile(
+            "Team", squad, ["Confirmed Starter"], [], None,
+            {"Confirmed Starter": 0.80, "Usual Starter": 0.60},
+        )
+
+        self.assertEqual("Confirmed Starter", profile.player_name)
+
+    def test_starting_goalkeeper_falls_back_to_highest_start_probability(self):
+        squad = [
+            {"player_name": "Starter", "position": "GK", "starter_probability": 0.85},
+            {"player_name": "Backup", "position": "GK", "starter_probability": 0.15},
+        ]
+
+        profile = _starting_goalkeeper_profile(
+            "Team", squad, [], [], None,
+            {"Starter": 0.70, "Backup": 0.90},
+        )
+
+        self.assertEqual("Starter", profile.player_name)
+
+    def test_starting_goalkeeper_remains_on_field_for_every_shootout_path(self):
+        squads = self._squads()
+        context = build_penalty_match_context(
+            "A",
+            "B",
+            [],
+            squads=squads,
+            lineups={"A": ["A0"], "B": ["B0"]},
+            seed=4,
+            simulations=300,
+            substitution_config=SubstitutionConfig(
+                change_probability=1.0,
+                max_per_window=2,
+            ),
+        )
+
+        goalkeeper_rows = {
+            (row.team_name, row.player_name): row.on_field_probability
+            for row in context.player_rows
+            if row.role == "GK"
+        }
+        self.assertEqual(1.0, goalkeeper_rows[("A", "A0")])
+        self.assertEqual(0.0, goalkeeper_rows[("A", "AB0")])
+        self.assertEqual(1.0, goalkeeper_rows[("B", "B0")])
+        self.assertEqual(0.0, goalkeeper_rows[("B", "BB0")])
+        self.assertIn("porteros titulares fijos (A0 y B0)", context.explanation)
 
 
 if __name__ == "__main__":

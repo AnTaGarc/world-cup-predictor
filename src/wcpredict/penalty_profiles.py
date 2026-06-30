@@ -46,15 +46,20 @@ def _name_key(value: object) -> str:
     return re.sub(r"[^a-z0-9]+", " ", ascii_value.casefold()).strip()
 
 
-def _as_date(value: object) -> date | None:
+def penalty_attempt_date(value: object) -> date | None:
     if isinstance(value, datetime):
         return value.date()
     if isinstance(value, date):
         return value
     if not value:
         return None
+    raw = str(value).strip()[:10]
     try:
-        return date.fromisoformat(str(value)[:10])
+        return date.fromisoformat(raw)
+    except ValueError:
+        pass
+    try:
+        return datetime.strptime(raw, "%d/%m/%Y").date()
     except ValueError:
         return None
 
@@ -107,7 +112,7 @@ def build_player_profile(
         shootout = str(row.get("phase") or "").casefold() == "shootout"
         shootout_attempts += int(shootout)
         phase_weight = SHOOTOUT_WEIGHT if shootout else REGULAR_WEIGHT
-        attempted_on = _as_date(row.get("attempted_on"))
+        attempted_on = penalty_attempt_date(row.get("attempted_on"))
         age_days = max(0, (as_of - attempted_on).days) if attempted_on else 0
         weight = phase_weight * (0.5 ** (age_days / RECENCY_HALF_LIFE_DAYS))
         if _outcome(row) == "scored":

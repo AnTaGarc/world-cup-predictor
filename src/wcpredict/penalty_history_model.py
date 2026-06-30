@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from collections import Counter
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from datetime import date
 import math
 from random import Random
@@ -12,11 +12,11 @@ from wcpredict.penalty_profiles import (
     PenaltyPlayerProfile,
     build_goalkeeper_profile,
     build_player_profiles,
+    penalty_attempt_date,
 )
 from wcpredict.penalty_shootout_simulator import simulate_shootout
 from wcpredict.penalty_substitution_model import (
     MatchWindowState,
-    ScenarioPlayer,
     SubstitutionConfig,
     normalize_role,
     simulate_substitution_path,
@@ -29,7 +29,7 @@ RECENT_BLEND = 0.35
 MAX_SHOOTOUT_SHIFT = 0.14
 DEFAULT_SIMULATIONS = 25_000
 MAX_SUBSTITUTION_PATH_PAIRS = 1_024
-PENALTY_MODEL_VERSION = "path-monte-carlo-v2"
+PENALTY_MODEL_VERSION = "path-monte-carlo-v3"
 
 
 @dataclass(frozen=True)
@@ -181,10 +181,25 @@ def _score_path(rng: Random) -> list[MatchWindowState]:
     return states
 
 
-def _keeper_for_state(
+def _lineup_name_list(lineup: list[str | dict] | None) -> list[str]:
+    return [
+        (
+            str(item.get("player_name") or item.get("name") or "")
+            if isinstance(item, dict)
+            else str(item)
+        ).strip()
+        for item in (lineup or [])
+    ]
+
+
+def _lineup_names(lineup: list[str | dict] | None) -> set[str]:
+    return set(_lineup_name_list(lineup))
+
+
+def _starting_goalkeeper_profile(
     team_name: str,
-    state_players: tuple[ScenarioPlayer, ...],
-    squad_by_name: dict[str, dict],
+    squad: list[dict],
+    lineup: list[str | dict] | None,
     attempts: list[dict],
     supplied: dict[str, GoalkeeperPenaltyProfile] | None,
     deep_rates: dict[str, float] | None,
@@ -192,15 +207,50 @@ def _keeper_for_state(
     supplied_profile = _mapping_value(supplied, team_name, None)
     if supplied_profile is not None:
         return supplied_profile
-    keeper = next((player for player in state_players if player.role == "GK"), None)
-    if keeper is None:
+
+    keepers = [row for row in squad if normalize_role(row.get("position") or row.get("role")) == "GK"]
+    if not keepers:
         return None
-    deep_rate = (deep_rates or {}).get(keeper.player_name)
+    confirmed_names = _lineup_names(lineup)
+    confirmed = [
+        row for row in keepers
+        if str(row.get("player_name") or row.get("name") or "").strip() in confirmed_names
+    ]
+    candidates = confirmed or keepers
+
+    def starter_rank(row: dict) -> tuple[float, int, float, int]:
+        return (
+            float(row.get("starter_probability") or 0.0),
+            int(row.get("starts") or 0),
+            float(row.get("expected_minutes") or 0.0),
+            int(row.get("minutes") or 0),
+        )
+
+    keeper = max(candidates, key=starter_rank)
+    keeper_name = str(keeper.get("player_name") or keeper.get("name") or "").strip()
+    deep_rate = (deep_rates or {}).get(keeper_name)
     return build_goalkeeper_profile(
-        squad_by_name.get(keeper.player_name, {"player_name": keeper.player_name}),
+        keeper,
         attempts,
         deep_rate,
     )
+
+
+def _lineup_with_goalkeeper(
+    squad: list[dict],
+    lineup: list[str | dict] | None,
+    goalkeeper_name: str | None,
+) -> list[str]:
+    names = _lineup_name_list(lineup)
+    goalkeeper_names = {
+        str(row.get("player_name") or row.get("name") or "").strip()
+        for row in squad
+        if normalize_role(row.get("position") or row.get("role")) == "GK"
+    }
+    names = [name for name in names if name not in goalkeeper_names]
+    if goalkeeper_name:
+        names.append(goalkeeper_name)
+    return names
 
 
 def build_penalty_match_context(
@@ -233,10 +283,23 @@ def build_penalty_match_context(
     player_profiles_b = build_player_profiles(squad_b, attempts_b, as_of)
     lineup_a = _mapping_value(lineups, team_a, None)
     lineup_b = _mapping_value(lineups, team_b, None)
-    squad_a_by_name = {str(row.get("player_name")): row for row in squad_a}
-    squad_b_by_name = {str(row.get("player_name")): row for row in squad_b}
+    keeper_a = _starting_goalkeeper_profile(
+        team_a, squad_a, lineup_a, attempts, goalkeeper_profiles, deep_goalkeeper_rates,
+    )
+    keeper_b = _starting_goalkeeper_profile(
+        team_b, squad_b, lineup_b, attempts, goalkeeper_profiles, deep_goalkeeper_rates,
+    )
+    lineup_a = _lineup_with_goalkeeper(
+        squad_a, lineup_a, keeper_a.player_name if keeper_a is not None else None,
+    )
+    lineup_b = _lineup_with_goalkeeper(
+        squad_b, lineup_b, keeper_b.player_name if keeper_b is not None else None,
+    )
     rng = Random(seed)
-    config = substitution_config or SubstitutionConfig()
+    config = replace(
+        substitution_config or SubstitutionConfig(),
+        allow_goalkeeper_substitution=False,
+    )
     wins_a = 0
     on_field = Counter()
     first_five = Counter()
@@ -255,28 +318,12 @@ def build_penalty_match_context(
         state_b = simulate_substitution_path(squad_b, lineup_b, path_b, rng, config)
         path_bank.append((state_a, state_b))
 
-    keeper_cache_a: dict[str, GoalkeeperPenaltyProfile | None] = {}
-    keeper_cache_b: dict[str, GoalkeeperPenaltyProfile | None] = {}
     for _ in range(simulations):
         state_a, state_b = path_bank[rng.randrange(path_pair_count)]
         for player in state_a.players:
             on_field[(team_a, player.player_name)] += 1
         for player in state_b.players:
             on_field[(team_b, player.player_name)] += 1
-        keeper_name_a = next((player.player_name for player in state_a.players if player.role == "GK"), "")
-        keeper_name_b = next((player.player_name for player in state_b.players if player.role == "GK"), "")
-        if keeper_name_a not in keeper_cache_a:
-            keeper_cache_a[keeper_name_a] = _keeper_for_state(
-                team_a, state_a.players, squad_a_by_name, attempts,
-                goalkeeper_profiles, deep_goalkeeper_rates,
-            )
-        if keeper_name_b not in keeper_cache_b:
-            keeper_cache_b[keeper_name_b] = _keeper_for_state(
-                team_b, state_b.players, squad_b_by_name, attempts,
-                goalkeeper_profiles, deep_goalkeeper_rates,
-            )
-        keeper_a = keeper_cache_a[keeper_name_a]
-        keeper_b = keeper_cache_b[keeper_name_b]
         result = simulate_shootout(
             state_a, state_b, player_profiles_a, player_profiles_b,
             keeper_a, keeper_b, rng,
@@ -326,8 +373,12 @@ def build_penalty_match_context(
     )
     p_a = wins_a / simulations
     standard_error = math.sqrt(p_a * (1.0 - p_a) / simulations)
+    keeper_summary = ""
+    if keeper_a is not None and keeper_b is not None:
+        keeper_summary = f" ({keeper_a.player_name} y {keeper_b.player_name})"
     explanation = (
-        f"{simulations:,} escenarios prepartido con cambios por rol y marcador; "
+        f"{simulations:,} escenarios prepartido con porteros titulares fijos{keeper_summary} "
+        f"y cambios de jugadores de campo por rol y marcador; "
         f"probabilidad de tanda para {team_a}: {p_a:.1%}. "
         f"Cobertura penalty_history: {coverage.players_with_history}/{coverage.squad_players} jugadores."
     )
@@ -345,9 +396,5 @@ def build_penalty_match_context(
 
 
 def _attempt_sort_key(row: dict) -> tuple[date, str]:
-    raw = str(row.get("attempted_on") or "")
-    try:
-        parsed = date.fromisoformat(raw[:10])
-    except ValueError:
-        parsed = date.min
+    parsed = penalty_attempt_date(row.get("attempted_on")) or date.min
     return parsed, str(row.get("source_row_key") or "")

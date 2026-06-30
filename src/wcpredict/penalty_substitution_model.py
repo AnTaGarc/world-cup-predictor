@@ -29,6 +29,7 @@ class SubstitutionConfig:
     )
     change_probability: float = 0.62
     max_per_window: int = 2
+    allow_goalkeeper_substitution: bool = True
 
 
 @dataclass(frozen=True)
@@ -249,6 +250,11 @@ def simulate_substitution_path(
             weights: list[float] = []
             for outgoing in on_field:
                 for incoming in bench:
+                    if (
+                        not config.allow_goalkeeper_substitution
+                        and (outgoing.role == "GK" or incoming.role == "GK")
+                    ):
+                        continue
                     weight = _pair_weight(outgoing, incoming, state)
                     if weight > 0:
                         pairs.append((outgoing, incoming))

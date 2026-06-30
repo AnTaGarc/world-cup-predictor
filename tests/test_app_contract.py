@@ -252,6 +252,8 @@ class AppContractTests(unittest.TestCase):
             source.index("def _penalty_match_context(match)")
         ]
         self.assertIn("load_precomputed_context", section)
+        self.assertIn("repository_penalty_input_fingerprint", section)
+        self.assertIn("expected_input_fingerprint=", section)
         self.assertNotIn("squads=", section)
         self.assertIn("pendiente de precálculo", section)
 

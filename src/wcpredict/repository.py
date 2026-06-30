@@ -2159,14 +2159,16 @@ class Repository:
         self, team_names: tuple[str, ...], before_utc: datetime
     ) -> list[dict]:
         """Return historical plus active reviewed tournament penalty evidence."""
+        from wcpredict.penalty_profiles import penalty_attempt_date
+
         canonical = {canonical_team_name(team) for team in team_names}
-        cutoff_date = before_utc.date().isoformat()
+        cutoff_date = before_utc.date()
         historical = []
         for row in self.list_penalty_attempts():
             if canonical_team_name(str(row.get("team_name") or "")) not in canonical:
                 continue
-            attempted_on = str(row.get("attempted_on") or "")[:10]
-            if attempted_on and attempted_on >= cutoff_date:
+            attempted_on = penalty_attempt_date(row.get("attempted_on"))
+            if attempted_on is not None and attempted_on >= cutoff_date:
                 continue
             historical.append(row)
         with self.session() as con:

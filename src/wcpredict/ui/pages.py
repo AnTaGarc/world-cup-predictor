@@ -39,7 +39,10 @@ from wcpredict.knockout_bracket import (
 )
 from wcpredict.knockout_model import predict_knockout_match
 from wcpredict.penalty_history_model import PENALTY_MODEL_VERSION, build_penalty_match_context
-from wcpredict.penalty_context_cache import load_precomputed_context
+from wcpredict.penalty_context_cache import (
+    load_precomputed_context,
+    repository_penalty_input_fingerprint,
+)
 from wcpredict.extra_time_model import adjust_extra_time_xg
 from wcpredict.knockout_audit import (
     build_knockout_snapshot_section,
@@ -815,11 +818,17 @@ def _penalty_match_context_cached(
     repo = _repo()
     match = repo.get_match(match_id)
     team_a, team_b = match.team_a.name, match.team_b.name
+    input_fingerprint = repository_penalty_input_fingerprint(
+        repo,
+        match,
+        model_version=model_version,
+    )
     precomputed = load_precomputed_context(
         PRECOMPUTED_PENALTY_DIR,
         team_a,
         team_b,
         model_version=model_version,
+        expected_input_fingerprint=input_fingerprint,
     )
     if precomputed is not None:
         return precomputed

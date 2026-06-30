@@ -93,6 +93,24 @@ class TournamentPenaltyEvidenceTests(unittest.TestCase):
         self.assertEqual(1, taker.attempts)
         self.assertEqual(0, transfermarkt_rows)
 
+    def test_day_first_historical_dates_respect_pre_match_cutoff(self):
+        common = {
+            "player_name": "Spain Taker 0",
+            "team_name": "Spain",
+            "outcome": "scored",
+            "source_provider": "transfermarkt",
+            "source_url": "https://example.test/penalties",
+            "fetched_at_utc": self.kickoff.isoformat(),
+        }
+        self.repo.save_penalty_attempts([
+            {**common, "attempted_on": "27/06/2026", "source_row_key": "before"},
+            {**common, "attempted_on": "01/07/2026", "source_row_key": "after"},
+        ])
+
+        evidence = self.repo.list_penalty_evidence(("Spain",), self.kickoff)
+
+        self.assertEqual(["before"], [row["source_row_key"] for row in evidence])
+
 
 if __name__ == "__main__":
     unittest.main()

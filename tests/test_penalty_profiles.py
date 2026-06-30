@@ -32,6 +32,21 @@ class PenaltyProfileTests(unittest.TestCase):
         weak = build_player_profile("Taker", "FW", old, date(2026, 6, 28))
         self.assertGreater(strong.effective_attempts, weak.effective_attempts)
 
+    def test_transfermarkt_day_first_dates_drive_recency_weighting(self):
+        recent = [{
+            "player_name": "Taker", "phase": "regular", "outcome": "scored",
+            "attempted_on": "01/06/2026",
+        }]
+        old = [{
+            "player_name": "Taker", "phase": "regular", "outcome": "scored",
+            "attempted_on": "01/06/2016",
+        }]
+
+        strong = build_player_profile("Taker", "FW", recent, date(2026, 6, 28))
+        weak = build_player_profile("Taker", "FW", old, date(2026, 6, 28))
+
+        self.assertGreater(strong.effective_attempts, weak.effective_attempts)
+
     def test_goalkeeper_penalty_history_dominates_general_rate_only_with_sample(self):
         keeper = {"player_name": "Keeper", "save_percentage": 80.0}
         one = [{"goalkeeper_name": "Keeper", "outcome": "saved"}]
