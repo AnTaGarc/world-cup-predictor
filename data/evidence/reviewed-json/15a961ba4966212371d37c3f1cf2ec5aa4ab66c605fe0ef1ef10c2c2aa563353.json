@@ -1,0 +1,278 @@
+{
+  "descripcion": "Estadísticas profundas revisadas manualmente a partir de capturas de SofaScore.",
+  "numero_de_partidos": 1,
+  "partidos": [
+    {
+      "id": "brasil_japon",
+      "nombre": "Brasil vs Japón",
+      "equipos": {
+        "izquierda_verde": "Brasil",
+        "derecha_azul": "Japón"
+      },
+      "estadisticas": {
+        "resumen_del_partido": {
+          "posesion_de_balon_pct": {
+            "Brasil": 69,
+            "Japón": 31
+          },
+          "goles_esperados_xg": {
+            "Brasil": 1.72,
+            "Japón": 0.23
+          },
+          "ocasiones_claras": {
+            "Brasil": 4,
+            "Japón": 0
+          },
+          "tiros_totales": {
+            "Brasil": 19,
+            "Japón": 5
+          },
+          "paradas": {
+            "Brasil": 1,
+            "Japón": 4
+          },
+          "saques_de_esquina": {
+            "Brasil": 6,
+            "Japón": 2
+          },
+          "faltas": {
+            "Brasil": 4,
+            "Japón": 13
+          },
+          "pases": {
+            "Brasil": 682,
+            "Japón": 315
+          },
+          "entradas": {
+            "Brasil": 12,
+            "Japón": 10
+          },
+          "tiros_libres": {
+            "Brasil": 13,
+            "Japón": 4
+          },
+          "tarjetas_amarillas": {
+            "Brasil": 2,
+            "Japón": 3
+          }
+        },
+        "tiros": {
+          "tiros_totales": {
+            "Brasil": 19,
+            "Japón": 5
+          },
+          "tiros_a_puerta": {
+            "Brasil": 7,
+            "Japón": 2
+          },
+          "tiros_al_palo": {
+            "Brasil": 1,
+            "Japón": 0
+          },
+          "tiros_fuera": {
+            "Brasil": 6,
+            "Japón": 1
+          },
+          "tiros_bloqueados": {
+            "Brasil": 6,
+            "Japón": 2
+          },
+          "tiros_dentro_del_area_penal": {
+            "Brasil": 12,
+            "Japón": 2
+          },
+          "tiros_fuera_del_area": {
+            "Brasil": 7,
+            "Japón": 3
+          }
+        },
+        "ataque": {
+          "ocasiones_claras_realizadas": {
+            "Brasil": 2,
+            "Japón": 0
+          },
+          "ocasiones_claras_falladas": {
+            "Brasil": 2,
+            "Japón": 0
+          },
+          "toques_dentro_del_area": {
+            "Brasil": 35,
+            "Japón": 11
+          },
+          "faltas_recibidas_en_el_tercio_final": {
+            "Brasil": 4,
+            "Japón": 1
+          },
+          "fueras_de_juego": {
+            "Brasil": 1,
+            "Japón": 0
+          }
+        },
+        "duelos": {
+          "duelos_pct": {
+            "Brasil": 55,
+            "Japón": 45
+          },
+          "perdidas": {
+            "Brasil": 5,
+            "Japón": 9
+          },
+          "duelos_en_el_suelo": {
+            "Brasil": {
+              "ganados": 27,
+              "totales": 44,
+              "porcentaje": 61
+            },
+            "Japón": {
+              "ganados": 17,
+              "totales": 44,
+              "porcentaje": 39
+            }
+          },
+          "duelos_aereos": {
+            "Brasil": {
+              "ganados": 12,
+              "totales": 27,
+              "porcentaje": 44
+            },
+            "Japón": {
+              "ganados": 15,
+              "totales": 27,
+              "porcentaje": 56
+            }
+          },
+          "regates": {
+            "Brasil": {
+              "completados": 5,
+              "intentados": 10,
+              "porcentaje": 50
+            },
+            "Japón": {
+              "completados": 3,
+              "intentados": 6,
+              "porcentaje": 50
+            }
+          }
+        },
+        "pases": {
+          "pases_precisos": {
+            "Brasil": 625,
+            "Japón": 261
+          },
+          "saques_de_banda": {
+            "Brasil": 21,
+            "Japón": 16
+          },
+          "pases_al_ultimo_tercio": {
+            "Brasil": 107,
+            "Japón": 44
+          },
+          "pases_en_el_ultimo_tercio": {
+            "Brasil": {
+              "completados": 210,
+              "intentados": 242,
+              "porcentaje": 87
+            },
+            "Japón": {
+              "completados": 55,
+              "intentados": 80,
+              "porcentaje": 69
+            }
+          },
+          "pases_largos": {
+            "Brasil": {
+              "completados": 21,
+              "intentados": 45,
+              "porcentaje": 47
+            },
+            "Japón": {
+              "completados": 24,
+              "intentados": 45,
+              "porcentaje": 53
+            }
+          },
+          "centros": {
+            "Brasil": {
+              "completados": 9,
+              "intentados": 40,
+              "porcentaje": 23
+            },
+            "Japón": {
+              "completados": 2,
+              "intentados": 10,
+              "porcentaje": 20
+            }
+          }
+        },
+        "defensa": {
+          "entradas_ganadas_pct": {
+            "Brasil": 67,
+            "Japón": 40
+          },
+          "tackles_totales": {
+            "Brasil": 12,
+            "Japón": 10
+          },
+          "intercepciones": {
+            "Brasil": 9,
+            "Japón": 4
+          },
+          "recuperaciones": {
+            "Brasil": 38,
+            "Japón": 32
+          },
+          "despejes": {
+            "Brasil": 18,
+            "Japón": 45
+          },
+          "errores_que_llevan_a_gol": {
+            "Brasil": 1,
+            "Japón": 1
+          }
+        },
+        "porteria": {
+          "paradas": {
+            "Brasil": 1,
+            "Japón": 4
+          },
+          "goles_evitados": {
+            "Brasil": -0.54,
+            "Japón": -0.3
+          },
+          "grandes_paradas": {
+            "Brasil": 0,
+            "Japón": 1
+          },
+          "despejes_por_alto": {
+            "Brasil": 0,
+            "Japón": 4
+          },
+          "con_los_punos": {
+            "Brasil": 0,
+            "Japón": 2
+          },
+          "saques_de_puerta": {
+            "Brasil": 4,
+            "Japón": 10
+          }
+        },
+        "mapa_de_ataques": {
+          "equipo_mostrado": "Brasil",
+          "direccion_de_ataque": "hacia_la_derecha",
+          "descripcion": "Mapa de ataques mostrado para Brasil."
+        },
+        "mapa_de_pases": {
+          "tipo_de_dato": "distribucion_global_no_atribuible_por_equipo",
+          "tercio_defensivo_pct": 18,
+          "tercio_central_pct": 43,
+          "tercio_ofensivo_pct": 39
+        }
+      },
+      "fuentes": [
+        "Captura de pantalla 2026-06-29 211812.png",
+        "Captura de pantalla 2026-06-29 211828.png",
+        "Captura de pantalla 2026-06-29 211839.png"
+      ]
+    }
+  ]
+}
