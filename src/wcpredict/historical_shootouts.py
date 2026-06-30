@@ -10,7 +10,7 @@ from wcpredict.names import canonical_team_name
 from wcpredict.repository import Repository
 
 
-VALID_OUTCOMES = {"scored", "saved", "off_target", "woodwork"}
+VALID_OUTCOMES = {"scored", "saved", "missed", "off_target", "woodwork"}
 
 
 @dataclass(frozen=True)

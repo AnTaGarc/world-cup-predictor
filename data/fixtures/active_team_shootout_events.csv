@@ -1,0 +1,25 @@
+espn_event_id,espn_league,played_on,competition,competition_edition,round_name,team_a,team_b,winner_team,retrieved_at_utc
+723708,uefa.nations,2025-03-23,UEFA Nations League,2024/25,Quarter-final,Netherlands,Spain,Spain,2026-06-30T12:00:00+00:00
+723738,uefa.nations,2025-06-08,UEFA Nations League,2024/25,Final,Spain,Portugal,Portugal,2026-06-30T12:00:00+00:00
+703936,uefa.euro,2024-07-01,EURO,2024,Round of 16,Portugal,Slovenia,Portugal,2026-06-30T12:00:00+00:00
+703940,uefa.euro,2024-07-05,EURO,2024,Quarter-final,Portugal,France,France,2026-06-30T12:00:00+00:00
+703941,uefa.euro,2024-07-06,EURO,2024,Quarter-final,England,Switzerland,England,2026-06-30T12:00:00+00:00
+654361,uefa.nations,2023-06-18,UEFA Nations League,2022/23,Final,Croatia,Spain,Spain,2026-06-30T12:00:00+00:00
+732183,caf.nations,2026-01-17,Africa Cup of Nations,2025,Third-place match,Egypt,Nigeria,Nigeria,2026-06-30T12:00:00+00:00
+697524,caf.nations,2024-01-28,Africa Cup of Nations,2023,Round of 16,Egypt,Congo DR,Congo DR,2026-06-30T12:00:00+00:00
+697526,caf.nations,2024-01-29,Africa Cup of Nations,2023,Round of 16,Senegal,Cote d'Ivoire,Cote d'Ivoire,2026-06-30T12:00:00+00:00
+698137,caf.nations,2024-02-03,Africa Cup of Nations,2023,Quarter-final,Cape Verde,South Africa,South Africa,2026-06-30T12:00:00+00:00
+698615,caf.nations,2024-02-10,Africa Cup of Nations,2023,Third-place match,South Africa,Congo DR,South Africa,2026-06-30T12:00:00+00:00
+629162,caf.nations,2022-01-26,Africa Cup of Nations,2021,Round of 16,Cote d'Ivoire,Egypt,Egypt,2026-06-30T12:00:00+00:00
+629155,caf.nations,2022-02-03,Africa Cup of Nations,2021,Semi-final,Cameroon,Egypt,Egypt,2026-06-30T12:00:00+00:00
+629153,caf.nations,2022-02-06,Africa Cup of Nations,2021,Final,Senegal,Egypt,Senegal,2026-06-30T12:00:00+00:00
+703946,conmebol.america,2024-07-04,Copa America,2024,Quarter-final,Argentina,Ecuador,Argentina,2026-06-30T12:00:00+00:00
+703947,conmebol.america,2024-07-05,Copa America,2024,Quarter-final,Venezuela,Canada,Canada,2026-06-30T12:00:00+00:00
+703949,conmebol.america,2024-07-06,Copa America,2024,Quarter-final,Uruguay,Brazil,Uruguay,2026-06-30T12:00:00+00:00
+703952,conmebol.america,2024-07-13,Copa America,2024,Third-place match,Canada,Uruguay,Uruguay,2026-06-30T12:00:00+00:00
+603187,conmebol.america,2021-07-03,Copa America,2021,Quarter-final,Uruguay,Colombia,Colombia,2026-06-30T12:00:00+00:00
+603184,conmebol.america,2021-07-06,Copa America,2021,Semi-final,Argentina,Colombia,Argentina,2026-06-30T12:00:00+00:00
+547348,conmebol.america,2019-06-28,Copa America,2019,Quarter-final,Colombia,Chile,Chile,2026-06-30T12:00:00+00:00
+735344,concacaf.gold,2025-06-29,CONCACAF Gold Cup,2025,Quarter-final,Canada,Guatemala,Guatemala,2026-06-30T12:00:00+00:00
+735342,concacaf.gold,2025-06-29,CONCACAF Gold Cup,2025,Quarter-final,USA,Costa Rica,USA,2026-06-30T12:00:00+00:00
+535322,afc.asian.cup,2019-01-21,AFC Asian Cup,2019,Round of 16,Australia,Uzbekistan,Australia,2026-06-30T12:00:00+00:00

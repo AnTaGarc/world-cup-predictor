@@ -98,6 +98,29 @@ class HistoricalShootoutTests(unittest.TestCase):
         self.assertEqual(2, summary.kick_rows)
         self.assertEqual([], self.repo.list_historical_shootout_coverage("Morocco"))
 
+    def test_import_accepts_generic_missed_outcome_when_source_cannot_classify_it(self):
+        self.kicks.write_text(
+            self.kicks.read_text(encoding="utf-8").replace(
+                ",Soler,Yassine Bounou,saved,fifa,",
+                ",Soler,,missed,fifa,",
+            ),
+            encoding="utf-8",
+        )
+
+        summary = import_historical_shootout_csv(
+            self.repo,
+            self.coverage,
+            self.kicks,
+            active_teams={"Morocco"},
+        )
+
+        kicks = self.repo.list_historical_shootout_kicks(
+            ("Morocco",), datetime(2026, 6, 28, tzinfo=timezone.utc)
+        )
+        self.assertEqual(2, summary.kick_rows)
+        self.assertEqual("missed", kicks[1]["outcome"])
+        self.assertFalse(kicks[1]["goalkeeper_name"])
+
 
 if __name__ == "__main__":
     unittest.main()
