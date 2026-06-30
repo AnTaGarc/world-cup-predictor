@@ -36,6 +36,7 @@ class DatabaseRepositoryTests(unittest.TestCase):
                 "source_catalog",
                 "sentiment_snapshots",
                 "outcome_model_runs",
+                "goalkeeper_penalty_attempts",
             }.issubset(tables)
         )
         self.assertEqual(
@@ -44,6 +45,52 @@ class DatabaseRepositoryTests(unittest.TestCase):
         self.assertEqual(
             "verified_user_capture", EvidenceStatus.VERIFIED_USER_CAPTURE.value
         )
+
+    def test_goalkeeper_penalty_attempts_are_separate_idempotent_and_cut_off(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            repo = Repository(Path(tmp) / "worldcup.sqlite")
+            repo.initialize()
+            common = {
+                "goalkeeper_name": "Yassine Bounou",
+                "transfermarkt_player_id": "207834",
+                "competition": "Test",
+                "phase": "regular",
+                "taker_name": "Taker",
+                "opponent_team": "Opponent",
+                "match_label": "Test match",
+                "source_provider": "transfermarkt",
+                "source_url": "https://example.test/keeper",
+                "fetched_at_utc": "2026-06-30T10:00:00+00:00",
+                "raw": {"cells": ["test"]},
+            }
+            rows = [
+                {
+                    **common,
+                    "attempted_on": "27/06/2026",
+                    "outcome": "saved",
+                    "source_row_key": "before",
+                },
+                {
+                    **common,
+                    "attempted_on": "01/07/2026",
+                    "outcome": "scored",
+                    "source_row_key": "after",
+                },
+            ]
+
+            self.assertEqual(2, repo.save_goalkeeper_penalty_attempts(rows))
+            self.assertEqual(2, repo.save_goalkeeper_penalty_attempts(rows))
+            stored = repo.list_goalkeeper_penalty_attempts(
+                "Yassine Bounou",
+                datetime(2026, 6, 30, tzinfo=timezone.utc),
+            )
+            with repo.session() as con:
+                taker_rows = con.execute(
+                    "SELECT COUNT(*) FROM penalty_attempts"
+                ).fetchone()[0]
+
+        self.assertEqual(["before"], [row["source_row_key"] for row in stored])
+        self.assertEqual(0, taker_rows)
 
     def test_schema_creates_core_tables(self):
         with tempfile.TemporaryDirectory() as tmp:

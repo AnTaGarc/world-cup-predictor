@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta, timezone
+from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 from contextlib import contextmanager
 import json
@@ -2154,6 +2154,77 @@ class Repository:
         with self.session() as con:
             rows = con.execute(query, tuple(params)).fetchall()
         return [dict(row) for row in rows]
+
+    def save_goalkeeper_penalty_attempts(self, attempts: list[dict]) -> int:
+        if not attempts:
+            return 0
+        written = 0
+        with self.session() as con:
+            for row in attempts:
+                before = con.total_changes
+                con.execute(
+                    "INSERT INTO goalkeeper_penalty_attempts("
+                    "goalkeeper_name, transfermarkt_player_id, attempted_on, competition, "
+                    "phase, outcome, taker_name, opponent_team, match_label, source_provider, "
+                    "source_url, source_row_key, fetched_at_utc, raw_json"
+                    ") VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) "
+                    "ON CONFLICT(source_provider, source_row_key) DO UPDATE SET "
+                    "goalkeeper_name=excluded.goalkeeper_name, "
+                    "transfermarkt_player_id=excluded.transfermarkt_player_id, "
+                    "attempted_on=excluded.attempted_on, competition=excluded.competition, "
+                    "phase=excluded.phase, outcome=excluded.outcome, "
+                    "taker_name=excluded.taker_name, opponent_team=excluded.opponent_team, "
+                    "match_label=excluded.match_label, source_url=excluded.source_url, "
+                    "fetched_at_utc=excluded.fetched_at_utc, raw_json=excluded.raw_json",
+                    (
+                        row["goalkeeper_name"],
+                        row.get("transfermarkt_player_id"),
+                        row.get("attempted_on"),
+                        row.get("competition"),
+                        row.get("phase") or "regular",
+                        row["outcome"],
+                        row.get("taker_name"),
+                        row.get("opponent_team"),
+                        row.get("match_label"),
+                        row.get("source_provider") or "transfermarkt",
+                        row["source_url"],
+                        row["source_row_key"],
+                        row["fetched_at_utc"],
+                        json.dumps(row.get("raw") or {}, ensure_ascii=False, sort_keys=True),
+                    ),
+                )
+                if con.total_changes > before:
+                    written += 1
+        return written
+
+    def list_goalkeeper_penalty_attempts(
+        self,
+        goalkeeper_name: str,
+        before_utc: datetime,
+    ) -> list[dict]:
+        from wcpredict.penalty_profiles import penalty_attempt_date
+
+        with self.session() as con:
+            rows = con.execute(
+                "SELECT * FROM goalkeeper_penalty_attempts WHERE goalkeeper_name=?",
+                (goalkeeper_name,),
+            ).fetchall()
+        cutoff = before_utc.date()
+        eligible = []
+        for raw in rows:
+            row = dict(raw)
+            attempted_on = penalty_attempt_date(row.get("attempted_on"))
+            if attempted_on is not None and attempted_on >= cutoff:
+                continue
+            eligible.append(row)
+        eligible.sort(
+            key=lambda row: (
+                penalty_attempt_date(row.get("attempted_on")) or date.min,
+                str(row.get("source_row_key") or ""),
+            ),
+            reverse=True,
+        )
+        return eligible
 
     def list_penalty_evidence(
         self, team_names: tuple[str, ...], before_utc: datetime

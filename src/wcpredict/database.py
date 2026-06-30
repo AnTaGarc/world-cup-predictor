@@ -202,6 +202,25 @@ CREATE TABLE IF NOT EXISTS penalty_attempts (
     UNIQUE(source_provider, source_row_key)
 );
 
+CREATE TABLE IF NOT EXISTS goalkeeper_penalty_attempts (
+    id INTEGER PRIMARY KEY,
+    goalkeeper_name TEXT NOT NULL,
+    transfermarkt_player_id TEXT,
+    attempted_on TEXT,
+    competition TEXT,
+    phase TEXT NOT NULL,
+    outcome TEXT NOT NULL,
+    taker_name TEXT,
+    opponent_team TEXT,
+    match_label TEXT,
+    source_provider TEXT NOT NULL,
+    source_url TEXT NOT NULL,
+    source_row_key TEXT NOT NULL,
+    fetched_at_utc TEXT NOT NULL,
+    raw_json TEXT NOT NULL DEFAULT '{}',
+    UNIQUE(source_provider, source_row_key)
+);
+
 CREATE TABLE IF NOT EXISTS historical_matches (
     id INTEGER PRIMARY KEY,
     played_at_utc TEXT NOT NULL,
