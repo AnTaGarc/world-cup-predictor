@@ -3228,7 +3228,7 @@ class Repository:
                     specific_stage = (
                         None
                         if incoming_stage.casefold() in {
-                            "fifa world cup", "fifa world cup 2026"
+                            "fifa world cup", "fifa world cup 2026", "group stage"
                         }
                         else incoming_stage
                     )
@@ -3249,7 +3249,8 @@ class Repository:
                             "INSERT INTO matches(competition, stage, kickoff_utc, team_a_id, team_b_id, status, venue, neutral_site) "
                             "VALUES('FIFA World Cup 2026', ?, ?, ?, ?, ?, ?, 1) "
                             "ON CONFLICT(competition, kickoff_utc, team_a_id, team_b_id) DO UPDATE SET "
-                            "stage=CASE WHEN lower(excluded.stage) IN ('fifa world cup', 'fifa world cup 2026') "
+                            "stage=CASE WHEN lower(excluded.stage) IN "
+                            "('fifa world cup', 'fifa world cup 2026', 'group stage') "
                             "THEN matches.stage ELSE excluded.stage END, "
                             "status=excluded.status, venue=COALESCE(excluded.venue, matches.venue)",
                             (incoming_stage, kickoff, team_ids[0], team_ids[1], match_status, row.get("venue")),

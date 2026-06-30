@@ -319,6 +319,36 @@ class KnockoutBracketTests(unittest.TestCase):
                 ).fetchone()
         self.assertEqual((COMPETITION, "Round of 32"), repaired)
 
+    def test_resolution_keeps_persisted_third_when_group_recalculation_is_unavailable(self):
+        with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as tmp:
+            repo = Repository(Path(tmp) / "app.sqlite")
+            repo.initialize()
+            seed_knockout_bracket(repo, KNOCKOUT_CSV)
+            mexico = repo.upsert_team("Mexico")
+            ecuador = repo.upsert_team("Ecuador")
+            match_id = repo.upsert_match(
+                COMPETITION,
+                "Round of 32",
+                datetime(2026, 6, 30, 18, tzinfo=timezone.utc),
+                mexico,
+                ecuador,
+                "scheduled",
+            )
+            with sqlite3.connect(repo.path) as con:
+                con.execute(
+                    "UPDATE knockout_bracket SET home_team_id=?, away_team_id=?, match_id=? "
+                    "WHERE slot_id='M79'",
+                    (mexico, ecuador, match_id),
+                )
+                con.commit()
+
+            resolve_knockout_bracket(repo)
+
+            m79 = next(row for row in bracket_view(repo) if row["slot_id"] == "M79")
+        self.assertEqual("Mexico", m79["home"])
+        self.assertEqual("Ecuador", m79["away"])
+        self.assertFalse(m79["away_pending"])
+
     def test_group_standings_use_head_to_head_before_goal_difference(self):
         with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as tmp:
             repo = Repository(Path(tmp) / "app.sqlite")

@@ -170,6 +170,66 @@ class WorldCupDataTests(unittest.TestCase):
 
             self.assertEqual("Group stage - Group J", repo.get_match(match_id).stage)
 
+    def test_generic_group_stage_does_not_overwrite_seeded_group(self):
+        with tempfile.TemporaryDirectory() as directory:
+            repo = Repository(Path(directory) / "app.sqlite")
+            repo.initialize()
+            team_a = repo.upsert_team("Mexico")
+            team_b = repo.upsert_team("Ecuador")
+            kickoff = datetime(2026, 6, 24, 18, tzinfo=timezone.utc)
+            match_id = repo.upsert_match(
+                "FIFA World Cup 2026",
+                "Group stage - Group A",
+                kickoff,
+                team_a,
+                team_b,
+                "scheduled",
+            )
+            download = DatasetDownload(
+                "swaptr_wc2026_matches",
+                "v-generic-group",
+                b"date,time,stage,home_team,away_team,home_score,away_score\n"
+                b"2026-06-24,18:00,Group stage,Mexico,Ecuador,2,1\n",
+                datetime(2026, 6, 25, tzinfo=timezone.utc),
+                1,
+            )
+
+            import_world_cup_download(
+                repo, download, datetime(2026, 6, 25, 8, tzinfo=timezone.utc)
+            )
+
+            self.assertEqual("Group stage - Group A", repo.get_match(match_id).stage)
+
+    def test_generic_group_stage_preserves_seeded_group_for_reversed_pair(self):
+        with tempfile.TemporaryDirectory() as directory:
+            repo = Repository(Path(directory) / "app.sqlite")
+            repo.initialize()
+            team_a = repo.upsert_team("Mexico")
+            team_b = repo.upsert_team("Ecuador")
+            kickoff = datetime(2026, 6, 24, 18, tzinfo=timezone.utc)
+            match_id = repo.upsert_match(
+                "FIFA World Cup 2026",
+                "Group stage - Group A",
+                kickoff,
+                team_a,
+                team_b,
+                "scheduled",
+            )
+            download = DatasetDownload(
+                "swaptr_wc2026_matches",
+                "v-generic-group-reversed",
+                b"date,time,stage,home_team,away_team,home_score,away_score\n"
+                b"2026-06-24,18:00,Group stage,Ecuador,Mexico,1,2\n",
+                datetime(2026, 6, 25, tzinfo=timezone.utc),
+                1,
+            )
+
+            import_world_cup_download(
+                repo, download, datetime(2026, 6, 25, 8, tzinfo=timezone.utc)
+            )
+
+            self.assertEqual("Group stage - Group A", repo.get_match(match_id).stage)
+
     def test_parser_keeps_fixture_time_stage_and_status(self):
         row = parse_match_rows(
             "date,kickoff_time,round,home_team,away_team,status\n"

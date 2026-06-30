@@ -656,11 +656,14 @@ def resolve_knockout_bracket(repo: Repository, now: datetime | None = None) -> d
                     # Third-place assignment is table-driven and may be
                     # corrected after a provisional/fallback resolution. It
                     # must therefore be recalculated even when an id is already
-                    # persisted; other source types retain their stable id.
+                    # persisted.  If the table cannot be rebuilt yet, retain a
+                    # previously persisted assignment instead of erasing it.
                     if _parse_third_allowed(source) is not None:
-                        return _resolve_source(
-                            con, source, slots_by_id, third_assignment, slot.slot_id,
-                        )
+                        if third_assignment:
+                            return _resolve_source(
+                                con, source, slots_by_id, third_assignment, slot.slot_id,
+                            )
+                        return existing_id
                     return existing_id or _resolve_source(
                         con, source, slots_by_id, third_assignment, slot.slot_id,
                     )
