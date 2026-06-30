@@ -14,32 +14,39 @@ from wcpredict.repository import Repository
 
 
 class KnockoutSettlementUiTests(unittest.TestCase):
-    def test_regulation_path_hides_extra_time_and_shootout(self):
+    def test_regulation_path_only_exposes_required_90_minute_total(self):
         state = build_settlement_sections("regulation")
 
-        self.assertEqual(
-            ("first_half", "second_half", "regulation_total"),
-            state.visible_periods,
-        )
+        self.assertEqual(("regulation_total",), state.visible_periods)
         self.assertFalse(state.show_extra_time_score)
         self.assertFalse(state.show_shootout)
+        statuses = period_statuses("regulation", set(), [])
+        self.assertEqual("pending", statuses["regulation_total"])
+        self.assertEqual("not_played", statuses["first_half"])
 
-    def test_shootout_path_exposes_all_periods_and_editor(self):
+    def test_shootout_path_exposes_atomic_periods_and_optional_120_total(self):
         state = build_settlement_sections("shootout")
 
-        self.assertIn("extra_time_first", state.visible_periods)
-        self.assertIn("full_match_total", state.visible_periods)
+        self.assertEqual(
+            (
+                "first_half", "second_half", "extra_time_first",
+                "extra_time_second", "full_match_total",
+            ),
+            state.visible_periods,
+        )
         self.assertTrue(state.show_extra_time_score)
         self.assertTrue(state.show_shootout)
+        statuses = period_statuses("shootout", set(), [])
+        self.assertEqual("optional", statuses["full_match_total"])
+        self.assertEqual("not_played", statuses["regulation_total"])
+        self.assertEqual("not_played", statuses["extra_time_total"])
 
-    def test_optional_cumulative_periods_do_not_remain_pending(self):
-        statuses = period_statuses(
-            "regulation", {"first_half", "second_half"}, []
-        )
+    def test_hidden_cumulative_periods_do_not_affect_extra_time_statuses(self):
+        statuses = period_statuses("extra_time", {"regulation_total", "extra_time_total"}, [])
 
-        self.assertEqual("imported", statuses["first_half"])
-        self.assertEqual("optional", statuses["regulation_total"])
-        self.assertEqual("not_played", statuses["extra_time_first"])
+        self.assertEqual("pending", statuses["first_half"])
+        self.assertEqual("not_played", statuses["regulation_total"])
+        self.assertEqual("not_played", statuses["extra_time_total"])
 
     def test_regulation_total_alone_is_enough_to_close_at_90_minutes(self):
         draft = KnockoutSettlementDraft(
@@ -53,14 +60,14 @@ class KnockoutSettlementUiTests(unittest.TestCase):
         self.assertEqual((), validate_settlement_draft(draft))
         statuses = period_statuses("regulation", {"regulation_total"}, [])
         self.assertEqual("imported", statuses["regulation_total"])
-        self.assertEqual("optional", statuses["first_half"])
-        self.assertEqual("optional", statuses["second_half"])
+        self.assertEqual("not_played", statuses["first_half"])
+        self.assertEqual("not_played", statuses["second_half"])
 
-    def test_regulation_requires_total_or_both_halves(self):
+    def test_regulation_requires_total_even_when_both_halves_exist(self):
         draft = KnockoutSettlementDraft(
             phase_result=MatchPhaseResultInput(2, 0, None, None, None, None, "regulation"),
             kicks=(),
-            imported_periods=frozenset({"first_half"}),
+            imported_periods=frozenset({"first_half", "second_half"}),
             goalkeeper_a_id=None,
             goalkeeper_b_id=None,
         )
@@ -69,11 +76,26 @@ class KnockoutSettlementUiTests(unittest.TestCase):
 
         self.assertTrue(any("acumulado" in error.casefold() for error in errors))
 
-    def test_extra_time_total_can_replace_both_extra_time_halves(self):
+    def test_extra_time_totals_cannot_replace_four_atomic_periods(self):
         draft = KnockoutSettlementDraft(
             phase_result=MatchPhaseResultInput(1, 1, 1, 0, None, None, "extra_time"),
             kicks=(),
             imported_periods=frozenset({"regulation_total", "extra_time_total"}),
+            goalkeeper_a_id=None,
+            goalkeeper_b_id=None,
+        )
+
+        errors = validate_settlement_draft(draft)
+
+        self.assertTrue(any("primera y segunda parte" in error.casefold() for error in errors))
+
+    def test_extra_time_closes_with_four_atomic_periods_without_totals(self):
+        draft = KnockoutSettlementDraft(
+            phase_result=MatchPhaseResultInput(1, 1, 1, 0, None, None, "extra_time"),
+            kicks=(),
+            imported_periods=frozenset({
+                "first_half", "second_half", "extra_time_first", "extra_time_second",
+            }),
             goalkeeper_a_id=None,
             goalkeeper_b_id=None,
         )
