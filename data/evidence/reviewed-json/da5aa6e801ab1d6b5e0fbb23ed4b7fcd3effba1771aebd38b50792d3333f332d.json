@@ -1,0 +1,250 @@
+{
+  "descripcion": "Estadísticas profundas revisadas manualmente a partir de capturas de SofaScore.",
+  "numero_de_partidos": 1,
+  "partidos": [
+    {
+      "id": "paises_bajos_marruecos_primera_parte_prorroga",
+      "nombre": "Países Bajos vs Marruecos — primera parte de la prórroga",
+      "periodo": {
+        "tipo": "primera_parte_prorroga",
+        "descripcion": "Primera parte de la prórroga"
+      },
+      "equipos": {
+        "izquierda_verde": "Países Bajos",
+        "derecha_azul": "Marruecos"
+      },
+      "estadisticas": {
+        "resumen_del_partido": {
+          "posesion_de_balon_pct": {
+            "Países Bajos": 17,
+            "Marruecos": 83
+          },
+          "goles_esperados_xg": {
+            "Países Bajos": 0.0,
+            "Marruecos": 0.74
+          },
+          "ocasiones_claras": {
+            "Países Bajos": 0,
+            "Marruecos": 1
+          },
+          "tiros_totales": {
+            "Países Bajos": 0,
+            "Marruecos": 1
+          },
+          "paradas": {
+            "Países Bajos": 1,
+            "Marruecos": 0
+          },
+          "saques_de_esquina": {
+            "Países Bajos": 0,
+            "Marruecos": 1
+          },
+          "faltas": {
+            "Países Bajos": 3,
+            "Marruecos": 3
+          },
+          "pases": {
+            "Países Bajos": 28,
+            "Marruecos": 136
+          },
+          "entradas": {
+            "Países Bajos": 3,
+            "Marruecos": 1
+          },
+          "tiros_libres": {
+            "Países Bajos": 3,
+            "Marruecos": 3
+          },
+          "tarjetas_amarillas": {
+            "Países Bajos": 0,
+            "Marruecos": 0
+          }
+        },
+        "tiros": {
+          "tiros_totales": {
+            "Países Bajos": 0,
+            "Marruecos": 1
+          },
+          "tiros_a_puerta": {
+            "Países Bajos": 0,
+            "Marruecos": 1
+          },
+          "tiros_al_palo": {
+            "Países Bajos": 0,
+            "Marruecos": 0
+          },
+          "tiros_fuera": {
+            "Países Bajos": 0,
+            "Marruecos": 0
+          },
+          "tiros_bloqueados": {
+            "Países Bajos": 0,
+            "Marruecos": 0
+          },
+          "tiros_dentro_del_area_penal": {
+            "Países Bajos": 0,
+            "Marruecos": 1
+          },
+          "tiros_fuera_del_area": {
+            "Países Bajos": 0,
+            "Marruecos": 0
+          }
+        },
+        "ataque": {
+          "ocasiones_claras_realizadas": {
+            "Países Bajos": 0,
+            "Marruecos": 0
+          },
+          "ocasiones_claras_falladas": {
+            "Países Bajos": 0,
+            "Marruecos": 1
+          },
+          "pases_en_profundidad": {
+            "Países Bajos": 0,
+            "Marruecos": 1
+          },
+          "faltas_recibidas_en_el_tercio_final": {
+            "Países Bajos": 0,
+            "Marruecos": 0
+          },
+          "fueras_de_juego": {
+            "Países Bajos": 0,
+            "Marruecos": 0
+          }
+        },
+        "duelos": {
+          "duelos_pct": {
+            "Países Bajos": 57,
+            "Marruecos": 43
+          },
+          "perdidas": {
+            "Países Bajos": 1,
+            "Marruecos": 1
+          },
+          "duelos_en_el_suelo": {
+            "Países Bajos": {
+              "ganados": 6,
+              "totales": 10,
+              "porcentaje": 60
+            },
+            "Marruecos": {
+              "ganados": 4,
+              "totales": 10,
+              "porcentaje": 40
+            }
+          },
+          "duelos_aereos": {
+            "Países Bajos": {
+              "ganados": 2,
+              "totales": 4,
+              "porcentaje": 50
+            },
+            "Marruecos": {
+              "ganados": 2,
+              "totales": 4,
+              "porcentaje": 50
+            }
+          },
+          "regates": {
+            "Países Bajos": {
+              "completados": 0,
+              "intentados": 1,
+              "porcentaje": 0
+            },
+            "Marruecos": {
+              "completados": 2,
+              "intentados": 4,
+              "porcentaje": 50
+            }
+          }
+        },
+        "pases": {
+          "pases_precisos": {
+            "Países Bajos": 20,
+            "Marruecos": 128
+          },
+          "saques_de_banda": {
+            "Países Bajos": 5,
+            "Marruecos": 4
+          },
+          "pases_al_ultimo_tercio": {
+            "Países Bajos": 8,
+            "Marruecos": 15
+          },
+          "pases_largos": {
+            "Países Bajos": {
+              "completados": 0,
+              "intentados": 4,
+              "porcentaje": 0
+            },
+            "Marruecos": {
+              "completados": 2,
+              "intentados": 6,
+              "porcentaje": 33
+            }
+          },
+          "centros": {
+            "Países Bajos": {
+              "completados": 1,
+              "intentados": 1,
+              "porcentaje": 100
+            },
+            "Marruecos": {
+              "completados": 0,
+              "intentados": 2,
+              "porcentaje": 0
+            }
+          }
+        },
+        "defensa": {
+          "entradas_ganadas_pct": {
+            "Países Bajos": 33,
+            "Marruecos": 100
+          },
+          "tackles_totales": {
+            "Países Bajos": 3,
+            "Marruecos": 1
+          },
+          "intercepciones": {
+            "Países Bajos": 1,
+            "Marruecos": 1
+          },
+          "recuperaciones": {
+            "Países Bajos": 3,
+            "Marruecos": 2
+          },
+          "despejes": {
+            "Países Bajos": 3,
+            "Marruecos": 7
+          }
+        },
+        "porteria": {
+          "paradas": {
+            "Países Bajos": 1,
+            "Marruecos": 0
+          },
+          "saques_de_puerta": {
+            "Países Bajos": 0,
+            "Marruecos": 0
+          }
+        },
+        "mapa_de_ataques": {
+          "equipo_mostrado": "Países Bajos",
+          "direccion_de_ataque": "hacia_la_derecha",
+          "descripcion": "Mapa de ataques mostrado para Países Bajos durante la primera parte de la prórroga."
+        },
+        "mapa_de_pases": {
+          "tipo_de_dato": "distribucion_global_no_atribuible_por_equipo",
+          "tercio_defensivo_pct": 23,
+          "tercio_central_pct": 53,
+          "tercio_ofensivo_pct": 24
+        }
+      },
+      "fuentes": [
+        "Captura de pantalla 2026-06-30 153450.png",
+        "Captura de pantalla 2026-06-30 153459.png",
+        "Captura de pantalla 2026-06-30 153507.png"
+      ]
+    }
+  ]
+}

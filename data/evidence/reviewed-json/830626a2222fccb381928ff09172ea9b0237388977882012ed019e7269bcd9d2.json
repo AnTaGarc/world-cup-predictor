@@ -1,0 +1,246 @@
+{
+  "descripcion": "Estadísticas profundas revisadas manualmente a partir de capturas de SofaScore.",
+  "numero_de_partidos": 1,
+  "partidos": [
+    {
+      "id": "alemania_paraguay_segunda_parte_prorroga",
+      "nombre": "Alemania vs Paraguay — segunda parte de la prórroga",
+      "periodo": {
+        "tipo": "segunda_parte_prorroga",
+        "descripcion": "Segunda parte de la prórroga"
+      },
+      "equipos": {
+        "izquierda_verde": "Alemania",
+        "derecha_azul": "Paraguay"
+      },
+      "estadisticas": {
+        "resumen_del_partido": {
+          "posesion_de_balon_pct": {
+            "Alemania": 52,
+            "Paraguay": 48
+          },
+          "goles_esperados_xg": {
+            "Alemania": 0.23,
+            "Paraguay": 0.0
+          },
+          "ocasiones_claras": {
+            "Alemania": 1,
+            "Paraguay": 0
+          },
+          "tiros_totales": {
+            "Alemania": 3,
+            "Paraguay": 0
+          },
+          "paradas": {
+            "Alemania": 0,
+            "Paraguay": 2
+          },
+          "saques_de_esquina": {
+            "Alemania": 3,
+            "Paraguay": 1
+          },
+          "faltas": {
+            "Alemania": 3,
+            "Paraguay": 3
+          },
+          "pases": {
+            "Alemania": 46,
+            "Paraguay": 42
+          },
+          "entradas": {
+            "Alemania": 3,
+            "Paraguay": 7
+          },
+          "tiros_libres": {
+            "Alemania": 3,
+            "Paraguay": 3
+          },
+          "tarjetas_amarillas": {
+            "Alemania": 2,
+            "Paraguay": 1
+          }
+        },
+        "tiros": {
+          "tiros_totales": {
+            "Alemania": 3,
+            "Paraguay": 0
+          },
+          "tiros_a_puerta": {
+            "Alemania": 2,
+            "Paraguay": 0
+          },
+          "tiros_al_palo": {
+            "Alemania": 0,
+            "Paraguay": 0
+          },
+          "tiros_fuera": {
+            "Alemania": 1,
+            "Paraguay": 0
+          },
+          "tiros_bloqueados": {
+            "Alemania": 0,
+            "Paraguay": 0
+          },
+          "tiros_dentro_del_area_penal": {
+            "Alemania": 1,
+            "Paraguay": 0
+          },
+          "tiros_fuera_del_area": {
+            "Alemania": 2,
+            "Paraguay": 0
+          }
+        },
+        "ataque": {
+          "ocasiones_claras_realizadas": {
+            "Alemania": 0,
+            "Paraguay": 0
+          },
+          "ocasiones_claras_falladas": {
+            "Alemania": 1,
+            "Paraguay": 0
+          },
+          "faltas_recibidas_en_el_tercio_final": {
+            "Alemania": 2,
+            "Paraguay": 1
+          },
+          "fueras_de_juego": {
+            "Alemania": 0,
+            "Paraguay": 0
+          }
+        },
+        "duelos": {
+          "duelos_pct": {
+            "Alemania": 56,
+            "Paraguay": 44
+          },
+          "perdidas": {
+            "Alemania": 4,
+            "Paraguay": 3
+          },
+          "duelos_en_el_suelo": {
+            "Alemania": {
+              "ganados": 11,
+              "totales": 22,
+              "porcentaje": 50
+            },
+            "Paraguay": {
+              "ganados": 11,
+              "totales": 22,
+              "porcentaje": 50
+            }
+          },
+          "duelos_aereos": {
+            "Alemania": {
+              "ganados": 7,
+              "totales": 10,
+              "porcentaje": 70
+            },
+            "Paraguay": {
+              "ganados": 3,
+              "totales": 10,
+              "porcentaje": 30
+            }
+          },
+          "regates": {
+            "Alemania": {
+              "completados": 5,
+              "intentados": 8,
+              "porcentaje": 63
+            },
+            "Paraguay": {
+              "completados": 2,
+              "intentados": 2,
+              "porcentaje": 100
+            }
+          }
+        },
+        "pases": {
+          "pases_precisos": {
+            "Alemania": 41,
+            "Paraguay": 31
+          },
+          "saques_de_banda": {
+            "Alemania": 1,
+            "Paraguay": 2
+          },
+          "pases_al_ultimo_tercio": {
+            "Alemania": 7,
+            "Paraguay": 8
+          },
+          "pases_largos": {
+            "Alemania": {
+              "completados": 2,
+              "intentados": 3,
+              "porcentaje": 67
+            },
+            "Paraguay": {
+              "completados": 5,
+              "intentados": 12,
+              "porcentaje": 42
+            }
+          },
+          "centros": {
+            "Alemania": {
+              "completados": 1,
+              "intentados": 4,
+              "porcentaje": 25
+            },
+            "Paraguay": {
+              "completados": 1,
+              "intentados": 5,
+              "porcentaje": 20
+            }
+          }
+        },
+        "defensa": {
+          "entradas_ganadas_pct": {
+            "Alemania": 67,
+            "Paraguay": 57
+          },
+          "tackles_totales": {
+            "Alemania": 3,
+            "Paraguay": 7
+          },
+          "intercepciones": {
+            "Alemania": 0,
+            "Paraguay": 0
+          },
+          "recuperaciones": {
+            "Alemania": 11,
+            "Paraguay": 9
+          },
+          "despejes": {
+            "Alemania": 10,
+            "Paraguay": 2
+          }
+        },
+        "porteria": {
+          "paradas": {
+            "Alemania": 0,
+            "Paraguay": 2
+          },
+          "saques_de_puerta": {
+            "Alemania": 0,
+            "Paraguay": 1
+          }
+        },
+        "mapa_de_ataques": {
+          "equipo_mostrado": "Alemania",
+          "direccion_de_ataque": "hacia_la_derecha",
+          "descripcion": "Mapa de ataques mostrado para Alemania durante la segunda parte de la prórroga."
+        },
+        "mapa_de_pases": {
+          "tipo_de_dato": "distribucion_global_no_atribuible_por_equipo",
+          "tercio_defensivo_pct": 18,
+          "tercio_central_pct": 37,
+          "tercio_ofensivo_pct": 45
+        }
+      },
+      "fuentes": [
+        "Captura de pantalla 2026-06-30 125532.png",
+        "Captura de pantalla 2026-06-30 125545.png",
+        "Captura de pantalla 2026-06-30 125555.png"
+      ]
+    }
+  ]
+}
