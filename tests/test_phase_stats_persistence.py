@@ -98,14 +98,25 @@ class PhaseStatsPersistenceTests(unittest.TestCase):
         self.assertAlmostEqual(1.72, stats["Spain"]["xg"])
         self.assertEqual(18, stats["Spain"]["shots"])
 
-    def test_regulation_total_mismatch_reports_metric_and_team(self):
+    def test_hidden_regulation_total_no_longer_blocks_atomic_flow(self):
         self._import("first_half", "first", {"xg": 0.70, "shots": 8}, {"xg": 0.40, "shots": 5})
         self._import("second_half", "second", {"xg": 1.00, "shots": 10}, {"xg": 0.50, "shots": 6})
         self._import("regulation_total", "total", {"xg": 1.70, "shots": 19}, {"xg": 0.90, "shots": 11})
 
         issues = self.repo.validate_match_period_stats(self.match_id)
 
-        self.assertIn(("Spain", "shots", 18.0, 19.0), [issue.comparison for issue in issues])
+        self.assertEqual([], issues)
+
+    def test_full_match_total_mismatch_compares_all_four_atomic_periods(self):
+        self._import("first_half", "first", {"xg": 0.70, "shots": 8}, {"xg": 0.40, "shots": 5})
+        self._import("second_half", "second", {"xg": 1.00, "shots": 10}, {"xg": 0.50, "shots": 6})
+        self._import("extra_time_first", "et-first", {"xg": 0.20, "shots": 2}, {"xg": 0.10, "shots": 1})
+        self._import("extra_time_second", "et-second", {"xg": 0.10, "shots": 1}, {"xg": 0.10, "shots": 1})
+        self._import("full_match_total", "full", {"xg": 2.00, "shots": 22}, {"xg": 1.10, "shots": 13})
+
+        issues = self.repo.validate_match_period_stats(self.match_id)
+
+        self.assertIn(("Spain", "shots", 21.0, 22.0), [issue.comparison for issue in issues])
 
     def test_same_period_file_is_idempotent_and_period_is_queryable(self):
         collection = self._collection("first", {"xg": 0.72, "shots": 8}, {"xg": 0.40, "shots": 5})

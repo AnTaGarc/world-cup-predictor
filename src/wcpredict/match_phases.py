@@ -216,8 +216,10 @@ def validate_period_totals(rows: list[dict]) -> list[PhaseValidationIssue]:
         int(row["team_id"]): str(row.get("team_name") or row["team_id"]) for row in rows
     }
     comparisons = (
-        (("first_half", "second_half"), "regulation_total"),
-        (("extra_time_first", "extra_time_second"), "extra_time_total"),
+        ((
+            "first_half", "second_half",
+            "extra_time_first", "extra_time_second",
+        ), "full_match_total"),
     )
     for team_id, team_name in team_names.items():
         for atomic, total_period in comparisons:
