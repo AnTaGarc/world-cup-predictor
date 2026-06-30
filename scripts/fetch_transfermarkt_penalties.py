@@ -19,14 +19,17 @@ from wcpredict.repository import Repository
 from wcpredict.transfermarkt_penalties import (
     active_knockout_teams,
     fetch_html,
+    goalkeeper_penalty_url,
     load_penalty_team_snapshot,
     parse_penalty_attempts,
+    parse_goalkeeper_penalty_attempts,
     penalty_url,
     player_targets_for_teams,
     reconcile_penalty_teams,
     search_transfermarkt_player,
     write_identity_review,
 )
+from wcpredict.penalty_substitution_model import normalize_role
 
 
 def main() -> int:
@@ -87,6 +90,7 @@ def main() -> int:
     missing = []
     fetched_players = 0
     saved_attempts = 0
+    saved_goalkeeper_attempts = 0
     fetched_at = datetime.now(timezone.utc)
 
     for target in targets:
@@ -137,9 +141,43 @@ def main() -> int:
             saved_attempts += repo.save_penalty_attempts(attempts)
         print(f"{target.team_name} | {target.player_name}: {len(attempts)} penaltis")
 
+        if normalize_role(target.position) == "GK":
+            keeper_url = goalkeeper_penalty_url(
+                target.player_name, transfermarkt_id
+            )
+            try:
+                keeper_html = fetch_html(
+                    keeper_url, cache_dir, refresh=args.refresh
+                )
+            except Exception as exc:
+                print(
+                    f"ERROR portero {target.player_name} ({target.team_name}): "
+                    f"{type(exc).__name__}: {exc}"
+                )
+                continue
+            keeper_attempts = parse_goalkeeper_penalty_attempts(
+                keeper_html,
+                goalkeeper_name=target.player_name,
+                transfermarkt_player_id=transfermarkt_id,
+                source_url=keeper_url,
+                fetched_at_utc=fetched_at,
+            )
+            if not args.dry_run:
+                saved_goalkeeper_attempts += repo.save_goalkeeper_penalty_attempts(
+                    keeper_attempts
+                )
+            print(
+                f"{target.team_name} | {target.player_name}: "
+                f"{len(keeper_attempts)} penaltis afrontados"
+            )
+
     write_identity_review(Path(args.review_csv), review_candidates, missing)
     print(f"Jugadores consultados: {fetched_players}")
     print(f"Intentos guardados/actualizados: {saved_attempts}")
+    print(
+        "Intentos de portero guardados/actualizados: "
+        f"{saved_goalkeeper_attempts}"
+    )
     print(f"Revisión de identidades: {args.review_csv}")
     return 0
 

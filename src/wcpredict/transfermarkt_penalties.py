@@ -98,7 +98,13 @@ class TableParser(HTMLParser):
 
     def handle_data(self, data: str) -> None:
         normalized = " ".join(data.split()).casefold()
-        if "total penalties scored" in normalized:
+        if "total penalties saved or missed" in normalized:
+            self.penalty_section_outcome = "unknown_miss"
+        elif "total non-saved penalties" in normalized:
+            self.penalty_section_outcome = "scored"
+        elif "total penalties saved" in normalized:
+            self.penalty_section_outcome = "saved"
+        elif "total penalties scored" in normalized:
             self.penalty_section_outcome = "scored"
         elif "total penalties missed" in normalized:
             self.penalty_section_outcome = "missed"
@@ -117,6 +123,10 @@ def slugify_player_name(player_name: str) -> str:
 
 def penalty_url(player_name: str, transfermarkt_player_id: str) -> str:
     return f"{TRANSFERMARKT_BASE}/{slugify_player_name(player_name)}/elfmetertore/spieler/{transfermarkt_player_id}"
+
+
+def goalkeeper_penalty_url(player_name: str, transfermarkt_player_id: str) -> str:
+    return f"{TRANSFERMARKT_BASE}/{slugify_player_name(player_name)}/elfmeterstatistik/spieler/{transfermarkt_player_id}"
 
 
 def load_penalty_team_snapshot(path: Path) -> list[str]:
@@ -355,6 +365,61 @@ def parse_penalty_attempts(
     return attempts
 
 
+def parse_goalkeeper_penalty_attempts(
+    html: str,
+    *,
+    goalkeeper_name: str,
+    transfermarkt_player_id: str,
+    source_url: str,
+    fetched_at_utc: datetime,
+) -> list[dict]:
+    parser = TableParser()
+    parser.feed(html)
+    attempts: list[dict] = []
+    for index, (row, section_outcome) in enumerate(
+        zip(parser.rows, parser.row_default_outcomes)
+    ):
+        cells = [cell for cell in row if cell]
+        if len(cells) < 3:
+            continue
+        lowered = " | ".join(cells).casefold()
+        if any(
+            header in lowered
+            for header in ("date", "competition", "result", "penalty taker")
+        ):
+            continue
+        outcome = _row_outcome(cells, default_outcome=section_outcome)
+        if outcome == "missed":
+            outcome = "unknown_miss"
+        if outcome not in {
+            "saved", "scored", "off_target", "woodwork", "unknown_miss"
+        }:
+            continue
+        date_value = _first_date(cells)
+        source_row_key = (
+            f"transfermarkt-gk:{transfermarkt_player_id}:"
+            f"{date_value or 'unknown'}:{index}:{outcome}:"
+            f"{hashlib.sha1('|'.join(cells).encode()).hexdigest()[:10]}"
+        )
+        attempts.append({
+            "goalkeeper_name": goalkeeper_name,
+            "transfermarkt_player_id": transfermarkt_player_id,
+            "attempted_on": date_value,
+            "competition": cells[1] if len(cells) > 1 else None,
+            "phase": "shootout" if "penalty shootout" in lowered or "shoot-out" in lowered else "regular",
+            "outcome": outcome,
+            "taker_name": _taker_from_cells(cells),
+            "opponent_team": _opponent_from_cells(cells),
+            "match_label": " | ".join(cells[:8]),
+            "source_provider": "transfermarkt",
+            "source_url": source_url,
+            "source_row_key": source_row_key,
+            "fetched_at_utc": fetched_at_utc.isoformat(),
+            "raw": {"cells": cells, "section_outcome": section_outcome},
+        })
+    return attempts
+
+
 def _row_outcome(cells: list[str], *, default_outcome: str | None = None) -> str | None:
     text = " ".join(cells).lower()
     if "saved" in text:
@@ -396,6 +461,16 @@ def _goalkeeper_from_cells(cells: list[str]) -> str | None:
     # Heuristic: Transfermarkt rows usually put the keeper toward the end.
     for cell in reversed(cells):
         if cell and not re.search(r"\d|:|'", cell) and len(cell.split()) <= 4:
+            return cell
+    return None
+
+
+def _taker_from_cells(cells: list[str]) -> str | None:
+    for idx, cell in enumerate(cells):
+        if "penalty taker" in cell.casefold() and idx + 1 < len(cells):
+            return cells[idx + 1]
+    for cell in reversed(cells):
+        if cell and not re.search(r"\d|:|'", cell) and len(cell.split()) <= 5:
             return cell
     return None
 

@@ -7,8 +7,10 @@ from wcpredict.repository import Repository
 from wcpredict.transfermarkt_penalties import (
     active_knockout_teams,
     eligible_penalty_teams,
+    goalkeeper_penalty_url,
     load_penalty_team_snapshot,
     parse_penalty_attempts,
+    parse_goalkeeper_penalty_attempts,
     penalty_url,
     player_targets_for_teams,
     reconcile_penalty_teams,
@@ -111,6 +113,61 @@ class TransfermarktPenaltyTests(unittest.TestCase):
             "https://www.transfermarkt.com/harry-kane/elfmetertore/spieler/132098",
             penalty_url("Harry Kane", "132098"),
         )
+
+    def test_goalkeeper_penalty_url_uses_keeper_statistics_page(self):
+        self.assertEqual(
+            "https://www.transfermarkt.com/yassine-bounou/elfmeterstatistik/spieler/207834",
+            goalkeeper_penalty_url("Yassine Bounou", "207834"),
+        )
+
+    def test_goalkeeper_parser_separates_saved_scored_and_off_target(self):
+        html = """
+        <h2>Total penalties saved - 1</h2>
+        <table>
+          <tr><th>Date</th><th>Competition</th><th>Final result</th><th>Penalty taker</th></tr>
+          <tr><td>Jun 20, 2026</td><td>World Cup</td><td>2:1</td><td>Taker One</td></tr>
+        </table>
+        <h2>Total non-saved penalties - 1</h2>
+        <table>
+          <tr><th>Date</th><th>Competition</th><th>Final result</th><th>Penalty taker</th></tr>
+          <tr><td>Jun 21, 2026</td><td>World Cup</td><td>1:1</td><td>Taker Two</td></tr>
+        </table>
+        <table>
+          <tr><th>Date</th><th>Competition</th><th>Result</th><th>Penalty taker</th></tr>
+          <tr><td>Jun 22, 2026</td><td>World Cup</td><td>Off target</td><td>Taker Three</td></tr>
+        </table>
+        """
+        attempts = parse_goalkeeper_penalty_attempts(
+            html,
+            goalkeeper_name="Yassine Bounou",
+            transfermarkt_player_id="207834",
+            source_url="https://example.test/keeper",
+            fetched_at_utc=datetime(2026, 6, 25, tzinfo=timezone.utc),
+        )
+
+        self.assertEqual(
+            ["saved", "scored", "off_target"],
+            [row["outcome"] for row in attempts],
+        )
+        self.assertEqual("Taker One", attempts[0]["taker_name"])
+
+    def test_goalkeeper_parser_preserves_ambiguous_miss_without_crediting_save(self):
+        html = """
+        <h2>Total penalties saved or missed - 1</h2>
+        <table>
+          <tr><th>Date</th><th>Competition</th><th>Final result</th><th>Penalty taker</th></tr>
+          <tr><td>Jun 20, 2026</td><td>World Cup</td><td>2:1</td><td>Taker One</td></tr>
+        </table>
+        """
+        attempts = parse_goalkeeper_penalty_attempts(
+            html,
+            goalkeeper_name="Keeper",
+            transfermarkt_player_id="1",
+            source_url="https://example.test/keeper",
+            fetched_at_utc=datetime(2026, 6, 25, tzinfo=timezone.utc),
+        )
+
+        self.assertEqual("unknown_miss", attempts[0]["outcome"])
 
     def test_parser_uses_scored_and_missed_table_headings(self):
         html = """
