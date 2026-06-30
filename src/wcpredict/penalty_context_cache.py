@@ -14,8 +14,10 @@ from wcpredict.penalty_history_model import (
     DEFAULT_SIMULATIONS,
     PENALTY_MODEL_VERSION,
     PenaltyCoverage,
+    PenaltyGoalkeeperContribution,
     PenaltyMatchContext,
     PenaltyPlayerContribution,
+    PenaltyTeamShootoutCoverage,
     PenaltyTeamProfile,
     build_penalty_match_context,
 )
@@ -48,6 +50,20 @@ def _context_from_dict(raw: dict) -> PenaltyMatchContext:
         })),
         simulations=int(raw.get("simulations", 0)),
         standard_error=float(raw.get("standard_error", 0.0)),
+        goalkeeper_rows=tuple(
+            PenaltyGoalkeeperContribution(**row)
+            for row in raw.get("goalkeeper_rows", [])
+        ),
+        shootout_coverage_rows=tuple(
+            PenaltyTeamShootoutCoverage(
+                team_name=row["team_name"],
+                competitions=tuple(row.get("competitions", [])),
+                shootout_attempts=int(row.get("shootout_attempts", 0)),
+            )
+            for row in raw.get("shootout_coverage_rows", [])
+        ),
+        data_cutoff=str(raw.get("data_cutoff") or ""),
+        model_version=str(raw.get("model_version") or PENALTY_MODEL_VERSION),
         explanation=str(raw.get("explanation") or ""),
     )
 
@@ -321,6 +337,7 @@ def build_repository_penalty_context(
         squads=squads,
         lineups=lineups,
         goalkeeper_attempts=goalkeeper_attempts,
+        shootout_coverage=shootout_coverage,
         deep_goalkeeper_rates=deep_rates,
         as_of=match.kickoff_utc.date(),
         seed=seed,

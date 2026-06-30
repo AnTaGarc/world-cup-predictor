@@ -262,6 +262,10 @@ class AppContractTests(unittest.TestCase):
         self.assertIn("Probables al minuto 120", source)
         self.assertIn("Prob. entre los 5 primeros", source)
         self.assertIn("Cobertura penalty_history", source)
+        self.assertIn("Porteros titulares usados", source)
+        self.assertIn("Penaltis afrontados", source)
+        self.assertIn("Tandas recientes cubiertas", source)
+        self.assertIn("Corte de datos", source)
 
     def test_knockout_redesign_uses_theme_helpers_instead_of_loose_widgets(self):
         from wcpredict.ui import theme

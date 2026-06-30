@@ -3274,6 +3274,54 @@ def render_prediction_lab() -> None:
             xg_cols[3].metric(f"xG {team_b} (prórroga)", f"{et_b:.2f}", help="xG_90 × 0.30 (30 min de tiempo extra)")
         if getattr(penalty_context, "explanation", ""):
             callout(penalty_context.explanation, tone="blue", title="Contexto de penaltis")
+        if penalty_context.goalkeeper_rows:
+            st.markdown("**Porteros titulares usados**")
+            st.dataframe(
+                pd.DataFrame([
+                    {
+                        "Selección": row.team_name,
+                        "Portero": row.player_name,
+                        "Probabilidad de parada": row.penalty_save_probability * 100,
+                        "Penaltis afrontados": row.faced_penalties,
+                        "Paradas": row.saves,
+                        "Goles": row.goals,
+                        "Fuera/poste": row.off_target_attempts,
+                        "En partido": row.regular_attempts,
+                        "En tanda": row.shootout_attempts,
+                        "Fuente": row.source,
+                    }
+                    for row in penalty_context.goalkeeper_rows
+                ]),
+                width="stretch",
+                hide_index=True,
+                column_config={
+                    "Probabilidad de parada": st.column_config.ProgressColumn(
+                        format="%.1f%%", min_value=0, max_value=100,
+                    )
+                },
+            )
+        if penalty_context.shootout_coverage_rows:
+            st.markdown("**Tandas recientes cubiertas**")
+            st.dataframe(
+                pd.DataFrame([
+                    {
+                        "Selección": row.team_name,
+                        "Competiciones revisadas": (
+                            " · ".join(row.competitions) if row.competitions
+                            else "Sin cobertura verificada"
+                        ),
+                        "Lanzamientos de tanda": row.shootout_attempts,
+                    }
+                    for row in penalty_context.shootout_coverage_rows
+                ]),
+                width="stretch",
+                hide_index=True,
+            )
+        if penalty_context.data_cutoff:
+            st.caption(
+                f"Corte de datos: {penalty_context.data_cutoff} · "
+                f"Modelo: {penalty_context.model_version}."
+            )
         if penalty_context.player_rows:
             st.markdown("**Probables al minuto 120**")
             penalty_rows = [

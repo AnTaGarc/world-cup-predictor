@@ -76,6 +76,27 @@ class PenaltyCoverage:
 
 
 @dataclass(frozen=True)
+class PenaltyGoalkeeperContribution:
+    team_name: str
+    player_name: str
+    penalty_save_probability: float
+    faced_penalties: int
+    saves: int
+    goals: int
+    off_target_attempts: int
+    regular_attempts: int
+    shootout_attempts: int
+    source: str
+
+
+@dataclass(frozen=True)
+class PenaltyTeamShootoutCoverage:
+    team_name: str
+    competitions: tuple[str, ...]
+    shootout_attempts: int
+
+
+@dataclass(frozen=True)
 class PenaltyMatchContext:
     team_a: PenaltyTeamProfile
     team_b: PenaltyTeamProfile
@@ -86,6 +107,10 @@ class PenaltyMatchContext:
     coverage: PenaltyCoverage = PenaltyCoverage(0, 0, 0, 0, 0, 0, 0)
     simulations: int = 0
     standard_error: float = 0.0
+    goalkeeper_rows: tuple[PenaltyGoalkeeperContribution, ...] = ()
+    shootout_coverage_rows: tuple[PenaltyTeamShootoutCoverage, ...] = ()
+    data_cutoff: str = ""
+    model_version: str = PENALTY_MODEL_VERSION
 
 
 def _team_rows(team_name: str, attempts: list[dict]) -> list[dict]:
@@ -335,6 +360,7 @@ def build_penalty_match_context(
     lineups: dict[str, list[str | dict]] | None = None,
     goalkeeper_profiles: dict[str, GoalkeeperPenaltyProfile] | None = None,
     goalkeeper_attempts: list[dict] | None = None,
+    shootout_coverage: list[dict] | None = None,
     deep_goalkeeper_rates: dict[str, float] | None = None,
     as_of: date | None = None,
     seed: int = 0,
@@ -458,6 +484,37 @@ def build_penalty_match_context(
     )
     p_a = wins_a / simulations
     standard_error = math.sqrt(p_a * (1.0 - p_a) / simulations)
+    goalkeeper_rows = tuple(
+        PenaltyGoalkeeperContribution(
+            team_name=team_name,
+            player_name=keeper.player_name,
+            penalty_save_probability=keeper.penalty_save_rate,
+            faced_penalties=keeper.faced_penalties,
+            saves=keeper.saves,
+            goals=keeper.goals,
+            off_target_attempts=keeper.off_target_attempts,
+            regular_attempts=keeper.regular_attempts,
+            shootout_attempts=keeper.shootout_attempts,
+            source=keeper.source,
+        )
+        for team_name, keeper in ((team_a, keeper_a), (team_b, keeper_b))
+        if keeper is not None
+    )
+    coverage_by_team: dict[str, list[str]] = {team_a: [], team_b: []}
+    for row in shootout_coverage or []:
+        for team_name in (team_a, team_b):
+            if canonical_team_name(str(row.get("team_name") or "")) == canonical_team_name(team_name):
+                label = f"{row.get('competition')} {row.get('competition_edition')}"
+                if label not in coverage_by_team[team_name]:
+                    coverage_by_team[team_name].append(label)
+    shootout_coverage_rows = tuple(
+        PenaltyTeamShootoutCoverage(
+            team_name=team_name,
+            competitions=tuple(coverage_by_team[team_name]),
+            shootout_attempts=experience.attempts,
+        )
+        for team_name, experience in ((team_a, experience_a), (team_b, experience_b))
+    )
     keeper_summary = ""
     if keeper_a is not None and keeper_b is not None:
         keeper_summary = f" ({keeper_a.player_name} y {keeper_b.player_name})"
@@ -476,6 +533,10 @@ def build_penalty_match_context(
         coverage=coverage,
         simulations=simulations,
         standard_error=standard_error,
+        goalkeeper_rows=goalkeeper_rows,
+        shootout_coverage_rows=shootout_coverage_rows,
+        data_cutoff=as_of.isoformat(),
+        model_version=PENALTY_MODEL_VERSION,
         explanation=explanation,
     )
 

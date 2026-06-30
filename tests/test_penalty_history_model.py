@@ -149,6 +149,7 @@ class PenaltyHistoryModelTests(unittest.TestCase):
             [],
             squads=squads,
             lineups={"A": ["A0"], "B": ["B0"]},
+            as_of=date(2026, 6, 28),
             seed=4,
             simulations=300,
             substitution_config=SubstitutionConfig(
@@ -167,6 +168,11 @@ class PenaltyHistoryModelTests(unittest.TestCase):
         self.assertEqual(1.0, goalkeeper_rows[("B", "B0")])
         self.assertEqual(0.0, goalkeeper_rows[("B", "BB0")])
         self.assertIn("porteros titulares fijos (A0 y B0)", context.explanation)
+        self.assertEqual(
+            [("A", "A0"), ("B", "B0")],
+            [(row.team_name, row.player_name) for row in context.goalkeeper_rows],
+        )
+        self.assertEqual("2026-06-28", context.data_cutoff)
 
 
 if __name__ == "__main__":
