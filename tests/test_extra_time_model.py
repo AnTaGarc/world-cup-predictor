@@ -88,6 +88,44 @@ class ExtraTimeModelTests(unittest.TestCase):
         self.assertAlmostEqual(0.30, spain_row["extra_time_xg"])
         self.assertEqual(1, spain_row["extra_time_goals"])
 
+    def test_repository_uses_extra_time_total_when_halves_are_not_imported(self):
+        with tempfile.TemporaryDirectory() as directory:
+            repo = Repository(Path(directory) / "app.sqlite")
+            repo.initialize()
+            spain = repo.upsert_team("Spain")
+            germany = repo.upsert_team("Germany")
+            match_id = repo.upsert_match(
+                "FIFA World Cup 2026", "Round of 32", self.as_of - timedelta(days=2),
+                spain, germany, "scheduled",
+            )
+            with repo.session() as con:
+                for team_id, regulation_xg, extra_xg in (
+                    (spain, 1.50, 0.60), (germany, 1.20, 0.05)
+                ):
+                    con.execute(
+                        "INSERT INTO team_match_stats(match_id, team_id, xg, source_id) VALUES(?, ?, ?, 'test')",
+                        (match_id, team_id, regulation_xg),
+                    )
+                    con.execute(
+                        "INSERT INTO team_match_period_stats("
+                        "match_id, team_id, period, xg, source_id, content_sha256, observed_at_utc"
+                        ") VALUES(?, ?, 'extra_time_total', ?, 'test', 'hash', ?)",
+                        (match_id, team_id, extra_xg, self.as_of.isoformat()),
+                    )
+            repo.settle_knockout_match_versioned(
+                match_id,
+                MatchPhaseResultInput(1, 1, 1, 0, None, None, "extra_time"),
+                (), None, self.as_of - timedelta(days=2) + timedelta(hours=3),
+            )
+
+            rows = repo.list_extra_time_training_rows_before(self.as_of)
+
+        self.assertEqual(2, len(rows))
+        self.assertAlmostEqual(
+            0.60,
+            next(row for row in rows if row["team_name"] == "Spain")["extra_time_xg"],
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

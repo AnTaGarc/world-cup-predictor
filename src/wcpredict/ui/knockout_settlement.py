@@ -17,14 +17,14 @@ from wcpredict.match_phases import (
 PERIOD_LABELS = {
     "first_half": "Primera parte (0'–45')",
     "second_half": "Segunda parte (45'–90')",
-    "regulation_total": "Acumulado de 90' (opcional)",
+    "regulation_total": "Acumulado de 90'",
     "extra_time_first": "Primera parte de la prórroga (90'–105')",
     "extra_time_second": "Segunda parte de la prórroga (105'–120')",
-    "extra_time_total": "Acumulado de prórroga (opcional)",
+    "extra_time_total": "Acumulado de prórroga",
     "full_match_total": "Acumulado de 120' (opcional)",
 }
-ATOMIC_REQUIRED = {"first_half", "second_half"}
-EXTRA_TIME_REQUIRED = {"extra_time_first", "extra_time_second"}
+REGULATION_PARTS = {"first_half", "second_half"}
+EXTRA_TIME_PARTS = {"extra_time_first", "extra_time_second"}
 
 
 @dataclass(frozen=True)
@@ -62,35 +62,54 @@ def period_statuses(
     issues: list[PhaseValidationIssue],
 ) -> dict[str, str]:
     visible = set(build_settlement_sections(decided_in).visible_periods)
-    optional = {"regulation_total", "extra_time_total", "full_match_total"}
+    alternative_groups = (
+        ("regulation_total", REGULATION_PARTS),
+        ("extra_time_total", EXTRA_TIME_PARTS),
+    )
     has_mismatch = any(issue.severity == "blocking" for issue in issues)
     output = {}
     for period in PERIOD_LABELS:
         if period not in visible:
             output[period] = "not_played"
-        elif has_mismatch and period in optional and period in imported_periods:
+        elif has_mismatch and period in {"regulation_total", "extra_time_total", "full_match_total"} and period in imported_periods:
             output[period] = "mismatch"
         elif period in imported_periods:
             output[period] = "imported"
-        elif period in optional:
+        elif period == "full_match_total":
             output[period] = "optional"
         else:
             output[period] = "pending"
+    for total, parts in alternative_groups:
+        if total not in visible:
+            continue
+        complete = total in imported_periods or parts.issubset(imported_periods)
+        if complete:
+            for period in {total, *parts}:
+                if output[period] == "pending":
+                    output[period] = "optional"
     return output
 
 
 def validate_settlement_draft(draft: KnockoutSettlementDraft) -> tuple[str, ...]:
     errors = list(validate_phase_result(draft.phase_result))
-    required = set(ATOMIC_REQUIRED)
-    if draft.phase_result.decided_in in {"extra_time", "shootout"}:
-        required.update(EXTRA_TIME_REQUIRED)
-    missing = sorted(required - set(draft.imported_periods))
-    if missing:
+    imported = set(draft.imported_periods)
+    regulation_complete = (
+        "regulation_total" in imported or REGULATION_PARTS.issubset(imported)
+    )
+    if not regulation_complete:
         errors.append(
-            "Faltan estadísticas de periodos disputados: "
-            + ", ".join(PERIOD_LABELS[period] for period in missing)
-            + "."
+            "Faltan las estadísticas de los 90 minutos: importa el acumulado "
+            "de 90' o los JSON de primera y segunda parte."
         )
+    if draft.phase_result.decided_in in {"extra_time", "shootout"}:
+        extra_time_complete = (
+            "extra_time_total" in imported or EXTRA_TIME_PARTS.issubset(imported)
+        )
+        if not extra_time_complete:
+            errors.append(
+                "Faltan las estadísticas de la prórroga: importa su acumulado "
+                "o los JSON de sus dos partes."
+            )
     if draft.phase_result.decided_in == "shootout":
         if draft.goalkeeper_a_id is None or draft.goalkeeper_b_id is None:
             errors.append("Debes seleccionar el portero de ambas selecciones.")
@@ -143,6 +162,10 @@ def render_knockout_settlement(
         "mismatch": "🔴 No cuadra",
     }
     st.markdown("#### Estadísticas por periodo")
+    st.caption(
+        "Para cada fase jugada puedes importar su acumulado o sus dos partes. "
+        "Si el partido termina en 90', el JSON completo de los 90 minutos es suficiente."
+    )
     for period in sections.visible_periods:
         status = statuses[period]
         with st.expander(f"{PERIOD_LABELS[period]} · {status_labels[status]}"):

@@ -35,6 +35,23 @@ def _format_score(goals_a: int, goals_b: int) -> str:
     return f"{int(goals_a)}-{int(goals_b)}"
 
 
+def _score_outcome(goals_a: int, goals_b: int) -> str:
+    return "home" if goals_a > goals_b else "away" if goals_b > goals_a else "draw"
+
+
+def _outcome_miss_severity(
+    best_probability: float,
+    actual_probability: float,
+) -> str:
+    """Grade a miss by probability regret instead of treating every miss equally."""
+    gap = max(0.0, float(best_probability) - float(actual_probability))
+    if gap <= 0.10:
+        return "ok"
+    if gap <= 0.25:
+        return "warn"
+    return "bad"
+
+
 def build_match_audit(
     *,
     team_a: str,
@@ -57,7 +74,7 @@ def build_match_audit(
     "shots_on_target", "possession") with the model's expected TOTAL for the match.
     Missing values become "—" rows with severity "warn".
     """
-    actual_outcome = "home" if goals_a > goals_b else "away" if goals_b > goals_a else "draw"
+    actual_outcome = _score_outcome(goals_a, goals_b)
     actual_label = team_a if actual_outcome == "home" else team_b if actual_outcome == "away" else "Empate"
     predicted_label_pairs = (("home", team_a), ("draw", "Empate"), ("away", team_b))
     best_key, best_value = max(
@@ -66,13 +83,17 @@ def build_match_audit(
     )
     predicted_label = next(label for key, label in predicted_label_pairs if key == best_key)
     outcome_delta = primary_1x2.get(actual_outcome, 0.0) - best_value
+    outcome_severity = (
+        "good" if best_key == actual_outcome
+        else _outcome_miss_severity(best_value, primary_1x2.get(actual_outcome, 0.0))
+    )
     outcome_row = AuditRow(
         "Resultado (1X2)",
         f"{predicted_label} ({best_value:.0%})",
         f"{actual_label} ({primary_1x2.get(actual_outcome, 0.0):.0%} en el modelo)",
         outcome_delta,
         f"{outcome_delta:+.0%}",
-        "good" if best_key == actual_outcome else "bad",
+        outcome_severity,
     )
 
     score_rows: list[AuditRow] = []
@@ -80,11 +101,22 @@ def build_match_audit(
     if mode_score is not None:
         mode_label = _format_score(mode_score[0], mode_score[1])
         diff = abs(mode_score[0] - goals_a) + abs(mode_score[1] - goals_b)
+        same_outcome = _score_outcome(*mode_score) == actual_outcome
+        if diff == 0:
+            score_severity = "good"
+        elif diff <= 1:
+            score_severity = "ok"
+        elif same_outcome:
+            score_severity = "ok" if diff <= 2 else "warn"
+        elif outcome_severity == "bad" and diff >= 4:
+            score_severity = "bad"
+        else:
+            score_severity = "warn"
         score_rows.append(
             AuditRow(
                 "Marcador (modo)", mode_label, actual_score,
                 float(diff), f"|Δ| {diff} goles",
-                "good" if diff == 0 else "ok" if diff <= 1 else "warn" if diff <= 2 else "bad",
+                score_severity,
             )
         )
     if expected_score is not None:

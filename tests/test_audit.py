@@ -21,15 +21,36 @@ class AuditTests(unittest.TestCase):
         self.assertIn("Brazil", audit["outcome"][0].predicted)
         self.assertIn("Brazil", audit["outcome"][0].actual)
 
-    def test_outcome_row_marks_a_missed_prediction_as_bad(self):
+    def test_outcome_row_marks_a_moderate_miss_as_warning(self):
         audit = build_match_audit(
             team_a="USA", team_b="Australia", goals_a=0, goals_b=2,
             primary_1x2={"home": 0.48, "draw": 0.24, "away": 0.28},
             mode_score=(1, 0), expected_score=(1.4, 0.9),
             team_a_stats=None, team_b_stats=None,
         )
-        self.assertEqual("bad", audit["outcome"][0].severity)
+        self.assertEqual("warn", audit["outcome"][0].severity)
         self.assertIn("Australia", audit["outcome"][0].actual)
+
+    def test_outcome_row_treats_a_near_coin_flip_miss_as_ok(self):
+        audit = build_match_audit(
+            team_a="A", team_b="B", goals_a=0, goals_b=1,
+            primary_1x2={"home": 0.46, "draw": 0.10, "away": 0.44},
+            mode_score=(1, 0), expected_score=None,
+            team_a_stats=None, team_b_stats=None,
+        )
+
+        self.assertEqual("ok", audit["outcome"][0].severity)
+
+    def test_outcome_row_reserves_bad_for_a_high_confidence_miss(self):
+        audit = build_match_audit(
+            team_a="A", team_b="B", goals_a=0, goals_b=2,
+            primary_1x2={"home": 0.80, "draw": 0.10, "away": 0.10},
+            mode_score=(3, 0), expected_score=None,
+            team_a_stats=None, team_b_stats=None,
+        )
+
+        self.assertEqual("bad", audit["outcome"][0].severity)
+        self.assertEqual("bad", audit["score"][0].severity)
 
     def test_mode_score_severity_grades_distance_in_goals(self):
         exact = build_match_audit(
@@ -58,8 +79,8 @@ class AuditTests(unittest.TestCase):
         )
         self.assertEqual("good", exact["score"][0].severity)
         self.assertEqual("ok", miss_by_one["score"][0].severity)
-        self.assertEqual("warn", miss_by_two["score"][0].severity)
-        self.assertEqual("bad", miss_by_four["score"][0].severity)
+        self.assertEqual("ok", miss_by_two["score"][0].severity)
+        self.assertEqual("warn", miss_by_four["score"][0].severity)
 
     def test_volume_rows_combine_team_stats_into_match_total(self):
         audit = build_match_audit(

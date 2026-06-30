@@ -85,6 +85,19 @@ class PhaseStatsPersistenceTests(unittest.TestCase):
 
         self.assertEqual([], self.repo.list_team_match_stats(self.match_id))
 
+    def test_regulation_total_alone_projects_to_team_match_stats(self):
+        self._import(
+            "regulation_total", "total",
+            {"xg": 1.72, "shots": 18, "corners": 7},
+            {"xg": 0.95, "shots": 11, "corners": 3},
+        )
+
+        self.repo.project_regulation_stats(self.match_id, self.now)
+
+        stats = {row["team_name"]: row for row in self.repo.list_team_match_stats(self.match_id)}
+        self.assertAlmostEqual(1.72, stats["Spain"]["xg"])
+        self.assertEqual(18, stats["Spain"]["shots"])
+
     def test_regulation_total_mismatch_reports_metric_and_team(self):
         self._import("first_half", "first", {"xg": 0.70, "shots": 8}, {"xg": 0.40, "shots": 5})
         self._import("second_half", "second", {"xg": 1.00, "shots": 10}, {"xg": 0.50, "shots": 6})

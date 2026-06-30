@@ -122,18 +122,18 @@ El cierre de una eliminatoria empieza seleccionando cómo terminó:
 2. En prórroga.
 3. En penaltis.
 
-Después se registra el marcador al 90' y se importan, en orden:
+Después se registra el marcador al 90' y se aporta una de estas dos rutas equivalentes:
 
-- primera parte;
-- segunda parte;
-- acumulado de 90' opcional.
+- un único JSON con el acumulado completo de los 90'; o
+- los JSON de primera y segunda parte.
+
+Por tanto, si el encuentro termina en 90 minutos, el JSON acumulado de esa fase es suficiente para cerrar. Las dos partes permiten más detalle y validación, pero no son obligatorias cuando existe el acumulado.
 
 Si hubo prórroga, se habilitan:
 
 - goles marcados exclusivamente durante la prórroga;
-- primera parte de la prórroga;
-- segunda parte de la prórroga;
-- acumulado de prórroga o de 120' opcional.
+- un único JSON con el acumulado de la prórroga, o los JSON de sus dos partes;
+- acumulado de 120' opcional como control adicional.
 
 Si hubo tanda, se habilita el editor de lanzamientos. El usuario selecciona un portero defensor para cada selección; ese portero se asocia automáticamente a todos los lanzamientos rivales. Cada fila permite elegir un tirador de la plantilla correspondiente y uno de los tres resultados canónicos.
 
@@ -162,7 +162,7 @@ Los porcentajes y tasas no se suman. La posesión, precisión de pase y métrica
 
 Una discrepancia bloqueante identifica métrica, equipo, suma calculada, acumulado importado y periodos implicados. Corregir o volver a importar una fase no obliga a repetir las demás.
 
-Al cerrar el partido, el acumulado validado de 90 minutos se proyecta sobre `team_match_stats`. Si se importó `regulation_total`, ese registro es la fuente preferida después de comprobarlo contra las dos partes; si no se importó, se deriva de `first_half + second_half`. La prórroga se deriva de sus dos partes y usa `extra_time_total` solo como control o fuente preferida tras validación. Nunca se proyecta `full_match_total` sobre `team_match_stats`.
+Al cerrar el partido, el acumulado validado de 90 minutos se proyecta sobre `team_match_stats`. Si se importó `regulation_total`, ese registro es la fuente preferida y funciona por sí solo; si también existen las dos partes, se comprueba contra ellas. Si no se importó, se deriva de `first_half + second_half`. Para entrenar el submodelo de prórroga, `extra_time_total` también funciona por sí solo y es la fuente preferida; en su ausencia se suman sus dos partes. Nunca se proyecta `full_match_total` sobre `team_match_stats`.
 
 ## Modelo de prórroga
 
@@ -209,6 +209,8 @@ El `prediction_snapshots.payload_json` prepartido de una eliminatoria conserva t
 ### 90 minutos
 
 Mantiene las predicciones y comparaciones actuales: 1X2, marcador, xG, mercados, estadísticas profundas y comparaciones por equipo. La evaluación usa el marcador y el acumulado estadístico al 90', aunque el encuentro continúe.
+
+La severidad visual del resultado no convierte cualquier fallo en rojo. Si el resultado más probable no ocurre, se mide la diferencia entre su probabilidad y la asignada al resultado real: hasta 10 puntos porcentuales se considera un fallo razonable, hasta 25 puntos una advertencia y solo una diferencia mayor se marca como error fuerte. El marcador modal también se suaviza cuando queda a un gol o conserva correctamente el signo 1X2; el rojo se reserva para una desviación grande combinada con un resultado de alta confianza fallado.
 
 ### Prórroga
 

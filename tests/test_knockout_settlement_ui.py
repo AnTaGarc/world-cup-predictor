@@ -41,6 +41,45 @@ class KnockoutSettlementUiTests(unittest.TestCase):
         self.assertEqual("optional", statuses["regulation_total"])
         self.assertEqual("not_played", statuses["extra_time_first"])
 
+    def test_regulation_total_alone_is_enough_to_close_at_90_minutes(self):
+        draft = KnockoutSettlementDraft(
+            phase_result=MatchPhaseResultInput(2, 0, None, None, None, None, "regulation"),
+            kicks=(),
+            imported_periods=frozenset({"regulation_total"}),
+            goalkeeper_a_id=None,
+            goalkeeper_b_id=None,
+        )
+
+        self.assertEqual((), validate_settlement_draft(draft))
+        statuses = period_statuses("regulation", {"regulation_total"}, [])
+        self.assertEqual("imported", statuses["regulation_total"])
+        self.assertEqual("optional", statuses["first_half"])
+        self.assertEqual("optional", statuses["second_half"])
+
+    def test_regulation_requires_total_or_both_halves(self):
+        draft = KnockoutSettlementDraft(
+            phase_result=MatchPhaseResultInput(2, 0, None, None, None, None, "regulation"),
+            kicks=(),
+            imported_periods=frozenset({"first_half"}),
+            goalkeeper_a_id=None,
+            goalkeeper_b_id=None,
+        )
+
+        errors = validate_settlement_draft(draft)
+
+        self.assertTrue(any("acumulado" in error.casefold() for error in errors))
+
+    def test_extra_time_total_can_replace_both_extra_time_halves(self):
+        draft = KnockoutSettlementDraft(
+            phase_result=MatchPhaseResultInput(1, 1, 1, 0, None, None, "extra_time"),
+            kicks=(),
+            imported_periods=frozenset({"regulation_total", "extra_time_total"}),
+            goalkeeper_a_id=None,
+            goalkeeper_b_id=None,
+        )
+
+        self.assertEqual((), validate_settlement_draft(draft))
+
     def test_shootout_requires_goalkeepers_and_valid_sequence(self):
         draft = KnockoutSettlementDraft(
             phase_result=MatchPhaseResultInput(1, 1, 0, 0, 1, 0, "shootout"),
