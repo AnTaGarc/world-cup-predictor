@@ -1,3 +1,4 @@
+from datetime import date
 import unittest
 
 from wcpredict.knockout_model import predict_knockout_match
@@ -49,6 +50,40 @@ class PenaltyHistoryModelTests(unittest.TestCase):
         context = build_penalty_match_context("Canada", "South Africa", attempts)
         self.assertGreater(context.team_a_shootout_win_probability, 0.55)
         self.assertLessEqual(context.team_a_shootout_win_probability, 0.64)
+
+    def test_recent_team_shootouts_inform_only_current_players_without_history(self):
+        attempts = []
+        for index in range(6):
+            attempts.extend([
+                {
+                    "team_name": "A", "player_name": f"Former A {index}",
+                    "phase": "shootout", "outcome": "scored",
+                    "attempted_on": f"2026-01-{index + 1:02d}",
+                },
+                {
+                    "team_name": "B", "player_name": f"Former B {index}",
+                    "phase": "shootout", "outcome": "saved",
+                    "attempted_on": f"2026-01-{index + 1:02d}",
+                },
+            ])
+
+        context = build_penalty_match_context(
+            "A", "B", attempts, squads=self._squads(),
+            as_of=date(2026, 6, 28), seed=3, simulations=200,
+        )
+        a_prior_players = [
+            row.conversion for row in context.player_rows
+            if row.team_name == "A" and row.attempts == 0
+        ]
+        b_prior_players = [
+            row.conversion for row in context.player_rows
+            if row.team_name == "B" and row.attempts == 0
+        ]
+
+        self.assertGreater(
+            sum(a_prior_players) / len(a_prior_players),
+            sum(b_prior_players) / len(b_prior_players),
+        )
 
     def test_knockout_model_accepts_penalty_history_probability(self):
         neutral = predict_knockout_match(1.2, 1.2)

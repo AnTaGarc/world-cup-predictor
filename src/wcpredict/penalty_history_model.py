@@ -29,7 +29,7 @@ RECENT_BLEND = 0.35
 MAX_SHOOTOUT_SHIFT = 0.14
 DEFAULT_SIMULATIONS = 25_000
 MAX_SUBSTITUTION_PATH_PAIRS = 1_024
-PENALTY_MODEL_VERSION = "path-monte-carlo-v3"
+PENALTY_MODEL_VERSION = "path-monte-carlo-v4"
 
 
 @dataclass(frozen=True)
@@ -40,6 +40,15 @@ class PenaltyTeamProfile:
     conversion: float
     recent_attempts: int
     recent_conversion: float | None
+
+
+@dataclass(frozen=True)
+class PenaltyTeamShootoutExperience:
+    team_name: str
+    attempts: int
+    scored: int
+    effective_attempts: float
+    conversion: float
 
 
 @dataclass(frozen=True)
@@ -203,6 +212,7 @@ def _starting_goalkeeper_profile(
     attempts: list[dict],
     supplied: dict[str, GoalkeeperPenaltyProfile] | None,
     deep_rates: dict[str, float] | None,
+    as_of: date | None = None,
 ) -> GoalkeeperPenaltyProfile | None:
     supplied_profile = _mapping_value(supplied, team_name, None)
     if supplied_profile is not None:
@@ -233,7 +243,70 @@ def _starting_goalkeeper_profile(
         keeper,
         attempts,
         deep_rate,
+        as_of or date.today(),
     )
+
+
+def build_team_shootout_experience(
+    team_name: str,
+    attempts: list[dict],
+    as_of: date,
+) -> PenaltyTeamShootoutExperience:
+    rows = [
+        row for row in _team_rows(team_name, attempts)
+        if str(row.get("phase") or "").casefold() == "shootout"
+        and str(row.get("outcome") or "").casefold()
+        in {"scored", "saved", "missed", "off_target", "woodwork"}
+    ]
+    weighted_scored = 0.0
+    weighted_missed = 0.0
+    for row in rows:
+        attempted_on = penalty_attempt_date(row.get("attempted_on"))
+        age_days = max(0, (as_of - attempted_on).days) if attempted_on else 0
+        weight = 1.5 * (0.5 ** (age_days / 1095.0))
+        if str(row.get("outcome") or "").casefold() == "scored":
+            weighted_scored += weight
+        else:
+            weighted_missed += weight
+    effective = weighted_scored + weighted_missed
+    conversion = (
+        GLOBAL_PENALTY_CONVERSION * PRIOR_ATTEMPTS + weighted_scored
+    ) / (PRIOR_ATTEMPTS + effective)
+    return PenaltyTeamShootoutExperience(
+        team_name=team_name,
+        attempts=len(rows),
+        scored=sum(
+            str(row.get("outcome") or "").casefold() == "scored" for row in rows
+        ),
+        effective_attempts=effective,
+        conversion=conversion,
+    )
+
+
+def _apply_team_experience_to_prior_only_players(
+    profiles: dict[str, PenaltyPlayerProfile],
+    experience: PenaltyTeamShootoutExperience,
+) -> dict[str, PenaltyPlayerProfile]:
+    blend = min(
+        0.20,
+        0.25 * experience.effective_attempts
+        / (PRIOR_ATTEMPTS + experience.effective_attempts),
+    )
+    if blend <= 0:
+        return profiles
+    adjusted: dict[str, PenaltyPlayerProfile] = {}
+    for name, profile in profiles.items():
+        if profile.attempts > 0:
+            adjusted[name] = profile
+            continue
+        shift = blend * (experience.conversion - GLOBAL_PENALTY_CONVERSION)
+        adjusted[name] = replace(
+            profile,
+            conversion=max(0.45, min(0.95, profile.conversion + shift)),
+            low=max(0.05, min(0.95, profile.low + shift)),
+            high=max(0.05, min(0.99, profile.high + shift)),
+        )
+    return adjusted
 
 
 def _lineup_with_goalkeeper(
@@ -261,6 +334,7 @@ def build_penalty_match_context(
     squads: dict[str, list[dict]] | None = None,
     lineups: dict[str, list[str | dict]] | None = None,
     goalkeeper_profiles: dict[str, GoalkeeperPenaltyProfile] | None = None,
+    goalkeeper_attempts: list[dict] | None = None,
     deep_goalkeeper_rates: dict[str, float] | None = None,
     as_of: date | None = None,
     seed: int = 0,
@@ -277,17 +351,28 @@ def build_penalty_match_context(
         raise ValueError("simulations must be positive")
 
     as_of = as_of or date.today()
+    goalkeeper_attempts = goalkeeper_attempts if goalkeeper_attempts is not None else attempts
     attempts_a = _team_rows(team_a, attempts)
     attempts_b = _team_rows(team_b, attempts)
     player_profiles_a = build_player_profiles(squad_a, attempts_a, as_of)
     player_profiles_b = build_player_profiles(squad_b, attempts_b, as_of)
+    experience_a = build_team_shootout_experience(team_a, attempts, as_of)
+    experience_b = build_team_shootout_experience(team_b, attempts, as_of)
+    player_profiles_a = _apply_team_experience_to_prior_only_players(
+        player_profiles_a, experience_a
+    )
+    player_profiles_b = _apply_team_experience_to_prior_only_players(
+        player_profiles_b, experience_b
+    )
     lineup_a = _mapping_value(lineups, team_a, None)
     lineup_b = _mapping_value(lineups, team_b, None)
     keeper_a = _starting_goalkeeper_profile(
-        team_a, squad_a, lineup_a, attempts, goalkeeper_profiles, deep_goalkeeper_rates,
+        team_a, squad_a, lineup_a, goalkeeper_attempts, goalkeeper_profiles,
+        deep_goalkeeper_rates, as_of,
     )
     keeper_b = _starting_goalkeeper_profile(
-        team_b, squad_b, lineup_b, attempts, goalkeeper_profiles, deep_goalkeeper_rates,
+        team_b, squad_b, lineup_b, goalkeeper_attempts, goalkeeper_profiles,
+        deep_goalkeeper_rates, as_of,
     )
     lineup_a = _lineup_with_goalkeeper(
         squad_a, lineup_a, keeper_a.player_name if keeper_a is not None else None,

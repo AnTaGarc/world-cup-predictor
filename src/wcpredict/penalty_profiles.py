@@ -38,6 +38,12 @@ class GoalkeeperPenaltyProfile:
     faced_penalties: int
     penalty_history_weight: float
     source: str
+    effective_attempts: float = 0.0
+    saves: int = 0
+    goals: int = 0
+    off_target_attempts: int = 0
+    regular_attempts: int = 0
+    shootout_attempts: int = 0
 
 
 def _name_key(value: object) -> str:
@@ -163,6 +169,7 @@ def build_goalkeeper_profile(
     player: dict,
     attempts: list[dict],
     deep_save_rate: float | None = None,
+    as_of: date | None = None,
 ) -> GoalkeeperPenaltyProfile:
     player_name = str(player.get("player_name") or "")
     player_key = _name_key(player_name)
@@ -170,12 +177,18 @@ def build_goalkeeper_profile(
         row for row in attempts
         if _name_key(row.get("goalkeeper_name")) == player_key
     ]
-    tournament = [
+    diagnostic_attempts = [
         row for row in matching
-        if str(row.get("source_provider") or "") == "world_cup_2026_manual"
-        and _outcome(row) in {"scored", "saved", "off_target", "woodwork"}
+        if _outcome(row) in {
+            "scored", "saved", "missed", "off_target", "woodwork", "unknown_miss"
+        }
     ]
-    historical = [row for row in matching if row not in tournament]
+    trusted = [
+        row for row in matching
+        if row.get("taker_name") is not None
+        or str(row.get("source_provider") or "") not in {"", "transfermarkt"}
+    ]
+    historical = [row for row in matching if row not in trusted]
     observed_saves = [row for row in historical if _is_goalkeeper_save(row)]
     # Transfermarkt's generic missed-penalty page does not always say whether
     # the goalkeeper saved it or the taker missed. Avoid a one-sided sample of
@@ -184,21 +197,49 @@ def build_goalkeeper_profile(
         [row for row in historical if _outcome(row) == "scored" or _is_goalkeeper_save(row)]
         if observed_saves else []
     )
-    relevant = historical_relevant + tournament
-    saves = sum(_is_goalkeeper_save(row) for row in relevant)
-    faced = len(relevant)
-    history_weight = faced / (PRIOR_ATTEMPTS + faced)
-    penalty_rate = (GLOBAL_PENALTY_SAVE * PRIOR_ATTEMPTS + saves) / (PRIOR_ATTEMPTS + faced)
+    relevant = historical_relevant + trusted
+    scored_or_saved = [
+        row for row in relevant
+        if _outcome(row) == "scored" or _is_goalkeeper_save(row)
+    ]
+    as_of = as_of or date.today()
+    weighted_saves = 0.0
+    weighted_goals = 0.0
+    for row in scored_or_saved:
+        phase_weight = (
+            SHOOTOUT_WEIGHT
+            if str(row.get("phase") or "").casefold() == "shootout"
+            else REGULAR_WEIGHT
+        )
+        attempted_on = penalty_attempt_date(row.get("attempted_on"))
+        age_days = max(0, (as_of - attempted_on).days) if attempted_on else 0
+        weight = phase_weight * (0.5 ** (age_days / RECENCY_HALF_LIFE_DAYS))
+        if _is_goalkeeper_save(row):
+            weighted_saves += weight
+        else:
+            weighted_goals += weight
+    effective_attempts = weighted_saves + weighted_goals
+    saves = sum(_is_goalkeeper_save(row) for row in scored_or_saved)
+    goals = sum(_outcome(row) == "scored" for row in scored_or_saved)
+    faced = len([
+        row for row in relevant
+        if _outcome(row) in {"scored", "saved", "off_target", "woodwork"}
+        or _is_goalkeeper_save(row)
+    ])
+    history_weight = effective_attempts / (PRIOR_ATTEMPTS + effective_attempts)
+    penalty_rate = (
+        GLOBAL_PENALTY_SAVE * PRIOR_ATTEMPTS + weighted_saves
+    ) / (PRIOR_ATTEMPTS + effective_attempts)
 
     general_rate = deep_save_rate
     if general_rate is None and player.get("save_percentage") is not None:
         general_rate = float(player["save_percentage"]) / 100.0
-    general_weight = 0.0 if general_rate is None else 0.15 / (1.0 + faced)
+    general_weight = 0.0 if general_rate is None else 0.15 / (1.0 + effective_attempts)
     if general_rate is not None:
         general_rate = min(1.0, max(0.0, float(general_rate)))
         penalty_rate = (1.0 - general_weight) * penalty_rate + general_weight * general_rate
 
-    if faced:
+    if effective_attempts > 0:
         source = "penalty_history"
     elif general_rate is not None:
         source = "general_save_fallback"
@@ -210,4 +251,19 @@ def build_goalkeeper_profile(
         faced_penalties=faced,
         penalty_history_weight=history_weight,
         source=source,
+        effective_attempts=effective_attempts,
+        saves=saves,
+        goals=goals,
+        off_target_attempts=sum(
+            _outcome(row) in {"off_target", "woodwork"}
+            for row in diagnostic_attempts
+        ),
+        regular_attempts=sum(
+            str(row.get("phase") or "regular").casefold() != "shootout"
+            for row in diagnostic_attempts
+        ),
+        shootout_attempts=sum(
+            str(row.get("phase") or "").casefold() == "shootout"
+            for row in diagnostic_attempts
+        ),
     )

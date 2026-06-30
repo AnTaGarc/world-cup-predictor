@@ -127,7 +127,9 @@ def group_stage_complete(repo: Repository, team_name: str) -> bool:
     return completed >= 3
 
 
-def _repository_inputs(repo: Repository, match) -> tuple[dict, dict, dict, list[dict]]:
+def _repository_inputs(repo: Repository, match) -> tuple[
+    dict, dict, dict, list[dict], list[dict], list[dict]
+]:
     team_names = (match.team_a.name, match.team_b.name)
     selected = [
         dict(row) for row in repo.list_current_world_cup_players()
@@ -175,8 +177,56 @@ def _repository_inputs(repo: Repository, match) -> tuple[dict, dict, dict, list[
         for player in squads[team]:
             if is_goalkeeper(player):
                 deep_rates[str(player.get("player_name") or "")] = baseline.save_rate
-    return squads, lineups, deep_rates, repo.list_penalty_evidence(
+    attempts = repo.list_penalty_evidence(team_names, match.kickoff_utc)
+    historical_kicks = repo.list_historical_shootout_kicks(
         team_names, match.kickoff_utc
+    )
+    historical_attempts = [
+        {
+            "player_name": row.get("player_name"),
+            "team_name": row.get("team_name"),
+            "attempted_on": row.get("played_on"),
+            "competition": row.get("competition"),
+            "phase": "shootout",
+            "outcome": row.get("outcome"),
+            "goalkeeper_name": row.get("goalkeeper_name"),
+            "opponent_team": (
+                row.get("team_b")
+                if same_team(str(row.get("team_a") or ""), str(row.get("team_name") or ""))
+                else row.get("team_a")
+            ),
+            "source_provider": row.get("source_provider"),
+            "source_url": row.get("source_url"),
+            "source_row_key": row.get("source_row_key"),
+        }
+        for row in historical_kicks
+    ]
+    attempts.extend(historical_attempts)
+
+    goalkeeper_attempts: list[dict] = []
+    goalkeeper_names = {
+        str(player.get("player_name") or "")
+        for team in team_names
+        for player in squads[team]
+        if is_goalkeeper(player)
+    }
+    for goalkeeper_name in sorted(goalkeeper_names):
+        goalkeeper_attempts.extend(
+            repo.list_goalkeeper_penalty_attempts(
+                goalkeeper_name, match.kickoff_utc
+            )
+        )
+    goalkeeper_attempts.extend([
+        row for row in attempts
+        if str(row.get("source_provider") or "") != "transfermarkt"
+    ])
+    coverage = [
+        row
+        for team in team_names
+        for row in repo.list_historical_shootout_coverage(team)
+    ]
+    return (
+        squads, lineups, deep_rates, attempts, goalkeeper_attempts, coverage
     )
 
 
@@ -202,6 +252,8 @@ def _input_fingerprint(
     lineups: dict,
     deep_rates: dict,
     attempts: list[dict],
+    goalkeeper_attempts: list[dict],
+    shootout_coverage: list[dict],
     group_results: list[dict],
     model_version: str,
 ) -> str:
@@ -212,6 +264,8 @@ def _input_fingerprint(
             "lineups": lineups,
             "deep_rates": deep_rates,
             "attempts": attempts,
+            "goalkeeper_attempts": goalkeeper_attempts,
+            "shootout_coverage": shootout_coverage,
             "group_results": group_results,
             "model_version": model_version,
         },
@@ -226,9 +280,13 @@ def repository_penalty_input_fingerprint(
     *,
     model_version: str = PENALTY_MODEL_VERSION,
 ) -> str:
-    squads, lineups, deep_rates, attempts = _repository_inputs(repo, match)
+    (
+        squads, lineups, deep_rates, attempts, goalkeeper_attempts,
+        shootout_coverage,
+    ) = _repository_inputs(repo, match)
     return _input_fingerprint(
-        match, squads, lineups, deep_rates, attempts,
+        match, squads, lineups, deep_rates, attempts, goalkeeper_attempts,
+        shootout_coverage,
         _group_results_for_fingerprint(repo, match), model_version,
     )
 
@@ -240,13 +298,18 @@ def build_repository_penalty_context(
     simulations: int = DEFAULT_SIMULATIONS,
     model_version: str = PENALTY_MODEL_VERSION,
 ) -> tuple[PenaltyMatchContext, str]:
-    squads, lineups, deep_rates, attempts = _repository_inputs(repo, match)
+    (
+        squads, lineups, deep_rates, attempts, goalkeeper_attempts,
+        shootout_coverage,
+    ) = _repository_inputs(repo, match)
     fingerprint = _input_fingerprint(
         match,
         squads,
         lineups,
         deep_rates,
         attempts,
+        goalkeeper_attempts,
+        shootout_coverage,
         _group_results_for_fingerprint(repo, match),
         model_version,
     )
@@ -257,6 +320,7 @@ def build_repository_penalty_context(
         attempts,
         squads=squads,
         lineups=lineups,
+        goalkeeper_attempts=goalkeeper_attempts,
         deep_goalkeeper_rates=deep_rates,
         as_of=match.kickoff_utc.date(),
         seed=seed,

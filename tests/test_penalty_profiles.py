@@ -56,6 +56,43 @@ class PenaltyProfileTests(unittest.TestCase):
         self.assertLess(abs(sparse.penalty_save_rate - GLOBAL_PENALTY_SAVE), 0.10)
         self.assertGreater(sampled.penalty_history_weight, sparse.penalty_history_weight)
 
+    def test_recent_shootout_goalkeeper_evidence_outweighs_old_regular_evidence(self):
+        recent = [{
+            "goalkeeper_name": "Keeper", "taker_name": "Taker",
+            "phase": "shootout", "outcome": "saved", "attempted_on": "2026-06-01",
+        }]
+        old = [{
+            "goalkeeper_name": "Keeper", "taker_name": "Taker",
+            "phase": "regular", "outcome": "saved", "attempted_on": "2016-06-01",
+        }]
+
+        strong = build_goalkeeper_profile(
+            {"player_name": "Keeper"}, recent, as_of=date(2026, 6, 28)
+        )
+        weak = build_goalkeeper_profile(
+            {"player_name": "Keeper"}, old, as_of=date(2026, 6, 28)
+        )
+
+        self.assertGreater(strong.effective_attempts, weak.effective_attempts)
+        self.assertEqual(1, strong.shootout_attempts)
+        self.assertEqual(1, weak.regular_attempts)
+
+    def test_direct_goalkeeper_rows_make_scored_only_sample_valid(self):
+        attempts = [
+            {
+                "goalkeeper_name": "Keeper", "taker_name": f"Taker {index}",
+                "phase": "regular", "outcome": "scored", "attempted_on": "2026-01-01",
+            }
+            for index in range(5)
+        ]
+
+        profile = build_goalkeeper_profile(
+            {"player_name": "Keeper"}, attempts, as_of=date(2026, 6, 28)
+        )
+
+        self.assertEqual(5, profile.faced_penalties)
+        self.assertEqual("penalty_history", profile.source)
+
     def test_goalkeeper_does_not_get_credit_for_off_target_attempt(self):
         keeper = {"player_name": "Keeper"}
         attempts = [
@@ -65,6 +102,7 @@ class PenaltyProfileTests(unittest.TestCase):
         profile = build_goalkeeper_profile(keeper, attempts)
         expected = (GLOBAL_PENALTY_SAVE * 12.0 + 1.0) / 13.0
         self.assertEqual(1, profile.faced_penalties)
+        self.assertEqual(1, profile.off_target_attempts)
         self.assertAlmostEqual(expected, profile.penalty_save_rate)
 
     def test_goalkeeper_recovers_saved_outcome_from_legacy_raw_json(self):

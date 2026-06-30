@@ -8,6 +8,7 @@ from wcpredict.penalty_context_cache import (
     group_stage_complete,
     load_precomputed_context,
     save_precomputed_context,
+    repository_penalty_input_fingerprint,
 )
 from wcpredict.penalty_history_model import (
     PenaltyCoverage,
@@ -18,6 +19,38 @@ from wcpredict.repository import Repository
 
 
 class PenaltyContextCacheTests(unittest.TestCase):
+    def test_goalkeeper_evidence_changes_repository_fingerprint(self):
+        with tempfile.TemporaryDirectory() as directory:
+            repo = Repository(Path(directory) / "app.sqlite")
+            repo.initialize()
+            morocco = repo.upsert_team("Morocco")
+            spain = repo.upsert_team("Spain")
+            match_id = repo.upsert_match(
+                "FIFA World Cup 2026", "Round of 16",
+                datetime(2026, 7, 4, tzinfo=timezone.utc),
+                morocco, spain, "scheduled",
+            )
+            repo.replace_current_world_cup_players(
+                "test",
+                [
+                    {"player_name": "Bounou", "team_name": "Morocco", "position": "GK"},
+                    {"player_name": "Spain Keeper", "team_name": "Spain", "position": "GK"},
+                ],
+                datetime(2026, 6, 30, tzinfo=timezone.utc),
+            )
+            match = repo.get_match(match_id)
+            before = repository_penalty_input_fingerprint(repo, match)
+            repo.save_goalkeeper_penalty_attempts([{
+                "goalkeeper_name": "Bounou", "attempted_on": "2026-01-01",
+                "phase": "shootout", "outcome": "saved", "taker_name": "Taker",
+                "source_provider": "test", "source_url": "https://example.test",
+                "source_row_key": "bounou-1",
+                "fetched_at_utc": "2026-06-30T10:00:00+00:00",
+            }])
+            after = repository_penalty_input_fingerprint(repo, match)
+
+        self.assertNotEqual(before, after)
+
     def test_context_round_trips_through_versioned_atomic_json(self):
         context = build_penalty_match_context("Spain", "Japan", [])
         context = replace(
