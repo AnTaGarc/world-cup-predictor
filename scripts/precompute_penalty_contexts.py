@@ -18,7 +18,16 @@ from wcpredict.penalty_context_cache import (
     save_precomputed_context,
 )
 from wcpredict.penalty_history_model import DEFAULT_SIMULATIONS, PENALTY_MODEL_VERSION
+from wcpredict.names import canonical_team_name
 from wcpredict.repository import Repository
+from wcpredict.transfermarkt_penalties import active_knockout_teams
+
+
+def team_a_and_b_are_active(match, active_teams: set[str]) -> bool:
+    return {
+        canonical_team_name(match.team_a.name),
+        canonical_team_name(match.team_b.name),
+    }.issubset(active_teams)
 
 
 def main() -> int:
@@ -42,9 +51,16 @@ def main() -> int:
     repo.initialize()
     output_dir = Path(args.output_dir)
     selected_ids = set(args.match_id or [])
+    active_teams = set(active_knockout_teams(repo))
+    knockout_stages = {
+        "Round of 32", "Round of 16", "Quarter-final", "Semi-final",
+        "Third-place play-off", "Final",
+    }
     candidates = [
         match for match in repo.list_matches()
-        if str(match.stage or "").startswith("Round of 32")
+        if str(match.stage or "") in knockout_stages
+        and str(match.status or "").casefold() != "finished"
+        and team_a_and_b_are_active(match, active_teams)
         and (not selected_ids or match.id in selected_ids)
     ]
     if not candidates:

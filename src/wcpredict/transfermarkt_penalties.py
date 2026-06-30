@@ -170,6 +170,34 @@ def eligible_penalty_teams(repo: Repository) -> list[str]:
     return [str(row["name"]) for row in rows]
 
 
+def active_knockout_teams(repo: Repository) -> list[str]:
+    """Return teams attached to at least one unfinished knockout slot."""
+    team_ids: set[int] = set()
+    with closing(sqlite3.connect(repo.path, timeout=30)) as con:
+        con.row_factory = sqlite3.Row
+        slots = con.execute(
+            "SELECT kb.home_team_id, kb.away_team_id, m.status "
+            "FROM knockout_bracket kb "
+            "LEFT JOIN matches m ON m.id=kb.match_id "
+            "WHERE kb.competition=?",
+            (COMPETITION,),
+        ).fetchall()
+        for row in slots:
+            if str(row["status"] or "scheduled").casefold() == "finished":
+                continue
+            for key in ("home_team_id", "away_team_id"):
+                if row[key] is not None:
+                    team_ids.add(int(row[key]))
+        if not team_ids:
+            return []
+        placeholders = ",".join("?" for _ in team_ids)
+        rows = con.execute(
+            f"SELECT name FROM teams WHERE id IN ({placeholders}) ORDER BY name",
+            tuple(sorted(team_ids)),
+        ).fetchall()
+    return sorted({canonical_team_name(str(row["name"])) for row in rows})
+
+
 def player_targets_for_teams(repo: Repository, team_names: list[str]) -> list[PenaltyPlayerTarget]:
     if not team_names:
         return []

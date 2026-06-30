@@ -5,6 +5,7 @@ import unittest
 
 from wcpredict.repository import Repository
 from wcpredict.transfermarkt_penalties import (
+    active_knockout_teams,
     eligible_penalty_teams,
     load_penalty_team_snapshot,
     parse_penalty_attempts,
@@ -16,6 +17,60 @@ from wcpredict.transfermarkt_penalties import (
 
 
 class TransfermarktPenaltyTests(unittest.TestCase):
+    @staticmethod
+    def _insert_bracket_slot(
+        repo, slot_id, stage, home_team_id, away_team_id, match_id=None
+    ):
+        with repo.session() as con:
+            con.execute(
+                "INSERT INTO knockout_bracket(competition, stage, slot_id, kickoff_utc, "
+                "home_source, away_source, home_team_id, away_team_id, match_id) "
+                "VALUES('FIFA World Cup 2026', ?, ?, '2026-07-01T20:00:00+00:00', "
+                "'test-home', 'test-away', ?, ?, ?)",
+                (stage, slot_id, home_team_id, away_team_id, match_id),
+            )
+
+    def test_active_knockout_teams_excludes_closed_loser_and_keeps_winner(self):
+        with tempfile.TemporaryDirectory() as directory:
+            repo = Repository(Path(directory) / "app.sqlite")
+            repo.initialize()
+            germany = repo.upsert_team("Germany")
+            paraguay = repo.upsert_team("Paraguay")
+            france = repo.upsert_team("France")
+            match_id = repo.upsert_match(
+                "FIFA World Cup 2026",
+                "Round of 32",
+                datetime(2026, 6, 28, tzinfo=timezone.utc),
+                germany,
+                paraguay,
+                "finished",
+            )
+            self._insert_bracket_slot(
+                repo, "R32-1", "Round of 32", germany, paraguay, match_id
+            )
+            self._insert_bracket_slot(
+                repo, "R16-1", "Round of 16", paraguay, france
+            )
+
+            active = active_knockout_teams(repo)
+
+        self.assertNotIn("Germany", active)
+        self.assertEqual(["France", "Paraguay"], active)
+
+    def test_active_knockout_teams_does_not_permanently_blacklist_germany(self):
+        with tempfile.TemporaryDirectory() as directory:
+            repo = Repository(Path(directory) / "app.sqlite")
+            repo.initialize()
+            germany = repo.upsert_team("Germany")
+            paraguay = repo.upsert_team("Paraguay")
+            self._insert_bracket_slot(
+                repo, "R32-1", "Round of 32", germany, paraguay
+            )
+
+            active = active_knockout_teams(repo)
+
+        self.assertEqual(["Germany", "Paraguay"], active)
+
     def test_fetch_script_configures_utf8_console_output(self):
         source = (
             Path(__file__).parents[1] / "scripts" / "fetch_transfermarkt_penalties.py"

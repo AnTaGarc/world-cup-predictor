@@ -17,7 +17,7 @@ from wcpredict.database import initialize_database
 from wcpredict.knockout_bracket import resolve_knockout_bracket, seed_knockout_bracket
 from wcpredict.repository import Repository
 from wcpredict.transfermarkt_penalties import (
-    eligible_penalty_teams,
+    active_knockout_teams,
     fetch_html,
     load_penalty_team_snapshot,
     parse_penalty_attempts,
@@ -38,11 +38,11 @@ def main() -> int:
     parser.add_argument(
         "--team-snapshot",
         default=str(ROOT / "data" / "fixtures" / "world_cup_2026_penalty_teams.csv"),
-        help="Canonical qualified-team snapshot used unless --teams is supplied.",
+        help="Canonical qualified-team snapshot used only to audit the active bracket.",
     )
     parser.add_argument("--cache-dir", default=str(ROOT / "data" / "cache" / "transfermarkt_penalties"))
     parser.add_argument("--review-csv", default=str(ROOT / "output" / "penalty_identity_review.csv"))
-    parser.add_argument("--teams", nargs="*", help="Optional explicit team list; otherwise uses bracket/group status.")
+    parser.add_argument("--teams", nargs="*", help="Optional explicit team list; otherwise uses the active knockout bracket.")
     parser.add_argument("--resolve-ids", action="store_true", help="Search Transfermarkt for missing player ids.")
     parser.add_argument("--auto-confidence", type=float, default=0.95)
     parser.add_argument("--refresh", action="store_true", help="Ignore cached Transfermarkt HTML.")
@@ -57,10 +57,10 @@ def main() -> int:
         seed_knockout_bracket(repo, knockout_csv)
         resolve_knockout_bracket(repo)
 
-    dynamic_teams = eligible_penalty_teams(repo)
+    dynamic_teams = active_knockout_teams(repo)
     snapshot_path = Path(args.team_snapshot)
     snapshot_teams = load_penalty_team_snapshot(snapshot_path) if snapshot_path.exists() else []
-    teams = args.teams or snapshot_teams or dynamic_teams
+    teams = args.teams or dynamic_teams
     if not teams:
         print("No hay selecciones elegibles todavía.")
         return 0
