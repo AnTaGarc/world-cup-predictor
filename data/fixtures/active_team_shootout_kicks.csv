@@ -56,6 +56,15 @@ played_on,competition,competition_edition,round_name,team_a,team_b,winner_team,s
 2023-06-18,UEFA Nations League,2022/23,Final,Croatia,Spain,Spain,10,Spain,Aymeric Laporte,,missed,espn,https://www.espn.com/soccer/match/_/gameId/654361,espn:654361:40807249,2026-06-30T12:00:00+00:00
 2023-06-18,UEFA Nations League,2022/23,Final,Croatia,Spain,Spain,11,Croatia,Bruno Petkovic,,missed,espn,https://www.espn.com/soccer/match/_/gameId/654361,espn:654361:40807251,2026-06-30T12:00:00+00:00
 2023-06-18,UEFA Nations League,2022/23,Final,Croatia,Spain,Spain,12,Spain,Dani Carvajal,,scored,espn,https://www.espn.com/soccer/match/_/gameId/654361,espn:654361:40807255,2026-06-30T12:00:00+00:00
+2026-01-14,Africa Cup of Nations,2025,Semi-final,Nigeria,Morocco,Morocco,1,Morocco,Neil El Aynaoui,,scored,espn,https://www.espn.com/soccer/match/_/gameId/732182,espn:732182:46761056,2026-06-30T12:00:00+00:00
+2026-01-14,Africa Cup of Nations,2025,Semi-final,Nigeria,Morocco,Morocco,2,Nigeria,Paul Onuachu,,scored,espn,https://www.espn.com/soccer/match/_/gameId/732182,espn:732182:46761061,2026-06-30T12:00:00+00:00
+2026-01-14,Africa Cup of Nations,2025,Semi-final,Nigeria,Morocco,Morocco,3,Morocco,Hamza Igmane,,missed,espn,https://www.espn.com/soccer/match/_/gameId/732182,espn:732182:46761070,2026-06-30T12:00:00+00:00
+2026-01-14,Africa Cup of Nations,2025,Semi-final,Nigeria,Morocco,Morocco,4,Nigeria,Samuel Chukwueze,,missed,espn,https://www.espn.com/soccer/match/_/gameId/732182,espn:732182:46761073,2026-06-30T12:00:00+00:00
+2026-01-14,Africa Cup of Nations,2025,Semi-final,Nigeria,Morocco,Morocco,5,Morocco,Eliesse Ben Seghir,,scored,espn,https://www.espn.com/soccer/match/_/gameId/732182,espn:732182:46761083,2026-06-30T12:00:00+00:00
+2026-01-14,Africa Cup of Nations,2025,Semi-final,Nigeria,Morocco,Morocco,6,Nigeria,Fisayo Dele-Bashiru,,scored,espn,https://www.espn.com/soccer/match/_/gameId/732182,espn:732182:46761090,2026-06-30T12:00:00+00:00
+2026-01-14,Africa Cup of Nations,2025,Semi-final,Nigeria,Morocco,Morocco,7,Morocco,Achraf Hakimi,,scored,espn,https://www.espn.com/soccer/match/_/gameId/732182,espn:732182:46761099,2026-06-30T12:00:00+00:00
+2026-01-14,Africa Cup of Nations,2025,Semi-final,Nigeria,Morocco,Morocco,8,Nigeria,Bruno Onyemaechi,,missed,espn,https://www.espn.com/soccer/match/_/gameId/732182,espn:732182:46761100,2026-06-30T12:00:00+00:00
+2026-01-14,Africa Cup of Nations,2025,Semi-final,Nigeria,Morocco,Morocco,9,Morocco,Youssef En-Nesyri,,scored,espn,https://www.espn.com/soccer/match/_/gameId/732182,espn:732182:46761116,2026-06-30T12:00:00+00:00
 2026-01-17,Africa Cup of Nations,2025,Third-place match,Egypt,Nigeria,Nigeria,1,Nigeria,Fisayo Dele-Bashiru,,missed,espn,https://www.espn.com/soccer/match/_/gameId/732183,espn:732183:46779125,2026-06-30T12:00:00+00:00
 2026-01-17,Africa Cup of Nations,2025,Third-place match,Egypt,Nigeria,Nigeria,2,Egypt,Mohamed Salah,,missed,espn,https://www.espn.com/soccer/match/_/gameId/732183,espn:732183:46779132,2026-06-30T12:00:00+00:00
 2026-01-17,Africa Cup of Nations,2025,Third-place match,Egypt,Nigeria,Nigeria,3,Nigeria,Akor Adams,,scored,espn,https://www.espn.com/soccer/match/_/gameId/732183,espn:732183:46779176,2026-06-30T12:00:00+00:00
@@ -142,6 +151,13 @@ played_on,competition,competition_edition,round_name,team_a,team_b,winner_team,s
 2022-02-06,Africa Cup of Nations,2021,Final,Senegal,Egypt,Senegal,7,Senegal,Bamba Dieng,,scored,espn,https://www.espn.com/soccer/match/_/gameId/629153,espn:629153:37529961,2026-06-30T12:00:00+00:00
 2022-02-06,Africa Cup of Nations,2021,Final,Senegal,Egypt,Senegal,8,Egypt,Mohanad Lashin,,missed,espn,https://www.espn.com/soccer/match/_/gameId/629153,espn:629153:37529972,2026-06-30T12:00:00+00:00
 2022-02-06,Africa Cup of Nations,2021,Final,Senegal,Egypt,Senegal,9,Senegal,Sadio Mané,,scored,espn,https://www.espn.com/soccer/match/_/gameId/629153,espn:629153:37529982,2026-06-30T12:00:00+00:00
+2022-12-06,World Cup,2022,Round of 16,Morocco,Spain,Morocco,1,Morocco,Abdelhamid Sabiri,,scored,espn,https://www.espn.com/soccer/match/_/gameId/633841,espn:633841:39526903,2026-06-30T12:00:00+00:00
+2022-12-06,World Cup,2022,Round of 16,Morocco,Spain,Morocco,2,Spain,Pablo Sarabia,,missed,espn,https://www.espn.com/soccer/match/_/gameId/633841,espn:633841:39526904,2026-06-30T12:00:00+00:00
+2022-12-06,World Cup,2022,Round of 16,Morocco,Spain,Morocco,3,Morocco,Hakim Ziyech,,scored,espn,https://www.espn.com/soccer/match/_/gameId/633841,espn:633841:39526910,2026-06-30T12:00:00+00:00
+2022-12-06,World Cup,2022,Round of 16,Morocco,Spain,Morocco,4,Spain,Carlos Soler,,missed,espn,https://www.espn.com/soccer/match/_/gameId/633841,espn:633841:39526911,2026-06-30T12:00:00+00:00
+2022-12-06,World Cup,2022,Round of 16,Morocco,Spain,Morocco,5,Morocco,Badr Benoun,,missed,espn,https://www.espn.com/soccer/match/_/gameId/633841,espn:633841:39526917,2026-06-30T12:00:00+00:00
+2022-12-06,World Cup,2022,Round of 16,Morocco,Spain,Morocco,6,Spain,Sergio Busquets,,missed,espn,https://www.espn.com/soccer/match/_/gameId/633841,espn:633841:39526922,2026-06-30T12:00:00+00:00
+2022-12-06,World Cup,2022,Round of 16,Morocco,Spain,Morocco,7,Morocco,Achraf Hakimi,,scored,espn,https://www.espn.com/soccer/match/_/gameId/633841,espn:633841:39526925,2026-06-30T12:00:00+00:00
 2024-07-04,Copa America,2024,Quarter-final,Argentina,Ecuador,Argentina,1,Argentina,Lionel Messi,,missed,espn,https://www.espn.com/soccer/match/_/gameId/703946,espn:703946:43373294,2026-06-30T12:00:00+00:00
 2024-07-04,Copa America,2024,Quarter-final,Argentina,Ecuador,Argentina,2,Ecuador,Ángel Mena,,missed,espn,https://www.espn.com/soccer/match/_/gameId/703946,espn:703946:43373306,2026-06-30T12:00:00+00:00
 2024-07-04,Copa America,2024,Quarter-final,Argentina,Ecuador,Argentina,3,Argentina,Julián Álvarez,,scored,espn,https://www.espn.com/soccer/match/_/gameId/703946,espn:703946:43373307,2026-06-30T12:00:00+00:00
@@ -181,6 +197,18 @@ played_on,competition,competition_edition,round_name,team_a,team_b,winner_team,s
 2024-07-13,Copa America,2024,Third-place match,Canada,Uruguay,Uruguay,7,Canada,Mathieu Choinière,,scored,espn,https://www.espn.com/soccer/match/_/gameId/703952,espn:703952:43401804,2026-06-30T12:00:00+00:00
 2024-07-13,Copa America,2024,Third-place match,Canada,Uruguay,Uruguay,8,Uruguay,Luis Suárez,,scored,espn,https://www.espn.com/soccer/match/_/gameId/703952,espn:703952:43401812,2026-06-30T12:00:00+00:00
 2024-07-13,Copa America,2024,Third-place match,Canada,Uruguay,Uruguay,9,Canada,Alphonso Davies,,missed,espn,https://www.espn.com/soccer/match/_/gameId/703952,espn:703952:43401818,2026-06-30T12:00:00+00:00
+2021-07-02,Copa America,2021,Quarter-final,Peru,Paraguay,Peru,1,Paraguay,Ángel Romero,,scored,espn,https://www.espn.com/soccer/match/_/gameId/603189,espn:603189:36115084,2026-06-30T12:00:00+00:00
+2021-07-02,Copa America,2021,Quarter-final,Peru,Paraguay,Peru,2,Peru,Gianluca Lapadula,,scored,espn,https://www.espn.com/soccer/match/_/gameId/603189,espn:603189:36115087,2026-06-30T12:00:00+00:00
+2021-07-02,Copa America,2021,Quarter-final,Peru,Paraguay,Peru,3,Paraguay,Júnior Alonso,,scored,espn,https://www.espn.com/soccer/match/_/gameId/603189,espn:603189:36115090,2026-06-30T12:00:00+00:00
+2021-07-02,Copa America,2021,Quarter-final,Peru,Paraguay,Peru,4,Peru,Yoshimar Yotún,,scored,espn,https://www.espn.com/soccer/match/_/gameId/603189,espn:603189:36115091,2026-06-30T12:00:00+00:00
+2021-07-02,Copa America,2021,Quarter-final,Peru,Paraguay,Peru,5,Paraguay,Héctor Martínez,,missed,espn,https://www.espn.com/soccer/match/_/gameId/603189,espn:603189:36115096,2026-06-30T12:00:00+00:00
+2021-07-02,Copa America,2021,Quarter-final,Peru,Paraguay,Peru,6,Peru,Santiago Ormeño,,missed,espn,https://www.espn.com/soccer/match/_/gameId/603189,espn:603189:36115099,2026-06-30T12:00:00+00:00
+2021-07-02,Copa America,2021,Quarter-final,Peru,Paraguay,Peru,7,Paraguay,Braian Samudio,,missed,espn,https://www.espn.com/soccer/match/_/gameId/603189,espn:603189:36115107,2026-06-30T12:00:00+00:00
+2021-07-02,Copa America,2021,Quarter-final,Peru,Paraguay,Peru,8,Peru,Renato Tapia,,scored,espn,https://www.espn.com/soccer/match/_/gameId/603189,espn:603189:36115112,2026-06-30T12:00:00+00:00
+2021-07-02,Copa America,2021,Quarter-final,Peru,Paraguay,Peru,9,Paraguay,Robert Piris Da Motta,,scored,espn,https://www.espn.com/soccer/match/_/gameId/603189,espn:603189:36115118,2026-06-30T12:00:00+00:00
+2021-07-02,Copa America,2021,Quarter-final,Peru,Paraguay,Peru,10,Peru,Christian Cueva,,missed,espn,https://www.espn.com/soccer/match/_/gameId/603189,espn:603189:36115138,2026-06-30T12:00:00+00:00
+2021-07-02,Copa America,2021,Quarter-final,Peru,Paraguay,Peru,11,Paraguay,Alberto Espínola,,missed,espn,https://www.espn.com/soccer/match/_/gameId/603189,espn:603189:36115148,2026-06-30T12:00:00+00:00
+2021-07-02,Copa America,2021,Quarter-final,Peru,Paraguay,Peru,12,Peru,Miguel Trauco,,scored,espn,https://www.espn.com/soccer/match/_/gameId/603189,espn:603189:36115165,2026-06-30T12:00:00+00:00
 2021-07-03,Copa America,2021,Quarter-final,Uruguay,Colombia,Colombia,1,Colombia,Duván Zapata,,scored,espn,https://www.espn.com/soccer/match/_/gameId/603187,espn:603187:36119923,2026-06-30T12:00:00+00:00
 2021-07-03,Copa America,2021,Quarter-final,Uruguay,Colombia,Colombia,2,Uruguay,Edinson Cavani,,scored,espn,https://www.espn.com/soccer/match/_/gameId/603187,espn:603187:36119927,2026-06-30T12:00:00+00:00
 2021-07-03,Copa America,2021,Quarter-final,Uruguay,Colombia,Colombia,3,Colombia,Davinson Sánchez,,scored,espn,https://www.espn.com/soccer/match/_/gameId/603187,espn:603187:36119935,2026-06-30T12:00:00+00:00
@@ -198,6 +226,16 @@ played_on,competition,competition_edition,round_name,team_a,team_b,winner_team,s
 2021-07-06,Copa America,2021,Semi-final,Argentina,Colombia,Argentina,7,Colombia,Miguel Borja,,scored,espn,https://www.espn.com/soccer/match/_/gameId/603184,espn:603184:36130940,2026-06-30T12:00:00+00:00
 2021-07-06,Copa America,2021,Semi-final,Argentina,Colombia,Argentina,8,Argentina,Lautaro Martínez,,scored,espn,https://www.espn.com/soccer/match/_/gameId/603184,espn:603184:36130942,2026-06-30T12:00:00+00:00
 2021-07-06,Copa America,2021,Semi-final,Argentina,Colombia,Argentina,9,Colombia,Edwin Cardona,,missed,espn,https://www.espn.com/soccer/match/_/gameId/603184,espn:603184:36130943,2026-06-30T12:00:00+00:00
+2019-06-27,Copa America,2019,Quarter-final,Brazil,Paraguay,Brazil,1,Paraguay,Gustavo Gómez,,missed,espn,https://www.espn.com/soccer/match/_/gameId/547350,espn:547350:32378069,2026-06-30T12:00:00+00:00
+2019-06-27,Copa America,2019,Quarter-final,Brazil,Paraguay,Brazil,2,Brazil,Willian,,scored,espn,https://www.espn.com/soccer/match/_/gameId/547350,espn:547350:32378070,2026-06-30T12:00:00+00:00
+2019-06-27,Copa America,2019,Quarter-final,Brazil,Paraguay,Brazil,3,Paraguay,Miguel Almirón,,scored,espn,https://www.espn.com/soccer/match/_/gameId/547350,espn:547350:32378071,2026-06-30T12:00:00+00:00
+2019-06-27,Copa America,2019,Quarter-final,Brazil,Paraguay,Brazil,4,Brazil,Marquinhos,,scored,espn,https://www.espn.com/soccer/match/_/gameId/547350,espn:547350:32378072,2026-06-30T12:00:00+00:00
+2019-06-27,Copa America,2019,Quarter-final,Brazil,Paraguay,Brazil,5,Paraguay,Bruno Valdez,,scored,espn,https://www.espn.com/soccer/match/_/gameId/547350,espn:547350:32378073,2026-06-30T12:00:00+00:00
+2019-06-27,Copa America,2019,Quarter-final,Brazil,Paraguay,Brazil,6,Brazil,Philippe Coutinho,,scored,espn,https://www.espn.com/soccer/match/_/gameId/547350,espn:547350:32378074,2026-06-30T12:00:00+00:00
+2019-06-27,Copa America,2019,Quarter-final,Brazil,Paraguay,Brazil,7,Paraguay,Rodrigo Rojas,,scored,espn,https://www.espn.com/soccer/match/_/gameId/547350,espn:547350:32378075,2026-06-30T12:00:00+00:00
+2019-06-27,Copa America,2019,Quarter-final,Brazil,Paraguay,Brazil,8,Brazil,Roberto Firmino,,missed,espn,https://www.espn.com/soccer/match/_/gameId/547350,espn:547350:32378076,2026-06-30T12:00:00+00:00
+2019-06-27,Copa America,2019,Quarter-final,Brazil,Paraguay,Brazil,9,Paraguay,Derlis González,,missed,espn,https://www.espn.com/soccer/match/_/gameId/547350,espn:547350:32378077,2026-06-30T12:00:00+00:00
+2019-06-27,Copa America,2019,Quarter-final,Brazil,Paraguay,Brazil,10,Brazil,Gabriel Jesus,,scored,espn,https://www.espn.com/soccer/match/_/gameId/547350,espn:547350:32378078,2026-06-30T12:00:00+00:00
 2019-06-28,Copa America,2019,Quarter-final,Colombia,Chile,Chile,1,Colombia,James Rodríguez,,scored,espn,https://www.espn.com/soccer/match/_/gameId/547348,espn:547348:32380539,2026-06-30T12:00:00+00:00
 2019-06-28,Copa America,2019,Quarter-final,Colombia,Chile,Chile,2,Chile,Arturo Vidal,,scored,espn,https://www.espn.com/soccer/match/_/gameId/547348,espn:547348:32380542,2026-06-30T12:00:00+00:00
 2019-06-28,Copa America,2019,Quarter-final,Colombia,Chile,Chile,3,Colombia,Edwin Cardona,,scored,espn,https://www.espn.com/soccer/match/_/gameId/547348,espn:547348:32380550,2026-06-30T12:00:00+00:00
