@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import sqlite3
+import subprocess
 import sys
 import tempfile
 from pathlib import Path
@@ -59,6 +60,75 @@ class ProjectSyncPolicyTests(unittest.TestCase):
                 project_sync.checkpoint_and_validate_sqlite(
                     Path(directory) / "worldcup.sqlite"
                 )
+
+
+class ProjectSyncGitTests(unittest.TestCase):
+    def setUp(self):
+        self.directory = tempfile.TemporaryDirectory()
+        self.root = Path(self.directory.name)
+        self.git("init", "-b", "main")
+        self.git("config", "user.name", "Sync Test")
+        self.git("config", "user.email", "sync@example.test")
+        (self.root / ".gitignore").write_text(
+            "data/cache/\noutput/\n.codex-remote-attachments/\n*.log\n",
+            encoding="utf-8",
+        )
+        for relative in project_sync.DURABLE_PATHS:
+            path = self.root / relative
+            if path.suffix:
+                path.parent.mkdir(parents=True, exist_ok=True)
+                if path.suffix == ".sqlite":
+                    con = sqlite3.connect(path)
+                    con.execute("CREATE TABLE seed(value INTEGER)")
+                    con.close()
+                else:
+                    path.write_text("seed", encoding="utf-8")
+            else:
+                path.mkdir(parents=True, exist_ok=True)
+                (path / ".keep").write_text("seed", encoding="utf-8")
+        self.git("add", "-A")
+        self.git("commit", "-m", "seed")
+
+    def tearDown(self):
+        self.directory.cleanup()
+
+    def git(self, *args: str, check: bool = True):
+        return subprocess.run(
+            ["git", *args], cwd=self.root, check=check,
+            capture_output=True, text=True, encoding="utf-8",
+        )
+
+    def test_staging_includes_durable_data_and_excludes_disposable_files(self):
+        evidence = self.root / "data/evidence/reviewed-json/new.json"
+        evidence.write_text("{}", encoding="utf-8")
+        (self.root / "data/worldcup.sqlite").write_bytes(b"updated")
+        for relative in ("data/cache/page.html", "output/report.csv", "server.log"):
+            path = self.root / relative
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text("temporary", encoding="utf-8")
+
+        staged = project_sync.stage_and_validate(self.root)
+
+        self.assertIn("data/worldcup.sqlite", staged)
+        self.assertIn("data/evidence/reviewed-json/new.json", staged)
+        self.assertNotIn("data/cache/page.html", staged)
+        self.assertNotIn("output/report.csv", staged)
+        self.assertNotIn("server.log", staged)
+
+    def test_forbidden_tracked_path_blocks_staging(self):
+        path = self.root / "output/tracked.log"
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text("bad", encoding="utf-8")
+        self.git("add", "-f", "output/tracked.log")
+
+        with self.assertRaisesRegex(project_sync.SyncError, "prohibid"):
+            project_sync.stage_and_validate(self.root)
+
+    def test_durable_roots_must_exist_and_must_not_be_ignored(self):
+        (self.root / "data/models/.keep").unlink()
+        (self.root / "data/models").rmdir()
+        with self.assertRaisesRegex(project_sync.SyncError, "data/models"):
+            project_sync.validate_durable_paths(self.root)
 
 
 if __name__ == "__main__":

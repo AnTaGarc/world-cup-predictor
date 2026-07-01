@@ -42,7 +42,9 @@ data/qa*.log
 
 # External dataset downloads (re-downloadable via the import scripts)
 data/external/
-data/cache/espn_shootouts/
+data/cache/
+output/
+.codex-remote-attachments/
 
 # Streamlit local cache / secrets
 .streamlit/secrets.toml
