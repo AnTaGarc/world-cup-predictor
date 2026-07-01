@@ -1,0 +1,282 @@
+{
+  "descripcion": "Estadísticas profundas revisadas manualmente a partir de capturas de SofaScore.",
+  "numero_de_partidos": 1,
+  "partidos": [
+    {
+      "id": "mexico_ecuador",
+      "nombre": "México vs Ecuador",
+      "equipos": {
+        "izquierda_verde": "México",
+        "derecha_azul": "Ecuador"
+      },
+      "estadisticas": {
+        "resumen_del_partido": {
+          "posesion_de_balon_pct": {
+            "México": 43,
+            "Ecuador": 57
+          },
+          "goles_esperados_xg": {
+            "México": 1.05,
+            "Ecuador": 0.75
+          },
+          "ocasiones_claras": {
+            "México": 2,
+            "Ecuador": 1
+          },
+          "tiros_totales": {
+            "México": 15,
+            "Ecuador": 7
+          },
+          "paradas": {
+            "México": 1,
+            "Ecuador": 1
+          },
+          "saques_de_esquina": {
+            "México": 3,
+            "Ecuador": 8
+          },
+          "faltas": {
+            "México": 10,
+            "Ecuador": 14
+          },
+          "pases": {
+            "México": 316,
+            "Ecuador": 410
+          },
+          "entradas": {
+            "México": 10,
+            "Ecuador": 11
+          },
+          "tiros_libres": {
+            "México": 14,
+            "Ecuador": 10
+          },
+          "tarjetas_amarillas": {
+            "México": 0,
+            "Ecuador": 3
+          },
+          "tarjetas_rojas": {
+            "México": 0,
+            "Ecuador": 1
+          }
+        },
+        "tiros": {
+          "tiros_totales": {
+            "México": 15,
+            "Ecuador": 7
+          },
+          "tiros_a_puerta": {
+            "México": 3,
+            "Ecuador": 1
+          },
+          "tiros_al_palo": {
+            "México": 0,
+            "Ecuador": 1
+          },
+          "tiros_fuera": {
+            "México": 9,
+            "Ecuador": 5
+          },
+          "tiros_bloqueados": {
+            "México": 3,
+            "Ecuador": 1
+          },
+          "tiros_dentro_del_area_penal": {
+            "México": 10,
+            "Ecuador": 5
+          },
+          "tiros_fuera_del_area": {
+            "México": 5,
+            "Ecuador": 2
+          }
+        },
+        "ataque": {
+          "ocasiones_claras_falladas": {
+            "México": 2,
+            "Ecuador": 1
+          },
+          "pases_en_profundidad": {
+            "México": 1,
+            "Ecuador": 1
+          },
+          "toques_dentro_del_area": {
+            "México": 20,
+            "Ecuador": 21
+          },
+          "faltas_recibidas_en_el_tercio_final": {
+            "México": 1,
+            "Ecuador": 1
+          },
+          "fueras_de_juego": {
+            "México": 0,
+            "Ecuador": 1
+          }
+        },
+        "duelos": {
+          "duelos_pct": {
+            "México": 54,
+            "Ecuador": 46
+          },
+          "perdidas": {
+            "México": 6,
+            "Ecuador": 4
+          },
+          "duelos_en_el_suelo": {
+            "México": {
+              "ganados": 29,
+              "totales": 58,
+              "porcentaje": 50
+            },
+            "Ecuador": {
+              "ganados": 29,
+              "totales": 58,
+              "porcentaje": 50
+            }
+          },
+          "duelos_aereos": {
+            "México": {
+              "ganados": 23,
+              "totales": 38,
+              "porcentaje": 61
+            },
+            "Ecuador": {
+              "ganados": 15,
+              "totales": 38,
+              "porcentaje": 39
+            }
+          },
+          "regates": {
+            "México": {
+              "completados": 6,
+              "intentados": 11,
+              "porcentaje": 55
+            },
+            "Ecuador": {
+              "completados": 8,
+              "intentados": 14,
+              "porcentaje": 57
+            }
+          }
+        },
+        "pases": {
+          "pases_precisos": {
+            "México": 248,
+            "Ecuador": 341
+          },
+          "saques_de_banda": {
+            "México": 16,
+            "Ecuador": 22
+          },
+          "pases_al_ultimo_tercio": {
+            "México": 58,
+            "Ecuador": 72
+          },
+          "pases_en_el_ultimo_tercio": {
+            "México": {
+              "completados": 60,
+              "intentados": 103,
+              "porcentaje": 58
+            },
+            "Ecuador": {
+              "completados": 90,
+              "intentados": 133,
+              "porcentaje": 68
+            }
+          },
+          "pases_largos": {
+            "México": {
+              "completados": 27,
+              "intentados": 58,
+              "porcentaje": 47
+            },
+            "Ecuador": {
+              "completados": 17,
+              "intentados": 53,
+              "porcentaje": 32
+            }
+          },
+          "centros": {
+            "México": {
+              "completados": 4,
+              "intentados": 7,
+              "porcentaje": 57
+            },
+            "Ecuador": {
+              "completados": 3,
+              "intentados": 25,
+              "porcentaje": 12
+            }
+          }
+        },
+        "defensa": {
+          "entradas_ganadas_pct": {
+            "México": 50,
+            "Ecuador": 73
+          },
+          "tackles_totales": {
+            "México": 10,
+            "Ecuador": 11
+          },
+          "intercepciones": {
+            "México": 7,
+            "Ecuador": 6
+          },
+          "recuperaciones": {
+            "México": 35,
+            "Ecuador": 34
+          },
+          "despejes": {
+            "México": 39,
+            "Ecuador": 19
+          },
+          "errores_que_llevan_a_gol": {
+            "México": 0,
+            "Ecuador": 1
+          }
+        },
+        "porteria": {
+          "paradas": {
+            "México": 1,
+            "Ecuador": 1
+          },
+          "goles_evitados": {
+            "México": 0.63,
+            "Ecuador": -0.86
+          },
+          "grandes_paradas": {
+            "México": 1,
+            "Ecuador": 1
+          },
+          "despejes_por_alto": {
+            "México": 1,
+            "Ecuador": 0
+          },
+          "con_los_punos": {
+            "México": 2,
+            "Ecuador": 0
+          },
+          "saques_de_puerta": {
+            "México": 13,
+            "Ecuador": 14
+          }
+        },
+        "mapa_de_ataques": {
+          "equipo_mostrado": "México",
+          "direccion_de_ataque": "hacia_la_derecha",
+          "descripcion": "Mapa de ataques mostrado para México."
+        },
+        "mapa_de_pases": {
+          "tipo_de_dato": "distribucion_global_no_atribuible_por_equipo",
+          "tercio_defensivo_pct": 33,
+          "tercio_central_pct": 41,
+          "tercio_ofensivo_pct": 26
+        }
+      },
+      "fuentes": [
+        "Captura de pantalla 2026-07-01 082217.png",
+        "Captura de pantalla 2026-07-01 082227.png",
+        "Captura de pantalla 2026-07-01 082241.png"
+      ]
+    }
+  ]
+}

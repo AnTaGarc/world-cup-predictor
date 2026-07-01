@@ -1,0 +1,274 @@
+{
+  "descripcion": "Estadísticas profundas revisadas manualmente a partir de capturas de SofaScore.",
+  "numero_de_partidos": 1,
+  "partidos": [
+    {
+      "id": "costa_de_marfil_noruega",
+      "nombre": "Costa de Marfil vs Noruega",
+      "equipos": {
+        "izquierda_verde": "Costa de Marfil",
+        "derecha_azul": "Noruega"
+      },
+      "estadisticas": {
+        "resumen_del_partido": {
+          "posesion_de_balon_pct": {
+            "Costa de Marfil": 47,
+            "Noruega": 53
+          },
+          "goles_esperados_xg": {
+            "Costa de Marfil": 1.36,
+            "Noruega": 2.02
+          },
+          "ocasiones_claras": {
+            "Costa de Marfil": 3,
+            "Noruega": 4
+          },
+          "tiros_totales": {
+            "Costa de Marfil": 14,
+            "Noruega": 9
+          },
+          "paradas": {
+            "Costa de Marfil": 1,
+            "Noruega": 4
+          },
+          "saques_de_esquina": {
+            "Costa de Marfil": 14,
+            "Noruega": 3
+          },
+          "faltas": {
+            "Costa de Marfil": 6,
+            "Noruega": 7
+          },
+          "pases": {
+            "Costa de Marfil": 401,
+            "Noruega": 473
+          },
+          "entradas": {
+            "Costa de Marfil": 24,
+            "Noruega": 19
+          },
+          "tiros_libres": {
+            "Costa de Marfil": 7,
+            "Noruega": 6
+          },
+          "tarjetas_amarillas": {
+            "Costa de Marfil": 0,
+            "Noruega": 1
+          }
+        },
+        "tiros": {
+          "tiros_totales": {
+            "Costa de Marfil": 14,
+            "Noruega": 9
+          },
+          "tiros_a_puerta": {
+            "Costa de Marfil": 5,
+            "Noruega": 4
+          },
+          "tiros_al_palo": {
+            "Costa de Marfil": 0,
+            "Noruega": 0
+          },
+          "tiros_fuera": {
+            "Costa de Marfil": 9,
+            "Noruega": 2
+          },
+          "tiros_bloqueados": {
+            "Costa de Marfil": 1,
+            "Noruega": 3
+          },
+          "tiros_dentro_del_area_penal": {
+            "Costa de Marfil": 10,
+            "Noruega": 8
+          },
+          "tiros_fuera_del_area": {
+            "Costa de Marfil": 4,
+            "Noruega": 1
+          }
+        },
+        "ataque": {
+          "ocasiones_claras_realizadas": {
+            "Costa de Marfil": 1,
+            "Noruega": 1
+          },
+          "ocasiones_claras_falladas": {
+            "Costa de Marfil": 2,
+            "Noruega": 3
+          },
+          "pases_en_profundidad": {
+            "Costa de Marfil": 0,
+            "Noruega": 1
+          },
+          "toques_dentro_del_area": {
+            "Costa de Marfil": 48,
+            "Noruega": 25
+          },
+          "faltas_recibidas_en_el_tercio_final": {
+            "Costa de Marfil": 2,
+            "Noruega": 1
+          },
+          "fueras_de_juego": {
+            "Costa de Marfil": 2,
+            "Noruega": 2
+          }
+        },
+        "duelos": {
+          "duelos_pct": {
+            "Costa de Marfil": 54,
+            "Noruega": 46
+          },
+          "perdidas": {
+            "Costa de Marfil": 6,
+            "Noruega": 7
+          },
+          "duelos_en_el_suelo": {
+            "Costa de Marfil": {
+              "ganados": 38,
+              "totales": 63,
+              "porcentaje": 60
+            },
+            "Noruega": {
+              "ganados": 25,
+              "totales": 63,
+              "porcentaje": 40
+            }
+          },
+          "duelos_aereos": {
+            "Costa de Marfil": {
+              "ganados": 11,
+              "totales": 27,
+              "porcentaje": 41
+            },
+            "Noruega": {
+              "ganados": 16,
+              "totales": 27,
+              "porcentaje": 59
+            }
+          },
+          "regates": {
+            "Costa de Marfil": {
+              "completados": 7,
+              "intentados": 20,
+              "porcentaje": 35
+            },
+            "Noruega": {
+              "completados": 3,
+              "intentados": 20,
+              "porcentaje": 15
+            }
+          }
+        },
+        "pases": {
+          "pases_precisos": {
+            "Costa de Marfil": 339,
+            "Noruega": 415
+          },
+          "saques_de_banda": {
+            "Costa de Marfil": 16,
+            "Noruega": 23
+          },
+          "pases_al_ultimo_tercio": {
+            "Costa de Marfil": 38,
+            "Noruega": 48
+          },
+          "pases_en_el_ultimo_tercio": {
+            "Costa de Marfil": {
+              "completados": 101,
+              "intentados": 129,
+              "porcentaje": 78
+            },
+            "Noruega": {
+              "completados": 105,
+              "intentados": 135,
+              "porcentaje": 78
+            }
+          },
+          "pases_largos": {
+            "Costa de Marfil": {
+              "completados": 17,
+              "intentados": 38,
+              "porcentaje": 45
+            },
+            "Noruega": {
+              "completados": 18,
+              "intentados": 34,
+              "porcentaje": 53
+            }
+          },
+          "centros": {
+            "Costa de Marfil": {
+              "completados": 7,
+              "intentados": 29,
+              "porcentaje": 24
+            },
+            "Noruega": {
+              "completados": 5,
+              "intentados": 10,
+              "porcentaje": 50
+            }
+          }
+        },
+        "defensa": {
+          "entradas_ganadas_pct": {
+            "Costa de Marfil": 75,
+            "Noruega": 58
+          },
+          "tackles_totales": {
+            "Costa de Marfil": 24,
+            "Noruega": 19
+          },
+          "intercepciones": {
+            "Costa de Marfil": 4,
+            "Noruega": 6
+          },
+          "recuperaciones": {
+            "Costa de Marfil": 44,
+            "Noruega": 34
+          },
+          "despejes": {
+            "Costa de Marfil": 11,
+            "Noruega": 37
+          }
+        },
+        "porteria": {
+          "paradas": {
+            "Costa de Marfil": 1,
+            "Noruega": 4
+          },
+          "goles_evitados": {
+            "Costa de Marfil": 0.03,
+            "Noruega": 0.44
+          },
+          "grandes_paradas": {
+            "Costa de Marfil": 0,
+            "Noruega": 1
+          },
+          "con_los_punos": {
+            "Costa de Marfil": 0,
+            "Noruega": 2
+          },
+          "saques_de_puerta": {
+            "Costa de Marfil": 3,
+            "Noruega": 12
+          }
+        },
+        "mapa_de_ataques": {
+          "equipo_mostrado": "Costa de Marfil",
+          "direccion_de_ataque": "hacia_la_derecha",
+          "descripcion": "Mapa de ataques mostrado para Costa de Marfil."
+        },
+        "mapa_de_pases": {
+          "tipo_de_dato": "distribucion_global_no_atribuible_por_equipo",
+          "tercio_defensivo_pct": 29,
+          "tercio_central_pct": 36,
+          "tercio_ofensivo_pct": 35
+        }
+      },
+      "fuentes": [
+        "Captura de pantalla 2026-06-30 210914.png",
+        "Captura de pantalla 2026-06-30 210926.png",
+        "Captura de pantalla 2026-06-30 210935.png"
+      ]
+    }
+  ]
+}

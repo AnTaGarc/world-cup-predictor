@@ -1,0 +1,270 @@
+{
+  "descripcion": "Estadísticas profundas revisadas manualmente a partir de capturas de SofaScore.",
+  "numero_de_partidos": 1,
+  "partidos": [
+    {
+      "id": "francia_suecia",
+      "nombre": "Francia vs Suecia",
+      "equipos": {
+        "izquierda_verde": "Francia",
+        "derecha_azul": "Suecia"
+      },
+      "estadisticas": {
+        "resumen_del_partido": {
+          "posesion_de_balon_pct": {
+            "Francia": 61,
+            "Suecia": 39
+          },
+          "goles_esperados_xg": {
+            "Francia": 3.24,
+            "Suecia": 0.7
+          },
+          "ocasiones_claras": {
+            "Francia": 7,
+            "Suecia": 1
+          },
+          "tiros_totales": {
+            "Francia": 25,
+            "Suecia": 8
+          },
+          "paradas": {
+            "Francia": 3,
+            "Suecia": 9
+          },
+          "saques_de_esquina": {
+            "Francia": 9,
+            "Suecia": 1
+          },
+          "faltas": {
+            "Francia": 14,
+            "Suecia": 10
+          },
+          "pases": {
+            "Francia": 551,
+            "Suecia": 350
+          },
+          "entradas": {
+            "Francia": 13,
+            "Suecia": 13
+          },
+          "tiros_libres": {
+            "Francia": 10,
+            "Suecia": 14
+          }
+        },
+        "tiros": {
+          "tiros_totales": {
+            "Francia": 25,
+            "Suecia": 8
+          },
+          "tiros_a_puerta": {
+            "Francia": 12,
+            "Suecia": 3
+          },
+          "tiros_al_palo": {
+            "Francia": 2,
+            "Suecia": 0
+          },
+          "tiros_fuera": {
+            "Francia": 9,
+            "Suecia": 4
+          },
+          "tiros_bloqueados": {
+            "Francia": 4,
+            "Suecia": 1
+          },
+          "tiros_dentro_del_area_penal": {
+            "Francia": 16,
+            "Suecia": 7
+          },
+          "tiros_fuera_del_area": {
+            "Francia": 9,
+            "Suecia": 1
+          }
+        },
+        "ataque": {
+          "ocasiones_claras_realizadas": {
+            "Francia": 2,
+            "Suecia": 0
+          },
+          "ocasiones_claras_falladas": {
+            "Francia": 5,
+            "Suecia": 1
+          },
+          "pases_en_profundidad": {
+            "Francia": 3,
+            "Suecia": 1
+          },
+          "toques_dentro_del_area": {
+            "Francia": 35,
+            "Suecia": 14
+          },
+          "faltas_recibidas_en_el_tercio_final": {
+            "Francia": 1,
+            "Suecia": 0
+          },
+          "fueras_de_juego": {
+            "Francia": 3,
+            "Suecia": 1
+          }
+        },
+        "duelos": {
+          "duelos_pct": {
+            "Francia": 53,
+            "Suecia": 47
+          },
+          "perdidas": {
+            "Francia": 3,
+            "Suecia": 9
+          },
+          "duelos_en_el_suelo": {
+            "Francia": {
+              "ganados": 33,
+              "totales": 66,
+              "porcentaje": 50
+            },
+            "Suecia": {
+              "ganados": 33,
+              "totales": 66,
+              "porcentaje": 50
+            }
+          },
+          "duelos_aereos": {
+            "Francia": {
+              "ganados": 13,
+              "totales": 20,
+              "porcentaje": 65
+            },
+            "Suecia": {
+              "ganados": 7,
+              "totales": 20,
+              "porcentaje": 35
+            }
+          },
+          "regates": {
+            "Francia": {
+              "completados": 11,
+              "intentados": 21,
+              "porcentaje": 52
+            },
+            "Suecia": {
+              "completados": 7,
+              "intentados": 11,
+              "porcentaje": 64
+            }
+          }
+        },
+        "pases": {
+          "pases_precisos": {
+            "Francia": 484,
+            "Suecia": 278
+          },
+          "saques_de_banda": {
+            "Francia": 10,
+            "Suecia": 19
+          },
+          "pases_al_ultimo_tercio": {
+            "Francia": 62,
+            "Suecia": 49
+          },
+          "pases_en_el_ultimo_tercio": {
+            "Francia": {
+              "completados": 180,
+              "intentados": 207,
+              "porcentaje": 87
+            },
+            "Suecia": {
+              "completados": 64,
+              "intentados": 105,
+              "porcentaje": 61
+            }
+          },
+          "pases_largos": {
+            "Francia": {
+              "completados": 17,
+              "intentados": 36,
+              "porcentaje": 47
+            },
+            "Suecia": {
+              "completados": 11,
+              "intentados": 45,
+              "porcentaje": 24
+            }
+          },
+          "centros": {
+            "Francia": {
+              "completados": 4,
+              "intentados": 17,
+              "porcentaje": 24
+            },
+            "Suecia": {
+              "completados": 3,
+              "intentados": 11,
+              "porcentaje": 27
+            }
+          }
+        },
+        "defensa": {
+          "entradas_ganadas_pct": {
+            "Francia": 54,
+            "Suecia": 69
+          },
+          "tackles_totales": {
+            "Francia": 13,
+            "Suecia": 13
+          },
+          "intercepciones": {
+            "Francia": 5,
+            "Suecia": 12
+          },
+          "recuperaciones": {
+            "Francia": 46,
+            "Suecia": 35
+          },
+          "despejes": {
+            "Francia": 23,
+            "Suecia": 26
+          }
+        },
+        "porteria": {
+          "paradas": {
+            "Francia": 3,
+            "Suecia": 9
+          },
+          "goles_evitados": {
+            "Francia": 0.65,
+            "Suecia": 0.83
+          },
+          "grandes_paradas": {
+            "Francia": 1,
+            "Suecia": 3
+          },
+          "despejes_por_alto": {
+            "Francia": 0,
+            "Suecia": 1
+          },
+          "saques_de_puerta": {
+            "Francia": 8,
+            "Suecia": 8
+          }
+        },
+        "mapa_de_ataques": {
+          "equipo_mostrado": "Francia",
+          "direccion_de_ataque": "hacia_la_derecha",
+          "descripcion": "Mapa de ataques mostrado para Francia."
+        },
+        "mapa_de_pases": {
+          "tipo_de_dato": "distribucion_global_no_atribuible_por_equipo",
+          "tercio_defensivo_pct": 25,
+          "tercio_central_pct": 42,
+          "tercio_ofensivo_pct": 33
+        }
+      },
+      "fuentes": [
+        "Captura de pantalla 2026-07-01 082010.png",
+        "Captura de pantalla 2026-07-01 082026.png",
+        "Captura de pantalla 2026-07-01 082047.png"
+      ]
+    }
+  ]
+}
