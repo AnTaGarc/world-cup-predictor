@@ -212,5 +212,51 @@ class ProjectPullTests(unittest.TestCase):
         self.assertTrue(cache.exists())
 
 
+class ProjectPushTests(ProjectPullTests):
+    def test_empty_commit_message_is_rejected(self):
+        with self.assertRaisesRegex(project_sync.SyncError, "mensaje"):
+            project_sync.push_project(self.reader, "", run_tests=False)
+
+    def test_remote_ahead_is_rejected_before_commit(self):
+        self._advance_remote()
+        fixture = self.reader / "data/fixtures/.keep"
+        fixture.write_text("local update", encoding="utf-8")
+        before = run_git(self.reader, "rev-parse", "HEAD").stdout.strip()
+
+        with self.assertRaisesRegex(project_sync.SyncError, "pull_project.ps1"):
+            project_sync.push_project(
+                self.reader, "data: local update", run_tests=False
+            )
+
+        self.assertEqual(before, run_git(self.reader, "rev-parse", "HEAD").stdout.strip())
+
+    def test_push_commits_durable_data_and_never_commits_cache(self):
+        db = self.reader / "data/worldcup.sqlite"
+        con = sqlite3.connect(db)
+        con.execute("INSERT INTO seed VALUES(8)")
+        con.commit()
+        con.close()
+        precomputed = self.reader / "data/precomputed/match.json"
+        precomputed.write_text('{"probability": 0.6}', encoding="utf-8")
+        cache = self.reader / "data/cache/page.html"
+        cache.parent.mkdir(parents=True, exist_ok=True)
+        cache.write_text("temporary", encoding="utf-8")
+
+        head = project_sync.push_project(
+            self.reader, "data: update match statistics", run_tests=False
+        )
+
+        tree = project_sync.run_git(
+            self.reader, "ls-tree", "-r", "--name-only", head
+        ).splitlines()
+        self.assertIn("data/worldcup.sqlite", tree)
+        self.assertIn("data/precomputed/match.json", tree)
+        self.assertNotIn("data/cache/page.html", tree)
+        self.assertEqual(
+            head,
+            run_git(self.remote, "rev-parse", "refs/heads/main").stdout.strip(),
+        )
+
+
 if __name__ == "__main__":
     unittest.main()

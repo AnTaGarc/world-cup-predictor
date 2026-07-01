@@ -170,6 +170,52 @@ def pull_project(
     return run_git(root, "rev-parse", "HEAD")
 
 
+def _run_project_tests(root: Path) -> None:
+    result = subprocess.run(
+        [sys.executable, "-m", "unittest", "discover", "-s", "tests", "-v"],
+        cwd=root,
+        env={**__import__("os").environ, "PYTHONPATH": "src"},
+    )
+    if result.returncode != 0:
+        raise SyncError("La suite de tests ha fallado; no se crea ni sube el commit.")
+
+
+def push_project(
+    root: Path,
+    message: str,
+    remote: str = "origin",
+    branch: str = "main",
+    *,
+    run_tests: bool = True,
+    what_if: bool = False,
+) -> str:
+    if not message.strip():
+        raise SyncError("El mensaje del commit no puede estar vacío.")
+    _validate_sync_target(root, remote, branch)
+    validate_durable_paths(root)
+    if what_if:
+        return run_git(root, "rev-parse", "HEAD")
+    if run_tests:
+        _run_project_tests(root)
+    run_git(root, "fetch", remote)
+    ancestor = _run(
+        root,
+        ("git", "merge-base", "--is-ancestor", f"{remote}/{branch}", "HEAD"),
+        check=False,
+    )
+    if ancestor.returncode != 0:
+        raise SyncError(
+            "El remoto contiene cambios ausentes localmente. Ejecuta primero "
+            "scripts/pull_project.ps1."
+        )
+    checkpoint_and_validate_sqlite(root / "data/worldcup.sqlite")
+    staged = stage_and_validate(root)
+    if staged:
+        run_git(root, "commit", "-m", message.strip())
+    run_git(root, "push", remote, branch)
+    return run_git(root, "rev-parse", "HEAD")
+
+
 def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description="Sincronización segura del proyecto y sus datos deportivos."
@@ -178,6 +224,13 @@ def _parser() -> argparse.ArgumentParser:
     pull = subparsers.add_parser("pull", help="Actualiza main solo por fast-forward.")
     pull.add_argument("--root", type=Path, default=Path(__file__).resolve().parents[1])
     pull.add_argument("--what-if", action="store_true")
+    push = subparsers.add_parser(
+        "push", help="Valida, prepara, confirma y publica todos los datos persistentes."
+    )
+    push.add_argument("--root", type=Path, default=Path(__file__).resolve().parents[1])
+    push.add_argument("--message", required=True)
+    push.add_argument("--skip-tests", action="store_true")
+    push.add_argument("--what-if", action="store_true")
     return parser
 
 
@@ -187,6 +240,16 @@ def main(argv: list[str] | None = None) -> int:
         if args.command == "pull":
             head = pull_project(args.root, what_if=args.what_if)
             mode = "Comprobación" if args.what_if else "Pull"
+            print(f"{mode} correcto. HEAD: {head}")
+            return 0
+        if args.command == "push":
+            head = push_project(
+                args.root,
+                args.message,
+                run_tests=not args.skip_tests,
+                what_if=args.what_if,
+            )
+            mode = "Comprobación" if args.what_if else "Push"
             print(f"{mode} correcto. HEAD: {head}")
             return 0
     except SyncError as exc:
