@@ -1,3 +1,7 @@
+# Local launcher shortcuts (personal, doble-clic para push/pull)
+Subir cambios.cmd
+Actualizar desde nube.cmd
+
 # Python
 __pycache__/
 *.py[cod]
