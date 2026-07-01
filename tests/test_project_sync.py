@@ -15,6 +15,13 @@ if str(SCRIPTS) not in sys.path:
 import project_sync
 
 
+def run_git(path: Path, *args: str) -> subprocess.CompletedProcess[str]:
+    return subprocess.run(
+        ["git", *args], cwd=path, check=True, capture_output=True, text=True,
+        encoding="utf-8",
+    )
+
+
 class ProjectSyncPolicyTests(unittest.TestCase):
     def test_durable_data_is_allowed_and_disposable_data_is_forbidden(self):
         for path in (
@@ -129,6 +136,80 @@ class ProjectSyncGitTests(unittest.TestCase):
         (self.root / "data/models").rmdir()
         with self.assertRaisesRegex(project_sync.SyncError, "data/models"):
             project_sync.validate_durable_paths(self.root)
+
+
+class ProjectPullTests(unittest.TestCase):
+    def setUp(self):
+        self.directory = tempfile.TemporaryDirectory()
+        root = Path(self.directory.name)
+        self.remote = root / "remote.git"
+        self.writer = root / "writer"
+        self.reader = root / "reader"
+        run_git(root, "init", "--bare", str(self.remote))
+        run_git(root, "clone", str(self.remote), str(self.writer))
+        run_git(self.writer, "switch", "-c", "main")
+        self._identity(self.writer)
+        (self.writer / ".gitignore").write_text(
+            "data/cache/\noutput/\n.codex-remote-attachments/\n*.log\n",
+            encoding="utf-8",
+        )
+        for relative in project_sync.DURABLE_PATHS:
+            path = self.writer / relative
+            if path.suffix == ".sqlite":
+                path.parent.mkdir(parents=True, exist_ok=True)
+                con = sqlite3.connect(path)
+                con.execute("CREATE TABLE seed(value INTEGER)")
+                con.close()
+            else:
+                path.mkdir(parents=True, exist_ok=True)
+                (path / ".keep").write_text("seed", encoding="utf-8")
+        run_git(self.writer, "add", "-A")
+        run_git(self.writer, "commit", "-m", "seed")
+        run_git(self.writer, "push", "-u", "origin", "main")
+        run_git(self.remote, "symbolic-ref", "HEAD", "refs/heads/main")
+        run_git(root, "clone", str(self.remote), str(self.reader))
+        self._identity(self.reader)
+
+    def tearDown(self):
+        self.directory.cleanup()
+
+    @staticmethod
+    def _identity(path: Path) -> None:
+        run_git(path, "config", "user.name", "Sync Test")
+        run_git(path, "config", "user.email", "sync@example.test")
+
+    def _advance_remote(self) -> str:
+        readme = self.writer / "README.md"
+        readme.write_text("remote update", encoding="utf-8")
+        run_git(self.writer, "add", "README.md")
+        run_git(self.writer, "commit", "-m", "remote update")
+        run_git(self.writer, "push")
+        return run_git(self.writer, "rev-parse", "HEAD").stdout.strip()
+
+    def test_pull_aborts_when_tracked_data_has_local_changes(self):
+        fixture = self.reader / "data/fixtures/.keep"
+        fixture.write_text("local stats", encoding="utf-8")
+
+        with self.assertRaisesRegex(project_sync.SyncError, "push_project.ps1"):
+            project_sync.pull_project(self.reader)
+
+    def test_pull_aborts_when_new_reviewed_evidence_is_untracked(self):
+        evidence = self.reader / "data/evidence/reviewed-json/new.json"
+        evidence.write_text("{}", encoding="utf-8")
+
+        with self.assertRaisesRegex(project_sync.SyncError, "push_project.ps1"):
+            project_sync.pull_project(self.reader)
+
+    def test_pull_ignores_cache_and_fast_forwards(self):
+        remote_head = self._advance_remote()
+        cache = self.reader / "data/cache/page.html"
+        cache.parent.mkdir(parents=True, exist_ok=True)
+        cache.write_text("cache", encoding="utf-8")
+
+        head = project_sync.pull_project(self.reader)
+
+        self.assertEqual(remote_head, head)
+        self.assertTrue(cache.exists())
 
 
 if __name__ == "__main__":

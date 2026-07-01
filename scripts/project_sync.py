@@ -1,8 +1,10 @@
 from __future__ import annotations
 
+import argparse
 from pathlib import Path
 import sqlite3
 import subprocess
+import sys
 
 
 DURABLE_PATHS = (
@@ -127,3 +129,71 @@ def stage_and_validate(root: Path) -> list[str]:
             "Quedan archivos versionables fuera del commit: " + ", ".join(omitted)
         )
     return staged
+
+
+def _validate_sync_target(root: Path, remote: str, branch: str) -> None:
+    validate_repository(root)
+    current = run_git(root, "branch", "--show-current")
+    if current != branch:
+        raise SyncError(
+            f"La sincronización solo está permitida en {branch}; rama actual: {current}"
+        )
+    _run(root, ("git", "remote", "get-url", remote))
+
+
+def _versionable_status(root: Path) -> list[str]:
+    output = run_git(root, "status", "--porcelain=v1", "--untracked-files=all")
+    return [line for line in output.splitlines() if line]
+
+
+def pull_project(
+    root: Path,
+    remote: str = "origin",
+    branch: str = "main",
+    *,
+    what_if: bool = False,
+) -> str:
+    _validate_sync_target(root, remote, branch)
+    local = _versionable_status(root)
+    if local:
+        raise SyncError(
+            "Hay cambios locales versionables. Ejecuta primero "
+            "scripts/push_project.ps1. Cambios: " + " | ".join(local)
+        )
+    if what_if:
+        return run_git(root, "rev-parse", "HEAD")
+    run_git(root, "fetch", remote)
+    run_git(root, "merge", "--ff-only", f"{remote}/{branch}")
+    database = root / "data/worldcup.sqlite"
+    if database.exists():
+        checkpoint_and_validate_sqlite(database)
+    return run_git(root, "rev-parse", "HEAD")
+
+
+def _parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(
+        description="Sincronización segura del proyecto y sus datos deportivos."
+    )
+    subparsers = parser.add_subparsers(dest="command", required=True)
+    pull = subparsers.add_parser("pull", help="Actualiza main solo por fast-forward.")
+    pull.add_argument("--root", type=Path, default=Path(__file__).resolve().parents[1])
+    pull.add_argument("--what-if", action="store_true")
+    return parser
+
+
+def main(argv: list[str] | None = None) -> int:
+    args = _parser().parse_args(argv)
+    try:
+        if args.command == "pull":
+            head = pull_project(args.root, what_if=args.what_if)
+            mode = "Comprobación" if args.what_if else "Pull"
+            print(f"{mode} correcto. HEAD: {head}")
+            return 0
+    except SyncError as exc:
+        print(f"ERROR: {exc}", file=sys.stderr)
+        return 1
+    return 1
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
