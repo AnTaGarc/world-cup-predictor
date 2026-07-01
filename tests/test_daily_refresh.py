@@ -102,6 +102,32 @@ class DailyRefreshTests(unittest.TestCase):
         self.assertEqual([], calls)
         self.assertEqual("stale", result.status)
 
+    def test_one_failed_provider_and_one_current_provider_is_partial(self):
+        failed_provider, current_provider = PROVIDERS[:2]
+        cached_at = self.now - timedelta(days=1)
+        self.repo.record_dataset_snapshot(
+            failed_provider, "v1", "abc", cached_at, cached_at, 48, "ready", None
+        )
+        self.repo.record_dataset_refresh_check(
+            current_provider, self.now - timedelta(hours=2), "ready", None
+        )
+
+        def fetch(provider):
+            if provider == failed_provider:
+                raise RuntimeError("403 Forbidden")
+            raise AssertionError("current provider must be skipped")
+
+        result = ensure_current_world_cup_data(
+            self.repo,
+            fetch,
+            now=self.now,
+            providers=(failed_provider, current_provider),
+        )
+
+        self.assertEqual("partial", result.status)
+        self.assertEqual((failed_provider,), result.failed)
+        self.assertEqual((current_provider,), result.skipped_recent)
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -192,6 +192,13 @@ class AppContractTests(unittest.TestCase):
         self.assertIn('getattr(daily_result, "updated"', source)
         self.assertIn("_resolve_bracket_after_daily_refresh(repo, daily_result)", source)
 
+    def test_daily_refresh_status_names_aggregate_and_exposes_error_details(self):
+        source = (Path(__file__).parents[1] / "src" / "wcpredict" / "ui" / "pages.py").read_text(encoding="utf-8")
+        self.assertIn("def _daily_refresh_failure_details", source)
+        self.assertIn('status_pill(f"Datos diarios:', source)
+        self.assertIn('st.expander("Detalle de errores de actualización")', source)
+        self.assertNotIn('status_pill(f"Calendario diario:', source)
+
     def test_bracket_view_resolves_before_rendering(self):
         source = (Path(__file__).parents[1] / "src" / "wcpredict" / "ui" / "pages.py").read_text(encoding="utf-8")
         section = source[source.index("def _render_bracket_section"):source.index("def render_prediction_lab")]

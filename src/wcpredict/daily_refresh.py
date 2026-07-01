@@ -99,10 +99,13 @@ def ensure_current_world_cup_data(
             cached_after_failure = cached_after_failure or bool(repository.list_dataset_snapshots(provider_id))
             repository.record_dataset_refresh_check(provider_id, now, "failed", str(exc)[:240])
 
-    if updated:
-        status = "updated" if not failed else "partial"
-    elif failed:
-        status = "stale" if cached_after_failure else "failed"
+    successful = bool(updated or unchanged or skipped)
+    if failed:
+        status = "partial" if successful else (
+            "stale" if cached_after_failure else "failed"
+        )
+    elif updated:
+        status = "updated"
     else:
         status = "current"
     return DailyRefreshResult(

@@ -712,6 +712,18 @@ def _refresh_current_world_cup_banks(repo: Repository):
     )
 
 
+def _daily_refresh_failure_details(repo: Repository, daily_result) -> list[str]:
+    details: list[str] = []
+    for provider_id in getattr(daily_result, "failed", ()):
+        checks = repo.list_dataset_refresh_checks(provider_id)
+        message = (
+            str(checks[0].get("error_message") or "Error sin detalle")[:240]
+            if checks else "Error sin detalle"
+        )
+        details.append(f"{provider_id}: {message}")
+    return details
+
+
 def _resolve_bracket_after_daily_refresh(repo: Repository, daily_result) -> None:
     if not getattr(daily_result, "updated", ()):
         return
@@ -2321,12 +2333,17 @@ def render_dashboard() -> None:
     )
     st.markdown(
         '<div class="status-row">'
-        + status_pill(f"Calendario diario: {localize_status(daily_result.status)}", daily_tone)
+        + status_pill(f"Datos diarios: {localize_status(daily_result.status)}", daily_tone)
         + status_pill(f"Actualizadas {len(daily_result.updated)}", "green" if daily_result.updated else "neutral")
         + status_pill(f"Con error {len(daily_result.failed)}", "red" if daily_result.failed else "neutral")
         + "</div>",
         unsafe_allow_html=True,
     )
+    failure_details = _daily_refresh_failure_details(repo, daily_result)
+    if failure_details:
+        with st.expander("Detalle de errores de actualización"):
+            for detail in failure_details:
+                st.write(detail)
     now = datetime.now(timezone.utc)
     local_today = _display_dt(now).date()
     window_end = local_today + timedelta(days=2)
