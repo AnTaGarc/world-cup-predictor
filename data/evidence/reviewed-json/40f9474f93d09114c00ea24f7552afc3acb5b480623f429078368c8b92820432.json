@@ -1,0 +1,278 @@
+{
+  "descripcion": "Estadísticas profundas revisadas manualmente a partir de capturas de SofaScore.",
+  "numero_de_partidos": 1,
+  "partidos": [
+    {
+      "id": "inglaterra_rd_congo",
+      "nombre": "Inglaterra vs RD Congo",
+      "equipos": {
+        "izquierda_verde": "Inglaterra",
+        "derecha_azul": "RD Congo"
+      },
+      "estadisticas": {
+        "resumen_del_partido": {
+          "posesion_de_balon_pct": {
+            "Inglaterra": 60,
+            "RD Congo": 40
+          },
+          "goles_esperados_xg": {
+            "Inglaterra": 2.04,
+            "RD Congo": 0.8
+          },
+          "ocasiones_claras": {
+            "Inglaterra": 7,
+            "RD Congo": 1
+          },
+          "tiros_totales": {
+            "Inglaterra": 16,
+            "RD Congo": 7
+          },
+          "paradas": {
+            "Inglaterra": 1,
+            "RD Congo": 5
+          },
+          "saques_de_esquina": {
+            "Inglaterra": 5,
+            "RD Congo": 3
+          },
+          "faltas": {
+            "Inglaterra": 10,
+            "RD Congo": 12
+          },
+          "pases": {
+            "Inglaterra": 517,
+            "RD Congo": 365
+          },
+          "entradas": {
+            "Inglaterra": 11,
+            "RD Congo": 20
+          },
+          "tiros_libres": {
+            "Inglaterra": 12,
+            "RD Congo": 10
+          },
+          "tarjetas_amarillas": {
+            "Inglaterra": 1,
+            "RD Congo": 1
+          }
+        },
+        "tiros": {
+          "tiros_totales": {
+            "Inglaterra": 16,
+            "RD Congo": 7
+          },
+          "tiros_a_puerta": {
+            "Inglaterra": 7,
+            "RD Congo": 2
+          },
+          "tiros_al_palo": {
+            "Inglaterra": 0,
+            "RD Congo": 1
+          },
+          "tiros_fuera": {
+            "Inglaterra": 6,
+            "RD Congo": 3
+          },
+          "tiros_bloqueados": {
+            "Inglaterra": 3,
+            "RD Congo": 2
+          },
+          "tiros_dentro_del_area_penal": {
+            "Inglaterra": 13,
+            "RD Congo": 2
+          },
+          "tiros_fuera_del_area": {
+            "Inglaterra": 3,
+            "RD Congo": 5
+          }
+        },
+        "ataque": {
+          "ocasiones_claras_realizadas": {
+            "Inglaterra": 1,
+            "RD Congo": 0
+          },
+          "ocasiones_claras_falladas": {
+            "Inglaterra": 6,
+            "RD Congo": 1
+          },
+          "pases_en_profundidad": {
+            "Inglaterra": 2,
+            "RD Congo": 0
+          },
+          "toques_dentro_del_area": {
+            "Inglaterra": 40,
+            "RD Congo": 12
+          },
+          "faltas_recibidas_en_el_tercio_final": {
+            "Inglaterra": 4,
+            "RD Congo": 2
+          },
+          "fueras_de_juego": {
+            "Inglaterra": 0,
+            "RD Congo": 4
+          }
+        },
+        "duelos": {
+          "duelos_pct": {
+            "Inglaterra": 49,
+            "RD Congo": 51
+          },
+          "perdidas": {
+            "Inglaterra": 10,
+            "RD Congo": 5
+          },
+          "duelos_en_el_suelo": {
+            "Inglaterra": {
+              "ganados": 30,
+              "totales": 66,
+              "porcentaje": 45
+            },
+            "RD Congo": {
+              "ganados": 36,
+              "totales": 66,
+              "porcentaje": 55
+            }
+          },
+          "duelos_aereos": {
+            "Inglaterra": {
+              "ganados": 14,
+              "totales": 23,
+              "porcentaje": 61
+            },
+            "RD Congo": {
+              "ganados": 9,
+              "totales": 23,
+              "porcentaje": 39
+            }
+          },
+          "regates": {
+            "Inglaterra": {
+              "completados": 7,
+              "intentados": 17,
+              "porcentaje": 41
+            },
+            "RD Congo": {
+              "completados": 6,
+              "intentados": 12,
+              "porcentaje": 50
+            }
+          }
+        },
+        "pases": {
+          "pases_precisos": {
+            "Inglaterra": 468,
+            "RD Congo": 299
+          },
+          "saques_de_banda": {
+            "Inglaterra": 15,
+            "RD Congo": 24
+          },
+          "pases_al_ultimo_tercio": {
+            "Inglaterra": 75,
+            "RD Congo": 49
+          },
+          "pases_en_el_ultimo_tercio": {
+            "Inglaterra": {
+              "completados": 167,
+              "intentados": 198,
+              "porcentaje": 84
+            },
+            "RD Congo": {
+              "completados": 58,
+              "intentados": 87,
+              "porcentaje": 67
+            }
+          },
+          "pases_largos": {
+            "Inglaterra": {
+              "completados": 18,
+              "intentados": 32,
+              "porcentaje": 56
+            },
+            "RD Congo": {
+              "completados": 18,
+              "intentados": 46,
+              "porcentaje": 39
+            }
+          },
+          "centros": {
+            "Inglaterra": {
+              "completados": 9,
+              "intentados": 43,
+              "porcentaje": 21
+            },
+            "RD Congo": {
+              "completados": 2,
+              "intentados": 13,
+              "porcentaje": 15
+            }
+          }
+        },
+        "defensa": {
+          "entradas_ganadas_pct": {
+            "Inglaterra": 64,
+            "RD Congo": 35
+          },
+          "tackles_totales": {
+            "Inglaterra": 11,
+            "RD Congo": 20
+          },
+          "intercepciones": {
+            "Inglaterra": 7,
+            "RD Congo": 3
+          },
+          "recuperaciones": {
+            "Inglaterra": 44,
+            "RD Congo": 35
+          },
+          "despejes": {
+            "Inglaterra": 23,
+            "RD Congo": 36
+          }
+        },
+        "porteria": {
+          "paradas": {
+            "Inglaterra": 1,
+            "RD Congo": 5
+          },
+          "goles_evitados": {
+            "Inglaterra": -0.85,
+            "RD Congo": -0.04
+          },
+          "grandes_paradas": {
+            "Inglaterra": 0,
+            "RD Congo": 2
+          },
+          "despejes_por_alto": {
+            "Inglaterra": 0,
+            "RD Congo": 2
+          },
+          "con_los_punos": {
+            "Inglaterra": 0,
+            "RD Congo": 2
+          },
+          "saques_de_puerta": {
+            "Inglaterra": 5,
+            "RD Congo": 16
+          }
+        },
+        "mapa_de_ataques": {
+          "equipo_mostrado": "Inglaterra",
+          "direccion_de_ataque": "hacia_la_derecha",
+          "descripcion": "Mapa de ataques mostrado para Inglaterra."
+        },
+        "mapa_de_pases": {
+          "tipo_de_dato": "distribucion_global_no_atribuible_por_equipo",
+          "tercio_defensivo_pct": 21,
+          "tercio_central_pct": 37,
+          "tercio_ofensivo_pct": 42
+        }
+      },
+      "fuentes": [
+        "Captura de pantalla 2026-07-01 205143.png",
+        "Captura de pantalla 2026-07-01 205152.png",
+        "Captura de pantalla 2026-07-01 205202.png"
+      ]
+    }
+  ]
+}
