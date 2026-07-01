@@ -9,6 +9,6 @@ if ($WhatIf) {
     $arguments += "--what-if"
 }
 
-Write-Host "Cierra la aplicación antes de sincronizar la base SQLite."
+Write-Host "Cierra la aplicacion antes de sincronizar la base SQLite."
 & python @arguments
 exit $LASTEXITCODE

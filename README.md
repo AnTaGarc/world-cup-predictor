@@ -171,6 +171,37 @@ match_result,1X2,Canada,,2.25,Winamax
 
 ## Demo
 
+## SincronizaciÃ³n segura
+
+Cierra Streamlit y cualquier proceso que pueda estar escribiendo en la base antes de
+sincronizar. Para guardar y publicar todos los cambios del proyecto:
+
+```powershell
+.\scripts\push_project.ps1 -Message "data: update deep stats and results"
+```
+
+El programa hace checkpoint y valida `data/worldcup.sqlite`, ejecuta la suite completa,
+incluye cÃ³digo y todos los datos persistentes (base, modelos, fixtures, JSON revisados y
+precÃ¡lculos), crea el commit y publica `main`. Nunca prepara `data/cache/`, `output/`,
+logs, adjuntos de Codex ni archivos auxiliares de SQLite.
+
+Para descargar una actualizaciÃ³n:
+
+```powershell
+.\scripts\pull_project.ps1
+```
+
+El pull solo permite fast-forward. Si existen estadÃ­sticas, cÃ³digo u otros cambios
+versionables locales, se detiene y pide ejecutar primero el push. Las cachÃ©s y los
+temporales ignorados no bloquean la descarga.
+
+Puede comprobarse cualquiera de los flujos sin modificar Git:
+
+```powershell
+.\scripts\push_project.ps1 -Message "comprobaciÃ³n" -WhatIf
+.\scripts\pull_project.ps1 -WhatIf
+```
+
 Seed local demo data:
 
 ```powershell

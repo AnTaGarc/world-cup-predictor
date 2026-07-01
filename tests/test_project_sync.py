@@ -258,5 +258,35 @@ class ProjectPushTests(ProjectPullTests):
         )
 
 
+class ProjectSyncCliTests(unittest.TestCase):
+    def _help(self, *args: str) -> str:
+        result = subprocess.run(
+            [sys.executable, str(SCRIPTS / "project_sync.py"), *args, "--help"],
+            check=True, capture_output=True, text=True, encoding="utf-8",
+        )
+        return result.stdout
+
+    def test_top_level_help_lists_push_and_pull(self):
+        output = self._help()
+        self.assertIn("push", output)
+        self.assertIn("pull", output)
+
+    def test_push_help_exposes_message_tests_and_dry_run(self):
+        output = self._help("push")
+        self.assertIn("--message", output)
+        self.assertIn("--skip-tests", output)
+        self.assertIn("--what-if", output)
+
+    def test_pull_help_exposes_dry_run(self):
+        self.assertIn("--what-if", self._help("pull"))
+
+    def test_powershell_launchers_delegate_to_python_core(self):
+        push = (SCRIPTS / "push_project.ps1").read_text(encoding="utf-8")
+        pull = (SCRIPTS / "pull_project.ps1").read_text(encoding="utf-8")
+        self.assertIn('"--message", $Message', push)
+        self.assertIn('project_sync.py", "push"', push)
+        self.assertIn('project_sync.py", "pull"', pull)
+
+
 if __name__ == "__main__":
     unittest.main()
