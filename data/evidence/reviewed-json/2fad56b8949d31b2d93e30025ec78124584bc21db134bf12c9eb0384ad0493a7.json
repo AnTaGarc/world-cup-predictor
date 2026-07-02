@@ -1,0 +1,282 @@
+{
+  "descripcion": "Estadísticas profundas revisadas manualmente a partir de capturas de SofaScore.",
+  "numero_de_partidos": 1,
+  "partidos": [
+    {
+      "id": "belgica_senegal",
+      "nombre": "Bélgica vs Senegal",
+      "equipos": {
+        "izquierda_verde": "Bélgica",
+        "derecha_azul": "Senegal"
+      },
+      "estadisticas": {
+        "resumen_del_partido": {
+          "posesion_de_balon_pct": {
+            "Bélgica": 52,
+            "Senegal": 48
+          },
+          "goles_esperados_xg": {
+            "Bélgica": 1.74,
+            "Senegal": 3.58
+          },
+          "ocasiones_claras": {
+            "Bélgica": 3,
+            "Senegal": 6
+          },
+          "tiros_totales": {
+            "Bélgica": 19,
+            "Senegal": 19
+          },
+          "paradas": {
+            "Bélgica": 3,
+            "Senegal": 3
+          },
+          "saques_de_esquina": {
+            "Bélgica": 4,
+            "Senegal": 2
+          },
+          "faltas": {
+            "Bélgica": 22,
+            "Senegal": 12
+          },
+          "pases": {
+            "Bélgica": 701,
+            "Senegal": 639
+          },
+          "entradas": {
+            "Bélgica": 12,
+            "Senegal": 12
+          },
+          "tiros_libres": {
+            "Bélgica": 11,
+            "Senegal": 22
+          },
+          "tarjetas_amarillas": {
+            "Bélgica": 1,
+            "Senegal": 1
+          }
+        },
+        "tiros": {
+          "tiros_totales": {
+            "Bélgica": 19,
+            "Senegal": 19
+          },
+          "tiros_a_puerta": {
+            "Bélgica": 5,
+            "Senegal": 5
+          },
+          "tiros_al_palo": {
+            "Bélgica": 1,
+            "Senegal": 2
+          },
+          "tiros_fuera": {
+            "Bélgica": 9,
+            "Senegal": 11
+          },
+          "tiros_bloqueados": {
+            "Bélgica": 5,
+            "Senegal": 3
+          },
+          "tiros_dentro_del_area_penal": {
+            "Bélgica": 11,
+            "Senegal": 10
+          },
+          "tiros_fuera_del_area": {
+            "Bélgica": 8,
+            "Senegal": 9
+          }
+        },
+        "ataque": {
+          "ocasiones_claras_realizadas": {
+            "Bélgica": 3,
+            "Senegal": 2
+          },
+          "ocasiones_claras_falladas": {
+            "Bélgica": 0,
+            "Senegal": 4
+          },
+          "pases_en_profundidad": {
+            "Bélgica": 0,
+            "Senegal": 2
+          },
+          "toques_dentro_del_area": {
+            "Bélgica": 37,
+            "Senegal": 30
+          },
+          "faltas_recibidas_en_el_tercio_final": {
+            "Bélgica": 2,
+            "Senegal": 2
+          },
+          "fueras_de_juego": {
+            "Bélgica": 2,
+            "Senegal": 2
+          }
+        },
+        "duelos": {
+          "duelos_pct": {
+            "Bélgica": 53,
+            "Senegal": 47
+          },
+          "perdidas": {
+            "Bélgica": 5,
+            "Senegal": 6
+          },
+          "duelos_en_el_suelo": {
+            "Bélgica": {
+              "ganados": 34,
+              "totales": 74,
+              "porcentaje": 46
+            },
+            "Senegal": {
+              "ganados": 40,
+              "totales": 74,
+              "porcentaje": 54
+            }
+          },
+          "duelos_aereos": {
+            "Bélgica": {
+              "ganados": 28,
+              "totales": 43,
+              "porcentaje": 65
+            },
+            "Senegal": {
+              "ganados": 15,
+              "totales": 43,
+              "porcentaje": 35
+            }
+          },
+          "regates": {
+            "Bélgica": {
+              "completados": 11,
+              "intentados": 18,
+              "porcentaje": 61
+            },
+            "Senegal": {
+              "completados": 9,
+              "intentados": 15,
+              "porcentaje": 60
+            }
+          }
+        },
+        "pases": {
+          "pases_precisos": {
+            "Bélgica": 602,
+            "Senegal": 536
+          },
+          "saques_de_banda": {
+            "Bélgica": 16,
+            "Senegal": 19
+          },
+          "pases_al_ultimo_tercio": {
+            "Bélgica": 72,
+            "Senegal": 92
+          },
+          "pases_en_el_ultimo_tercio": {
+            "Bélgica": {
+              "completados": 130,
+              "intentados": 185,
+              "porcentaje": 70
+            },
+            "Senegal": {
+              "completados": 152,
+              "intentados": 200,
+              "porcentaje": 76
+            }
+          },
+          "pases_largos": {
+            "Bélgica": {
+              "completados": 25,
+              "intentados": 50,
+              "porcentaje": 50
+            },
+            "Senegal": {
+              "completados": 34,
+              "intentados": 84,
+              "porcentaje": 40
+            }
+          },
+          "centros": {
+            "Bélgica": {
+              "completados": 7,
+              "intentados": 26,
+              "porcentaje": 27
+            },
+            "Senegal": {
+              "completados": 5,
+              "intentados": 22,
+              "porcentaje": 23
+            }
+          }
+        },
+        "defensa": {
+          "entradas_ganadas_pct": {
+            "Bélgica": 42,
+            "Senegal": 33
+          },
+          "tackles_totales": {
+            "Bélgica": 12,
+            "Senegal": 12
+          },
+          "intercepciones": {
+            "Bélgica": 8,
+            "Senegal": 11
+          },
+          "recuperaciones": {
+            "Bélgica": 64,
+            "Senegal": 60
+          },
+          "despejes": {
+            "Bélgica": 28,
+            "Senegal": 31
+          },
+          "errores_que_llevan_a_disparo": {
+            "Bélgica": 1,
+            "Senegal": 0
+          },
+          "errores_que_llevan_a_gol": {
+            "Bélgica": 0,
+            "Senegal": 1
+          }
+        },
+        "porteria": {
+          "paradas": {
+            "Bélgica": 3,
+            "Senegal": 3
+          },
+          "goles_evitados": {
+            "Bélgica": -0.15,
+            "Senegal": -0.7
+          },
+          "grandes_paradas": {
+            "Bélgica": 0,
+            "Senegal": 1
+          },
+          "despejes_por_alto": {
+            "Bélgica": 1,
+            "Senegal": 2
+          },
+          "saques_de_puerta": {
+            "Bélgica": 10,
+            "Senegal": 12
+          }
+        },
+        "mapa_de_ataques": {
+          "equipo_mostrado": "Bélgica",
+          "direccion_de_ataque": "hacia_la_derecha",
+          "descripcion": "Mapa de ataques mostrado para Bélgica."
+        },
+        "mapa_de_pases": {
+          "tipo_de_dato": "distribucion_global_no_atribuible_por_equipo",
+          "tercio_defensivo_pct": 26,
+          "tercio_central_pct": 46,
+          "tercio_ofensivo_pct": 28
+        }
+      },
+      "fuentes": [
+        "Captura de pantalla 2026-07-02 164342.png",
+        "Captura de pantalla 2026-07-02 164353.png",
+        "Captura de pantalla 2026-07-02 164404.png"
+      ]
+    }
+  ]
+}

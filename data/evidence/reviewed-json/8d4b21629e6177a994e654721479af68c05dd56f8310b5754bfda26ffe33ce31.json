@@ -1,0 +1,250 @@
+{
+  "descripcion": "Estadísticas profundas revisadas manualmente a partir de capturas de SofaScore.",
+  "numero_de_partidos": 1,
+  "partidos": [
+    {
+      "id": "belgica_senegal_primera_parte_prorroga",
+      "nombre": "Bélgica vs Senegal — primera parte de la prórroga",
+      "periodo": {
+        "tipo": "primera_parte_prorroga",
+        "descripcion": "Primera parte de la prórroga"
+      },
+      "equipos": {
+        "izquierda_verde": "Bélgica",
+        "derecha_azul": "Senegal"
+      },
+      "estadisticas": {
+        "resumen_del_partido": {
+          "posesion_de_balon_pct": {
+            "Bélgica": 57,
+            "Senegal": 43
+          },
+          "goles_esperados_xg": {
+            "Bélgica": 0.04,
+            "Senegal": 0.0
+          },
+          "ocasiones_claras": {
+            "Bélgica": 0,
+            "Senegal": 0
+          },
+          "tiros_totales": {
+            "Bélgica": 1,
+            "Senegal": 0
+          },
+          "paradas": {
+            "Bélgica": 0,
+            "Senegal": 0
+          },
+          "saques_de_esquina": {
+            "Bélgica": 0,
+            "Senegal": 0
+          },
+          "faltas": {
+            "Bélgica": 5,
+            "Senegal": 0
+          },
+          "pases": {
+            "Bélgica": 104,
+            "Senegal": 80
+          },
+          "entradas": {
+            "Bélgica": 3,
+            "Senegal": 3
+          },
+          "tiros_libres": {
+            "Bélgica": 0,
+            "Senegal": 4
+          },
+          "tarjetas_amarillas": {
+            "Bélgica": 0,
+            "Senegal": 0
+          }
+        },
+        "tiros": {
+          "tiros_totales": {
+            "Bélgica": 1,
+            "Senegal": 0
+          },
+          "tiros_a_puerta": {
+            "Bélgica": 0,
+            "Senegal": 0
+          },
+          "tiros_al_palo": {
+            "Bélgica": 0,
+            "Senegal": 0
+          },
+          "tiros_fuera": {
+            "Bélgica": 1,
+            "Senegal": 0
+          },
+          "tiros_bloqueados": {
+            "Bélgica": 1,
+            "Senegal": 0
+          },
+          "tiros_dentro_del_area_penal": {
+            "Bélgica": 0,
+            "Senegal": 0
+          },
+          "tiros_fuera_del_area": {
+            "Bélgica": 1,
+            "Senegal": 0
+          }
+        },
+        "ataque": {
+          "ocasiones_claras_realizadas": {
+            "Bélgica": 0,
+            "Senegal": 0
+          },
+          "ocasiones_claras_falladas": {
+            "Bélgica": 0,
+            "Senegal": 0
+          },
+          "pases_en_profundidad": {
+            "Bélgica": 0,
+            "Senegal": 0
+          },
+          "faltas_recibidas_en_el_tercio_final": {
+            "Bélgica": 0,
+            "Senegal": 0
+          },
+          "fueras_de_juego": {
+            "Bélgica": 0,
+            "Senegal": 0
+          }
+        },
+        "duelos": {
+          "duelos_pct": {
+            "Bélgica": 50,
+            "Senegal": 50
+          },
+          "perdidas": {
+            "Bélgica": 1,
+            "Senegal": 2
+          },
+          "duelos_en_el_suelo": {
+            "Bélgica": {
+              "ganados": 4,
+              "totales": 11,
+              "porcentaje": 36
+            },
+            "Senegal": {
+              "ganados": 7,
+              "totales": 11,
+              "porcentaje": 64
+            }
+          },
+          "duelos_aereos": {
+            "Bélgica": {
+              "ganados": 5,
+              "totales": 7,
+              "porcentaje": 71
+            },
+            "Senegal": {
+              "ganados": 2,
+              "totales": 7,
+              "porcentaje": 29
+            }
+          },
+          "regates": {
+            "Bélgica": {
+              "completados": 1,
+              "intentados": 3,
+              "porcentaje": 33
+            },
+            "Senegal": {
+              "completados": 0,
+              "intentados": 1,
+              "porcentaje": 0
+            }
+          }
+        },
+        "pases": {
+          "pases_precisos": {
+            "Bélgica": 88,
+            "Senegal": 61
+          },
+          "saques_de_banda": {
+            "Bélgica": 2,
+            "Senegal": 1
+          },
+          "pases_al_ultimo_tercio": {
+            "Bélgica": 11,
+            "Senegal": 13
+          },
+          "pases_largos": {
+            "Bélgica": {
+              "completados": 3,
+              "intentados": 6,
+              "porcentaje": 50
+            },
+            "Senegal": {
+              "completados": 4,
+              "intentados": 15,
+              "porcentaje": 27
+            }
+          },
+          "centros": {
+            "Bélgica": {
+              "completados": 1,
+              "intentados": 3,
+              "porcentaje": 33
+            },
+            "Senegal": {
+              "completados": 0,
+              "intentados": 0,
+              "porcentaje": null
+            }
+          }
+        },
+        "defensa": {
+          "entradas_ganadas_pct": {
+            "Bélgica": 33,
+            "Senegal": 33
+          },
+          "tackles_totales": {
+            "Bélgica": 3,
+            "Senegal": 3
+          },
+          "intercepciones": {
+            "Bélgica": 0,
+            "Senegal": 1
+          },
+          "recuperaciones": {
+            "Bélgica": 10,
+            "Senegal": 9
+          },
+          "despejes": {
+            "Bélgica": 3,
+            "Senegal": 3
+          }
+        },
+        "porteria": {
+          "paradas": {
+            "Bélgica": 0,
+            "Senegal": 0
+          },
+          "saques_de_puerta": {
+            "Bélgica": 0,
+            "Senegal": 1
+          }
+        },
+        "mapa_de_ataques": {
+          "equipo_mostrado": "Bélgica",
+          "direccion_de_ataque": "hacia_la_derecha",
+          "descripcion": "Mapa de ataques mostrado para Bélgica durante la primera parte de la prórroga."
+        },
+        "mapa_de_pases": {
+          "tipo_de_dato": "distribucion_global_no_atribuible_por_equipo",
+          "tercio_defensivo_pct": 26,
+          "tercio_central_pct": 46,
+          "tercio_ofensivo_pct": 28
+        }
+      },
+      "fuentes": [
+        "Captura de pantalla 2026-07-02 164837.png",
+        "Captura de pantalla 2026-07-02 164849.png",
+        "Captura de pantalla 2026-07-02 164857.png"
+      ]
+    }
+  ]
+}

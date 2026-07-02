@@ -1,0 +1,282 @@
+{
+  "descripcion": "Estadísticas profundas revisadas manualmente a partir de capturas de SofaScore.",
+  "numero_de_partidos": 1,
+  "partidos": [
+    {
+      "id": "estados_unidos_bosnia_y_herzegovina",
+      "nombre": "Estados Unidos vs Bosnia y Herzegovina",
+      "equipos": {
+        "izquierda_verde": "Estados Unidos",
+        "derecha_azul": "Bosnia y Herzegovina"
+      },
+      "estadisticas": {
+        "resumen_del_partido": {
+          "posesion_de_balon_pct": {
+            "Estados Unidos": 48,
+            "Bosnia y Herzegovina": 52
+          },
+          "goles_esperados_xg": {
+            "Estados Unidos": 0.88,
+            "Bosnia y Herzegovina": 0.25
+          },
+          "ocasiones_claras": {
+            "Estados Unidos": 2,
+            "Bosnia y Herzegovina": 0
+          },
+          "tiros_totales": {
+            "Estados Unidos": 8,
+            "Bosnia y Herzegovina": 10
+          },
+          "paradas": {
+            "Estados Unidos": 3,
+            "Bosnia y Herzegovina": 0
+          },
+          "saques_de_esquina": {
+            "Estados Unidos": 4,
+            "Bosnia y Herzegovina": 3
+          },
+          "faltas": {
+            "Estados Unidos": 7,
+            "Bosnia y Herzegovina": 13
+          },
+          "pases": {
+            "Estados Unidos": 415,
+            "Bosnia y Herzegovina": 447
+          },
+          "entradas": {
+            "Estados Unidos": 12,
+            "Bosnia y Herzegovina": 15
+          },
+          "tiros_libres": {
+            "Estados Unidos": 13,
+            "Bosnia y Herzegovina": 7
+          },
+          "tarjetas_amarillas": {
+            "Estados Unidos": 0,
+            "Bosnia y Herzegovina": 1
+          },
+          "tarjetas_rojas": {
+            "Estados Unidos": 1,
+            "Bosnia y Herzegovina": 0
+          }
+        },
+        "tiros": {
+          "tiros_totales": {
+            "Estados Unidos": 8,
+            "Bosnia y Herzegovina": 10
+          },
+          "tiros_a_puerta": {
+            "Estados Unidos": 2,
+            "Bosnia y Herzegovina": 3
+          },
+          "tiros_al_palo": {
+            "Estados Unidos": 1,
+            "Bosnia y Herzegovina": 0
+          },
+          "tiros_fuera": {
+            "Estados Unidos": 4,
+            "Bosnia y Herzegovina": 4
+          },
+          "tiros_bloqueados": {
+            "Estados Unidos": 2,
+            "Bosnia y Herzegovina": 3
+          },
+          "tiros_dentro_del_area_penal": {
+            "Estados Unidos": 6,
+            "Bosnia y Herzegovina": 5
+          },
+          "tiros_fuera_del_area": {
+            "Estados Unidos": 2,
+            "Bosnia y Herzegovina": 5
+          }
+        },
+        "ataque": {
+          "ocasiones_claras_realizadas": {
+            "Estados Unidos": 1,
+            "Bosnia y Herzegovina": 0
+          },
+          "ocasiones_claras_falladas": {
+            "Estados Unidos": 1,
+            "Bosnia y Herzegovina": 0
+          },
+          "pases_en_profundidad": {
+            "Estados Unidos": 1,
+            "Bosnia y Herzegovina": 0
+          },
+          "toques_dentro_del_area": {
+            "Estados Unidos": 23,
+            "Bosnia y Herzegovina": 7
+          },
+          "faltas_recibidas_en_el_tercio_final": {
+            "Estados Unidos": 5,
+            "Bosnia y Herzegovina": 1
+          },
+          "fueras_de_juego": {
+            "Estados Unidos": 3,
+            "Bosnia y Herzegovina": 0
+          }
+        },
+        "duelos": {
+          "duelos_pct": {
+            "Estados Unidos": 59,
+            "Bosnia y Herzegovina": 41
+          },
+          "perdidas": {
+            "Estados Unidos": 5,
+            "Bosnia y Herzegovina": 4
+          },
+          "duelos_en_el_suelo": {
+            "Estados Unidos": {
+              "ganados": 34,
+              "totales": 59,
+              "porcentaje": 58
+            },
+            "Bosnia y Herzegovina": {
+              "ganados": 25,
+              "totales": 59,
+              "porcentaje": 42
+            }
+          },
+          "duelos_aereos": {
+            "Estados Unidos": {
+              "ganados": 13,
+              "totales": 21,
+              "porcentaje": 62
+            },
+            "Bosnia y Herzegovina": {
+              "ganados": 8,
+              "totales": 21,
+              "porcentaje": 38
+            }
+          },
+          "regates": {
+            "Estados Unidos": {
+              "completados": 9,
+              "intentados": 19,
+              "porcentaje": 47
+            },
+            "Bosnia y Herzegovina": {
+              "completados": 3,
+              "intentados": 11,
+              "porcentaje": 27
+            }
+          }
+        },
+        "pases": {
+          "pases_precisos": {
+            "Estados Unidos": 349,
+            "Bosnia y Herzegovina": 365
+          },
+          "saques_de_banda": {
+            "Estados Unidos": 20,
+            "Bosnia y Herzegovina": 20
+          },
+          "pases_al_ultimo_tercio": {
+            "Estados Unidos": 61,
+            "Bosnia y Herzegovina": 52
+          },
+          "pases_en_el_ultimo_tercio": {
+            "Estados Unidos": {
+              "completados": 77,
+              "intentados": 117,
+              "porcentaje": 66
+            },
+            "Bosnia y Herzegovina": {
+              "completados": 60,
+              "intentados": 94,
+              "porcentaje": 64
+            }
+          },
+          "pases_largos": {
+            "Estados Unidos": {
+              "completados": 17,
+              "intentados": 42,
+              "porcentaje": 40
+            },
+            "Bosnia y Herzegovina": {
+              "completados": 12,
+              "intentados": 50,
+              "porcentaje": 24
+            }
+          },
+          "centros": {
+            "Estados Unidos": {
+              "completados": 3,
+              "intentados": 14,
+              "porcentaje": 21
+            },
+            "Bosnia y Herzegovina": {
+              "completados": 0,
+              "intentados": 13,
+              "porcentaje": 0
+            }
+          }
+        },
+        "defensa": {
+          "entradas_ganadas_pct": {
+            "Estados Unidos": 67,
+            "Bosnia y Herzegovina": 80
+          },
+          "tackles_totales": {
+            "Estados Unidos": 12,
+            "Bosnia y Herzegovina": 15
+          },
+          "intercepciones": {
+            "Estados Unidos": 7,
+            "Bosnia y Herzegovina": 7
+          },
+          "recuperaciones": {
+            "Estados Unidos": 44,
+            "Bosnia y Herzegovina": 31
+          },
+          "despejes": {
+            "Estados Unidos": 28,
+            "Bosnia y Herzegovina": 26
+          },
+          "errores_que_llevan_a_gol": {
+            "Estados Unidos": 0,
+            "Bosnia y Herzegovina": 1
+          }
+        },
+        "porteria": {
+          "paradas": {
+            "Estados Unidos": 3,
+            "Bosnia y Herzegovina": 0
+          },
+          "goles_evitados": {
+            "Estados Unidos": 0.13,
+            "Bosnia y Herzegovina": -1.71
+          },
+          "despejes_por_alto": {
+            "Estados Unidos": 1,
+            "Bosnia y Herzegovina": 0
+          },
+          "con_los_punos": {
+            "Estados Unidos": 0,
+            "Bosnia y Herzegovina": 2
+          },
+          "saques_de_puerta": {
+            "Estados Unidos": 4,
+            "Bosnia y Herzegovina": 11
+          }
+        },
+        "mapa_de_ataques": {
+          "equipo_mostrado": "Estados Unidos",
+          "direccion_de_ataque": "hacia_la_derecha",
+          "descripcion": "Mapa de ataques mostrado para Estados Unidos."
+        },
+        "mapa_de_pases": {
+          "tipo_de_dato": "distribucion_global_no_atribuible_por_equipo",
+          "tercio_defensivo_pct": 22,
+          "tercio_central_pct": 50,
+          "tercio_ofensivo_pct": 28
+        }
+      },
+      "fuentes": [
+        "Captura de pantalla 2026-07-02 165500.png",
+        "Captura de pantalla 2026-07-02 165514.png",
+        "Captura de pantalla 2026-07-02 165525.png"
+      ]
+    }
+  ]
+}
