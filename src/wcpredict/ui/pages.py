@@ -729,6 +729,64 @@ def _daily_refresh_failure_details(repo: Repository, daily_result) -> list[str]:
     return details
 
 
+def _render_external_dataset_review(repo: Repository) -> None:
+    """Surface score mismatches and unresolved entity aliases from the
+    github_wc2026 external dataset. Nothing here mutates data automatically;
+    every action requires an explicit user click."""
+    try:
+        mismatches = repo.list_score_mismatches(only_unresolved=True)
+        pending_teams = repo.list_pending_aliases("team")
+        pending_players = repo.list_pending_aliases("player")
+    except Exception:
+        return
+    with st.expander("Dataset externo (mominullptr)", expanded=False):
+        st.write(f"Discrepancias de marcador pendientes: {len(mismatches)}")
+        st.write(f"Alias de equipos pendientes: {len(pending_teams)}")
+        st.write(f"Alias de jugadores pendientes: {len(pending_players)}")
+        if mismatches:
+            st.dataframe(_visible_frame(mismatches), use_container_width=True)
+        if pending_teams:
+            st.markdown("**Equipos por asignar**")
+            team_options = {
+                f"{row['name']} (id {row['id']})": int(row["id"])
+                for row in sorted(
+                    ({"id": t.id, "name": t.name} for t in _list_teams(repo)),
+                    key=lambda item: item["name"],
+                )
+            }
+            for row in pending_teams:
+                col1, col2, col3 = st.columns([2, 2, 1])
+                col1.write(f"{row['display_name']} (ext {row['external_id']})")
+                choice = col2.selectbox(
+                    "Equipo local",
+                    list(team_options),
+                    key=f"gh_team_alias_{row['external_id']}",
+                    label_visibility="collapsed",
+                )
+                if col3.button("Confirmar", key=f"gh_team_confirm_{row['external_id']}"):
+                    repo.confirm_alias(
+                        "team", "github_wc2026", str(row["external_id"]),
+                        team_options[choice], "ui",
+                        datetime.now(timezone.utc).isoformat(),
+                    )
+                    repo.resolve_gh_foreign_keys()
+                    st.rerun()
+
+
+def _list_teams(repo: Repository):
+    with repo.session() as con:
+        rows = con.execute("SELECT id, name FROM teams ORDER BY name").fetchall()
+
+    class _Team:
+        __slots__ = ("id", "name")
+
+        def __init__(self, row):
+            self.id = row["id"]
+            self.name = row["name"]
+
+    return [_Team(row) for row in rows]
+
+
 def _resolve_bracket_after_daily_refresh(repo: Repository, daily_result) -> None:
     if not getattr(daily_result, "updated", ()):
         return
@@ -2349,6 +2407,7 @@ def render_dashboard() -> None:
         with st.expander("Detalle de errores de actualización"):
             for detail in failure_details:
                 st.write(detail)
+    _render_external_dataset_review(repo)
     now = datetime.now(timezone.utc)
     local_today = _display_dt(now).date()
     window_end = local_today + timedelta(days=2)

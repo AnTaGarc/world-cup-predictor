@@ -199,6 +199,14 @@ class AppContractTests(unittest.TestCase):
         self.assertIn('st.expander("Detalle de errores de actualización")', source)
         self.assertNotIn('status_pill(f"Calendario diario:', source)
 
+    def test_external_dataset_review_expander_present(self):
+        source = (Path(__file__).parents[1] / "src" / "wcpredict" / "ui" / "pages.py").read_text(encoding="utf-8")
+        self.assertIn("def _render_external_dataset_review", source)
+        self.assertIn('st.expander("Dataset externo (mominullptr)"', source)
+        self.assertIn("Discrepancias de marcador pendientes", source)
+        self.assertIn("Alias de equipos pendientes", source)
+        self.assertIn("Alias de jugadores pendientes", source)
+
     def test_bracket_view_resolves_before_rendering(self):
         source = (Path(__file__).parents[1] / "src" / "wcpredict" / "ui" / "pages.py").read_text(encoding="utf-8")
         section = source[source.index("def _render_bracket_section"):source.index("def render_prediction_lab")]
