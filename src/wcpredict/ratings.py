@@ -67,38 +67,78 @@ def _type_weight(match_type: str) -> float:
     return 1.0
 
 
-def build_team_ratings(results: list[MatchResult], as_of: date) -> dict[str, TeamRating]:
-    totals: dict[str, dict[str, float]] = {}
-    for result in deduplicate_results(results):
-        if result.played_on >= as_of:
-            continue
-        weight = _recency_weight(result.played_on, as_of) * _type_weight(result.match_type)
-        for team in (result.team_a, result.team_b):
-            totals.setdefault(team, {"gf": 0.0, "ga": 0.0, "w": 0.0})
-        totals[result.team_a]["gf"] += result.goals_a * weight
-        totals[result.team_a]["ga"] += result.goals_b * weight
-        totals[result.team_a]["w"] += weight
-        totals[result.team_b]["gf"] += result.goals_b * weight
-        totals[result.team_b]["ga"] += result.goals_a * weight
-        totals[result.team_b]["w"] += weight
+_OPPONENT_CLAMP_LOW = 0.60
+_OPPONENT_CLAMP_HIGH = 1.60
 
-    all_gf = sum(team["gf"] for team in totals.values())
-    all_w = sum(team["w"] for team in totals.values())
-    average_goals = all_gf / all_w if all_w else 1.25
 
+def _opponent_clamp(value: float) -> float:
+    return max(_OPPONENT_CLAMP_LOW, min(_OPPONENT_CLAMP_HIGH, value))
+
+
+def build_team_ratings(
+    results: list[MatchResult], as_of: date, iterations: int = 3
+) -> dict[str, TeamRating]:
+    """Goal-rate ratings with iterative strength-of-schedule normalization.
+
+    Pass 1 uses raw goals (legacy behaviour, reachable with iterations=1).
+    Later passes re-weigh every match by the opponent ratings of the
+    previous pass: goals against a leaky defense earn less attack, clean
+    sheets against toothless attacks earn less defense credit.
+    """
+    eligible = [
+        result for result in deduplicate_results(results)
+        if result.played_on < as_of
+    ]
     ratings: dict[str, TeamRating] = {}
-    for team, values in totals.items():
-        sample = values["w"]
-        scored_rate = values["gf"] / sample if sample else average_goals
-        conceded_rate = values["ga"] / sample if sample else average_goals
-        shrink = min(1.0, sample / 8.0)
-        attack = 1.0 + shrink * ((scored_rate / average_goals) - 1.0)
-        defense = 1.0 + shrink * ((conceded_rate / average_goals) - 1.0)
-        ratings[team] = TeamRating(
-            attack=max(0.35, attack),
-            defense=max(0.35, defense),
-            sample_weight=sample,
-        )
+    for iteration in range(max(1, iterations)):
+        totals: dict[str, dict[str, float]] = {}
+
+        def _accumulate(team: str, opponent: str, gf: int, ga: int, weight: float) -> None:
+            slot = totals.setdefault(
+                team, {"gf": 0.0, "ga": 0.0, "w_att": 0.0, "w_def": 0.0, "w": 0.0}
+            )
+            if iteration == 0 or opponent not in ratings:
+                opp_defense = opp_attack = 1.0
+            else:
+                opp_defense = _opponent_clamp(ratings[opponent].defense)
+                opp_attack = _opponent_clamp(ratings[opponent].attack)
+            # Scoring against a leaky defense (defense > 1) is discounted;
+            # conceding against a strong attack is excusable.
+            slot["gf"] += (gf / opp_defense) * weight * _opponent_clamp(1.0 / opp_defense)
+            slot["ga"] += (ga / opp_attack) * weight * _opponent_clamp(opp_attack)
+            slot["w_att"] += weight * _opponent_clamp(1.0 / opp_defense)
+            slot["w_def"] += weight * _opponent_clamp(opp_attack)
+            slot["w"] += weight
+
+        for result in eligible:
+            weight = _recency_weight(result.played_on, as_of) * _type_weight(result.match_type)
+            _accumulate(result.team_a, result.team_b, result.goals_a, result.goals_b, weight)
+            _accumulate(result.team_b, result.team_a, result.goals_b, result.goals_a, weight)
+
+        all_gf = sum(team["gf"] for team in totals.values())
+        all_w_att = sum(team["w_att"] for team in totals.values())
+        all_ga = sum(team["ga"] for team in totals.values())
+        all_w_def = sum(team["w_def"] for team in totals.values())
+        average_scored = all_gf / all_w_att if all_w_att else 1.25
+        average_conceded = all_ga / all_w_def if all_w_def else 1.25
+
+        ratings = {}
+        for team, values in totals.items():
+            sample = values["w"]
+            scored_rate = values["gf"] / values["w_att"] if values["w_att"] else average_scored
+            conceded_rate = values["ga"] / values["w_def"] if values["w_def"] else average_conceded
+            # Shrink uses the opponent-weighted sample: a clean sheet against
+            # a toothless attack contributes little defensive certainty, so the
+            # rating stays closer to average.
+            shrink_att = min(1.0, values["w_att"] / 8.0)
+            shrink_def = min(1.0, values["w_def"] / 8.0)
+            attack = max(0.35, 1.0 + shrink_att * ((scored_rate / average_scored) - 1.0))
+            defense = max(0.35, 1.0 + shrink_def * ((conceded_rate / average_conceded) - 1.0))
+            ratings[team] = TeamRating(
+                attack=attack,
+                defense=defense,
+                sample_weight=sample,
+            )
     return ratings
 
 
