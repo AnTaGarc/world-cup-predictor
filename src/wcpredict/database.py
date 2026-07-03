@@ -818,6 +818,9 @@ ON gh_match_events(external_match_id);
 # Additional columns added after the original schema was defined. They are
 # applied with ALTER TABLE so existing DBs upgrade in place without losing data.
 _OPTIONAL_COLUMNS = {
+    "outcome_adjustment_calibrations": [
+        ("alphas_json", "TEXT"),
+    ],
     "observations": [
         ("period", "TEXT NOT NULL DEFAULT 'full_match'"),
     ],

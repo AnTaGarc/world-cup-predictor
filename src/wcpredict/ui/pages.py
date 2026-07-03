@@ -1673,15 +1673,25 @@ def _match_analysis_bundle_cached(
     # Alpha comes from the persisted calibration; alpha=0 keeps the layer inert.
     form_adjustment_note = None
     try:
+        import json as _json
         from wcpredict.tournament_form_adjustment import (
+            alpha_for_match,
             apply_form_adjustment,
             build_match_adjustment,
         )
         _calibration = repo.latest_form_calibration()
-        _alpha = float(_calibration["alpha"]) if _calibration else 0.0
-        if _alpha > 0.0 and (ml_probabilities or deep_ml_probabilities):
+        _alphas = {}
+        if _calibration:
+            if _calibration.get("alphas_json"):
+                _alphas = _json.loads(str(_calibration["alphas_json"]))
+            else:
+                _alphas = {"3plus": float(_calibration["alpha"] or 0.0)}
+        if any(float(v) > 0.0 for v in _alphas.values()) and (
+            ml_probabilities or deep_ml_probabilities
+        ):
             _adj = build_match_adjustment(repo, team_a, team_b, str(match.kickoff_utc))
-            if _adj.weight > 0.0 and _adj.score != 0.0:
+            _alpha = alpha_for_match(_alphas, _adj.matches_min)
+            if _alpha > 0.0 and _adj.weight > 0.0 and _adj.score != 0.0:
                 if ml_probabilities:
                     ml_probabilities = apply_form_adjustment(
                         ml_probabilities, _alpha, _adj.score, _adj.weight
@@ -1692,7 +1702,8 @@ def _match_analysis_bundle_cached(
                     )
                 form_adjustment_note = (
                     f"Ajuste por forma del torneo: score {_adj.score:+.2f}, "
-                    f"peso {_adj.weight:.2f}, α {_alpha:.2f}"
+                    f"peso {_adj.weight:.2f} ({_adj.matches_min} partidos), "
+                    f"α {_alpha:.2f}"
                 )
     except Exception:
         form_adjustment_note = None

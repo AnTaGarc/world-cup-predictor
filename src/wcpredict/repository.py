@@ -4067,14 +4067,16 @@ class Repository:
     def save_form_calibration(
         self, model_version: str, alpha: float, sample_size: int,
         log_loss_base: float, log_loss_adjusted: float, now_utc_iso: str,
+        alphas_json: str | None = None,
     ) -> None:
         with self.session() as con:
             con.execute(
                 "INSERT INTO outcome_adjustment_calibrations("
                 "model_version, calibrated_at_utc, alpha, sample_size, "
-                "log_loss_base, log_loss_adjusted) VALUES(?, ?, ?, ?, ?, ?)",
+                "log_loss_base, log_loss_adjusted, alphas_json) "
+                "VALUES(?, ?, ?, ?, ?, ?, ?)",
                 (model_version, now_utc_iso, alpha, sample_size,
-                 log_loss_base, log_loss_adjusted),
+                 log_loss_base, log_loss_adjusted, alphas_json),
             )
 
     def latest_form_calibration(self) -> dict | None:

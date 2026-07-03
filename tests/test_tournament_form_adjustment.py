@@ -121,3 +121,35 @@ class CalibrationTests(unittest.TestCase):
         calibration = calibrate_alpha([])
         self.assertEqual(0.0, calibration.alpha)
         self.assertEqual(0, calibration.sample_size)
+
+
+class StratifiedCalibrationTests(unittest.TestCase):
+    def _samples(self, matches_min, informative):
+        samples = []
+        for i in range(30):
+            winner_is_home = i % 2 == 0
+            score = (0.7 if winner_is_home else -0.7) if informative else (0.7 if i % 3 else -0.7)
+            samples.append({
+                "probs": {"home": 0.35, "draw": 0.30, "away": 0.35},
+                "score": score,
+                "weight": 0.5,
+                "matches_min": matches_min,
+                "outcome": "home" if winner_is_home else "away",
+            })
+        return samples
+
+    def test_buckets_activate_independently(self):
+        from wcpredict.tournament_form_adjustment import calibrate_stratified
+        samples = self._samples(3, informative=True) + self._samples(2, informative=False)
+        report = calibrate_stratified(samples)
+        self.assertGreater(report["3plus"]["alpha"], 0.0)
+        self.assertEqual(0.0, report["2"]["alpha"])
+
+    def test_alpha_for_match_selection(self):
+        from wcpredict.tournament_form_adjustment import alpha_for_match
+        alphas = {"2": 0.9, "3plus": 1.3}
+        self.assertEqual(0.0, alpha_for_match(alphas, 0))
+        self.assertEqual(0.0, alpha_for_match(alphas, 1))
+        self.assertEqual(0.9, alpha_for_match(alphas, 2))
+        self.assertEqual(1.3, alpha_for_match(alphas, 3))
+        self.assertEqual(1.3, alpha_for_match(alphas, 5))

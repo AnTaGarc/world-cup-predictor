@@ -38,6 +38,7 @@ class FormFeatures:
 class Adjustment:
     score: float
     weight: float
+    matches_min: int = 0
     detail: dict[str, float] = field(default_factory=dict)
 
 
@@ -219,7 +220,7 @@ def build_match_adjustment(repo, team_a: str, team_b: str, kickoff_iso: str) -> 
     score = _clip(sum(deltas.values()) / len(deltas))
     smallest = min(features_a.matches_played, features_b.matches_played)
     weight = smallest / (smallest + SHRINKAGE_K)
-    return Adjustment(score=score, weight=weight, detail=deltas)
+    return Adjustment(score=score, weight=weight, matches_min=smallest, detail=deltas)
 
 
 def apply_form_adjustment(
@@ -367,6 +368,58 @@ def build_calibration_samples(repo) -> list[dict[str, Any]]:
             "probs": probs,
             "score": adjustment.score,
             "weight": adjustment.weight,
+            "matches_min": adjustment.matches_min,
             "outcome": outcome,
         })
     return samples
+
+
+# Buckets for the stratified alpha: teams' minimum tournament matches played.
+# Below 2 matches the layer stays off (weight is negligible and no stratum
+# has shown signal there); each bucket calibrates and activates on its own.
+ALPHA_BUCKETS = ("2", "3plus")
+MIN_BUCKET_IMPROVEMENT = 0.03
+
+
+def bucket_for_matches(matches_min: int) -> str | None:
+    if matches_min >= 3:
+        return "3plus"
+    if matches_min == 2:
+        return "2"
+    return None
+
+
+def calibrate_stratified(samples: list[dict]) -> dict[str, dict]:
+    """Calibrate one alpha per matches-played bucket, activating each bucket
+    only when its own improvement clears MIN_BUCKET_IMPROVEMENT."""
+    report: dict[str, dict] = {}
+    for bucket in ALPHA_BUCKETS:
+        subset = [
+            s for s in samples
+            if bucket_for_matches(int(s.get("matches_min", 0))) == bucket
+        ]
+        calibration = calibrate_alpha(subset)
+        alpha = calibration.alpha
+        improvement = (
+            (calibration.log_loss_base - calibration.log_loss_adjusted)
+            / calibration.log_loss_base
+            if calibration.log_loss_base > 0 else 0.0
+        )
+        if improvement < MIN_BUCKET_IMPROVEMENT:
+            alpha = 0.0
+        report[bucket] = {
+            "alpha": alpha,
+            "alpha_raw": calibration.alpha,
+            "sample_size": calibration.sample_size,
+            "log_loss_base": calibration.log_loss_base,
+            "log_loss_adjusted": calibration.log_loss_adjusted,
+            "improvement": improvement,
+        }
+    return report
+
+
+def alpha_for_match(alphas: dict[str, float], matches_min: int) -> float:
+    bucket = bucket_for_matches(matches_min)
+    if bucket is None:
+        return 0.0
+    return float(alphas.get(bucket, 0.0))
