@@ -91,6 +91,29 @@ aplica una hora de backoff para no repetir llamadas en cada rerun.
 Son fuentes primarias operativas para el Mundial actual, pero de procedencia
 comunitaria: una fuente oficial o una captura revisada prevalece ante un conflicto.
 
+## Fuente externa: mominullptr/FIFA-World-Cup-2026-Dataset
+
+Ademas de los feeds de swaptr (Kaggle) y martj42 se ingiere diariamente el dataset
+publico [`mominullptr/FIFA-World-Cup-2026-Dataset`](https://github.com/mominullptr/FIFA-World-Cup-2026-Dataset)
+(CC0). Aporta:
+
+- Timeline de eventos al minuto (goles, tarjetas, VAR).
+- Arbitro asignado por partido y su tendencia historica de tarjetas.
+- Estadisticas de equipo por partido con faltas, offsides, paradas y POTM.
+- Stats de jugador acumuladas del torneo (rating medio, penaltis, clean sheets).
+- ELO, ranking FIFA pre-torneo y seleccionador.
+
+Estas fuentes no sustituyen los cierres oficiales (`verified_user_capture`),
+las tandas de penaltis ni la carga por periodos. Su marcador se compara
+automaticamente con el nuestro:
+
+- Coincidencia: se registra como verificado.
+- Discrepancia: aparece bajo "Datos diarios -> Dataset externo (mominullptr)"
+  para revision manual (nunca se autocorrige).
+- Sin marcador local: queda disponible como candidato preconfirmado.
+
+Backfill puntual: `python scripts/backfill_github_wc2026.py`.
+
 ## Modelos por mercado
 
 - 1X2, goles y BTTS conservan la matriz de marcadores activa. Dixon–Coles, Poisson
