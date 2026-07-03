@@ -208,7 +208,7 @@ class AppContractTests(unittest.TestCase):
         self.assertIn("Alias de jugadores pendientes", source)
         self.assertIn("Cierres candidatos pendientes", source)
         self.assertIn("verified_external_confirmed", source)
-        self.assertIn("Prórroga: cierre manual", source)
+        self.assertIn("descuento largo", source)
 
     def test_daily_refresh_syncs_external_observations(self):
         source = (Path(__file__).parents[1] / "src" / "wcpredict" / "ui" / "pages.py").read_text(encoding="utf-8")

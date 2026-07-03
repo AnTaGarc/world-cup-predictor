@@ -1,0 +1,286 @@
+{
+  "descripcion": "Estadísticas profundas revisadas manualmente a partir de capturas de SofaScore.",
+  "numero_de_partidos": 1,
+  "partidos": [
+    {
+      "id": "espana_austria",
+      "nombre": "España vs Austria",
+      "equipos": {
+        "izquierda_verde": "España",
+        "derecha_azul": "Austria"
+      },
+      "estadisticas": {
+        "resumen_del_partido": {
+          "posesion_de_balon_pct": {
+            "España": 64,
+            "Austria": 36
+          },
+          "distancia_recorrida_km": {
+            "España": 100.4,
+            "Austria": 100.4
+          },
+          "goles_esperados_xg": {
+            "España": 2.8,
+            "Austria": 0.32
+          },
+          "ocasiones_claras": {
+            "España": 4,
+            "Austria": 1
+          },
+          "tiros_totales": {
+            "España": 23,
+            "Austria": 5
+          },
+          "paradas": {
+            "España": 0,
+            "Austria": 6
+          },
+          "numero_de_sprints": {
+            "España": 107,
+            "Austria": 103
+          },
+          "saques_de_esquina": {
+            "España": 9,
+            "Austria": 0
+          },
+          "faltas": {
+            "España": 8,
+            "Austria": 15
+          },
+          "pases": {
+            "España": 629,
+            "Austria": 347
+          },
+          "entradas": {
+            "España": 19,
+            "Austria": 16
+          },
+          "tiros_libres": {
+            "España": 15,
+            "Austria": 8
+          },
+          "tarjetas_amarillas": {
+            "España": 0,
+            "Austria": 1
+          }
+        },
+        "tiros": {
+          "tiros_totales": {
+            "España": 23,
+            "Austria": 5
+          },
+          "tiros_a_puerta": {
+            "España": 10,
+            "Austria": 0
+          },
+          "tiros_al_palo": {
+            "España": 1,
+            "Austria": 0
+          },
+          "tiros_fuera": {
+            "España": 6,
+            "Austria": 4
+          },
+          "tiros_bloqueados": {
+            "España": 7,
+            "Austria": 1
+          },
+          "tiros_dentro_del_area_penal": {
+            "España": 15,
+            "Austria": 4
+          },
+          "tiros_fuera_del_area": {
+            "España": 8,
+            "Austria": 1
+          }
+        },
+        "ataque": {
+          "ocasiones_claras_realizadas": {
+            "España": 3,
+            "Austria": 0
+          },
+          "ocasiones_claras_falladas": {
+            "España": 1,
+            "Austria": 1
+          },
+          "toques_dentro_del_area": {
+            "España": 51,
+            "Austria": 10
+          },
+          "faltas_recibidas_en_el_tercio_final": {
+            "España": 3,
+            "Austria": 0
+          },
+          "fueras_de_juego": {
+            "España": 2,
+            "Austria": 5
+          }
+        },
+        "duelos": {
+          "duelos_pct": {
+            "España": 64,
+            "Austria": 36
+          },
+          "perdidas": {
+            "España": 8,
+            "Austria": 8
+          },
+          "duelos_en_el_suelo": {
+            "España": {
+              "ganados": 41,
+              "totales": 68,
+              "porcentaje": 60
+            },
+            "Austria": {
+              "ganados": 27,
+              "totales": 68,
+              "porcentaje": 40
+            }
+          },
+          "duelos_aereos": {
+            "España": {
+              "ganados": 12,
+              "totales": 15,
+              "porcentaje": 80
+            },
+            "Austria": {
+              "ganados": 3,
+              "totales": 15,
+              "porcentaje": 20
+            }
+          },
+          "regates": {
+            "España": {
+              "completados": 7,
+              "intentados": 15,
+              "porcentaje": 47
+            },
+            "Austria": {
+              "completados": 5,
+              "intentados": 16,
+              "porcentaje": 31
+            }
+          }
+        },
+        "pases": {
+          "pases_precisos": {
+            "España": 570,
+            "Austria": 285
+          },
+          "saques_de_banda": {
+            "España": 15,
+            "Austria": 7
+          },
+          "pases_al_ultimo_tercio": {
+            "España": 53,
+            "Austria": 29
+          },
+          "pases_en_el_ultimo_tercio": {
+            "España": {
+              "completados": 139,
+              "intentados": 167,
+              "porcentaje": 83
+            },
+            "Austria": {
+              "completados": 42,
+              "intentados": 58,
+              "porcentaje": 72
+            }
+          },
+          "pases_largos": {
+            "España": {
+              "completados": 23,
+              "intentados": 35,
+              "porcentaje": 66
+            },
+            "Austria": {
+              "completados": 14,
+              "intentados": 37,
+              "porcentaje": 38
+            }
+          },
+          "centros": {
+            "España": {
+              "completados": 7,
+              "intentados": 21,
+              "porcentaje": 33
+            },
+            "Austria": {
+              "completados": 3,
+              "intentados": 13,
+              "porcentaje": 23
+            }
+          }
+        },
+        "defensa": {
+          "entradas_ganadas_pct": {
+            "España": 63,
+            "Austria": 50
+          },
+          "tackles_totales": {
+            "España": 19,
+            "Austria": 16
+          },
+          "intercepciones": {
+            "España": 6,
+            "Austria": 6
+          },
+          "recuperaciones": {
+            "España": 46,
+            "Austria": 44
+          },
+          "despejes": {
+            "España": 15,
+            "Austria": 21
+          },
+          "errores_que_llevan_a_disparo": {
+            "España": 0,
+            "Austria": 1
+          }
+        },
+        "porteria": {
+          "paradas": {
+            "España": 0,
+            "Austria": 6
+          },
+          "goles_evitados": {
+            "España": 0.0,
+            "Austria": -0.8
+          },
+          "grandes_paradas": {
+            "España": 0,
+            "Austria": 1
+          },
+          "despejes_por_alto": {
+            "España": 1,
+            "Austria": 1
+          },
+          "con_los_punos": {
+            "España": 0,
+            "Austria": 2
+          },
+          "saques_de_puerta": {
+            "España": 7,
+            "Austria": 8
+          }
+        },
+        "mapa_de_ataques": {
+          "equipo_mostrado": "España",
+          "direccion_de_ataque": "hacia_la_derecha",
+          "descripcion": "Mapa de ataques mostrado para España."
+        },
+        "mapa_de_pases": {
+          "tipo_de_dato": "distribucion_global_no_atribuible_por_equipo",
+          "tercio_defensivo_pct": 20,
+          "tercio_central_pct": 42,
+          "tercio_ofensivo_pct": 38
+        }
+      },
+      "fuentes": [
+        "Captura de pantalla 2026-07-03 185110.png",
+        "Captura de pantalla 2026-07-03 185122.png",
+        "Captura de pantalla 2026-07-03 185136.png"
+      ]
+    }
+  ]
+}

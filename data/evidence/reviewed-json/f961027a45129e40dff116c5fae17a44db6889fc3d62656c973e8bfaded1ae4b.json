@@ -1,0 +1,282 @@
+{
+  "descripcion": "Estadísticas profundas revisadas manualmente a partir de capturas de SofaScore.",
+  "numero_de_partidos": 1,
+  "partidos": [
+    {
+      "id": "portugal_croacia",
+      "nombre": "Portugal vs Croacia",
+      "equipos": {
+        "izquierda_verde": "Portugal",
+        "derecha_azul": "Croacia"
+      },
+      "estadisticas": {
+        "resumen_del_partido": {
+          "posesion_de_balon_pct": {
+            "Portugal": 60,
+            "Croacia": 40
+          },
+          "goles_esperados_xg": {
+            "Portugal": 2.2,
+            "Croacia": 1.34
+          },
+          "ocasiones_claras": {
+            "Portugal": 3,
+            "Croacia": 4
+          },
+          "tiros_totales": {
+            "Portugal": 15,
+            "Croacia": 13
+          },
+          "paradas": {
+            "Portugal": 5,
+            "Croacia": 2
+          },
+          "saques_de_esquina": {
+            "Portugal": 9,
+            "Croacia": 5
+          },
+          "faltas": {
+            "Portugal": 6,
+            "Croacia": 12
+          },
+          "pases": {
+            "Portugal": 585,
+            "Croacia": 370
+          },
+          "entradas": {
+            "Portugal": 19,
+            "Croacia": 22
+          },
+          "tiros_libres": {
+            "Portugal": 11,
+            "Croacia": 6
+          },
+          "tarjetas_amarillas": {
+            "Portugal": 1,
+            "Croacia": 2
+          }
+        },
+        "tiros": {
+          "tiros_totales": {
+            "Portugal": 15,
+            "Croacia": 13
+          },
+          "tiros_a_puerta": {
+            "Portugal": 3,
+            "Croacia": 6
+          },
+          "tiros_al_palo": {
+            "Portugal": 1,
+            "Croacia": 1
+          },
+          "tiros_fuera": {
+            "Portugal": 8,
+            "Croacia": 5
+          },
+          "tiros_bloqueados": {
+            "Portugal": 4,
+            "Croacia": 2
+          },
+          "tiros_dentro_del_area_penal": {
+            "Portugal": 10,
+            "Croacia": 10
+          },
+          "tiros_fuera_del_area": {
+            "Portugal": 5,
+            "Croacia": 3
+          }
+        },
+        "ataque": {
+          "ocasiones_claras_realizadas": {
+            "Portugal": 1,
+            "Croacia": 1
+          },
+          "ocasiones_claras_falladas": {
+            "Portugal": 2,
+            "Croacia": 3
+          },
+          "pases_en_profundidad": {
+            "Portugal": 0,
+            "Croacia": 1
+          },
+          "toques_dentro_del_area": {
+            "Portugal": 19,
+            "Croacia": 22
+          },
+          "faltas_recibidas_en_el_tercio_final": {
+            "Portugal": 2,
+            "Croacia": 1
+          },
+          "fueras_de_juego": {
+            "Portugal": 1,
+            "Croacia": 4
+          }
+        },
+        "duelos": {
+          "duelos_pct": {
+            "Portugal": 57,
+            "Croacia": 43
+          },
+          "perdidas": {
+            "Portugal": 9,
+            "Croacia": 17
+          },
+          "duelos_en_el_suelo": {
+            "Portugal": {
+              "ganados": 43,
+              "totales": 77,
+              "porcentaje": 56
+            },
+            "Croacia": {
+              "ganados": 34,
+              "totales": 77,
+              "porcentaje": 44
+            }
+          },
+          "duelos_aereos": {
+            "Portugal": {
+              "ganados": 12,
+              "totales": 20,
+              "porcentaje": 60
+            },
+            "Croacia": {
+              "ganados": 8,
+              "totales": 20,
+              "porcentaje": 40
+            }
+          },
+          "regates": {
+            "Portugal": {
+              "completados": 12,
+              "intentados": 25,
+              "porcentaje": 48
+            },
+            "Croacia": {
+              "completados": 6,
+              "intentados": 8,
+              "porcentaje": 75
+            }
+          }
+        },
+        "pases": {
+          "pases_precisos": {
+            "Portugal": 533,
+            "Croacia": 312
+          },
+          "saques_de_banda": {
+            "Portugal": 9,
+            "Croacia": 14
+          },
+          "pases_al_ultimo_tercio": {
+            "Portugal": 89,
+            "Croacia": 24
+          },
+          "pases_en_el_ultimo_tercio": {
+            "Portugal": {
+              "completados": 125,
+              "intentados": 159,
+              "porcentaje": 79
+            },
+            "Croacia": {
+              "completados": 57,
+              "intentados": 75,
+              "porcentaje": 76
+            }
+          },
+          "pases_largos": {
+            "Portugal": {
+              "completados": 19,
+              "intentados": 39,
+              "porcentaje": 49
+            },
+            "Croacia": {
+              "completados": 18,
+              "intentados": 42,
+              "porcentaje": 43
+            }
+          },
+          "centros": {
+            "Portugal": {
+              "completados": 6,
+              "intentados": 20,
+              "porcentaje": 30
+            },
+            "Croacia": {
+              "completados": 7,
+              "intentados": 22,
+              "porcentaje": 32
+            }
+          }
+        },
+        "defensa": {
+          "entradas_ganadas_pct": {
+            "Portugal": 47,
+            "Croacia": 50
+          },
+          "tackles_totales": {
+            "Portugal": 19,
+            "Croacia": 22
+          },
+          "intercepciones": {
+            "Portugal": 5,
+            "Croacia": 10
+          },
+          "recuperaciones": {
+            "Portugal": 42,
+            "Croacia": 37
+          },
+          "despejes": {
+            "Portugal": 19,
+            "Croacia": 19
+          },
+          "errores_que_llevan_a_disparo": {
+            "Portugal": 1,
+            "Croacia": 0
+          }
+        },
+        "porteria": {
+          "paradas": {
+            "Portugal": 5,
+            "Croacia": 2
+          },
+          "goles_evitados": {
+            "Portugal": 0.51,
+            "Croacia": -0.15
+          },
+          "grandes_paradas": {
+            "Portugal": 2,
+            "Croacia": 0
+          },
+          "despejes_por_alto": {
+            "Portugal": 1,
+            "Croacia": 0
+          },
+          "con_los_punos": {
+            "Portugal": 0,
+            "Croacia": 1
+          },
+          "saques_de_puerta": {
+            "Portugal": 7,
+            "Croacia": 14
+          }
+        },
+        "mapa_de_ataques": {
+          "equipo_mostrado": "Portugal",
+          "direccion_de_ataque": "hacia_la_derecha",
+          "descripcion": "Mapa de ataques mostrado para Portugal."
+        },
+        "mapa_de_pases": {
+          "tipo_de_dato": "distribucion_global_no_atribuible_por_equipo",
+          "tercio_defensivo_pct": 21,
+          "tercio_central_pct": 46,
+          "tercio_ofensivo_pct": 33
+        }
+      },
+      "fuentes": [
+        "Captura de pantalla 2026-07-03 185418.png",
+        "Captura de pantalla 2026-07-03 185429.png",
+        "Captura de pantalla 2026-07-03 185443.png"
+      ]
+    }
+  ]
+}

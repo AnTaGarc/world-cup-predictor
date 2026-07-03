@@ -757,8 +757,11 @@ def _render_external_dataset_review(repo: Repository) -> None:
             col1, col2 = st.columns([3, 1])
             col1.write(label)
             if max_minute > 90:
-                col2.write("Prórroga: cierre manual")
-                continue
+                col1.caption(
+                    f"Eventos hasta el minuto {max_minute}: confirma solo si el partido "
+                    "terminó en los 90 (descuento largo). Si hubo prórroga o penaltis, "
+                    "usa el cierre manual por periodos."
+                )
             if col2.button("Confirmar", key=f"gh_score_confirm_{row['match_id']}"):
                 repo.settle_match(
                     int(row["match_id"]), int(row["goals_a"]), int(row["goals_b"]),

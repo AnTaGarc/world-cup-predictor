@@ -155,7 +155,9 @@ def build_form_features(repo, team_name: str, before_kickoff_iso: str) -> FormFe
     for m in matches:
         match_events = by_match.get(m["external_match_id"], [])
         max_minute = max((e["minute"] for e in match_events), default=90)
-        horizon = 120 if max_minute > 90 else 90
+        # Events between 91' and 105' are usually long stoppage time, not
+        # extra time (the dataset stores absolute minutes without periods).
+        horizon = 120 if max_minute > 105 else max(90, max_minute)
         for e in match_events:
             own = e.get("team_id") == own_team_id
             if e["event_type"] == "Goal":
@@ -190,7 +192,7 @@ def build_form_features(repo, team_name: str, before_kickoff_iso: str) -> FormFe
     for m in matches:
         match_events = by_match.get(m["external_match_id"], [])
         max_minute = max((e["minute"] for e in match_events), default=90)
-        if max_minute <= 90:
+        if max_minute <= 105:
             continue
         kick = str(m.get("kickoff_iso") or "")
         try:

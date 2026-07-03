@@ -1,0 +1,270 @@
+{
+  "descripcion": "Estadísticas profundas revisadas manualmente a partir de capturas de SofaScore.",
+  "numero_de_partidos": 1,
+  "partidos": [
+    {
+      "id": "suiza_argelia",
+      "nombre": "Suiza vs Argelia",
+      "equipos": {
+        "izquierda_verde": "Suiza",
+        "derecha_azul": "Argelia"
+      },
+      "estadisticas": {
+        "resumen_del_partido": {
+          "posesion_de_balon_pct": {
+            "Suiza": 45,
+            "Argelia": 55
+          },
+          "goles_esperados_xg": {
+            "Suiza": 2.45,
+            "Argelia": 0.74
+          },
+          "ocasiones_claras": {
+            "Suiza": 2,
+            "Argelia": 2
+          },
+          "tiros_totales": {
+            "Suiza": 11,
+            "Argelia": 8
+          },
+          "paradas": {
+            "Suiza": 2,
+            "Argelia": 2
+          },
+          "saques_de_esquina": {
+            "Suiza": 4,
+            "Argelia": 2
+          },
+          "faltas": {
+            "Suiza": 10,
+            "Argelia": 12
+          },
+          "pases": {
+            "Suiza": 438,
+            "Argelia": 563
+          },
+          "entradas": {
+            "Suiza": 20,
+            "Argelia": 21
+          },
+          "tiros_libres": {
+            "Suiza": 12,
+            "Argelia": 10
+          },
+          "tarjetas_amarillas": {
+            "Suiza": 0,
+            "Argelia": 2
+          }
+        },
+        "tiros": {
+          "tiros_totales": {
+            "Suiza": 11,
+            "Argelia": 8
+          },
+          "tiros_a_puerta": {
+            "Suiza": 5,
+            "Argelia": 2
+          },
+          "tiros_al_palo": {
+            "Suiza": 0,
+            "Argelia": 0
+          },
+          "tiros_fuera": {
+            "Suiza": 4,
+            "Argelia": 3
+          },
+          "tiros_bloqueados": {
+            "Suiza": 2,
+            "Argelia": 3
+          },
+          "tiros_dentro_del_area_penal": {
+            "Suiza": 9,
+            "Argelia": 5
+          },
+          "tiros_fuera_del_area": {
+            "Suiza": 2,
+            "Argelia": 3
+          }
+        },
+        "ataque": {
+          "ocasiones_claras_realizadas": {
+            "Suiza": 1,
+            "Argelia": 0
+          },
+          "ocasiones_claras_falladas": {
+            "Suiza": 1,
+            "Argelia": 2
+          },
+          "pases_en_profundidad": {
+            "Suiza": 1,
+            "Argelia": 0
+          },
+          "toques_dentro_del_area": {
+            "Suiza": 28,
+            "Argelia": 15
+          },
+          "faltas_recibidas_en_el_tercio_final": {
+            "Suiza": 1,
+            "Argelia": 0
+          },
+          "fueras_de_juego": {
+            "Suiza": 0,
+            "Argelia": 2
+          }
+        },
+        "duelos": {
+          "duelos_pct": {
+            "Suiza": 53,
+            "Argelia": 47
+          },
+          "perdidas": {
+            "Suiza": 9,
+            "Argelia": 9
+          },
+          "duelos_en_el_suelo": {
+            "Suiza": {
+              "ganados": 45,
+              "totales": 87,
+              "porcentaje": 52
+            },
+            "Argelia": {
+              "ganados": 42,
+              "totales": 87,
+              "porcentaje": 48
+            }
+          },
+          "duelos_aereos": {
+            "Suiza": {
+              "ganados": 15,
+              "totales": 26,
+              "porcentaje": 58
+            },
+            "Argelia": {
+              "ganados": 11,
+              "totales": 26,
+              "porcentaje": 42
+            }
+          },
+          "regates": {
+            "Suiza": {
+              "completados": 13,
+              "intentados": 25,
+              "porcentaje": 52
+            },
+            "Argelia": {
+              "completados": 11,
+              "intentados": 22,
+              "porcentaje": 50
+            }
+          }
+        },
+        "pases": {
+          "pases_precisos": {
+            "Suiza": 355,
+            "Argelia": 478
+          },
+          "saques_de_banda": {
+            "Suiza": 20,
+            "Argelia": 17
+          },
+          "pases_al_ultimo_tercio": {
+            "Suiza": 38,
+            "Argelia": 71
+          },
+          "pases_en_el_ultimo_tercio": {
+            "Suiza": {
+              "completados": 55,
+              "intentados": 85,
+              "porcentaje": 65
+            },
+            "Argelia": {
+              "completados": 91,
+              "intentados": 136,
+              "porcentaje": 67
+            }
+          },
+          "pases_largos": {
+            "Suiza": {
+              "completados": 21,
+              "intentados": 52,
+              "porcentaje": 40
+            },
+            "Argelia": {
+              "completados": 29,
+              "intentados": 63,
+              "porcentaje": 46
+            }
+          },
+          "centros": {
+            "Suiza": {
+              "completados": 4,
+              "intentados": 14,
+              "porcentaje": 29
+            },
+            "Argelia": {
+              "completados": 1,
+              "intentados": 6,
+              "porcentaje": 17
+            }
+          }
+        },
+        "defensa": {
+          "entradas_ganadas_pct": {
+            "Suiza": 70,
+            "Argelia": 43
+          },
+          "tackles_totales": {
+            "Suiza": 20,
+            "Argelia": 21
+          },
+          "intercepciones": {
+            "Suiza": 17,
+            "Argelia": 10
+          },
+          "recuperaciones": {
+            "Suiza": 50,
+            "Argelia": 55
+          },
+          "despejes": {
+            "Suiza": 23,
+            "Argelia": 14
+          },
+          "errores_que_llevan_a_gol": {
+            "Suiza": 0,
+            "Argelia": 1
+          }
+        },
+        "porteria": {
+          "paradas": {
+            "Suiza": 2,
+            "Argelia": 2
+          },
+          "goles_evitados": {
+            "Suiza": 0.28,
+            "Argelia": -0.71
+          },
+          "saques_de_puerta": {
+            "Suiza": 9,
+            "Argelia": 6
+          }
+        },
+        "mapa_de_ataques": {
+          "equipo_mostrado": "Suiza",
+          "direccion_de_ataque": "hacia_la_derecha",
+          "descripcion": "Mapa de ataques mostrado para Suiza."
+        },
+        "mapa_de_pases": {
+          "tipo_de_dato": "distribucion_global_no_atribuible_por_equipo",
+          "tercio_defensivo_pct": 27,
+          "tercio_central_pct": 47,
+          "tercio_ofensivo_pct": 26
+        }
+      },
+      "fuentes": [
+        "Captura de pantalla 2026-07-03 185624.png",
+        "Captura de pantalla 2026-07-03 185635.png",
+        "Captura de pantalla 2026-07-03 185643.png"
+      ]
+    }
+  ]
+}
