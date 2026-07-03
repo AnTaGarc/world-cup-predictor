@@ -207,6 +207,10 @@ class AppContractTests(unittest.TestCase):
         self.assertIn("Alias de equipos pendientes", source)
         self.assertIn("Alias de jugadores pendientes", source)
 
+    def test_daily_refresh_syncs_external_observations(self):
+        source = (Path(__file__).parents[1] / "src" / "wcpredict" / "ui" / "pages.py").read_text(encoding="utf-8")
+        self.assertIn("sync_gh_team_stats_to_observations", source)
+
     def test_bracket_view_resolves_before_rendering(self):
         source = (Path(__file__).parents[1] / "src" / "wcpredict" / "ui" / "pages.py").read_text(encoding="utf-8")
         section = source[source.index("def _render_bracket_section"):source.index("def render_prediction_lab")]

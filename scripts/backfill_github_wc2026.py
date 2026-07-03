@@ -42,8 +42,10 @@ def run_backfill(repository: Repository, fetcher=None, now: datetime | None = No
         import_github_wc2026_download(repository, download, now)
         imported.append(provider_id)
     repository.resolve_gh_foreign_keys(None, now.isoformat())
+    observations_synced = repository.sync_gh_team_stats_to_observations(now.isoformat())
     return {
         "imported": imported,
+        "observations_synced": observations_synced,
         "mismatches": len(repository.list_score_mismatches()),
         "pending_team_aliases": len(repository.list_pending_aliases("team")),
         "pending_player_aliases": len(repository.list_pending_aliases("player")),

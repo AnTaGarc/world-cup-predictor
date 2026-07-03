@@ -55,3 +55,7 @@ class BackfillTests(unittest.TestCase):
         with self.repo.session() as con:
             events = con.execute("SELECT COUNT(*) FROM gh_match_events").fetchone()[0]
         self.assertEqual(4, events)
+
+    def test_backfill_reports_observations_synced(self):
+        report = run_backfill(self.repo, fetcher=self._fetcher, now=self.now)
+        self.assertIn("observations_synced", report)

@@ -701,13 +701,16 @@ def _refresh_current_world_cup_banks_cached(
     repo = Repository(DATABASE_PATH)
     repo.initialize()
     now = datetime.now(timezone.utc)
-    return ensure_current_world_cup_data(
+    result = ensure_current_world_cup_data(
         repo,
         build_daily_fetcher(),
         importer=build_daily_importer(repo, now),
         now=now,
         providers=providers,
     )
+    if "github_wc2026_team_stats" in result.updated:
+        repo.sync_gh_team_stats_to_observations(now.isoformat())
+    return result
 
 
 def _refresh_current_world_cup_banks(repo: Repository):
