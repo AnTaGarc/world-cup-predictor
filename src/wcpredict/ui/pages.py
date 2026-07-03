@@ -742,7 +742,34 @@ def _render_external_dataset_review(repo: Repository) -> None:
         pending_players = repo.list_pending_aliases("player")
     except Exception:
         return
+    try:
+        candidates = repo.list_gh_score_candidates()
+    except Exception:
+        candidates = []
     with st.expander("Dataset externo (mominullptr)", expanded=False):
+        st.write(f"Cierres candidatos pendientes: {len(candidates)}")
+        for row in candidates:
+            label = (
+                f"{row['home_team_name']} {row['home_score']}-{row['away_score']} "
+                f"{row['away_team_name']}"
+            )
+            max_minute = row.get("max_event_minute") or 0
+            col1, col2 = st.columns([3, 1])
+            col1.write(label)
+            if max_minute > 90:
+                col2.write("Prórroga: cierre manual")
+                continue
+            if col2.button("Confirmar", key=f"gh_score_confirm_{row['match_id']}"):
+                repo.settle_match(
+                    int(row["match_id"]), int(row["goals_a"]), int(row["goals_b"]),
+                    [], datetime.now(timezone.utc),
+                    source_type="verified_external_confirmed",
+                )
+                try:
+                    resolve_knockout_bracket(repo)
+                except Exception:
+                    pass
+                st.rerun()
         st.write(f"Discrepancias de marcador pendientes: {len(mismatches)}")
         st.write(f"Alias de equipos pendientes: {len(pending_teams)}")
         st.write(f"Alias de jugadores pendientes: {len(pending_players)}")

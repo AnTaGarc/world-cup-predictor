@@ -4086,3 +4086,34 @@ class Repository:
                 "ORDER BY id DESC LIMIT 1"
             ).fetchone()
         return dict(row) if row is not None else None
+
+    # ------------------------------------------------------------------
+    # github_wc2026 external dataset: score candidates for one-click closure
+
+    def list_gh_score_candidates(self) -> list[dict]:
+        """Matches with a dataset score but no local result, ready for an
+        explicit user confirmation. Includes the max event minute so the UI
+        can refuse the shortcut when the timeline shows extra time (the
+        dataset cannot distinguish shootouts, so those need manual closure).
+        """
+        query = (
+            "SELECT DISTINCT gh.match_id, gh.external_match_id, "
+            "gh.home_team_name, gh.away_team_name, gh.home_score, gh.away_score, "
+            "gh.home_team_id, gh.away_team_id, m.team_a_id, m.team_b_id, "
+            "(SELECT MAX(e.minute) FROM gh_match_events e "
+            " WHERE e.external_match_id = gh.external_match_id) AS max_event_minute "
+            "FROM gh_score_verifications v "
+            "JOIN gh_matches gh ON gh.match_id = v.match_id "
+            "JOIN matches m ON m.id = gh.match_id "
+            "LEFT JOIN match_results mr ON mr.match_id = gh.match_id "
+            "WHERE v.status = 'no_local_result' AND mr.match_id IS NULL "
+            "AND gh.home_score IS NOT NULL AND gh.away_score IS NOT NULL"
+        )
+        with self.session() as con:
+            rows = [dict(row) for row in con.execute(query).fetchall()]
+        for row in rows:
+            if row["home_team_id"] == row["team_a_id"]:
+                row["goals_a"], row["goals_b"] = row["home_score"], row["away_score"]
+            else:
+                row["goals_a"], row["goals_b"] = row["away_score"], row["home_score"]
+        return rows

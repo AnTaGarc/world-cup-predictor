@@ -87,3 +87,48 @@ class ScoreVerificationTests(unittest.TestCase):
         with self.repo.session() as con:
             row = con.execute("SELECT status FROM gh_score_verifications").fetchone()
         self.assertEqual("no_local_result", row["status"])
+
+
+class ScoreCandidateTests(unittest.TestCase):
+    def setUp(self):
+        self.directory = tempfile.TemporaryDirectory()
+        self.repo = Repository(Path(self.directory.name) / "app.sqlite")
+        self.repo.initialize()
+        self.now = datetime(2026, 7, 3, 12, tzinfo=timezone.utc)
+        with self.repo.session() as con:
+            con.execute("INSERT INTO teams(id, name, fifa_code) VALUES(1, 'Spain', 'ESP')")
+            con.execute("INSERT INTO teams(id, name, fifa_code) VALUES(2, 'Austria', 'AUT')")
+            con.execute(
+                "INSERT INTO matches(id, competition, stage, kickoff_utc, team_a_id, "
+                "team_b_id, status) VALUES(300, 'FIFA World Cup 2026', 'Round of 32', "
+                "'2026-07-03T01:00:00+00:00', 1, 2, 'scheduled')"
+            )
+            con.execute(
+                "INSERT INTO gh_matches(provider_id, external_match_id, match_id, "
+                "home_team_id, away_team_id, home_team_name, away_team_name, "
+                "home_score, away_score, imported_at_utc) "
+                "VALUES('github_wc2026_matches', 83, 300, 1, 2, 'Spain', 'Austria', 3, 0, ?)",
+                (self.now.isoformat(),),
+            )
+            con.execute(
+                "INSERT INTO gh_score_verifications(match_id, provider_version, "
+                "dataset_home_score, dataset_away_score, status, detected_at_utc) "
+                "VALUES(300, 'v', 3, 0, 'no_local_result', ?)",
+                (self.now.isoformat(),),
+            )
+
+    def tearDown(self):
+        self.directory.cleanup()
+
+    def test_candidate_listed_with_oriented_goals(self):
+        rows = self.repo.list_gh_score_candidates()
+        self.assertEqual(1, len(rows))
+        self.assertEqual(3, rows[0]["goals_a"])
+        self.assertEqual(0, rows[0]["goals_b"])
+
+    def test_candidate_disappears_after_settlement(self):
+        self.repo.settle_match(300, 3, 0, [], self.now, source_type="verified_external_confirmed")
+        self.assertEqual([], self.repo.list_gh_score_candidates())
+        with self.repo.session() as con:
+            row = con.execute("SELECT status FROM matches WHERE id=300").fetchone()
+        self.assertEqual("finished", row["status"])
