@@ -633,6 +633,175 @@ CREATE INDEX IF NOT EXISTS idx_penalty_attempts_player
 ON penalty_attempts(player_name, transfermarkt_player_id);
 CREATE INDEX IF NOT EXISTS idx_penalty_attempts_team
 ON penalty_attempts(team_name);
+
+CREATE TABLE IF NOT EXISTS gh_match_events (
+    provider_id TEXT NOT NULL,
+    external_event_id INTEGER NOT NULL,
+    external_match_id INTEGER NOT NULL,
+    match_id INTEGER,
+    minute INTEGER NOT NULL,
+    period TEXT NOT NULL,
+    event_type TEXT NOT NULL,
+    external_team_id INTEGER NOT NULL,
+    team_id INTEGER,
+    external_player_id INTEGER NOT NULL,
+    player_id INTEGER,
+    provider_version TEXT NOT NULL,
+    imported_at_utc TEXT NOT NULL,
+    PRIMARY KEY(provider_id, external_event_id)
+);
+
+CREATE TABLE IF NOT EXISTS gh_match_team_stats (
+    provider_id TEXT NOT NULL,
+    external_match_id INTEGER NOT NULL,
+    match_id INTEGER,
+    external_team_id INTEGER NOT NULL,
+    team_id INTEGER,
+    possession_pct REAL,
+    total_shots INTEGER,
+    shots_on_target INTEGER,
+    corners INTEGER,
+    fouls INTEGER,
+    offsides INTEGER,
+    saves INTEGER,
+    player_of_the_match TEXT,
+    data_source TEXT,
+    last_updated TEXT,
+    imported_at_utc TEXT NOT NULL,
+    PRIMARY KEY(provider_id, external_match_id, external_team_id)
+);
+
+CREATE TABLE IF NOT EXISTS gh_match_lineups (
+    provider_id TEXT NOT NULL,
+    external_lineup_id INTEGER NOT NULL,
+    external_match_id INTEGER NOT NULL,
+    match_id INTEGER,
+    external_player_id INTEGER NOT NULL,
+    player_id INTEGER,
+    external_team_id INTEGER NOT NULL,
+    team_id INTEGER,
+    is_starting_xi INTEGER NOT NULL,
+    tactical_position TEXT,
+    minutes_played INTEGER,
+    imported_at_utc TEXT NOT NULL,
+    PRIMARY KEY(provider_id, external_lineup_id)
+);
+
+CREATE TABLE IF NOT EXISTS gh_matches (
+    provider_id TEXT NOT NULL,
+    external_match_id INTEGER PRIMARY KEY,
+    match_id INTEGER,
+    date TEXT,
+    kickoff_time_utc TEXT,
+    stage_name TEXT,
+    stadium_name TEXT,
+    city TEXT,
+    country TEXT,
+    external_home_team_id INTEGER,
+    home_team_id INTEGER,
+    home_team_name TEXT,
+    home_fifa_code TEXT,
+    external_away_team_id INTEGER,
+    away_team_id INTEGER,
+    away_team_name TEXT,
+    away_fifa_code TEXT,
+    home_score INTEGER,
+    away_score INTEGER,
+    status TEXT,
+    home_xg REAL,
+    away_xg REAL,
+    home_goalkeeper TEXT,
+    away_goalkeeper TEXT,
+    player_of_the_match_name TEXT,
+    external_referee_id INTEGER,
+    referee_id INTEGER,
+    referee_name TEXT,
+    imported_at_utc TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS gh_referees (
+    provider_id TEXT NOT NULL,
+    external_referee_id INTEGER NOT NULL,
+    referee_name TEXT NOT NULL,
+    country TEXT,
+    avg_cards_per_game REAL,
+    imported_at_utc TEXT NOT NULL,
+    PRIMARY KEY(provider_id, external_referee_id)
+);
+
+CREATE TABLE IF NOT EXISTS gh_player_stats (
+    provider_id TEXT NOT NULL,
+    external_player_id INTEGER NOT NULL,
+    player_id INTEGER,
+    external_team_id INTEGER,
+    team_id INTEGER,
+    player_name TEXT NOT NULL,
+    position TEXT,
+    matches_played INTEGER,
+    matches_started INTEGER,
+    minutes_played INTEGER,
+    goals INTEGER,
+    assists INTEGER,
+    shots INTEGER,
+    shots_on_target INTEGER,
+    yellow_cards INTEGER,
+    red_cards INTEGER,
+    penalty_goals INTEGER,
+    own_goals INTEGER,
+    clean_sheets INTEGER,
+    saves INTEGER,
+    goals_conceded INTEGER,
+    average_rating REAL,
+    data_source TEXT,
+    last_verified TEXT,
+    imported_at_utc TEXT NOT NULL,
+    PRIMARY KEY(provider_id, external_player_id)
+);
+
+CREATE TABLE IF NOT EXISTS gh_teams (
+    provider_id TEXT NOT NULL,
+    external_team_id INTEGER NOT NULL,
+    team_id INTEGER,
+    team_name TEXT NOT NULL,
+    fifa_code TEXT,
+    group_letter TEXT,
+    confederation TEXT,
+    fifa_ranking_pre_tournament INTEGER,
+    elo_rating INTEGER,
+    manager_name TEXT,
+    imported_at_utc TEXT NOT NULL,
+    PRIMARY KEY(provider_id, external_team_id)
+);
+
+CREATE TABLE IF NOT EXISTS entity_alias_map (
+    entity_type TEXT NOT NULL,
+    source_key TEXT NOT NULL,
+    external_id TEXT NOT NULL,
+    internal_id INTEGER NOT NULL,
+    confirmed_by TEXT NOT NULL,
+    confirmed_at_utc TEXT NOT NULL,
+    PRIMARY KEY(entity_type, source_key, external_id)
+);
+
+CREATE TABLE IF NOT EXISTS gh_score_verifications (
+    match_id INTEGER NOT NULL,
+    provider_version TEXT NOT NULL,
+    dataset_home_score INTEGER,
+    dataset_away_score INTEGER,
+    local_home_score INTEGER,
+    local_away_score INTEGER,
+    status TEXT NOT NULL,
+    detected_at_utc TEXT NOT NULL,
+    reviewed_by TEXT,
+    reviewed_at_utc TEXT,
+    resolution TEXT,
+    PRIMARY KEY(match_id, provider_version)
+);
+
+CREATE INDEX IF NOT EXISTS idx_gh_match_events_match
+ON gh_match_events(match_id);
+CREATE INDEX IF NOT EXISTS idx_gh_match_events_ext_match
+ON gh_match_events(external_match_id);
 """
 
 
