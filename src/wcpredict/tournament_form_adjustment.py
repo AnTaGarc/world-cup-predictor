@@ -435,6 +435,10 @@ def calibrate_stratified(samples: list[dict]) -> dict[str, dict]:
 
 
 def alpha_for_match(alphas: dict[str, float], matches_min: int) -> float:
+    if matches_min < 2:
+        return 0.0
+    if "global" in alphas:
+        return float(alphas["global"])
     bucket = bucket_for_matches(matches_min)
     if bucket is None:
         return 0.0

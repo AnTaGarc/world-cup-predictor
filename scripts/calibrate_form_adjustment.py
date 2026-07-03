@@ -9,48 +9,50 @@ sys.path.insert(0, str(Path(__file__).parents[1] / "src"))
 
 from wcpredict.repository import Repository
 from wcpredict.tournament_form_adjustment import (
+    _log_loss,
     build_calibration_samples,
-    calibrate_stratified,
+    calibrate_alpha,
 )
 
 
-MODEL_VERSION = "form-adjustment-v3-per-bucket"
+MODEL_VERSION = "form-adjustment-v4-global-continuous"
+# A single global alpha applies to every match where both teams have played
+# at least MIN_MATCHES tournament games. The continuous shrinkage weight
+# n/(n+3) then grows the effective shift with every extra match played:
+# 3 games -> 0.50, 4 -> 0.57, 5 -> 0.625, 6 -> 0.67...
+MIN_MATCHES = 2
+# Activation: the calibrated alpha must improve log-loss by at least 2%
+# relative on the n>=3 validation stratum (user decision 2026-07-03,
+# lowering the original 3% given 30+ validation samples).
+MIN_RELATIVE_IMPROVEMENT = 0.02
 
 
 def run_calibration(repository: Repository, now: datetime | None = None) -> dict:
-    """Calibrate one alpha per matches-played bucket ("2" and "3plus").
-
-    Each bucket activates independently when its own log-loss improvement
-    clears the 3% threshold (see MIN_BUCKET_IMPROVEMENT in the module).
-    Teams with fewer than 2 tournament matches never receive an adjustment.
-    The `alpha` column keeps the 3plus value for backward compatibility;
-    `alphas_json` carries the full per-bucket map used by the UI.
-    """
     now = now or datetime.now(timezone.utc)
     samples = build_calibration_samples(repository)
-    report = calibrate_stratified(samples)
-    alphas = {bucket: data["alpha"] for bucket, data in report.items()}
-    main = report.get("3plus", {})
+    active = [s for s in samples if int(s.get("matches_min", 0)) >= MIN_MATCHES]
+    calibration = calibrate_alpha(active, grid_max=2.5)
+    validation = [s for s in samples if int(s.get("matches_min", 0)) >= 3]
+    alpha = calibration.alpha
+    validation_base = _log_loss(validation, 0.0) if validation else 0.0
+    validation_adjusted = _log_loss(validation, alpha) if validation else 0.0
+    validation_improvement = (
+        (validation_base - validation_adjusted) / validation_base
+        if validation_base > 0 else 0.0
+    )
+    if not validation or validation_improvement < MIN_RELATIVE_IMPROVEMENT:
+        alpha = 0.0
     repository.save_form_calibration(
-        MODEL_VERSION,
-        float(main.get("alpha", 0.0)),
-        int(main.get("sample_size", 0)),
-        float(main.get("log_loss_base", 0.0)),
-        float(main.get("log_loss_adjusted", 0.0)),
-        now.isoformat(),
-        alphas_json=json.dumps(alphas),
+        MODEL_VERSION, alpha, len(active),
+        validation_base, validation_adjusted, now.isoformat(),
+        alphas_json=json.dumps({"global": alpha}),
     )
     return {
-        "alphas": alphas,
-        "buckets": {
-            bucket: {
-                "alpha_raw": data["alpha_raw"],
-                "n": data["sample_size"],
-                "improvement_pct": round(100.0 * data["improvement"], 3),
-            }
-            for bucket, data in report.items()
-        },
-        "total_samples": len(samples),
+        "alpha": alpha,
+        "alpha_raw": calibration.alpha,
+        "active_samples": len(active),
+        "validation_samples": len(validation),
+        "validation_improvement_pct": round(100.0 * validation_improvement, 3),
     }
 
 

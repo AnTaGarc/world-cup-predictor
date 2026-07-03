@@ -184,3 +184,14 @@ class BareTimeKickoffTests(unittest.TestCase):
     def test_bare_time_match_excluded_after_cutoff(self):
         features = build_form_features(self.repo, "Spain", "2026-06-21T00:00:00+00:00")
         self.assertEqual(0, features.matches_played)
+
+
+class GlobalAlphaSelectionTests(unittest.TestCase):
+    def test_global_alpha_applies_from_two_matches(self):
+        from wcpredict.tournament_form_adjustment import alpha_for_match
+        alphas = {"global": 1.5}
+        self.assertEqual(0.0, alpha_for_match(alphas, 0))
+        self.assertEqual(0.0, alpha_for_match(alphas, 1))
+        self.assertEqual(1.5, alpha_for_match(alphas, 2))
+        self.assertEqual(1.5, alpha_for_match(alphas, 4))
+        self.assertEqual(1.5, alpha_for_match(alphas, 7))
