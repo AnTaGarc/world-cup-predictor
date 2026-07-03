@@ -16,6 +16,7 @@ def _rows(csv_text: str) -> list[dict[str, str | None]]:
         {
             _key(str(name)): (value.strip() if value is not None and value.strip() else None)
             for name, value in row.items()
+            if name is not None and isinstance(value, (str, type(None)))
         }
         for row in reader
     ]
@@ -242,6 +243,10 @@ def import_github_wc2026_download(repository, download, imported_at_utc) -> None
     else:
         raise ValueError(f"unsupported github_wc2026 provider: {provider_id}")
     repository.resolve_gh_foreign_keys(provider_id)
+    if provider_id == "github_wc2026_matches":
+        repository.record_score_verifications_for_provider(
+            provider_id, imported_at_utc.isoformat()
+        )
 
 
 def derive_period(minute: int) -> str:

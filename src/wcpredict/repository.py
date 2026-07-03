@@ -3819,6 +3819,7 @@ class Repository:
             self._apply_alias_teams(con, "gh_player_stats", "external_team_id", "team_id")
             self._apply_alias_teams(con, "gh_matches", "external_home_team_id", "home_team_id")
             self._apply_alias_teams(con, "gh_matches", "external_away_team_id", "away_team_id")
+            self._resolve_gh_match_team_ids_by_code_or_name(con)
 
             con.execute(
                 "UPDATE gh_player_stats SET player_id = ("
@@ -3864,3 +3865,115 @@ class Repository:
                     f"  WHERE gh_matches.external_match_id = {table}.external_match_id"
                     f") WHERE match_id IS NULL"
                 )
+
+    # ------------------------------------------------------------------
+    # github_wc2026 external dataset: score cross-verification
+
+    def _resolve_gh_match_team_ids_by_code_or_name(self, con) -> None:
+        for side in ("home", "away"):
+            con.execute(
+                f"UPDATE gh_matches SET {side}_team_id = ("
+                "  SELECT t.id FROM teams t "
+                f"  WHERE lower(t.fifa_code) = lower(gh_matches.{side}_fifa_code)"
+                f") WHERE {side}_team_id IS NULL AND {side}_fifa_code IS NOT NULL"
+            )
+        pending = con.execute(
+            "SELECT external_match_id, home_team_id, away_team_id, "
+            "home_team_name, away_team_name FROM gh_matches "
+            "WHERE home_team_id IS NULL OR away_team_id IS NULL"
+        ).fetchall()
+        if not pending:
+            return
+        catalog = {
+            self._normalize_team_name(str(row["name"])): int(row["id"])
+            for row in con.execute("SELECT id, name FROM teams").fetchall()
+        }
+        for row in pending:
+            updates = {}
+            if row["home_team_id"] is None and row["home_team_name"]:
+                match = catalog.get(self._normalize_team_name(str(row["home_team_name"])))
+                if match is not None:
+                    updates["home_team_id"] = match
+            if row["away_team_id"] is None and row["away_team_name"]:
+                match = catalog.get(self._normalize_team_name(str(row["away_team_name"])))
+                if match is not None:
+                    updates["away_team_id"] = match
+            for column, value in updates.items():
+                con.execute(
+                    f"UPDATE gh_matches SET {column}=? WHERE external_match_id=?",
+                    (value, row["external_match_id"]),
+                )
+
+    def record_score_verifications_for_provider(
+        self, provider_id: str, now_utc_iso: str
+    ) -> list[dict]:
+        new_mismatches: list[dict] = []
+        with self.session() as con:
+            candidates = con.execute(
+                "SELECT gh.external_match_id, gh.match_id, "
+                "gh.home_team_id, gh.away_team_id, gh.home_score, gh.away_score, "
+                "m.team_a_id, m.team_b_id, mr.goals_a, mr.goals_b, "
+                "COALESCE(("
+                "  SELECT ds.provider_version FROM dataset_snapshots ds "
+                "  WHERE ds.provider_id = gh.provider_id "
+                "  ORDER BY ds.checked_at_utc DESC LIMIT 1"
+                "), 'unknown') AS provider_version "
+                "FROM gh_matches gh "
+                "LEFT JOIN matches m ON m.id = gh.match_id "
+                "LEFT JOIN match_results mr ON mr.match_id = gh.match_id "
+                "WHERE gh.provider_id = ? AND gh.match_id IS NOT NULL "
+                "AND gh.home_score IS NOT NULL AND gh.away_score IS NOT NULL",
+                (provider_id,),
+            ).fetchall()
+            for row in candidates:
+                if row["home_team_id"] == row["team_a_id"]:
+                    ds_a, ds_b = row["home_score"], row["away_score"]
+                else:
+                    ds_a, ds_b = row["away_score"], row["home_score"]
+                if row["goals_a"] is None or row["goals_b"] is None:
+                    status = "no_local_result"
+                    local_a = local_b = None
+                elif int(row["goals_a"]) == int(ds_a) and int(row["goals_b"]) == int(ds_b):
+                    status = "match"
+                    local_a, local_b = int(row["goals_a"]), int(row["goals_b"])
+                else:
+                    status = "mismatch"
+                    local_a, local_b = int(row["goals_a"]), int(row["goals_b"])
+                con.execute(
+                    "INSERT INTO gh_score_verifications("
+                    "match_id, provider_version, dataset_home_score, dataset_away_score, "
+                    "local_home_score, local_away_score, status, detected_at_utc) "
+                    "VALUES(?, ?, ?, ?, ?, ?, ?, ?) "
+                    "ON CONFLICT(match_id, provider_version) DO UPDATE SET "
+                    "dataset_home_score=excluded.dataset_home_score, "
+                    "dataset_away_score=excluded.dataset_away_score, "
+                    "local_home_score=excluded.local_home_score, "
+                    "local_away_score=excluded.local_away_score, "
+                    "status=excluded.status, detected_at_utc=excluded.detected_at_utc",
+                    (row["match_id"], row["provider_version"], ds_a, ds_b,
+                     local_a, local_b, status, now_utc_iso),
+                )
+                if status == "mismatch":
+                    new_mismatches.append({
+                        "match_id": row["match_id"],
+                        "dataset_home_score": ds_a,
+                        "dataset_away_score": ds_b,
+                        "local_home_score": local_a,
+                        "local_away_score": local_b,
+                    })
+        return new_mismatches
+
+    def list_score_mismatches(self, only_unresolved: bool = True) -> list[dict]:
+        query = (
+            "SELECT v.match_id, v.provider_version, v.dataset_home_score, "
+            "v.dataset_away_score, v.local_home_score, v.local_away_score, "
+            "v.detected_at_utc, gh.home_team_name, gh.away_team_name, gh.date "
+            "FROM gh_score_verifications v "
+            "LEFT JOIN gh_matches gh ON gh.match_id = v.match_id "
+            "WHERE v.status = 'mismatch'"
+        )
+        if only_unresolved:
+            query += " AND v.resolution IS NULL"
+        query += " ORDER BY v.detected_at_utc DESC"
+        with self.session() as con:
+            return [dict(row) for row in con.execute(query).fetchall()]
