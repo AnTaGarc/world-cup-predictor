@@ -10,6 +10,13 @@ DEFAULT_PROVIDERS = (
     "swaptr_wc2026_matches",
     "swaptr_wc2026_teams",
     "swaptr_wc2026_players",
+    "github_wc2026_teams",
+    "github_wc2026_referees",
+    "github_wc2026_matches",
+    "github_wc2026_team_stats",
+    "github_wc2026_lineups",
+    "github_wc2026_events",
+    "github_wc2026_player_stats",
 )
 
 

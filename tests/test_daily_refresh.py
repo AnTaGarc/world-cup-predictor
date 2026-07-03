@@ -26,7 +26,8 @@ class DailyRefreshTests(unittest.TestCase):
         calls = []
 
         result = ensure_current_world_cup_data(
-            self.repo, lambda provider: calls.append(provider), now=self.now
+            self.repo, lambda provider: calls.append(provider), now=self.now,
+            providers=PROVIDERS,
         )
 
         self.assertEqual([], calls)
@@ -51,6 +52,7 @@ class DailyRefreshTests(unittest.TestCase):
             lambda provider: downloads[provider],
             importer=lambda download: imported.append(download.provider_id),
             now=self.now,
+            providers=PROVIDERS,
         )
 
         self.assertEqual("updated", result.status)
@@ -131,3 +133,22 @@ class DailyRefreshTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+    def test_mixed_scenario_with_github_provider_partial(self):
+        providers = ("swaptr_wc2026_matches", "github_wc2026_events")
+
+        def fetcher(provider):
+            if provider == "swaptr_wc2026_matches":
+                return DatasetDownload(provider, "v1", b"payload", self.now, 1)
+            raise RuntimeError("upstream 500")
+
+        result = ensure_current_world_cup_data(
+            self.repo,
+            fetcher,
+            importer=lambda dl: None,
+            now=self.now,
+            providers=providers,
+        )
+        self.assertEqual("partial", result.status)
+        self.assertEqual(("swaptr_wc2026_matches",), result.updated)
+        self.assertEqual(("github_wc2026_events",), result.failed)

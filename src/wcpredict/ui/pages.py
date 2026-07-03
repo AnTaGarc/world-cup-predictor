@@ -51,7 +51,12 @@ from wcpredict.knockout_audit import (
 from wcpredict.services import MarketPrediction, predict_match_markets
 from wcpredict.source_catalog import default_source_catalog
 from wcpredict.daily_refresh import DEFAULT_PROVIDERS, DatasetDownload, ensure_current_world_cup_data
-from wcpredict.world_cup_data import fetch_kaggle_world_cup_dataset, import_world_cup_download
+from wcpredict.world_cup_data import (
+    build_daily_fetcher,
+    build_daily_importer,
+    fetch_kaggle_world_cup_dataset,
+    import_world_cup_download,
+)
 from wcpredict.advanced_form import (
     build_goalkeeper_baseline,
     build_volume_rate_observations,
@@ -698,8 +703,8 @@ def _refresh_current_world_cup_banks_cached(
     now = datetime.now(timezone.utc)
     return ensure_current_world_cup_data(
         repo,
-        fetch_kaggle_world_cup_dataset,
-        importer=lambda download: import_world_cup_download(repo, download, now),
+        build_daily_fetcher(),
+        importer=build_daily_importer(repo, now),
         now=now,
         providers=providers,
     )

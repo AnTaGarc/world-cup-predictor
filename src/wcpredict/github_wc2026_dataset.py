@@ -281,3 +281,36 @@ def parse_teams_rows(csv_text: str) -> list[dict[str, Any]]:
             }
         )
     return output
+
+
+RAW_URL_TEMPLATE = "https://raw.githubusercontent.com/mominullptr/FIFA-World-Cup-2026-Dataset/main/{filename}"
+COMMITS_API_URL = "https://api.github.com/repos/mominullptr/FIFA-World-Cup-2026-Dataset/commits/main"
+
+
+def resolve_latest_commit():
+    import requests
+    from datetime import datetime
+    response = requests.get(COMMITS_API_URL, timeout=15)
+    response.raise_for_status()
+    payload = response.json()
+    sha = str(payload["sha"])[:7]
+    committed = payload["commit"]["committer"]["date"]
+    committed_at = datetime.fromisoformat(str(committed).replace("Z", "+00:00"))
+    return sha, committed_at
+
+
+def fetch_github_wc2026_dataset(provider_id, commit_sha=None, commit_date=None):
+    import requests
+    from wcpredict.daily_refresh import DatasetDownload
+    if provider_id not in GITHUB_DATASETS:
+        raise ValueError(f"unsupported github_wc2026 provider: {provider_id}")
+    if commit_sha is None or commit_date is None:
+        commit_sha, commit_date = resolve_latest_commit()
+    url = RAW_URL_TEMPLATE.format(filename=GITHUB_DATASETS[provider_id])
+    response = requests.get(url, timeout=30)
+    response.raise_for_status()
+    content = response.content
+    return DatasetDownload(
+        provider_id, f"sha:{commit_sha}/parser-{PARSER_VERSION}", content,
+        commit_date, max(0, content.count(b"\n") - 1),
+    )

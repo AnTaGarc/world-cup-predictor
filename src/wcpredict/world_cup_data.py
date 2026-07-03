@@ -222,3 +222,36 @@ def fetch_kaggle_world_cup_dataset(provider_id: str) -> DatasetDownload:
     version = f"{dataset_version}/parser-{PARSER_VERSION}"
     row_count = max(0, content.count(b"\n") - 1)
     return DatasetDownload(provider_id, version, content, updated or datetime.now(timezone.utc), row_count)
+
+
+def build_daily_fetcher():
+    """Dispatch daily providers to the right upstream by prefix.
+
+    github_wc2026_* providers share one commit-SHA lookup per refresh cycle.
+    """
+    from wcpredict.github_wc2026_dataset import (
+        fetch_github_wc2026_dataset,
+        resolve_latest_commit,
+    )
+    cached: dict[str, Any] = {"sha": None, "date": None}
+
+    def fetcher(provider_id: str) -> DatasetDownload:
+        if provider_id.startswith("github_wc2026_"):
+            if cached["sha"] is None:
+                cached["sha"], cached["date"] = resolve_latest_commit()
+            return fetch_github_wc2026_dataset(provider_id, cached["sha"], cached["date"])
+        return fetch_kaggle_world_cup_dataset(provider_id)
+
+    return fetcher
+
+
+def build_daily_importer(repository, imported_at_utc):
+    from wcpredict.github_wc2026_dataset import import_github_wc2026_download
+
+    def importer(download: DatasetDownload) -> None:
+        if download.provider_id.startswith("github_wc2026_"):
+            import_github_wc2026_download(repository, download, imported_at_utc)
+        else:
+            import_world_cup_download(repository, download, imported_at_utc)
+
+    return importer
