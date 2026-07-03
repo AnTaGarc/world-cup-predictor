@@ -3781,3 +3781,86 @@ class Repository:
              "elo_rating", "manager_name", "imported_at_utc"),
             rows, provider_version, imported_at_utc,
         )
+
+    # ------------------------------------------------------------------
+    # github_wc2026 external dataset: foreign key resolution
+
+    def _apply_alias_teams(self, con, table: str, external_col: str, internal_col: str) -> None:
+        con.execute(
+            f"UPDATE {table} SET {internal_col} = ("
+            "  SELECT internal_id FROM entity_alias_map "
+            "  WHERE entity_type='team' AND source_key='github_wc2026' "
+            f"  AND external_id=CAST({table}.{external_col} AS TEXT)"
+            f") WHERE {internal_col} IS NULL AND {external_col} IS NOT NULL"
+        )
+
+    def resolve_gh_foreign_keys(self, provider_id: str | None = None, now_utc_iso: str | None = None) -> None:
+        from datetime import datetime, timezone
+        now = now_utc_iso or datetime.now(timezone.utc).isoformat()
+        with self.session() as con:
+            teams_needing = con.execute(
+                "SELECT gh.external_team_id, gh.team_name, gh.fifa_code FROM gh_teams gh "
+                "LEFT JOIN entity_alias_map m "
+                "ON m.entity_type='team' AND m.source_key='github_wc2026' "
+                "AND m.external_id=CAST(gh.external_team_id AS TEXT) "
+                "WHERE m.internal_id IS NULL"
+            ).fetchall()
+        for row in teams_needing:
+            self.reconcile_gh_team(
+                int(row["external_team_id"]), str(row["team_name"]),
+                (str(row["fifa_code"]) if row["fifa_code"] is not None else None),
+                now,
+            )
+        with self.session() as con:
+            self._apply_alias_teams(con, "gh_teams", "external_team_id", "team_id")
+            self._apply_alias_teams(con, "gh_match_team_stats", "external_team_id", "team_id")
+            self._apply_alias_teams(con, "gh_match_lineups", "external_team_id", "team_id")
+            self._apply_alias_teams(con, "gh_match_events", "external_team_id", "team_id")
+            self._apply_alias_teams(con, "gh_player_stats", "external_team_id", "team_id")
+            self._apply_alias_teams(con, "gh_matches", "external_home_team_id", "home_team_id")
+            self._apply_alias_teams(con, "gh_matches", "external_away_team_id", "away_team_id")
+
+            con.execute(
+                "UPDATE gh_player_stats SET player_id = ("
+                "  SELECT p.id FROM players p "
+                "  WHERE p.team_id = gh_player_stats.team_id "
+                "  AND lower(p.name) = lower(gh_player_stats.player_name) "
+                "  LIMIT 1"
+                ") WHERE player_id IS NULL AND team_id IS NOT NULL"
+            )
+            con.execute(
+                "INSERT OR IGNORE INTO entity_alias_map(entity_type, source_key, external_id, "
+                "internal_id, confirmed_by, confirmed_at_utc) "
+                "SELECT 'player', 'github_wc2026', CAST(external_player_id AS TEXT), "
+                "player_id, 'auto_normalized', ? FROM gh_player_stats "
+                "WHERE player_id IS NOT NULL",
+                (now,),
+            )
+            for table in ("gh_match_lineups", "gh_match_events"):
+                con.execute(
+                    f"UPDATE {table} SET player_id = ("
+                    "  SELECT internal_id FROM entity_alias_map "
+                    "  WHERE entity_type='player' AND source_key='github_wc2026' "
+                    f"  AND external_id=CAST({table}.external_player_id AS TEXT)"
+                    f") WHERE player_id IS NULL AND external_player_id IS NOT NULL"
+                )
+
+            con.execute(
+                "UPDATE gh_matches SET match_id = ("
+                "  SELECT m.id FROM matches m "
+                "  WHERE m.competition = 'FIFA World Cup 2026' "
+                "  AND ((m.team_a_id = gh_matches.home_team_id "
+                "        AND m.team_b_id = gh_matches.away_team_id) "
+                "    OR (m.team_a_id = gh_matches.away_team_id "
+                "        AND m.team_b_id = gh_matches.home_team_id)) "
+                "  LIMIT 1"
+                ") WHERE match_id IS NULL "
+                "AND home_team_id IS NOT NULL AND away_team_id IS NOT NULL"
+            )
+            for table in ("gh_match_events", "gh_match_team_stats", "gh_match_lineups"):
+                con.execute(
+                    f"UPDATE {table} SET match_id = ("
+                    "  SELECT match_id FROM gh_matches "
+                    f"  WHERE gh_matches.external_match_id = {table}.external_match_id"
+                    f") WHERE match_id IS NULL"
+                )

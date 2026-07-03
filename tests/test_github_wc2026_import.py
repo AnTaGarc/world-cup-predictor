@@ -90,3 +90,29 @@ class GhwcImportTests(unittest.TestCase):
                     expected, con.execute(f"SELECT COUNT(*) FROM {table}").fetchone()[0],
                     f"unexpected count in {table}",
                 )
+
+    def test_team_id_resolved_via_fifa_code(self):
+        import_github_wc2026_download(
+            self.repo, self._download("github_wc2026_teams", "teams.csv"), self.now
+        )
+        self.repo.resolve_gh_foreign_keys("github_wc2026_teams", self.now.isoformat())
+        with self.repo.session() as con:
+            row = con.execute(
+                "SELECT team_id FROM gh_teams WHERE external_team_id=1"
+            ).fetchone()
+        self.assertEqual(1, row["team_id"])
+
+    def test_events_team_id_resolved_after_teams_imported(self):
+        import_github_wc2026_download(
+            self.repo, self._download("github_wc2026_teams", "teams.csv"), self.now
+        )
+        self.repo.resolve_gh_foreign_keys("github_wc2026_teams", self.now.isoformat())
+        import_github_wc2026_download(
+            self.repo, self._download("github_wc2026_events", "match_events.csv"), self.now
+        )
+        self.repo.resolve_gh_foreign_keys("github_wc2026_events", self.now.isoformat())
+        with self.repo.session() as con:
+            rows = list(con.execute(
+                "SELECT external_team_id, team_id FROM gh_match_events ORDER BY external_event_id"
+            ))
+        self.assertEqual(1, rows[0]["team_id"])
