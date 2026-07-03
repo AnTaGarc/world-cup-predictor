@@ -208,6 +208,18 @@ def parse_player_stats_rows(csv_text: str) -> list[dict[str, Any]]:
     return output
 
 
+def derive_period(minute: int) -> str:
+    if 1 <= minute <= 45:
+        return "first_half"
+    if 46 <= minute <= 90:
+        return "second_half"
+    if 91 <= minute <= 105:
+        return "et_first"
+    if 106 <= minute <= 120:
+        return "et_second"
+    raise ValueError(f"minute out of expected range: {minute}")
+
+
 def parse_teams_rows(csv_text: str) -> list[dict[str, Any]]:
     output: list[dict[str, Any]] = []
     for row in _rows(csv_text):
