@@ -3587,3 +3587,99 @@ class Repository:
             )
             target[row["metric"]] = row["value_number"]
         return daily + structured_filtered + list(pivoted.values())
+
+    # ------------------------------------------------------------------
+    # github_wc2026 external dataset: entity reconciliation and aliases
+
+    _GH_NAME_SYNONYMS = {
+        "cabo verde": "cape verde",
+        "turkiye": "turkey",
+        "cote divoire": "ivory coast",
+        "ir iran": "iran",
+        "korea republic": "south korea",
+        "dr congo": "congo dr",
+    }
+
+    def _normalize_team_name(self, name: str) -> str:
+        import unicodedata
+        stripped = unicodedata.normalize("NFKD", name)
+        stripped = "".join(ch for ch in stripped if not unicodedata.combining(ch))
+        for junk in ("'", "’", "`", "-", "_", "."):
+            stripped = stripped.replace(junk, "")
+        normalized = " ".join(stripped.casefold().split())
+        return self._GH_NAME_SYNONYMS.get(normalized, normalized)
+
+    def reconcile_gh_team(
+        self, external_id: int, name: str, fifa_code: str | None, now_utc_iso: str
+    ) -> int | None:
+        with self.session() as con:
+            if fifa_code:
+                row = con.execute(
+                    "SELECT id FROM teams WHERE lower(fifa_code)=lower(?)",
+                    (fifa_code,),
+                ).fetchone()
+                if row is not None:
+                    internal_id = int(row["id"])
+                    self._upsert_alias(
+                        con, "team", "github_wc2026", str(external_id),
+                        internal_id, "auto_exact_match", now_utc_iso,
+                    )
+                    return internal_id
+            target = self._normalize_team_name(name)
+            for candidate in con.execute("SELECT id, name FROM teams").fetchall():
+                if self._normalize_team_name(str(candidate["name"])) == target:
+                    internal_id = int(candidate["id"])
+                    self._upsert_alias(
+                        con, "team", "github_wc2026", str(external_id),
+                        internal_id, "auto_normalized", now_utc_iso,
+                    )
+                    return internal_id
+        return None
+
+    def _upsert_alias(self, con, entity_type, source_key, external_id,
+                      internal_id, confirmed_by, confirmed_at_utc):
+        con.execute(
+            "INSERT INTO entity_alias_map(entity_type, source_key, external_id, "
+            "internal_id, confirmed_by, confirmed_at_utc) VALUES(?, ?, ?, ?, ?, ?) "
+            "ON CONFLICT(entity_type, source_key, external_id) DO UPDATE SET "
+            "internal_id=excluded.internal_id, "
+            "confirmed_by=excluded.confirmed_by, "
+            "confirmed_at_utc=excluded.confirmed_at_utc",
+            (entity_type, source_key, external_id, internal_id,
+             confirmed_by, confirmed_at_utc),
+        )
+
+    def list_pending_aliases(self, entity_type: str) -> list[dict]:
+        query_map = {
+            "team": (
+                "SELECT CAST(gh.external_team_id AS TEXT) AS external_id, "
+                "gh.team_name AS display_name "
+                "FROM gh_teams gh LEFT JOIN entity_alias_map m "
+                "ON m.entity_type='team' AND m.source_key='github_wc2026' "
+                "AND m.external_id=CAST(gh.external_team_id AS TEXT) "
+                "WHERE m.internal_id IS NULL "
+                "GROUP BY gh.external_team_id, gh.team_name"
+            ),
+            "player": (
+                "SELECT CAST(gh.external_player_id AS TEXT) AS external_id, "
+                "gh.player_name AS display_name "
+                "FROM gh_player_stats gh LEFT JOIN entity_alias_map m "
+                "ON m.entity_type='player' AND m.source_key='github_wc2026' "
+                "AND m.external_id=CAST(gh.external_player_id AS TEXT) "
+                "WHERE m.internal_id IS NULL "
+                "GROUP BY gh.external_player_id, gh.player_name"
+            ),
+        }
+        query = query_map.get(entity_type)
+        if query is None:
+            return []
+        with self.session() as con:
+            return [dict(row) for row in con.execute(query).fetchall()]
+
+    def confirm_alias(self, entity_type: str, source_key: str, external_id: str,
+                      internal_id: int, actor: str, now_utc_iso: str) -> None:
+        with self.session() as con:
+            self._upsert_alias(
+                con, entity_type, source_key, external_id, internal_id,
+                f"user:{actor}", now_utc_iso,
+            )
