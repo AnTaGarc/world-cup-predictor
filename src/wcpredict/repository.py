@@ -3977,3 +3977,42 @@ class Repository:
         query += " ORDER BY v.detected_at_utc DESC"
         with self.session() as con:
             return [dict(row) for row in con.execute(query).fetchall()]
+
+    # ------------------------------------------------------------------
+    # github_wc2026 external dataset: tournament evidence for models
+
+    def list_gh_tournament_penalty_evidence(
+        self, team_names: tuple[str, ...], before_kickoff_iso: str
+    ) -> list[dict]:
+        if not team_names:
+            return []
+        placeholders = ", ".join("?" for _ in team_names)
+        query = (
+            "SELECT gh.external_player_id, gh.player_name, t.name AS team_name, "
+            "gh.penalty_goals, gh.last_verified "
+            "FROM gh_player_stats gh JOIN teams t ON t.id = gh.team_id "
+            f"WHERE lower(t.name) IN ({placeholders}) "
+            "AND gh.penalty_goals >= 1 "
+            "AND gh.last_verified IS NOT NULL "
+            "AND substr(gh.last_verified, 1, 10) <= substr(?, 1, 10)"
+        )
+        params = tuple(name.casefold() for name in team_names) + (before_kickoff_iso,)
+        with self.session() as con:
+            return [dict(row) for row in con.execute(query, params).fetchall()]
+
+    def list_gh_goalkeeper_tournament_rates(
+        self, team_names: tuple[str, ...]
+    ) -> list[dict]:
+        if not team_names:
+            return []
+        placeholders = ", ".join("?" for _ in team_names)
+        query = (
+            "SELECT gh.player_name, t.name AS team_name, gh.saves, "
+            "gh.goals_conceded, gh.last_verified "
+            "FROM gh_player_stats gh JOIN teams t ON t.id = gh.team_id "
+            f"WHERE lower(t.name) IN ({placeholders}) "
+            "AND upper(COALESCE(gh.position, '')) = 'GK'"
+        )
+        params = tuple(name.casefold() for name in team_names)
+        with self.session() as con:
+            return [dict(row) for row in con.execute(query, params).fetchall()]
