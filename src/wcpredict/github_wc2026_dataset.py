@@ -208,6 +208,41 @@ def parse_player_stats_rows(csv_text: str) -> list[dict[str, Any]]:
     return output
 
 
+GITHUB_DATASETS = {
+    "github_wc2026_events": "match_events.csv",
+    "github_wc2026_team_stats": "match_team_stats.csv",
+    "github_wc2026_lineups": "match_lineups.csv",
+    "github_wc2026_matches": "matches_detailed.csv",
+    "github_wc2026_referees": "referees.csv",
+    "github_wc2026_player_stats": "player_stats.csv",
+    "github_wc2026_teams": "teams.csv",
+}
+
+PARSER_VERSION = "1"
+
+
+def import_github_wc2026_download(repository, download, imported_at_utc) -> None:
+    text = download.content.decode("utf-8-sig")
+    provider_id = download.provider_id
+    version = download.version
+    if provider_id == "github_wc2026_events":
+        repository.replace_gh_events(provider_id, parse_events_rows(text), version, imported_at_utc)
+    elif provider_id == "github_wc2026_team_stats":
+        repository.replace_gh_team_stats(provider_id, parse_team_stats_rows(text), version, imported_at_utc)
+    elif provider_id == "github_wc2026_lineups":
+        repository.replace_gh_lineups(provider_id, parse_lineups_rows(text), version, imported_at_utc)
+    elif provider_id == "github_wc2026_matches":
+        repository.replace_gh_matches(provider_id, parse_matches_rows(text), version, imported_at_utc)
+    elif provider_id == "github_wc2026_referees":
+        repository.replace_gh_referees(provider_id, parse_referees_rows(text), version, imported_at_utc)
+    elif provider_id == "github_wc2026_player_stats":
+        repository.replace_gh_player_stats(provider_id, parse_player_stats_rows(text), version, imported_at_utc)
+    elif provider_id == "github_wc2026_teams":
+        repository.replace_gh_teams(provider_id, parse_teams_rows(text), version, imported_at_utc)
+    else:
+        raise ValueError(f"unsupported github_wc2026 provider: {provider_id}")
+
+
 def derive_period(minute: int) -> str:
     if 1 <= minute <= 45:
         return "first_half"

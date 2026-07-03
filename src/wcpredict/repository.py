@@ -3683,3 +3683,101 @@ class Repository:
                 con, entity_type, source_key, external_id, internal_id,
                 f"user:{actor}", now_utc_iso,
             )
+
+    # ------------------------------------------------------------------
+    # github_wc2026 external dataset: table replace helpers
+
+    def _replace_gh_table(
+        self, table: str, provider_id: str,
+        columns: tuple[str, ...], rows: list[dict],
+        provider_version, imported_at_utc,
+        add_period: bool = False,
+        include_provider_version_column: bool = False,
+    ) -> None:
+        from wcpredict.github_wc2026_dataset import derive_period
+        with self.session() as con:
+            con.execute(f"DELETE FROM {table} WHERE provider_id=?", (provider_id,))
+            for row in rows:
+                data = dict(row)
+                if add_period and "minute" in data:
+                    data["period"] = derive_period(int(data["minute"]))
+                if include_provider_version_column:
+                    data["provider_version"] = provider_version
+                data["provider_id"] = provider_id
+                data["imported_at_utc"] = imported_at_utc.isoformat()
+                placeholders = ", ".join("?" for _ in columns)
+                con.execute(
+                    f"INSERT INTO {table}({', '.join(columns)}) VALUES({placeholders})",
+                    tuple(data.get(col) for col in columns),
+                )
+
+    def replace_gh_events(self, provider_id, rows, provider_version, imported_at_utc):
+        self._replace_gh_table(
+            "gh_match_events", provider_id,
+            ("provider_id", "external_event_id", "external_match_id", "match_id",
+             "minute", "period", "event_type", "external_team_id", "team_id",
+             "external_player_id", "player_id", "provider_version", "imported_at_utc"),
+            rows, provider_version, imported_at_utc,
+            add_period=True, include_provider_version_column=True,
+        )
+
+    def replace_gh_team_stats(self, provider_id, rows, provider_version, imported_at_utc):
+        self._replace_gh_table(
+            "gh_match_team_stats", provider_id,
+            ("provider_id", "external_match_id", "match_id", "external_team_id", "team_id",
+             "possession_pct", "total_shots", "shots_on_target", "corners", "fouls",
+             "offsides", "saves", "player_of_the_match", "data_source", "last_updated",
+             "imported_at_utc"),
+            rows, provider_version, imported_at_utc,
+        )
+
+    def replace_gh_lineups(self, provider_id, rows, provider_version, imported_at_utc):
+        self._replace_gh_table(
+            "gh_match_lineups", provider_id,
+            ("provider_id", "external_lineup_id", "external_match_id", "match_id",
+             "external_player_id", "player_id", "external_team_id", "team_id",
+             "is_starting_xi", "tactical_position", "minutes_played", "imported_at_utc"),
+            rows, provider_version, imported_at_utc,
+        )
+
+    def replace_gh_matches(self, provider_id, rows, provider_version, imported_at_utc):
+        self._replace_gh_table(
+            "gh_matches", provider_id,
+            ("provider_id", "external_match_id", "match_id", "date", "kickoff_time_utc",
+             "stage_name", "stadium_name", "city", "country",
+             "external_home_team_id", "home_team_id", "home_team_name", "home_fifa_code",
+             "external_away_team_id", "away_team_id", "away_team_name", "away_fifa_code",
+             "home_score", "away_score", "status", "home_xg", "away_xg",
+             "home_goalkeeper", "away_goalkeeper", "player_of_the_match_name",
+             "external_referee_id", "referee_id", "referee_name", "imported_at_utc"),
+            rows, provider_version, imported_at_utc,
+        )
+
+    def replace_gh_referees(self, provider_id, rows, provider_version, imported_at_utc):
+        self._replace_gh_table(
+            "gh_referees", provider_id,
+            ("provider_id", "external_referee_id", "referee_name", "country",
+             "avg_cards_per_game", "imported_at_utc"),
+            rows, provider_version, imported_at_utc,
+        )
+
+    def replace_gh_player_stats(self, provider_id, rows, provider_version, imported_at_utc):
+        self._replace_gh_table(
+            "gh_player_stats", provider_id,
+            ("provider_id", "external_player_id", "player_id", "external_team_id", "team_id",
+             "player_name", "position", "matches_played", "matches_started",
+             "minutes_played", "goals", "assists", "shots", "shots_on_target",
+             "yellow_cards", "red_cards", "penalty_goals", "own_goals", "clean_sheets",
+             "saves", "goals_conceded", "average_rating", "data_source", "last_verified",
+             "imported_at_utc"),
+            rows, provider_version, imported_at_utc,
+        )
+
+    def replace_gh_teams(self, provider_id, rows, provider_version, imported_at_utc):
+        self._replace_gh_table(
+            "gh_teams", provider_id,
+            ("provider_id", "external_team_id", "team_id", "team_name", "fifa_code",
+             "group_letter", "confederation", "fifa_ranking_pre_tournament",
+             "elo_rating", "manager_name", "imported_at_utc"),
+            rows, provider_version, imported_at_utc,
+        )
