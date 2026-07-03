@@ -1488,6 +1488,7 @@ class MatchAnalysisBundle:
     expected_xg: tuple = field(default_factory=tuple)
     goalkeeper_baselines: dict = field(default_factory=dict)
     corrections: object = None
+    form_adjustment_note: str | None = None
 
 
 @dataclass
@@ -1668,6 +1669,34 @@ def _match_analysis_bundle_cached(
             except Exception:
                 deep_ml_probabilities = None
 
+    # Phase 1 (ghwc): tournament-form adjustment on top of the base models.
+    # Alpha comes from the persisted calibration; alpha=0 keeps the layer inert.
+    form_adjustment_note = None
+    try:
+        from wcpredict.tournament_form_adjustment import (
+            apply_form_adjustment,
+            build_match_adjustment,
+        )
+        _calibration = repo.latest_form_calibration()
+        _alpha = float(_calibration["alpha"]) if _calibration else 0.0
+        if _alpha > 0.0 and (ml_probabilities or deep_ml_probabilities):
+            _adj = build_match_adjustment(repo, team_a, team_b, str(match.kickoff_utc))
+            if _adj.weight > 0.0 and _adj.score != 0.0:
+                if ml_probabilities:
+                    ml_probabilities = apply_form_adjustment(
+                        ml_probabilities, _alpha, _adj.score, _adj.weight
+                    )
+                if deep_ml_probabilities:
+                    deep_ml_probabilities = apply_form_adjustment(
+                        deep_ml_probabilities, _alpha, _adj.score, _adj.weight
+                    )
+                form_adjustment_note = (
+                    f"Ajuste por forma del torneo: score {_adj.score:+.2f}, "
+                    f"peso {_adj.weight:.2f}, α {_alpha:.2f}"
+                )
+    except Exception:
+        form_adjustment_note = None
+
     corrections = None
     if apply_corrections:
         try:
@@ -1749,6 +1778,7 @@ def _match_analysis_bundle_cached(
         corrections=corrections,
         deep_ml_probabilities=deep_ml_probabilities,
         deep_outcome_weight=deep_weight,
+        form_adjustment_note=form_adjustment_note,
     )
     return bundle
 
@@ -3277,6 +3307,8 @@ def render_prediction_lab() -> None:
     ml_model_meta = bundle.ml_model_meta
     if bundle.corrections is not None and corrections_active(bundle.corrections):
         callout(describe_corrections(bundle.corrections), tone="blue", title="Corrección automática activa")
+    if bundle.form_adjustment_note:
+        callout(bundle.form_adjustment_note, tone="blue", title="Ajuste por forma del torneo activo")
     knockout_prediction = _knockout_prediction_for_match(match, bundle, repo)
     try:
         _persist_pre_match_snapshot(match, bundle, repo, knockout_prediction)

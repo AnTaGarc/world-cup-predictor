@@ -211,6 +211,12 @@ class AppContractTests(unittest.TestCase):
         source = (Path(__file__).parents[1] / "src" / "wcpredict" / "ui" / "pages.py").read_text(encoding="utf-8")
         self.assertIn("sync_gh_team_stats_to_observations", source)
 
+    def test_tournament_form_adjustment_is_wired(self):
+        source = (Path(__file__).parents[1] / "src" / "wcpredict" / "ui" / "pages.py").read_text(encoding="utf-8")
+        self.assertIn("apply_form_adjustment", source)
+        self.assertIn("latest_form_calibration", source)
+        self.assertIn("Ajuste por forma del torneo activo", source)
+
     def test_bracket_view_resolves_before_rendering(self):
         source = (Path(__file__).parents[1] / "src" / "wcpredict" / "ui" / "pages.py").read_text(encoding="utf-8")
         section = source[source.index("def _render_bracket_section"):source.index("def render_prediction_lab")]

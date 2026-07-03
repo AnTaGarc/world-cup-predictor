@@ -798,6 +798,16 @@ CREATE TABLE IF NOT EXISTS gh_score_verifications (
     PRIMARY KEY(match_id, provider_version)
 );
 
+CREATE TABLE IF NOT EXISTS outcome_adjustment_calibrations (
+    id INTEGER PRIMARY KEY,
+    model_version TEXT NOT NULL,
+    calibrated_at_utc TEXT NOT NULL,
+    alpha REAL NOT NULL,
+    sample_size INTEGER NOT NULL,
+    log_loss_base REAL,
+    log_loss_adjusted REAL
+);
+
 CREATE INDEX IF NOT EXISTS idx_gh_match_events_match
 ON gh_match_events(match_id);
 CREATE INDEX IF NOT EXISTS idx_gh_match_events_ext_match
