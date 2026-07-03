@@ -9,6 +9,10 @@ import re
 import unicodedata
 
 from wcpredict.advanced_form import build_goalkeeper_baseline
+from wcpredict.github_wc2026_enrichment import (
+    build_synthetic_penalty_attempts,
+    goalkeeper_tournament_save_rate,
+)
 from wcpredict.names import canonical_team_name, same_team
 from wcpredict.penalty_history_model import (
     DEFAULT_SIMULATIONS,
@@ -218,6 +222,23 @@ def _repository_inputs(repo: Repository, match) -> tuple[
         for row in historical_kicks
     ]
     attempts.extend(historical_attempts)
+    attempts.extend(
+        build_synthetic_penalty_attempts(
+            repo.list_gh_tournament_penalty_evidence(
+                tuple(team_names), match.kickoff_utc
+            ),
+            match.kickoff_utc,
+        )
+    )
+
+    cutoff_date = str(match.kickoff_utc)[:10]
+    for gk_row in repo.list_gh_goalkeeper_tournament_rates(tuple(team_names)):
+        verified = gk_row.get("last_verified")
+        if verified and str(verified)[:10] > cutoff_date:
+            continue
+        rate = goalkeeper_tournament_save_rate(gk_row)
+        if rate is not None:
+            deep_rates.setdefault(str(gk_row.get("player_name") or ""), rate)
 
     goalkeeper_attempts: list[dict] = []
     goalkeeper_names = {
