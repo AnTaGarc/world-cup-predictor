@@ -4037,6 +4037,15 @@ class Repository:
                     value = row[column]
                     if value is None:
                         continue
+                    reviewed = con.execute(
+                        "SELECT 1 FROM observations WHERE match_id=? AND subject_type='team' "
+                        "AND subject_name=? AND metric=? "
+                        "AND evidence_status IN ('verified', 'verified_user_json', "
+                        "'verified_user_capture') LIMIT 1",
+                        (row["match_id"], row["team_name"], metric),
+                    ).fetchone()
+                    if reviewed is not None:
+                        continue
                     con.execute(
                         "INSERT INTO observations(match_id, subject_type, subject_name, "
                         "metric, value_number, value_text, unit, context_json, source_id, "

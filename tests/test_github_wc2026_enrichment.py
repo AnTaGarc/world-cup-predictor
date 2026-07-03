@@ -141,3 +141,20 @@ class ObservationBridgeTests(unittest.TestCase):
                 "AND match_id NOT IN (SELECT id FROM matches)"
             ).fetchone()[0]
         self.assertEqual(0, orphan)
+
+    def test_user_reviewed_observation_is_never_overridden(self):
+        with self.repo.session() as con:
+            con.execute(
+                "INSERT INTO observations(match_id, subject_type, subject_name, metric, "
+                "value_number, context_json, source_id, evidence_status, observed_at_utc) "
+                "VALUES(100, 'team', 'Mexico', 'resumen_del_partido.faltas', 12, '{}', "
+                "'user_capture', 'verified_user_json', ?)",
+                (self.now,),
+            )
+        self.repo.sync_gh_team_stats_to_observations(self.now)
+        with self.repo.session() as con:
+            gh_row = con.execute(
+                "SELECT COUNT(*) FROM observations WHERE source_id='github_wc2026' "
+                "AND match_id=100 AND metric='resumen_del_partido.faltas'"
+            ).fetchone()[0]
+        self.assertEqual(0, gh_row)
