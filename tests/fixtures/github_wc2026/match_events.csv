@@ -1,0 +1,5 @@
+event_id,match_id,minute,event_type,team_id,player_id
+1,1,9,Goal,1,16
+2,1,9,Assist,1,6
+3,1,17,Yellow Card,2,30
+4,1,110,Yellow Card,2,45

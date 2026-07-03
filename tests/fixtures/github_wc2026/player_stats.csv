@@ -1,0 +1,3 @@
+player_id,player_name,team_id,position,matches_played,matches_started,minutes_played,goals,assists,shots,shots_on_target,yellow_cards,red_cards,penalty_goals,own_goals,clean_sheets,saves,goals_conceded,average_rating,data_source,last_verified
+1,José Raúl Rangel,1,GK,4,4,348,0,0,,,0,0,0,0,4,5,0,,sofascore.com,2026-07-01
+16,Julián Andrés Quinones,1,FWD,3,3,220,3,1,10,4,0,0,1,0,,,,7.9,sofascore.com,2026-07-01
