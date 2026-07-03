@@ -76,3 +76,68 @@ class GoalkeeperRateTests(unittest.TestCase):
     def test_null_fields_return_none(self):
         self.assertIsNone(goalkeeper_tournament_save_rate({"saves": None, "goals_conceded": 2}))
         self.assertIsNone(goalkeeper_tournament_save_rate({"saves": 3, "goals_conceded": None}))
+
+
+class ObservationBridgeTests(unittest.TestCase):
+    def setUp(self):
+        self.directory = tempfile.TemporaryDirectory()
+        self.repo = Repository(Path(self.directory.name) / "app.sqlite")
+        self.repo.initialize()
+        self.now = datetime(2026, 7, 3, 12, tzinfo=timezone.utc).isoformat()
+        with self.repo.session() as con:
+            con.execute("INSERT INTO teams(id, name, fifa_code) VALUES(1, 'Mexico', 'MEX')")
+            con.execute("INSERT INTO teams(id, name, fifa_code) VALUES(2, 'South Africa', 'RSA')")
+            con.execute(
+                "INSERT INTO matches(id, competition, stage, kickoff_utc, team_a_id, "
+                "team_b_id, status) VALUES(100, 'FIFA World Cup 2026', 'Group Stage', "
+                "'2026-06-11T20:00:00+00:00', 1, 2, 'finished')"
+            )
+            con.execute(
+                "INSERT INTO gh_match_team_stats(provider_id, external_match_id, match_id, "
+                "external_team_id, team_id, possession_pct, total_shots, shots_on_target, "
+                "corners, fouls, offsides, saves, last_updated, imported_at_utc) "
+                "VALUES('github_wc2026_team_stats', 1, 100, 1, 1, 57, 16, 4, 6, 11, 2, 1, "
+                "'2026-06-24', ?)",
+                (self.now,),
+            )
+
+    def tearDown(self):
+        self.directory.cleanup()
+
+    def test_sync_creates_observations_with_mapped_metrics(self):
+        count = self.repo.sync_gh_team_stats_to_observations(self.now)
+        self.assertEqual(7, count)
+        with self.repo.session() as con:
+            row = con.execute(
+                "SELECT value_number, evidence_status, source_id FROM observations "
+                "WHERE match_id=100 AND subject_name='Mexico' "
+                "AND metric='resumen_del_partido.faltas'"
+            ).fetchone()
+        self.assertEqual(11, row["value_number"])
+        self.assertEqual("verified_external", row["evidence_status"])
+        self.assertEqual("github_wc2026", row["source_id"])
+
+    def test_sync_is_idempotent(self):
+        self.repo.sync_gh_team_stats_to_observations(self.now)
+        self.repo.sync_gh_team_stats_to_observations(self.now)
+        with self.repo.session() as con:
+            count = con.execute(
+                "SELECT COUNT(*) FROM observations WHERE source_id='github_wc2026'"
+            ).fetchone()[0]
+        self.assertEqual(7, count)
+
+    def test_unresolved_rows_are_skipped(self):
+        with self.repo.session() as con:
+            con.execute(
+                "INSERT INTO gh_match_team_stats(provider_id, external_match_id, "
+                "external_team_id, fouls, imported_at_utc) "
+                "VALUES('github_wc2026_team_stats', 2, 9, 20, ?)",
+                (self.now,),
+            )
+        self.repo.sync_gh_team_stats_to_observations(self.now)
+        with self.repo.session() as con:
+            orphan = con.execute(
+                "SELECT COUNT(*) FROM observations WHERE source_id='github_wc2026' "
+                "AND match_id NOT IN (SELECT id FROM matches)"
+            ).fetchone()[0]
+        self.assertEqual(0, orphan)

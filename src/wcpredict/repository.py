@@ -4016,3 +4016,38 @@ class Repository:
         params = tuple(name.casefold() for name in team_names)
         with self.session() as con:
             return [dict(row) for row in con.execute(query, params).fetchall()]
+
+    # ------------------------------------------------------------------
+    # github_wc2026 external dataset: observations bridge
+
+    def sync_gh_team_stats_to_observations(self, now_utc_iso: str | None = None) -> int:
+        from datetime import datetime, timezone
+        from wcpredict.github_wc2026_enrichment import GH_TEAM_METRIC_MAP
+        now = now_utc_iso or datetime.now(timezone.utc).isoformat()
+        written = 0
+        with self.session() as con:
+            rows = con.execute(
+                "SELECT gh.*, t.name AS team_name FROM gh_match_team_stats gh "
+                "JOIN teams t ON t.id = gh.team_id "
+                "WHERE gh.match_id IS NOT NULL AND gh.team_id IS NOT NULL"
+            ).fetchall()
+            for row in rows:
+                observed_at = row["last_updated"] or now
+                for column, metric in GH_TEAM_METRIC_MAP.items():
+                    value = row[column]
+                    if value is None:
+                        continue
+                    con.execute(
+                        "INSERT INTO observations(match_id, subject_type, subject_name, "
+                        "metric, value_number, value_text, unit, context_json, source_id, "
+                        "evidence_status, sample_size, observed_at_utc) "
+                        "VALUES(?, 'team', ?, ?, ?, NULL, NULL, '{}', 'github_wc2026', "
+                        "'verified_external', NULL, ?) "
+                        "ON CONFLICT(match_id, subject_type, subject_name, metric, "
+                        "context_json, source_id) DO UPDATE SET "
+                        "value_number=excluded.value_number, "
+                        "observed_at_utc=excluded.observed_at_utc",
+                        (row["match_id"], row["team_name"], metric, float(value), observed_at),
+                    )
+                    written += 1
+        return written
