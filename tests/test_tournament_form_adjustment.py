@@ -153,3 +153,34 @@ class StratifiedCalibrationTests(unittest.TestCase):
         self.assertEqual(0.9, alpha_for_match(alphas, 2))
         self.assertEqual(1.3, alpha_for_match(alphas, 3))
         self.assertEqual(1.3, alpha_for_match(alphas, 5))
+
+
+class BareTimeKickoffTests(unittest.TestCase):
+    """The real dataset stores kickoff_time_utc as a bare time like '21:00';
+    the cutoff must combine it with the date column, never compare the raw
+    time string against an ISO timestamp."""
+
+    def setUp(self):
+        self.directory = tempfile.TemporaryDirectory()
+        self.repo = Repository(Path(self.directory.name) / "app.sqlite")
+        self.repo.initialize()
+        with self.repo.session() as con:
+            con.execute("INSERT INTO teams(id, name, fifa_code) VALUES(1, 'Spain', 'ESP')")
+            con.execute("INSERT INTO teams(id, name, fifa_code) VALUES(2, 'Austria', 'AUT')")
+            con.execute(
+                "INSERT INTO gh_matches(provider_id, external_match_id, home_team_id, "
+                "away_team_id, home_score, away_score, kickoff_time_utc, date, imported_at_utc) "
+                "VALUES('github_wc2026_matches', 1, 1, 2, 4, 0, '21:00', '2026-06-21', "
+                "'2026-07-01T00:00:00+00:00')"
+            )
+
+    def tearDown(self):
+        self.directory.cleanup()
+
+    def test_bare_time_match_counts_before_cutoff(self):
+        features = build_form_features(self.repo, "Spain", "2026-07-06T00:00:00+00:00")
+        self.assertEqual(1, features.matches_played)
+
+    def test_bare_time_match_excluded_after_cutoff(self):
+        features = build_form_features(self.repo, "Spain", "2026-06-21T00:00:00+00:00")
+        self.assertEqual(0, features.matches_played)

@@ -54,20 +54,35 @@ def _clip(value: float, low: float = -1.0, high: float = 1.0) -> float:
     return max(low, min(high, value))
 
 
+def _gh_kickoff_iso(row: dict) -> str:
+    """The dataset stores kickoff_time_utc as a bare time ("21:00"); combine
+    it with the date column into a sortable ISO timestamp. A full ISO value
+    in kickoff_time_utc is used as-is."""
+    time_part = str(row.get("kickoff_time_utc") or "")
+    date_part = str(row.get("date") or "")
+    if "T" in time_part or "-" in time_part:
+        return time_part
+    if date_part and time_part:
+        return f"{date_part}T{time_part}"
+    return date_part
+
+
 def _team_gh_matches(con, team_name: str, before_kickoff_iso: str) -> list[dict]:
     cutoff = str(before_kickoff_iso)
     rows = con.execute(
         "SELECT gh.*, t.name AS resolved_name FROM gh_matches gh "
         "JOIN teams t ON t.id IN (gh.home_team_id, gh.away_team_id) "
         "WHERE lower(t.name) = lower(?) "
-        "AND gh.home_score IS NOT NULL AND gh.away_score IS NOT NULL "
-        "AND COALESCE(gh.kickoff_time_utc, gh.date) < ? "
-        "ORDER BY COALESCE(gh.kickoff_time_utc, gh.date)",
-        (team_name, cutoff),
+        "AND gh.home_score IS NOT NULL AND gh.away_score IS NOT NULL",
+        (team_name,),
     ).fetchall()
     output = []
     for row in rows:
         data = dict(row)
+        kickoff = _gh_kickoff_iso(data)
+        if not kickoff or kickoff >= cutoff:
+            continue
+        data["kickoff_iso"] = kickoff
         home = bool(
             con.execute(
                 "SELECT 1 FROM teams WHERE id=? AND lower(name)=lower(?)",
@@ -81,6 +96,7 @@ def _team_gh_matches(con, team_name: str, before_kickoff_iso: str) -> list[dict]
         data["xg_against"] = data["away_xg"] if home else data["home_xg"]
         data["own_team_id"] = data["home_team_id"] if home else data["away_team_id"]
         output.append(data)
+    output.sort(key=lambda item: item["kickoff_iso"])
     return output
 
 
@@ -158,7 +174,7 @@ def build_form_features(repo, team_name: str, before_kickoff_iso: str) -> FormFe
     values["inferiority"] = _clip(-(inferiority_minutes / max(1, n)) / 45.0)
 
     last = matches[-1]
-    last_kickoff = str(last.get("kickoff_time_utc") or last.get("date") or "")
+    last_kickoff = str(last.get("kickoff_iso") or "")
     days_rest = 7.0
     try:
         last_dt = datetime.fromisoformat(last_kickoff.replace("Z", "+00:00"))
@@ -176,7 +192,7 @@ def build_form_features(repo, team_name: str, before_kickoff_iso: str) -> FormFe
         max_minute = max((e["minute"] for e in match_events), default=90)
         if max_minute <= 90:
             continue
-        kick = str(m.get("kickoff_time_utc") or m.get("date") or "")
+        kick = str(m.get("kickoff_iso") or "")
         try:
             kick_dt = datetime.fromisoformat(kick.replace("Z", "+00:00"))
             if kick_dt.tzinfo is None:
