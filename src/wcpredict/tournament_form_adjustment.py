@@ -278,49 +278,93 @@ def calibrate_alpha(
 
 
 def build_calibration_samples(repo) -> list[dict[str, Any]]:
-    """Pair each closed WC2026 match having a pre-match snapshot with its
-    tournament-form adjustment (computed strictly before kickoff) and the
-    real outcome. The snapshot probabilities are the honest base: they were
-    generated before the match was played."""
+    """Pair each closed WC2026 match having stored pre-match probabilities
+    with its tournament-form adjustment (computed strictly before kickoff)
+    and the real outcome.
+
+    Two honest bases are combined, preferring the first when both exist:
+    1. `prediction_snapshots`: the earliest snapshot per match, generated
+       before kickoff by the app itself.
+    2. `backtest_runs` pool `live-wc2026-v1`: live rows written by the
+       settlement hook plus the pre-kickoff reconstruction produced by
+       scripts/backfill_live_residuals.py (same pipeline, temporal cutoff
+       at kickoff). This is the pool the phase-5b team residuals already
+       rely on, extending coverage to the whole group stage.
+    """
     import json
 
-    samples: list[dict[str, Any]] = []
+    base_probs: dict[int, dict[str, float]] = {}
+    match_meta: dict[int, dict[str, Any]] = {}
     with repo.session() as con:
-        rows = con.execute(
-            "SELECT ps.match_id, ps.payload_json, m.kickoff_utc, "
-            "ta.name AS team_a, tb.name AS team_b, mr.goals_a, mr.goals_b "
-            "FROM prediction_snapshots ps "
-            "JOIN matches m ON m.id = ps.match_id "
+        closed = con.execute(
+            "SELECT m.id AS match_id, m.kickoff_utc, ta.name AS team_a, "
+            "tb.name AS team_b, mr.goals_a, mr.goals_b "
+            "FROM matches m "
             "JOIN teams ta ON ta.id = m.team_a_id "
             "JOIN teams tb ON tb.id = m.team_b_id "
             "JOIN match_results mr ON mr.match_id = m.id "
-            "WHERE m.competition = 'FIFA World Cup 2026' "
-            "AND ps.id IN ("
+            "WHERE m.competition = 'FIFA World Cup 2026'"
+        ).fetchall()
+        for row in closed:
+            match_meta[int(row["match_id"])] = dict(row)
+
+        # Base 2 first (lower precedence): live-wc2026-v1 backtest pool.
+        pool = con.execute(
+            "SELECT match_id, selection, prob_predicted FROM backtest_runs "
+            "WHERE run_label = 'live-wc2026-v1' AND market = '1X2'"
+        ).fetchall()
+        by_match: dict[int, dict[str, float]] = {}
+        for row in pool:
+            by_match.setdefault(int(row["match_id"]), {})[str(row["selection"])] = float(
+                row["prob_predicted"]
+            )
+        for match_id, selections in by_match.items():
+            meta = match_meta.get(match_id)
+            if meta is None:
+                continue
+            home_p = selections.get(str(meta["team_a"]))
+            away_p = selections.get(str(meta["team_b"]))
+            draw_p = selections.get("Draw") or selections.get("Empate")
+            if home_p is None or away_p is None or draw_p is None:
+                continue
+            base_probs[match_id] = {"home": home_p, "draw": draw_p, "away": away_p}
+
+        # Base 1 (higher precedence): earliest pre-match snapshot.
+        snapshots = con.execute(
+            "SELECT ps.match_id, ps.payload_json FROM prediction_snapshots ps "
+            "WHERE ps.id IN ("
             "  SELECT MIN(ps2.id) FROM prediction_snapshots ps2 GROUP BY ps2.match_id"
             ")"
         ).fetchall()
-    for row in rows:
+    for row in snapshots:
+        match_id = int(row["match_id"])
+        meta = match_meta.get(match_id)
+        if meta is None:
+            continue
         payload = json.loads(row["payload_json"])
         one_x_two = {
             str(p.get("selection_name")): float(p.get("probability"))
             for p in payload.get("predictions", [])
             if p.get("market_name") == "1X2" and p.get("probability") is not None
         }
-        if not one_x_two:
-            continue
-        home_p = one_x_two.get(str(row["team_a"]))
-        away_p = one_x_two.get(str(row["team_b"]))
+        home_p = one_x_two.get(str(meta["team_a"]))
+        away_p = one_x_two.get(str(meta["team_b"]))
         draw_p = one_x_two.get("Draw") or one_x_two.get("Empate")
         if home_p is None or away_p is None or draw_p is None:
             continue
+        base_probs[match_id] = {"home": home_p, "draw": draw_p, "away": away_p}
+
+    samples: list[dict[str, Any]] = []
+    for match_id, probs in sorted(base_probs.items()):
+        meta = match_meta[match_id]
         adjustment = build_match_adjustment(
-            repo, str(row["team_a"]), str(row["team_b"]), str(row["kickoff_utc"])
+            repo, str(meta["team_a"]), str(meta["team_b"]), str(meta["kickoff_utc"])
         )
-        goals_a, goals_b = int(row["goals_a"]), int(row["goals_b"])
+        goals_a, goals_b = int(meta["goals_a"]), int(meta["goals_b"])
         outcome = "home" if goals_a > goals_b else ("away" if goals_a < goals_b else "draw")
         samples.append({
-            "match_id": row["match_id"],
-            "probs": {"home": home_p, "draw": draw_p, "away": away_p},
+            "match_id": match_id,
+            "probs": probs,
             "score": adjustment.score,
             "weight": adjustment.weight,
             "outcome": outcome,
