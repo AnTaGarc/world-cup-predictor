@@ -118,6 +118,16 @@ def render_knockout_settlement(
         "En prórroga": "extra_time",
         "En penaltis": "shootout",
     }
+    # Restore a durable draft (survives app restarts) into the widget
+    # session state, only for keys the user hasn't touched this session.
+    stored_draft = repo.load_knockout_draft(match.id) or {}
+    seed_flag = f"ko_draft_seeded_{match.id}"
+    if stored_draft and not st.session_state.get(seed_flag):
+        for state_key, value in stored_draft.get("widget_state", {}).items():
+            if state_key not in st.session_state:
+                st.session_state[state_key] = value
+        st.session_state[seed_flag] = True
+
     default_decision = str(active.get("decided_in") or "regulation")
     default_label = next(
         label for label, value in decision_labels.items() if value == default_decision
@@ -306,7 +316,29 @@ def render_knockout_settlement(
     errors = list(validate_settlement_draft(draft))
     errors.extend(issue.message for issue in issues if issue.severity == "blocking")
     if st.button("Guardar borrador", key=f"ko_save_draft_{match.id}"):
-        st.info("Borrador conservado en esta sesión. Los periodos importados ya están guardados.")
+        import json as _json
+        prefixes = (
+            f"ko_decision_{match.id}", f"ko_reg_a_{match.id}", f"ko_reg_b_{match.id}",
+            f"ko_et_a_{match.id}", f"ko_et_b_{match.id}",
+            f"ko_keeper_a_{match.id}", f"ko_keeper_b_{match.id}",
+            f"ko_kick_count_{match.id}",
+            f"ko_taker_{match.id}_", f"ko_outcome_{match.id}_",
+        )
+        widget_state = {
+            state_key: value for state_key, value in st.session_state.items()
+            if isinstance(state_key, str)
+            and any(state_key == p or state_key.startswith(p) for p in prefixes)
+            and isinstance(value, (str, int, float, bool))
+        }
+        repo.save_knockout_draft(
+            match.id,
+            _json.dumps({"widget_state": widget_state}, ensure_ascii=False),
+            datetime.now(timezone.utc).isoformat(),
+        )
+        st.success(
+            "Borrador guardado en la base de datos: sobrevive a reinicios de la app. "
+            "Los periodos importados ya estaban guardados."
+        )
     notices = [issue.message for issue in issues if issue.severity == "warning"]
     if notices:
         st.info(
@@ -322,11 +354,13 @@ def render_knockout_settlement(
         key=f"ko_finalize_{match.id}",
         width="stretch",
     ):
-        return repo.settle_knockout_match_versioned(
+        settled = repo.settle_knockout_match_versioned(
             match.id,
             phase_result,
             kicks,
             batch_id,
             datetime.now(timezone.utc),
         )
+        repo.delete_knockout_draft(match.id)
+        return settled
     return None

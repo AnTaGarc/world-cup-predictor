@@ -4117,3 +4117,35 @@ class Repository:
             else:
                 row["goals_a"], row["goals_b"] = row["away_score"], row["home_score"]
         return rows
+
+    # ------------------------------------------------------------------
+    # knockout settlement drafts: durable across app restarts
+
+    def save_knockout_draft(self, match_id: int, payload_json: str, now_utc_iso: str) -> None:
+        with self.session() as con:
+            con.execute(
+                "INSERT INTO knockout_settlement_drafts(match_id, payload_json, saved_at_utc) "
+                "VALUES(?, ?, ?) ON CONFLICT(match_id) DO UPDATE SET "
+                "payload_json=excluded.payload_json, saved_at_utc=excluded.saved_at_utc",
+                (match_id, payload_json, now_utc_iso),
+            )
+
+    def load_knockout_draft(self, match_id: int) -> dict | None:
+        import json
+        with self.session() as con:
+            row = con.execute(
+                "SELECT payload_json FROM knockout_settlement_drafts WHERE match_id=?",
+                (match_id,),
+            ).fetchone()
+        if row is None:
+            return None
+        try:
+            return json.loads(str(row["payload_json"]))
+        except (TypeError, ValueError):
+            return None
+
+    def delete_knockout_draft(self, match_id: int) -> None:
+        with self.session() as con:
+            con.execute(
+                "DELETE FROM knockout_settlement_drafts WHERE match_id=?", (match_id,)
+            )

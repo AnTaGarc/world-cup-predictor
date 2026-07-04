@@ -140,3 +140,39 @@ class KnockoutSettlementUiTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class DurableDraftTests(unittest.TestCase):
+    def setUp(self):
+        import tempfile
+        from pathlib import Path
+        from wcpredict.repository import Repository
+        self.directory = tempfile.TemporaryDirectory()
+        self.repo = Repository(Path(self.directory.name) / "app.sqlite")
+        self.repo.initialize()
+
+    def tearDown(self):
+        self.directory.cleanup()
+
+    def test_draft_round_trip_and_delete(self):
+        import json
+        payload = json.dumps({"widget_state": {"ko_kick_count_9": 8, "ko_taker_9_0": "Souttar"}})
+        self.repo.save_knockout_draft(9, payload, "2026-07-04T12:00:00+00:00")
+        loaded = self.repo.load_knockout_draft(9)
+        self.assertEqual(8, loaded["widget_state"]["ko_kick_count_9"])
+        # Overwrite keeps a single row.
+        self.repo.save_knockout_draft(9, json.dumps({"widget_state": {"x": 1}}), "2026-07-04T13:00:00+00:00")
+        self.assertEqual({"x": 1}, self.repo.load_knockout_draft(9)["widget_state"])
+        self.repo.delete_knockout_draft(9)
+        self.assertIsNone(self.repo.load_knockout_draft(9))
+
+    def test_missing_draft_returns_none(self):
+        self.assertIsNone(self.repo.load_knockout_draft(123))
+
+    def test_ui_source_contract(self):
+        from pathlib import Path
+        source = (Path(__file__).parents[1] / "src" / "wcpredict" / "ui" / "knockout_settlement.py").read_text(encoding="utf-8")
+        self.assertIn("save_knockout_draft", source)
+        self.assertIn("load_knockout_draft", source)
+        self.assertIn("delete_knockout_draft", source)
+        self.assertNotIn("Borrador conservado en esta sesión", source)

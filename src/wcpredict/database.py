@@ -798,6 +798,12 @@ CREATE TABLE IF NOT EXISTS gh_score_verifications (
     PRIMARY KEY(match_id, provider_version)
 );
 
+CREATE TABLE IF NOT EXISTS knockout_settlement_drafts (
+    match_id INTEGER PRIMARY KEY,
+    payload_json TEXT NOT NULL,
+    saved_at_utc TEXT NOT NULL
+);
+
 CREATE TABLE IF NOT EXISTS outcome_adjustment_calibrations (
     id INTEGER PRIMARY KEY,
     model_version TEXT NOT NULL,
