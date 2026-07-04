@@ -240,6 +240,42 @@ def _aligned_expected_score(
     return expected_a, expected_b
 
 
+def _conditional_mode_score(
+    matrix: list[list[float]], outcome: str
+) -> tuple[tuple[int, int], float] | None:
+    """Most probable scoreline restricted to one outcome class."""
+    best: tuple[int, int] | None = None
+    best_probability = 0.0
+    for a, row in enumerate(matrix):
+        for b, probability in enumerate(row):
+            if outcome == "home" and not a > b:
+                continue
+            if outcome == "away" and not b > a:
+                continue
+            if outcome == "draw" and a != b:
+                continue
+            if probability > best_probability:
+                best_probability = probability
+                best = (a, b)
+    return (best, best_probability) if best is not None else None
+
+
+def _mode_consistency_note(
+    unified_1x2: dict[str, float], exact_score, team_a: str, team_b: str
+) -> str:
+    favorite_key = max(unified_1x2, key=unified_1x2.get)
+    if favorite_key == "draw" or exact_score.team_a_goals != exact_score.team_b_goals:
+        return "Marcador con mayor probabilidad individual en la matriz conjunta."
+    favorite_team = team_a if favorite_key == "home" else team_b
+    return (
+        "Marcador con mayor probabilidad individual. Nota: aunque "
+        f"{favorite_team} es el resultado 1X2 más probable, su masa se "
+        "reparte entre muchos marcadores mientras el empate se concentra "
+        "en pocos; ver 'Exact Score (favorito)' para el marcador modal "
+        "condicionado a su victoria."
+    )
+
+
 def predict_match_markets(
     team_a: str,
     team_b: str,
@@ -500,8 +536,31 @@ def predict_match_markets(
             MarketFamily.GOALS, "Exact Score",
             f"{exact_score.team_a_goals}-{exact_score.team_b_goals}", None,
             exact_score.probability,
+            _mode_consistency_note(unified_1x2, exact_score, team_a, team_b),
         ),
     ]
+    # When the 1X2 favourite is a team but the joint mode is a draw score
+    # (a legitimate property: draw mass concentrates on 0-0/1-1 while win
+    # mass spreads across many scorelines), publish the favourite's own
+    # modal score so the UI can present a coherent story.
+    favorite_key = max(unified_1x2, key=unified_1x2.get)
+    mode_is_draw = exact_score.team_a_goals == exact_score.team_b_goals
+    if favorite_key in ("home", "away") and mode_is_draw:
+        favorite_team = team_a if favorite_key == "home" else team_b
+        conditional = _conditional_mode_score(scoreline_matrix, favorite_key)
+        if conditional is not None:
+            (cond_a, cond_b), cond_probability = conditional
+            rows.append(
+                prediction(
+                    MarketFamily.GOALS, "Exact Score (favorito)",
+                    f"{cond_a}-{cond_b}",
+                    None, cond_probability,
+                    f"Marcador más probable si gana {favorite_team}: la victoria "
+                    "reparte su masa entre muchos marcadores, por eso el modal "
+                    "global puede ser un empate aunque el empate no sea el "
+                    "resultado más probable.",
+                )
+            )
     # Top alternative scorelines and expected score: provide context next to the
     # mode-based "Exact Score" so the UI can show 2-1/3-1 alternatives instead of
     # the single low-bias mode.
