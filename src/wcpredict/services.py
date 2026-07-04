@@ -259,6 +259,8 @@ def predict_match_markets(
     draw_incentive: float = 0.0,
     draw_incentive_note: str = "",
     team_corrections: dict | None = None,
+    form_shift: float = 0.0,
+    form_note: str = "",
 ) -> list[MarketPrediction]:
     ratings = precomputed_ratings or build_team_ratings(results, as_of=as_of)
     xg_a, xg_b = expected_goals_for_match(
@@ -388,6 +390,28 @@ def predict_match_markets(
                 for key in ("home", "draw", "away")
             })
             scoreline_matrix = _score_matrix_aligned_to_1x2(matrix, score_1x2, scoreline_target_1x2)
+
+    # Phase 1 (ghwc): tournament-form adjustment applied to the final
+    # unified 1X2, matching the calibration semantics (alpha was fitted
+    # against final pre-match probabilities, not model components).
+    if abs(form_shift) > 0.005:
+        unified_1x2 = apply_outcome_shifts(
+            unified_1x2,
+            {"home": form_shift, "draw": 0.0, "away": -form_shift},
+        )
+        unified_note += (
+            f" Ajuste por forma del torneo: {form_shift:+.2f} logit."
+            + (f" {form_note}" if form_note else "")
+        )
+        final_matrix = _score_matrix_aligned_to_1x2(matrix, score_1x2, unified_1x2)
+        scoreline_target_1x2 = _normalize_1x2({
+            key: (
+                SCORELINE_OUTCOME_ALIGNMENT_WEIGHT * unified_1x2[key]
+                + (1.0 - SCORELINE_OUTCOME_ALIGNMENT_WEIGHT) * score_1x2[key]
+            )
+            for key in ("home", "draw", "away")
+        })
+        scoreline_matrix = _score_matrix_aligned_to_1x2(matrix, score_1x2, scoreline_target_1x2)
 
     if draw_incentive > 0.0:
         unified_1x2 = _boost_draw(unified_1x2, draw_incentive)

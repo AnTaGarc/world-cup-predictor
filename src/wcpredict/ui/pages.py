@@ -1699,14 +1699,15 @@ def _match_analysis_bundle_cached(
             except Exception:
                 deep_ml_probabilities = None
 
-    # Phase 1 (ghwc): tournament-form adjustment on top of the base models.
-    # Alpha comes from the persisted calibration; alpha=0 keeps the layer inert.
+    # Phase 1 (ghwc): tournament-form adjustment, applied inside the final
+    # 1X2 ensemble (predict_match_markets) so production matches the
+    # calibration semantics exactly. Here we only compute the logit shift.
     form_adjustment_note = None
+    form_shift = 0.0
     try:
         import json as _json
         from wcpredict.tournament_form_adjustment import (
             alpha_for_match,
-            apply_form_adjustment,
             build_match_adjustment,
         )
         _calibration = repo.latest_form_calibration()
@@ -1716,27 +1717,19 @@ def _match_analysis_bundle_cached(
                 _alphas = _json.loads(str(_calibration["alphas_json"]))
             else:
                 _alphas = {"3plus": float(_calibration["alpha"] or 0.0)}
-        if any(float(v) > 0.0 for v in _alphas.values()) and (
-            ml_probabilities or deep_ml_probabilities
-        ):
+        if any(float(v) > 0.0 for v in _alphas.values()):
             _adj = build_match_adjustment(repo, team_a, team_b, str(match.kickoff_utc))
             _alpha = alpha_for_match(_alphas, _adj.matches_min)
             if _alpha > 0.0 and _adj.weight > 0.0 and _adj.score != 0.0:
-                if ml_probabilities:
-                    ml_probabilities = apply_form_adjustment(
-                        ml_probabilities, _alpha, _adj.score, _adj.weight
-                    )
-                if deep_ml_probabilities:
-                    deep_ml_probabilities = apply_form_adjustment(
-                        deep_ml_probabilities, _alpha, _adj.score, _adj.weight
-                    )
+                form_shift = _alpha * _adj.weight * _adj.score
                 form_adjustment_note = (
                     f"Ajuste por forma del torneo: score {_adj.score:+.2f}, "
                     f"peso {_adj.weight:.2f} ({_adj.matches_min} partidos), "
-                    f"α {_alpha:.2f}"
+                    f"α {_alpha:.2f} → {form_shift:+.2f} logit"
                 )
     except Exception:
         form_adjustment_note = None
+        form_shift = 0.0
 
     corrections = None
     if apply_corrections:
@@ -1771,6 +1764,8 @@ def _match_analysis_bundle_cached(
         draw_incentive=draw_context.logit_boost,
         draw_incentive_note=draw_context.explanation,
         team_corrections=team_shifts_cache,
+        form_shift=form_shift,
+        form_note=form_adjustment_note or "",
     )
     score_only_predictions = predict_match_markets(
         team_a, team_b, results, match.kickoff_utc.date(), calibration_summary,

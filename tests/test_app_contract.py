@@ -221,9 +221,11 @@ class AppContractTests(unittest.TestCase):
 
     def test_tournament_form_adjustment_is_wired(self):
         source = (Path(__file__).parents[1] / "src" / "wcpredict" / "ui" / "pages.py").read_text(encoding="utf-8")
-        self.assertIn("apply_form_adjustment", source)
         self.assertIn("latest_form_calibration", source)
+        self.assertIn("form_shift=form_shift", source)
         self.assertIn("Ajuste por forma del torneo activo", source)
+        services = (Path(__file__).parents[1] / "src" / "wcpredict" / "services.py").read_text(encoding="utf-8")
+        self.assertIn("form_shift", services)
 
     def test_bracket_view_resolves_before_rendering(self):
         source = (Path(__file__).parents[1] / "src" / "wcpredict" / "ui" / "pages.py").read_text(encoding="utf-8")

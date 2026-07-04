@@ -195,3 +195,24 @@ class GlobalAlphaSelectionTests(unittest.TestCase):
         self.assertEqual(1.5, alpha_for_match(alphas, 2))
         self.assertEqual(1.5, alpha_for_match(alphas, 4))
         self.assertEqual(1.5, alpha_for_match(alphas, 7))
+
+
+class EnsembleIntegrationTests(unittest.TestCase):
+    def test_form_shift_moves_final_1x2(self):
+        from datetime import date
+        from wcpredict.ratings import MatchResult
+        from wcpredict.services import predict_match_markets
+
+        results = []
+        for day in range(1, 9):
+            results.append(MatchResult(date(2026, 6, day), "Alpha", "Beta", 1, 1, "world_cup"))
+        base = predict_match_markets("Alpha", "Beta", results, date(2026, 7, 1))
+        shifted = predict_match_markets(
+            "Alpha", "Beta", results, date(2026, 7, 1), form_shift=0.4
+        )
+
+        def p(rows, name):
+            return next(r.probability for r in rows if r.market_name == "1X2" and r.selection_name == name)
+
+        self.assertGreater(p(shifted, "Alpha"), p(base, "Alpha"))
+        self.assertLess(p(shifted, "Beta"), p(base, "Beta"))
