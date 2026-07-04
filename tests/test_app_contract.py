@@ -215,6 +215,11 @@ class AppContractTests(unittest.TestCase):
         self.assertIn("referee_card_multiplier_for_match", source)
         self.assertIn("card_multiplier=card_multiplier", source)
 
+    def test_knockout_audit_uses_current_model_with_cutoffs(self):
+        source = (Path(__file__).parents[1] / "src" / "wcpredict" / "ui" / "pages.py").read_text(encoding="utf-8")
+        self.assertIn("def _current_model_knockout_payload", source)
+        self.assertIn("list_extra_time_training_rows_before(match.kickoff_utc)", source)
+
     def test_daily_refresh_syncs_external_observations(self):
         source = (Path(__file__).parents[1] / "src" / "wcpredict" / "ui" / "pages.py").read_text(encoding="utf-8")
         self.assertIn("sync_gh_team_stats_to_observations", source)

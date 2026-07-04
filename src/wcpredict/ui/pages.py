@@ -2237,17 +2237,64 @@ def _render_per_team_audit_table(rows: list[dict], team_a: str, team_b: str) -> 
     st.markdown("".join(html_parts), unsafe_allow_html=True)
 
 
-def _render_knockout_phase_audit(repo: Repository, match) -> None:
-    snapshots = repo.list_prediction_snapshots(match.id)
+def _current_model_knockout_payload(repo: Repository, match, bundle) -> dict | None:
+    """Retro-prediction with the CURRENT model under strict pre-kickoff
+    cutoffs (user policy 2026-07-04: audits always use the most refined
+    model available, never the historical snapshot, but never post-match
+    data either — every input below is *_before(kickoff))."""
+    knockout_prediction = _knockout_prediction_for_match(match, bundle, repo)
+    if knockout_prediction is None or not bundle.expected_xg:
+        return None
+    payload = _bundle_snapshot_payload(
+        match.team_a.name,
+        match.team_b.name,
+        bundle.predictions,
+        bundle.primary,
+        bundle.expected_xg,
+        bundle.deep_count,
+        bundle.prior_deep_samples,
+    )
+    xa, xb = float(bundle.expected_xg[0]), float(bundle.expected_xg[1])
+    adjustment = adjust_extra_time_xg(
+        match.team_a.name,
+        match.team_b.name,
+        xa,
+        xb,
+        repo.list_extra_time_training_rows_before(match.kickoff_utc),
+        match.kickoff_utc,
+    )
+    payload["knockout"] = build_knockout_snapshot_section(
+        knockout_prediction,
+        adjustment.adjusted_xg,
+        _penalty_match_context(match),
+    )
+    return payload
+
+
+def _render_knockout_phase_audit(repo: Repository, match, bundle=None) -> None:
     phase_result = repo.get_active_match_phase_result(match.id)
-    if not snapshots or phase_result is None:
+    if phase_result is None:
         st.caption(
-            "Auditoría por fases no disponible: este cierre no tiene snapshot "
-            "prepartido o desglose de eliminatoria."
+            "Auditoría por fases no disponible: este cierre no tiene "
+            "desglose de eliminatoria."
         )
         return
-    try:
+    snapshot = None
+    if bundle is not None:
+        try:
+            snapshot = _current_model_knockout_payload(repo, match, bundle)
+        except Exception:
+            snapshot = None
+    if snapshot is None:
+        snapshots = repo.list_prediction_snapshots(match.id)
+        if not snapshots:
+            st.caption(
+                "Auditoría por fases no disponible: este cierre no tiene snapshot "
+                "prepartido o desglose de eliminatoria."
+            )
+            return
         snapshot = json.loads(snapshots[0]["payload_json"])
+    try:
         audit = evaluate_knockout_snapshot(
             snapshot,
             phase_result,
@@ -2431,7 +2478,7 @@ def _render_post_match_audit(
         "para los próximos partidos de ambas selecciones (auditoría usada, no solo registrada)."
     )
     if is_knockout and repo is not None and match is not None:
-        _render_knockout_phase_audit(repo, match)
+        _render_knockout_phase_audit(repo, match, bundle)
 
 
 def _match_analysis_bundle(match) -> MatchAnalysisBundle:
