@@ -235,13 +235,17 @@ def validate_period_totals(rows: list[dict]) -> list[PhaseValidationIssue]:
                 calculated = sum(float(value) for value in values)
                 tolerance = 0.02 if metric == "xg" else 0.0
                 if abs(calculated - float(imported)) > tolerance:
+                    # The optional 120' cumulative is the trusted figure when
+                    # it disagrees with the period sum (user decision
+                    # 2026-07-04): surface the discrepancy, keep the total.
                     issues.append(PhaseValidationIssue(
-                        "blocking",
+                        "warning",
                         team_name,
                         metric,
                         calculated,
                         float(imported),
-                        f"{team_name}: {metric} suma {calculated:g}, pero el acumulado indica {float(imported):g}.",
+                        f"{team_name}: {metric} suma {calculated:g}, pero el acumulado indica "
+                        f"{float(imported):g}; se usa el acumulado ({float(imported):g}).",
                     ))
     return issues
 

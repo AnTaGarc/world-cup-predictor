@@ -63,7 +63,7 @@ def period_statuses(
     issues: list[PhaseValidationIssue],
 ) -> dict[str, str]:
     visible = set(build_settlement_sections(decided_in).visible_periods)
-    has_mismatch = any(issue.severity == "blocking" for issue in issues)
+    has_mismatch = any(issue.severity in ("blocking", "warning") for issue in issues)
     output = {}
     for period in PERIOD_LABELS:
         if period not in visible:
@@ -307,6 +307,12 @@ def render_knockout_settlement(
     errors.extend(issue.message for issue in issues if issue.severity == "blocking")
     if st.button("Guardar borrador", key=f"ko_save_draft_{match.id}"):
         st.info("Borrador conservado en esta sesión. Los periodos importados ya están guardados.")
+    notices = [issue.message for issue in issues if issue.severity == "warning"]
+    if notices:
+        st.info(
+            "Discrepancias con el acumulado de 120' (prevalece el acumulado): "
+            + " ".join(dict.fromkeys(notices))
+        )
     if errors:
         st.warning("No se puede cerrar todavía: " + " ".join(dict.fromkeys(errors)))
     if st.button(

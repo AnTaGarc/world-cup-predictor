@@ -55,3 +55,24 @@ class MatchPhaseTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class CumulativePrevailsTests(unittest.TestCase):
+    """User decision 2026-07-04: a 120' cumulative that disagrees with the
+    period sum is a non-blocking warning and the cumulative prevails."""
+
+    def test_total_mismatch_is_warning_not_blocking(self):
+        from wcpredict.match_phases import validate_period_totals
+        rows = []
+        for period, sot in (
+            ("first_half", 1), ("second_half", 1),
+            ("extra_time_first", 1), ("extra_time_second", 1),
+        ):
+            rows.append({"team_id": 1, "team_name": "Egypt", "period": period,
+                         "shots_on_target": sot})
+        rows.append({"team_id": 1, "team_name": "Egypt", "period": "full_match_total",
+                     "shots_on_target": 3})
+        issues = validate_period_totals(rows)
+        self.assertEqual(1, len(issues))
+        self.assertEqual("warning", issues[0].severity)
+        self.assertIn("se usa el acumulado", issues[0].message)
