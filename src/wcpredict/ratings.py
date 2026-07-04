@@ -37,21 +37,35 @@ class FormContribution:
 
 
 def deduplicate_results(results: list[MatchResult]) -> list[MatchResult]:
-    """Collapse provider duplicates and aliases into one chronological result."""
-    unique: dict[tuple, MatchResult] = {}
+    """Collapse provider duplicates and aliases into one chronological result.
+
+    Providers disagree by up to one day on the same fixture (local vs UTC
+    kickoff dates), so the identity key ignores the exact date: two rows
+    with the same teams and score within a 1-day window collapse into one.
+    Rematches with identical scores within 24 hours do not exist in
+    international football.
+    """
+    by_fixture: dict[tuple, list[MatchResult]] = {}
     for result in results:
         team_a = canonical_team_name(result.team_a)
         team_b = canonical_team_name(result.team_b)
         if team_a <= team_b:
-            key = (result.played_on, team_a, team_b, result.goals_a, result.goals_b)
-            normalized = MatchResult(result.played_on, team_a, team_b, result.goals_a, result.goals_b, result.match_type)
+            key = (team_a, team_b, result.goals_a, result.goals_b)
         else:
-            key = (result.played_on, team_b, team_a, result.goals_b, result.goals_a)
-            normalized = MatchResult(result.played_on, team_a, team_b, result.goals_a, result.goals_b, result.match_type)
-        previous = unique.get(key)
-        if previous is None or _type_weight(normalized.match_type) > _type_weight(previous.match_type):
-            unique[key] = normalized
-    return sorted(unique.values(), key=lambda row: (row.played_on, row.team_a, row.team_b))
+            key = (team_b, team_a, result.goals_b, result.goals_a)
+        normalized = MatchResult(
+            result.played_on, team_a, team_b, result.goals_a, result.goals_b, result.match_type
+        )
+        kept = by_fixture.setdefault(key, [])
+        for index, existing in enumerate(kept):
+            if abs((existing.played_on - normalized.played_on).days) <= 1:
+                if _type_weight(normalized.match_type) > _type_weight(existing.match_type):
+                    kept[index] = normalized
+                break
+        else:
+            kept.append(normalized)
+    merged = [row for rows in by_fixture.values() for row in rows]
+    return sorted(merged, key=lambda row: (row.played_on, row.team_a, row.team_b))
 
 
 def _recency_weight(played_on: date, as_of: date, half_life_days: float = 450.0) -> float:

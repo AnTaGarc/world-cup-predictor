@@ -85,3 +85,32 @@ class OpponentAdjustedRatingTests(unittest.TestCase):
         again = build_team_ratings(rows, AS_OF, iterations=3)
         for team in three:
             self.assertEqual(three[team], again[team])
+
+
+class AdjacentDateDeduplicationTests(unittest.TestCase):
+    """Sources disagree by one day (local vs UTC kickoff dates); the same
+    fixture with identical goals within a 1-day window must count once."""
+
+    def test_same_match_one_day_apart_counts_once(self):
+        from wcpredict.ratings import deduplicate_results
+        rows = [
+            _mr(11, "Uruguay", "Spain", 0, 1),
+            _mr(12, "Uruguay", "Spain", 0, 1),
+        ]
+        self.assertEqual(1, len(deduplicate_results(rows)))
+
+    def test_reversed_orientation_one_day_apart_counts_once(self):
+        from wcpredict.ratings import deduplicate_results
+        rows = [
+            _mr(11, "Spain", "Uruguay", 1, 0),
+            _mr(12, "Uruguay", "Spain", 0, 1),
+        ]
+        self.assertEqual(1, len(deduplicate_results(rows)))
+
+    def test_distinct_matches_far_apart_are_kept(self):
+        from wcpredict.ratings import deduplicate_results
+        rows = [
+            _mr(1, "Spain", "Uruguay", 1, 0),
+            _mr(20, "Spain", "Uruguay", 1, 0),
+        ]
+        self.assertEqual(2, len(deduplicate_results(rows)))
