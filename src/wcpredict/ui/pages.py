@@ -965,13 +965,6 @@ def _penalty_match_context(match):
 def _knockout_prediction_for_match(match, bundle, repo: Repository | None = None):
     if not _is_knockout_stage(getattr(match, "stage", None)):
         return None
-    # For finished matches, rebuild the prediction from the frozen pre-match
-    # snapshot inputs instead of recomputing with today's model: the panel
-    # must show what was actually predicted, matching the phase audit.
-    if getattr(match, "status", "") == "finished" and repo is not None:
-        frozen = _frozen_knockout_prediction(match, repo)
-        if frozen is not None:
-            return frozen
     expected_xg = bundle.expected_xg
     if not expected_xg or len(expected_xg) != 2:
         return None
@@ -1000,39 +993,6 @@ def _knockout_prediction_for_match(match, bundle, repo: Repository | None = None
         ),
         extra_time_xg=extra_time_xg,
     )
-
-
-def _frozen_knockout_prediction(match, repo: Repository):
-    try:
-        snapshots = repo.list_prediction_snapshots(match.id)
-        if not snapshots:
-            return None
-        payload = json.loads(snapshots[0]["payload_json"])
-        expected_xg = payload.get("expected_xg") or ()
-        knockout = payload.get("knockout") or {}
-        if len(expected_xg) != 2 or not knockout:
-            return None
-        xa, xb = float(expected_xg[0]), float(expected_xg[1])
-        if xa <= 0 or xb <= 0:
-            return None
-        extra = knockout.get("extra_time") or {}
-        et_xg = extra.get("expected_xg") or None
-        if et_xg is not None and len(et_xg) == 2:
-            et_xg = (float(et_xg[0]), float(et_xg[1]))
-        else:
-            et_xg = None
-        shootout_home = (knockout.get("shootout") or {}).get("conditional", {}).get("home")
-        return predict_knockout_match(
-            xa, xb,
-            dispersion=0.08,
-            rho=-0.16,
-            home_penalty_win_probability=(
-                float(shootout_home) if shootout_home is not None else None
-            ),
-            extra_time_xg=et_xg,
-        )
-    except (KeyError, TypeError, ValueError, json.JSONDecodeError):
-        return None
 
 
 def _find_next_knockout_fixture(repo: Repository, match_id: int) -> str | None:
