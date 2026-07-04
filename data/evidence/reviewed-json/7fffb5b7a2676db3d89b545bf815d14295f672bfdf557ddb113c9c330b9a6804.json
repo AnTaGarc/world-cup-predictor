@@ -1,0 +1,250 @@
+{
+  "descripcion": "Estadísticas profundas revisadas manualmente a partir de capturas de SofaScore.",
+  "numero_de_partidos": 1,
+  "partidos": [
+    {
+      "id": "argentina_cabo_verde_primera_parte",
+      "nombre": "Argentina vs Cabo Verde — primera parte",
+      "periodo": {
+        "tipo": "primer_tiempo",
+        "descripcion": "Primera parte de los primeros 90 minutos"
+      },
+      "equipos": {
+        "izquierda_verde": "Argentina",
+        "derecha_azul": "Cabo Verde"
+      },
+      "estadisticas": {
+        "resumen_del_partido": {
+          "posesion_de_balon_pct": {
+            "Argentina": 66,
+            "Cabo Verde": 34
+          },
+          "goles_esperados_xg": {
+            "Argentina": 0.44,
+            "Cabo Verde": 0.05
+          },
+          "ocasiones_claras": {
+            "Argentina": 1,
+            "Cabo Verde": 0
+          },
+          "tiros_totales": {
+            "Argentina": 4,
+            "Cabo Verde": 1
+          },
+          "paradas": {
+            "Argentina": 0,
+            "Cabo Verde": 2
+          },
+          "saques_de_esquina": {
+            "Argentina": 0,
+            "Cabo Verde": 0
+          },
+          "faltas": {
+            "Argentina": 5,
+            "Cabo Verde": 4
+          },
+          "pases": {
+            "Argentina": 386,
+            "Cabo Verde": 200
+          },
+          "entradas": {
+            "Argentina": 10,
+            "Cabo Verde": 9
+          },
+          "tiros_libres": {
+            "Argentina": 4,
+            "Cabo Verde": 5
+          },
+          "tarjetas_amarillas": {
+            "Argentina": 0,
+            "Cabo Verde": 0
+          }
+        },
+        "tiros": {
+          "tiros_totales": {
+            "Argentina": 4,
+            "Cabo Verde": 1
+          },
+          "tiros_a_puerta": {
+            "Argentina": 3,
+            "Cabo Verde": 0
+          },
+          "tiros_al_palo": {
+            "Argentina": 0,
+            "Cabo Verde": 0
+          },
+          "tiros_fuera": {
+            "Argentina": 1,
+            "Cabo Verde": 1
+          },
+          "tiros_bloqueados": {
+            "Argentina": 0,
+            "Cabo Verde": 1
+          },
+          "tiros_dentro_del_area_penal": {
+            "Argentina": 2,
+            "Cabo Verde": 1
+          },
+          "tiros_fuera_del_area": {
+            "Argentina": 2,
+            "Cabo Verde": 1
+          }
+        },
+        "ataque": {
+          "ocasiones_claras_realizadas": {
+            "Argentina": 1,
+            "Cabo Verde": 0
+          },
+          "ocasiones_claras_falladas": {
+            "Argentina": 0,
+            "Cabo Verde": 0
+          },
+          "pases_en_profundidad": {
+            "Argentina": 3,
+            "Cabo Verde": 0
+          },
+          "faltas_recibidas_en_el_tercio_final": {
+            "Argentina": 1,
+            "Cabo Verde": 0
+          },
+          "fueras_de_juego": {
+            "Argentina": 2,
+            "Cabo Verde": 0
+          }
+        },
+        "duelos": {
+          "duelos_pct": {
+            "Argentina": 45,
+            "Cabo Verde": 55
+          },
+          "perdidas": {
+            "Argentina": 6,
+            "Cabo Verde": 5
+          },
+          "duelos_en_el_suelo": {
+            "Argentina": {
+              "ganados": 18,
+              "totales": 40,
+              "porcentaje": 45
+            },
+            "Cabo Verde": {
+              "ganados": 22,
+              "totales": 40,
+              "porcentaje": 55
+            }
+          },
+          "duelos_aereos": {
+            "Argentina": {
+              "ganados": 2,
+              "totales": 4,
+              "porcentaje": 50
+            },
+            "Cabo Verde": {
+              "ganados": 2,
+              "totales": 4,
+              "porcentaje": 50
+            }
+          },
+          "regates": {
+            "Argentina": {
+              "completados": 4,
+              "intentados": 7,
+              "porcentaje": 57
+            },
+            "Cabo Verde": {
+              "completados": 8,
+              "intentados": 13,
+              "porcentaje": 62
+            }
+          }
+        },
+        "pases": {
+          "pases_precisos": {
+            "Argentina": 361,
+            "Cabo Verde": 171
+          },
+          "saques_de_banda": {
+            "Argentina": 5,
+            "Cabo Verde": 8
+          },
+          "pases_al_ultimo_tercio": {
+            "Argentina": 31,
+            "Cabo Verde": 20
+          },
+          "pases_largos": {
+            "Argentina": {
+              "completados": 8,
+              "intentados": 13,
+              "porcentaje": 62
+            },
+            "Cabo Verde": {
+              "completados": 12,
+              "intentados": 26,
+              "porcentaje": 46
+            }
+          },
+          "centros": {
+            "Argentina": {
+              "completados": 0,
+              "intentados": 2,
+              "porcentaje": 0
+            },
+            "Cabo Verde": {
+              "completados": 1,
+              "intentados": 4,
+              "porcentaje": 25
+            }
+          }
+        },
+        "defensa": {
+          "entradas_ganadas_pct": {
+            "Argentina": 60,
+            "Cabo Verde": 44
+          },
+          "tackles_totales": {
+            "Argentina": 10,
+            "Cabo Verde": 9
+          },
+          "intercepciones": {
+            "Argentina": 3,
+            "Cabo Verde": 3
+          },
+          "recuperaciones": {
+            "Argentina": 24,
+            "Cabo Verde": 19
+          },
+          "despejes": {
+            "Argentina": 5,
+            "Cabo Verde": 2
+          }
+        },
+        "porteria": {
+          "paradas": {
+            "Argentina": 0,
+            "Cabo Verde": 2
+          },
+          "saques_de_puerta": {
+            "Argentina": 2,
+            "Cabo Verde": 4
+          }
+        },
+        "mapa_de_ataques": {
+          "equipo_mostrado": "Argentina",
+          "direccion_de_ataque": "hacia_la_derecha",
+          "descripcion": "Mapa de ataques mostrado para Argentina durante la primera parte."
+        },
+        "mapa_de_pases": {
+          "tipo_de_dato": "distribucion_global_no_atribuible_por_equipo",
+          "tercio_defensivo_pct": 20,
+          "tercio_central_pct": 45,
+          "tercio_ofensivo_pct": 35
+        }
+      },
+      "fuentes": [
+        "Captura de pantalla 2026-07-04 104502.png",
+        "Captura de pantalla 2026-07-04 104511.png",
+        "Captura de pantalla 2026-07-04 104522.png"
+      ]
+    }
+  ]
+}

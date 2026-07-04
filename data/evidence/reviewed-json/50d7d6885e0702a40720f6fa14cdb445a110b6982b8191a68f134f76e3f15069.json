@@ -1,0 +1,274 @@
+{
+  "descripcion": "Estadísticas profundas revisadas manualmente a partir de capturas de SofaScore.",
+  "numero_de_partidos": 1,
+  "partidos": [
+    {
+      "id": "colombia_ghana",
+      "nombre": "Colombia vs Ghana",
+      "equipos": {
+        "izquierda_verde": "Colombia",
+        "derecha_azul": "Ghana"
+      },
+      "estadisticas": {
+        "resumen_del_partido": {
+          "posesion_de_balon_pct": {
+            "Colombia": 61,
+            "Ghana": 39
+          },
+          "goles_esperados_xg": {
+            "Colombia": 2.04,
+            "Ghana": 0.27
+          },
+          "ocasiones_claras": {
+            "Colombia": 5,
+            "Ghana": 0
+          },
+          "tiros_totales": {
+            "Colombia": 20,
+            "Ghana": 8
+          },
+          "paradas": {
+            "Colombia": 0,
+            "Ghana": 7
+          },
+          "saques_de_esquina": {
+            "Colombia": 3,
+            "Ghana": 2
+          },
+          "faltas": {
+            "Colombia": 14,
+            "Ghana": 10
+          },
+          "pases": {
+            "Colombia": 586,
+            "Ghana": 376
+          },
+          "entradas": {
+            "Colombia": 12,
+            "Ghana": 13
+          },
+          "tiros_libres": {
+            "Colombia": 10,
+            "Ghana": 14
+          },
+          "tarjetas_amarillas": {
+            "Colombia": 2,
+            "Ghana": 3
+          }
+        },
+        "tiros": {
+          "tiros_totales": {
+            "Colombia": 20,
+            "Ghana": 8
+          },
+          "tiros_a_puerta": {
+            "Colombia": 8,
+            "Ghana": 0
+          },
+          "tiros_al_palo": {
+            "Colombia": 0,
+            "Ghana": 0
+          },
+          "tiros_fuera": {
+            "Colombia": 8,
+            "Ghana": 3
+          },
+          "tiros_bloqueados": {
+            "Colombia": 4,
+            "Ghana": 5
+          },
+          "tiros_dentro_del_area_penal": {
+            "Colombia": 12,
+            "Ghana": 2
+          },
+          "tiros_fuera_del_area": {
+            "Colombia": 8,
+            "Ghana": 6
+          }
+        },
+        "ataque": {
+          "ocasiones_claras_realizadas": {
+            "Colombia": 1,
+            "Ghana": 0
+          },
+          "ocasiones_claras_falladas": {
+            "Colombia": 4,
+            "Ghana": 0
+          },
+          "toques_dentro_del_area": {
+            "Colombia": 19,
+            "Ghana": 8
+          },
+          "faltas_recibidas_en_el_tercio_final": {
+            "Colombia": 1,
+            "Ghana": 0
+          },
+          "fueras_de_juego": {
+            "Colombia": 2,
+            "Ghana": 0
+          }
+        },
+        "duelos": {
+          "duelos_pct": {
+            "Colombia": 49,
+            "Ghana": 51
+          },
+          "perdidas": {
+            "Colombia": 6,
+            "Ghana": 7
+          },
+          "duelos_en_el_suelo": {
+            "Colombia": {
+              "ganados": 27,
+              "totales": 60,
+              "porcentaje": 45
+            },
+            "Ghana": {
+              "ganados": 33,
+              "totales": 60,
+              "porcentaje": 55
+            }
+          },
+          "duelos_aereos": {
+            "Colombia": {
+              "ganados": 8,
+              "totales": 12,
+              "porcentaje": 67
+            },
+            "Ghana": {
+              "ganados": 4,
+              "totales": 12,
+              "porcentaje": 33
+            }
+          },
+          "regates": {
+            "Colombia": {
+              "completados": 5,
+              "intentados": 12,
+              "porcentaje": 42
+            },
+            "Ghana": {
+              "completados": 6,
+              "intentados": 11,
+              "porcentaje": 55
+            }
+          }
+        },
+        "pases": {
+          "pases_precisos": {
+            "Colombia": 532,
+            "Ghana": 312
+          },
+          "saques_de_banda": {
+            "Colombia": 15,
+            "Ghana": 16
+          },
+          "pases_al_ultimo_tercio": {
+            "Colombia": 54,
+            "Ghana": 52
+          },
+          "pases_en_el_ultimo_tercio": {
+            "Colombia": {
+              "completados": 98,
+              "intentados": 120,
+              "porcentaje": 82
+            },
+            "Ghana": {
+              "completados": 47,
+              "intentados": 86,
+              "porcentaje": 55
+            }
+          },
+          "pases_largos": {
+            "Colombia": {
+              "completados": 32,
+              "intentados": 55,
+              "porcentaje": 58
+            },
+            "Ghana": {
+              "completados": 9,
+              "intentados": 46,
+              "porcentaje": 20
+            }
+          },
+          "centros": {
+            "Colombia": {
+              "completados": 5,
+              "intentados": 15,
+              "porcentaje": 33
+            },
+            "Ghana": {
+              "completados": 2,
+              "intentados": 15,
+              "porcentaje": 13
+            }
+          }
+        },
+        "defensa": {
+          "entradas_ganadas_pct": {
+            "Colombia": 67,
+            "Ghana": 54
+          },
+          "tackles_totales": {
+            "Colombia": 12,
+            "Ghana": 13
+          },
+          "intercepciones": {
+            "Colombia": 5,
+            "Ghana": 5
+          },
+          "recuperaciones": {
+            "Colombia": 41,
+            "Ghana": 42
+          },
+          "despejes": {
+            "Colombia": 24,
+            "Ghana": 11
+          },
+          "errores_que_llevan_a_disparo": {
+            "Colombia": 0,
+            "Ghana": 1
+          }
+        },
+        "porteria": {
+          "paradas": {
+            "Colombia": 0,
+            "Ghana": 7
+          },
+          "goles_evitados": {
+            "Colombia": 0.0,
+            "Ghana": 1.69
+          },
+          "grandes_paradas": {
+            "Colombia": 0,
+            "Ghana": 4
+          },
+          "con_los_punos": {
+            "Colombia": 0,
+            "Ghana": 1
+          },
+          "saques_de_puerta": {
+            "Colombia": 9,
+            "Ghana": 12
+          }
+        },
+        "mapa_de_ataques": {
+          "equipo_mostrado": "Colombia",
+          "direccion_de_ataque": "hacia_la_derecha",
+          "descripcion": "Mapa de ataques mostrado para Colombia."
+        },
+        "mapa_de_pases": {
+          "tipo_de_dato": "distribucion_global_no_atribuible_por_equipo",
+          "tercio_defensivo_pct": 25,
+          "tercio_central_pct": 47,
+          "tercio_ofensivo_pct": 28
+        }
+      },
+      "fuentes": [
+        "Captura de pantalla 2026-07-04 105039.png",
+        "Captura de pantalla 2026-07-04 105048.png",
+        "Captura de pantalla 2026-07-04 105058.png"
+      ]
+    }
+  ]
+}

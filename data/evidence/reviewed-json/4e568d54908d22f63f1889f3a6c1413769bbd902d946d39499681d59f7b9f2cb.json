@@ -1,0 +1,246 @@
+{
+  "descripcion": "Estadísticas profundas revisadas manualmente a partir de capturas de SofaScore.",
+  "numero_de_partidos": 1,
+  "partidos": [
+    {
+      "id": "australia_egipto_segunda_parte_prorroga",
+      "nombre": "Australia vs Egipto — segunda parte de la prórroga",
+      "periodo": {
+        "tipo": "segunda_parte_prorroga",
+        "descripcion": "Segunda parte de la prórroga"
+      },
+      "equipos": {
+        "izquierda_verde": "Australia",
+        "derecha_azul": "Egipto"
+      },
+      "estadisticas": {
+        "resumen_del_partido": {
+          "posesion_de_balon_pct": {
+            "Australia": 34,
+            "Egipto": 66
+          },
+          "goles_esperados_xg": {
+            "Australia": 0.33,
+            "Egipto": 0.07
+          },
+          "ocasiones_claras": {
+            "Australia": 0,
+            "Egipto": 0
+          },
+          "tiros_totales": {
+            "Australia": 4,
+            "Egipto": 2
+          },
+          "paradas": {
+            "Australia": 1,
+            "Egipto": 0
+          },
+          "saques_de_esquina": {
+            "Australia": 0,
+            "Egipto": 4
+          },
+          "faltas": {
+            "Australia": 3,
+            "Egipto": 3
+          },
+          "pases": {
+            "Australia": 41,
+            "Egipto": 79
+          },
+          "entradas": {
+            "Australia": 1,
+            "Egipto": 3
+          },
+          "tiros_libres": {
+            "Australia": 3,
+            "Egipto": 3
+          },
+          "tarjetas_amarillas": {
+            "Australia": 0,
+            "Egipto": 1
+          }
+        },
+        "tiros": {
+          "tiros_totales": {
+            "Australia": 4,
+            "Egipto": 2
+          },
+          "tiros_a_puerta": {
+            "Australia": 0,
+            "Egipto": 1
+          },
+          "tiros_al_palo": {
+            "Australia": 0,
+            "Egipto": 0
+          },
+          "tiros_fuera": {
+            "Australia": 2,
+            "Egipto": 1
+          },
+          "tiros_bloqueados": {
+            "Australia": 2,
+            "Egipto": 1
+          },
+          "tiros_dentro_del_area_penal": {
+            "Australia": 3,
+            "Egipto": 0
+          },
+          "tiros_fuera_del_area": {
+            "Australia": 1,
+            "Egipto": 2
+          }
+        },
+        "ataque": {
+          "ocasiones_claras_realizadas": {
+            "Australia": 0,
+            "Egipto": 0
+          },
+          "ocasiones_claras_falladas": {
+            "Australia": 0,
+            "Egipto": 0
+          },
+          "faltas_recibidas_en_el_tercio_final": {
+            "Australia": 2,
+            "Egipto": 0
+          },
+          "fueras_de_juego": {
+            "Australia": 0,
+            "Egipto": 0
+          }
+        },
+        "duelos": {
+          "duelos_pct": {
+            "Australia": 39,
+            "Egipto": 61
+          },
+          "perdidas": {
+            "Australia": 2,
+            "Egipto": 1
+          },
+          "duelos_en_el_suelo": {
+            "Australia": {
+              "ganados": 4,
+              "totales": 15,
+              "porcentaje": 27
+            },
+            "Egipto": {
+              "ganados": 11,
+              "totales": 15,
+              "porcentaje": 73
+            }
+          },
+          "duelos_aereos": {
+            "Australia": {
+              "ganados": 5,
+              "totales": 8,
+              "porcentaje": 63
+            },
+            "Egipto": {
+              "ganados": 3,
+              "totales": 8,
+              "porcentaje": 38
+            }
+          },
+          "regates": {
+            "Australia": {
+              "completados": 0,
+              "intentados": 1,
+              "porcentaje": 0
+            },
+            "Egipto": {
+              "completados": 5,
+              "intentados": 5,
+              "porcentaje": 100
+            }
+          }
+        },
+        "pases": {
+          "pases_precisos": {
+            "Australia": 35,
+            "Egipto": 61
+          },
+          "saques_de_banda": {
+            "Australia": 3,
+            "Egipto": 2
+          },
+          "pases_al_ultimo_tercio": {
+            "Australia": 9,
+            "Egipto": 7
+          },
+          "pases_largos": {
+            "Australia": {
+              "completados": 4,
+              "intentados": 4,
+              "porcentaje": 100
+            },
+            "Egipto": {
+              "completados": 2,
+              "intentados": 8,
+              "porcentaje": 25
+            }
+          },
+          "centros": {
+            "Australia": {
+              "completados": 1,
+              "intentados": 3,
+              "porcentaje": 33
+            },
+            "Egipto": {
+              "completados": 1,
+              "intentados": 8,
+              "porcentaje": 13
+            }
+          }
+        },
+        "defensa": {
+          "entradas_ganadas_pct": {
+            "Australia": 100,
+            "Egipto": 33
+          },
+          "tackles_totales": {
+            "Australia": 1,
+            "Egipto": 3
+          },
+          "intercepciones": {
+            "Australia": 2,
+            "Egipto": 1
+          },
+          "recuperaciones": {
+            "Australia": 6,
+            "Egipto": 6
+          },
+          "despejes": {
+            "Australia": 8,
+            "Egipto": 0
+          }
+        },
+        "porteria": {
+          "paradas": {
+            "Australia": 1,
+            "Egipto": 0
+          },
+          "saques_de_puerta": {
+            "Australia": 1,
+            "Egipto": 2
+          }
+        },
+        "mapa_de_ataques": {
+          "equipo_mostrado": "Australia",
+          "direccion_de_ataque": "hacia_la_derecha",
+          "descripcion": "Mapa de ataques mostrado para Australia durante la segunda parte de la prórroga."
+        },
+        "mapa_de_pases": {
+          "tipo_de_dato": "distribucion_global_no_atribuible_por_equipo",
+          "tercio_defensivo_pct": 25,
+          "tercio_central_pct": 46,
+          "tercio_ofensivo_pct": 29
+        }
+      },
+      "fuentes": [
+        "Captura de pantalla 2026-07-04 104212.png",
+        "Captura de pantalla 2026-07-04 104222.png",
+        "Captura de pantalla 2026-07-04 104233.png"
+      ]
+    }
+  ]
+}
