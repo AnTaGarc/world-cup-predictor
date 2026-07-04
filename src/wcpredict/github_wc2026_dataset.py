@@ -256,7 +256,8 @@ def derive_period(minute: int) -> str:
         return "second_half"
     if 91 <= minute <= 105:
         return "et_first"
-    if 106 <= minute <= 120:
+    if minute >= 106:
+        # Extra-time stoppage is stored as flat minutes (120+1 -> 121).
         return "et_second"
     raise ValueError(f"minute out of expected range: {minute}")
 

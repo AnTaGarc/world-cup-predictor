@@ -14,13 +14,15 @@ class PeriodDerivationTests(unittest.TestCase):
             (105, "et_first"),
             (106, "et_second"),
             (120, "et_second"),
+            (121, "et_second"),
+            (135, "et_second"),
         ]
         for minute, expected in cases:
             with self.subTest(minute=minute):
                 self.assertEqual(expected, derive_period(minute))
 
     def test_out_of_range_raises(self):
-        for bad in (0, -1, 121, 200):
+        for bad in (0, -1):
             with self.subTest(bad=bad):
                 with self.assertRaises(ValueError):
                     derive_period(bad)

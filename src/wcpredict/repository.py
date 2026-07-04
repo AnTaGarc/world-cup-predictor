@@ -3700,7 +3700,10 @@ class Repository:
             for row in rows:
                 data = dict(row)
                 if add_period and "minute" in data:
-                    data["period"] = derive_period(int(data["minute"]))
+                    if "penalty shootout" in str(data.get("event_type") or "").casefold():
+                        data["period"] = "shootout"
+                    else:
+                        data["period"] = derive_period(int(data["minute"]))
                 if include_provider_version_column:
                     data["provider_version"] = provider_version
                 data["provider_id"] = provider_id
