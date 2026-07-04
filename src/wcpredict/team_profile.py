@@ -223,6 +223,7 @@ class _TeamProfileBuildContext:
     by_match_metric: dict[tuple[str, str], list[tuple[str, float]]]
     teams_by_match: dict[str, tuple[str, ...]]
     rows_by_team: dict[str, tuple[dict, ...]]
+    conceded_rates: dict[tuple[str, str], float] = field(default_factory=dict)
 
 
 def _build_profile_context(deep_rows: list[dict]) -> _TeamProfileBuildContext:
@@ -251,11 +252,13 @@ def _build_profile_context(deep_rows: list[dict]) -> _TeamProfileBuildContext:
         metric: (sum(values) / len(values)) if values else 0.0
         for metric, values in metric_totals.items()
     }
+    from wcpredict.opponent_normalization import build_conceded_rates
     return _TeamProfileBuildContext(
         tournament_means=tournament_means,
         by_match_metric=by_match_metric,
         teams_by_match={key: tuple(values) for key, values in teams_by_match.items()},
         rows_by_team={key: tuple(values) for key, values in rows_by_team.items()},
+        conceded_rates=build_conceded_rates(deep_rows),
     )
 
 
@@ -267,6 +270,7 @@ def build_team_profiles(
     half_life_days: float = 540.0,
     shrinkage_prior_matches: float = 2.0,
     opponent_strengths: dict[str, float] | None = None,
+    normalized_metrics: frozenset[str] | None = None,
 ) -> dict[str, TeamProfile]:
     context = _build_profile_context(deep_rows)
     return {
@@ -278,6 +282,7 @@ def build_team_profiles(
             half_life_days=half_life_days,
             shrinkage_prior_matches=shrinkage_prior_matches,
             opponent_strengths=opponent_strengths,
+            normalized_metrics=normalized_metrics,
         )
         for team_name in team_names
     }
@@ -291,6 +296,7 @@ def build_team_profile(
     half_life_days: float = 540.0,
     shrinkage_prior_matches: float = 2.0,
     opponent_strengths: dict[str, float] | None = None,
+    normalized_metrics: frozenset[str] | None = None,
 ) -> TeamProfile:
     """Build a TeamProfile for ``team_name`` using every deep observation
     in ``deep_rows``.
@@ -320,141 +326,16 @@ def build_team_profile(
         strong sides count for more than the same metric against weak ones.
         Default treats every opponent equally.
     """
-    if as_of_utc.tzinfo is None:
-        as_of_utc = as_of_utc.replace(tzinfo=timezone.utc)
-
-    # Compute per-metric tournament means using ALL rows (not just this team).
-    metric_totals: dict[str, list[float]] = {}
-    for row in deep_rows:
-        metric = str(row.get("metric") or "")
-        value = row.get("value_number")
-        if metric not in METRIC_CATALOG or value is None:
-            continue
-        metric_totals.setdefault(metric, []).append(float(value))
-
-    tournament_means = {
-        metric: (sum(values) / len(values)) if values else 0.0
-        for metric, values in metric_totals.items()
-    }
-
-    # Mean opponent strength used to normalize per-match weighting (so a
-    # metric against a strong rival contributes more than the same metric
-    # against a weak one). Normalize the lookup dict to canonical keys so
-    # callers can pass whatever casing they have.
-    normalized_strengths: dict[str, float] = {}
-    if opponent_strengths:
-        for raw_name, value in opponent_strengths.items():
-            normalized_strengths[canonical_team_name(str(raw_name))] = float(value)
-    mean_strength = (
-        sum(normalized_strengths.values()) / len(normalized_strengths)
-        if normalized_strengths else 1.0
-    ) or 1.0
-
-    # Now accumulate this team's weighted observations. We need to know who
-    # the *opponent* was to apply the strength reweighting — that requires
-    # pairing rows from the same match.
-    own_rows = [r for r in deep_rows if _matches_team(r, team_name)]
-    # Build a per-match opponent lookup from the full deep_rows set.
-    match_opponents: dict[str, str] = {}
-    if normalized_strengths:
-        for r in deep_rows:
-            key = str(r.get("kickoff_utc") or "")
-            if not key:
-                continue
-            other_team = str(r.get("team_name") or "")
-            if other_team and not _matches_team(r, team_name):
-                match_opponents.setdefault(key, other_team)
-
-    # Pre-index rows by (kickoff_utc, metric) → list of (team_name, value)
-    # so we can find the "other team's" value for each (match, metric) cheaply.
-    by_match_metric: dict[tuple[str, str], list[tuple[str, float]]] = {}
-    for r in deep_rows:
-        metric = str(r.get("metric") or "")
-        value = r.get("value_number")
-        if metric not in METRIC_CATALOG or value is None:
-            continue
-        key = (str(r.get("kickoff_utc") or ""), metric)
-        if not key[0]:
-            continue
-        by_match_metric.setdefault(key, []).append(
-            (str(r.get("team_name") or ""), float(value))
-        )
-
-    weighted_sums: dict[str, tuple[float, float]] = {}  # created → (sum, weight)
-    conceded_sums: dict[str, tuple[float, float]] = {}  # conceded → (sum, weight)
-    total_weight = 0.0
-    for row in own_rows:
-        metric = str(row.get("metric") or "")
-        value = row.get("value_number")
-        if metric not in METRIC_CATALOG or value is None:
-            continue
-        played = _parse_dt(row.get("kickoff_utc"))
-        if played is None:
-            continue
-        # Composite weight from historical_relevance (family half-life +
-        # expanded competition matrix + opponent strength).
-        opp_strength: float | None = None
-        if normalized_strengths:
-            opp = match_opponents.get(str(row.get("kickoff_utc") or ""))
-            if opp:
-                opp_strength = normalized_strengths.get(
-                    canonical_team_name(opp), mean_strength
-                )
-        w = _composite_weight(
-            metric, played, as_of_utc,
-            competition=str(row.get("competition") or ""),
-            opponent_strength=opp_strength,
-            mean_strength=mean_strength,
-            half_life_override=half_life_days if half_life_days != 540.0 else None,
-            low_intensity=bool(row.get("_low_intensity", False)),
-        )
-        if w <= 0:
-            continue
-        s, ws = weighted_sums.get(metric, (0.0, 0.0))
-        weighted_sums[metric] = (s + float(value) * w, ws + w)
-        total_weight = max(total_weight, ws + w)
-
-        # Conceded: same weight, but the value is from the OTHER team in
-        # this match (what they produced *against us*).
-        pair = by_match_metric.get((str(row.get("kickoff_utc") or ""), metric), [])
-        for other_team, other_value in pair:
-            if _matches_team({"team_name": other_team}, team_name):
-                continue
-            cs, cws = conceded_sums.get(metric, (0.0, 0.0))
-            conceded_sums[metric] = (cs + other_value * w, cws + w)
-            break  # only one opponent per match
-
-    # Apply Bayesian shrinkage toward tournament mean.
-    metrics: dict[str, MetricEstimate] = {}
-    conceded: dict[str, MetricEstimate] = {}
-    for metric, (catalog_dim, _) in METRIC_CATALOG.items():
-        tmean = tournament_means.get(metric, 0.0)
-        s, w = weighted_sums.get(metric, (0.0, 0.0))
-        if w <= 0 and tmean <= 0:
-            continue
-        # Effective mean = (w * observed + prior * tmean) / (w + prior)
-        own_mean = s / w if w > 0 else tmean
-        prior = shrinkage_prior_matches
-        shrunk = (w * own_mean + prior * tmean) / (w + prior)
-        metrics[metric] = MetricEstimate(
-            metric=metric, dimension=catalog_dim, value=shrunk,
-            sample_size=w, tournament_mean=tmean,
-        )
-        # Conceded estimate (asymmetric profile: what rivals produce against us).
-        cs, cw = conceded_sums.get(metric, (0.0, 0.0))
-        if cw > 0 or tmean > 0:
-            conceded_mean = cs / cw if cw > 0 else tmean
-            conceded_shrunk = (cw * conceded_mean + prior * tmean) / (cw + prior)
-            conceded[metric] = MetricEstimate(
-                metric=metric, dimension=catalog_dim, value=conceded_shrunk,
-                sample_size=cw, tournament_mean=tmean,
-            )
-
-    return TeamProfile(
-        team_name=team_name,
-        metrics=metrics,
-        sample_weight=total_weight,
-        conceded_metrics=conceded,
+    context = _build_profile_context(deep_rows)
+    return _build_team_profile_from_context(
+        team_name,
+        deep_rows,
+        as_of_utc,
+        context,
+        half_life_days=half_life_days,
+        shrinkage_prior_matches=shrinkage_prior_matches,
+        opponent_strengths=opponent_strengths,
+        normalized_metrics=normalized_metrics,
     )
 
 
@@ -467,6 +348,7 @@ def _build_team_profile_from_context(
     half_life_days: float,
     shrinkage_prior_matches: float,
     opponent_strengths: dict[str, float] | None,
+    normalized_metrics: frozenset[str] | None = None,
 ) -> TeamProfile:
     if as_of_utc.tzinfo is None:
         as_of_utc = as_of_utc.replace(tzinfo=timezone.utc)
@@ -509,8 +391,17 @@ def _build_team_profile_from_context(
         )
         if w <= 0:
             continue
+        opponent = _opponent_for_match(context, str(row.get("kickoff_utc") or ""), team_name)
+        factor = normalization_factor(
+            context.conceded_rates,
+            context.tournament_means.get(metric, 0.0),
+            opponent,
+            metric,
+            normalized_metrics if normalized_metrics is not None
+            else OPPONENT_NORMALIZED_METRICS,
+        )
         s, ws = weighted_sums.get(metric, (0.0, 0.0))
-        weighted_sums[metric] = (s + float(value) * w, ws + w)
+        weighted_sums[metric] = (s + float(value) * factor * w, ws + w)
         total_weight = max(total_weight, ws + w)
 
         pair = context.by_match_metric.get((str(row.get("kickoff_utc") or ""), metric), [])
@@ -566,6 +457,10 @@ def _matches_team(row: dict, team_name: str) -> bool:
 
 
 from wcpredict.names import canonical_team_name  # re-export for typing  # noqa: E402
+from wcpredict.opponent_normalization import (  # noqa: E402
+    OPPONENT_NORMALIZED_METRICS,
+    normalization_factor,
+)
 
 
 def _parse_dt(value) -> datetime | None:
