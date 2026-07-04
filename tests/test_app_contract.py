@@ -210,6 +210,11 @@ class AppContractTests(unittest.TestCase):
         self.assertIn("verified_external_confirmed", source)
         self.assertIn("descuento largo", source)
 
+    def test_referee_card_multiplier_is_wired(self):
+        source = (Path(__file__).parents[1] / "src" / "wcpredict" / "ui" / "pages.py").read_text(encoding="utf-8")
+        self.assertIn("referee_card_multiplier_for_match", source)
+        self.assertIn("card_multiplier=card_multiplier", source)
+
     def test_daily_refresh_syncs_external_observations(self):
         source = (Path(__file__).parents[1] / "src" / "wcpredict" / "ui" / "pages.py").read_text(encoding="utf-8")
         self.assertIn("sync_gh_team_stats_to_observations", source)

@@ -1931,7 +1931,20 @@ def _team_volume_context_from_profiles_cached(
         match.kickoff_utc,
         opponent_strengths=opponent_strengths,
     )
-    team_lines = predict_team_volume_markets(team_profiles[team_a], team_profiles[team_b])
+    from wcpredict.referee_cards_model import referee_card_multiplier_for_match
+    try:
+        card_multiplier, referee_name = referee_card_multiplier_for_match(repo, match.id)
+    except Exception:
+        card_multiplier, referee_name = 1.0, None
+    team_lines = predict_team_volume_markets(
+        team_profiles[team_a], team_profiles[team_b],
+        card_multiplier=card_multiplier,
+    )
+    if referee_name and abs(card_multiplier - 1.0) >= 0.02:
+        section_note(
+            f"Árbitro asignado: {referee_name} — tendencia de tarjetas x{card_multiplier:.2f} "
+            "aplicada al mercado de amarillas."
+        )
     team_volume_stat_rows: list[dict] = []
     team_volume_predictions: dict[str, dict[str, float]] = {}
     if not team_lines:

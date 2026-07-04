@@ -154,6 +154,7 @@ def predict_team_volume_markets(
     own_weight: float = 0.45,
     opp_weight: float = 0.30,
     tournament_weight: float = 0.25,
+    card_multiplier: float = 1.0,
 ) -> list[TeamMarketLine]:
     """Return predicted volume markets for both teams of a match.
 
@@ -201,6 +202,10 @@ def predict_team_volume_markets(
                 + opp_weight * opp_val
                 + tournament_weight * tmean
             )
+            if market_id == "yellow_cards":
+                # Phase 3 (ghwc): the assigned referee's card tendency scales
+                # the expected count; 1.0 when unknown, clamped upstream.
+                lambd *= card_multiplier
             sample = team_profile.metrics.get(metric).sample_size if team_profile.metrics.get(metric) else 0.0
             conf = _confidence_for(sample)
             for line in lines:
