@@ -143,7 +143,11 @@ PILLS_BODY = """
 HERO_BODY = """
 <div style="padding:28px 30px;border-radius:20px;color:#fff;background:linear-gradient(125deg,#0e2b57 0%,#145ebc 72%,#1674d9 100%);box-shadow:var(--shadow-hero);max-width:680px">
   <div style="font-size:.72rem;letter-spacing:.14em;text-transform:uppercase;opacity:.85;font-weight:700">MUNDIAL 2026 · MESA DE ANÁLISIS</div>
-  <div style="font-size:2.1rem;font-weight:760;line-height:1.08;margin:8px 0 6px;letter-spacing:-.018em">Portugal <span style="opacity:.7;font-weight:600;font-size:.7em;letter-spacing:.05em">VS</span> España</div>
+  <div style="font-size:2.1rem;font-weight:760;line-height:1.08;margin:8px 0 6px;letter-spacing:-.018em;display:flex;align-items:center;gap:14px;flex-wrap:wrap">
+    <span style="display:inline-flex;align-items:center;gap:12px"><img src="../assets/crests/portugal.png" style="width:44px;height:44px;border-radius:6px;background:rgba(255,255,255,.12);padding:4px;object-fit:contain">Portugal</span>
+    <span style="opacity:.7;font-weight:600;font-size:.7em;letter-spacing:.05em">VS</span>
+    <span style="display:inline-flex;align-items:center;gap:12px"><img src="../assets/crests/spain.png" style="width:44px;height:44px;border-radius:6px;background:rgba(255,255,255,.12);padding:4px;object-fit:contain">España</span>
+  </div>
   <div style="opacity:.88;font-size:.96rem">Octavos de final · 5 jul · 19:00 · Dallas Stadium</div>
 </div>
 """
@@ -229,12 +233,12 @@ KO_BODY = """
 <div class="ko-advance">
   <div class="ko-advance-label">Quién avanza al siguiente cruce</div>
   <div class="ko-advance-bar">
-    <div class="ko-advance-team"><span>Paraguay</span></div>
+    <div class="ko-advance-team"><img src="../assets/crests/paraguay.png" style="width:28px;height:28px;border-radius:5px;background:rgba(255,255,255,.15);padding:3px;object-fit:contain"><span>Paraguay</span></div>
     <div class="ko-stacked-bar">
       <div class="ko-stacked-fill-home num" style="width:6.2%"></div>
       <div class="ko-stacked-fill-away num">93.8%</div>
     </div>
-    <div class="ko-advance-team away"><span>France</span></div>
+    <div class="ko-advance-team away"><span>France</span><img src="../assets/crests/france.png" style="width:28px;height:28px;border-radius:5px;background:rgba(255,255,255,.15);padding:3px;object-fit:contain"></div>
   </div>
   <div class="ko-funnel">
     <div><div class="ko-funnel-row-label">EN 90' <span class="hint">marginal · ganar o forzar prórroga</span></div>
@@ -338,12 +342,18 @@ marcador favorito condicional.
 
 
 def main() -> None:
+    import shutil
+    crests_src = ROOT / "data" / "crests"
+    crests_out = OUT / "assets" / "crests"
+    crests_out.mkdir(parents=True, exist_ok=True)
+    for crest in crests_src.glob("*.png"):
+        shutil.copy2(crest, crests_out / crest.name)
     for path, html in CARDS:
         target = OUT / path
         target.parent.mkdir(parents=True, exist_ok=True)
         target.write_text(html, encoding="utf-8")
     (OUT / "readme.md").write_text(README, encoding="utf-8")
-    print(f"{len(CARDS)} cards + readme -> {OUT}")
+    print(f"{len(CARDS)} cards + readme + crests -> {OUT}")
 
 
 if __name__ == "__main__":
