@@ -61,6 +61,8 @@ def card(path: str, group: str, name: str, subtitle: str, body: str, extra_css: 
     html = (
         f'<!-- @dsCard group="{group}" name="{name}" subtitle="{subtitle}" width="{width}" -->\n'
         "<!doctype html><html lang=\"es\"><head><meta charset=\"utf-8\">\n"
+        '<link rel="preconnect" href="https://fonts.googleapis.com">\n'
+        '<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">\n'
         f"<style>{TOKENS}{BASE}{extra_css}</style></head>\n"
         f"<body>{body}</body></html>\n"
     )
