@@ -1,0 +1,286 @@
+{
+  "descripcion": "Estadísticas profundas revisadas manualmente a partir de capturas de SofaScore.",
+  "numero_de_partidos": 1,
+  "partidos": [
+    {
+      "id": "canada_marruecos",
+      "nombre": "Canadá vs Marruecos",
+      "equipos": {
+        "izquierda_verde": "Canadá",
+        "derecha_azul": "Marruecos"
+      },
+      "estadisticas": {
+        "resumen_del_partido": {
+          "posesion_de_balon_pct": {
+            "Canadá": 45,
+            "Marruecos": 55
+          },
+          "distancia_recorrida_km": {
+            "Canadá": 107.4,
+            "Marruecos": 100.5
+          },
+          "goles_esperados_xg": {
+            "Canadá": 0.84,
+            "Marruecos": 0.82
+          },
+          "ocasiones_claras": {
+            "Canadá": 1,
+            "Marruecos": 2
+          },
+          "tiros_totales": {
+            "Canadá": 10,
+            "Marruecos": 5
+          },
+          "paradas": {
+            "Canadá": 1,
+            "Marruecos": 3
+          },
+          "numero_de_sprints": {
+            "Canadá": 154,
+            "Marruecos": 133
+          },
+          "saques_de_esquina": {
+            "Canadá": 11,
+            "Marruecos": 1
+          },
+          "faltas": {
+            "Canadá": 24,
+            "Marruecos": 14
+          },
+          "pases": {
+            "Canadá": 359,
+            "Marruecos": 473
+          },
+          "entradas": {
+            "Canadá": 18,
+            "Marruecos": 13
+          },
+          "tiros_libres": {
+            "Canadá": 14,
+            "Marruecos": 24
+          },
+          "tarjetas_amarillas": {
+            "Canadá": 4,
+            "Marruecos": 4
+          }
+        },
+        "tiros": {
+          "tiros_totales": {
+            "Canadá": 10,
+            "Marruecos": 5
+          },
+          "tiros_a_puerta": {
+            "Canadá": 3,
+            "Marruecos": 4
+          },
+          "tiros_al_palo": {
+            "Canadá": 0,
+            "Marruecos": 1
+          },
+          "tiros_fuera": {
+            "Canadá": 4,
+            "Marruecos": 1
+          },
+          "tiros_bloqueados": {
+            "Canadá": 3,
+            "Marruecos": 0
+          },
+          "tiros_dentro_del_area_penal": {
+            "Canadá": 6,
+            "Marruecos": 3
+          },
+          "tiros_fuera_del_area": {
+            "Canadá": 4,
+            "Marruecos": 2
+          }
+        },
+        "ataque": {
+          "ocasiones_claras_realizadas": {
+            "Canadá": 0,
+            "Marruecos": 1
+          },
+          "ocasiones_claras_falladas": {
+            "Canadá": 1,
+            "Marruecos": 1
+          },
+          "toques_dentro_del_area": {
+            "Canadá": 33,
+            "Marruecos": 9
+          },
+          "faltas_recibidas_en_el_tercio_final": {
+            "Canadá": 4,
+            "Marruecos": 1
+          },
+          "fueras_de_juego": {
+            "Canadá": 2,
+            "Marruecos": 3
+          }
+        },
+        "duelos": {
+          "duelos_pct": {
+            "Canadá": 48,
+            "Marruecos": 52
+          },
+          "perdidas": {
+            "Canadá": 8,
+            "Marruecos": 10
+          },
+          "duelos_en_el_suelo": {
+            "Canadá": {
+              "ganados": 37,
+              "totales": 77,
+              "porcentaje": 48
+            },
+            "Marruecos": {
+              "ganados": 40,
+              "totales": 77,
+              "porcentaje": 52
+            }
+          },
+          "duelos_aereos": {
+            "Canadá": {
+              "ganados": 17,
+              "totales": 36,
+              "porcentaje": 47
+            },
+            "Marruecos": {
+              "ganados": 19,
+              "totales": 36,
+              "porcentaje": 53
+            }
+          },
+          "regates": {
+            "Canadá": {
+              "completados": 5,
+              "intentados": 10,
+              "porcentaje": 50
+            },
+            "Marruecos": {
+              "completados": 6,
+              "intentados": 14,
+              "porcentaje": 43
+            }
+          }
+        },
+        "pases": {
+          "pases_precisos": {
+            "Canadá": 272,
+            "Marruecos": 388
+          },
+          "saques_de_banda": {
+            "Canadá": 24,
+            "Marruecos": 23
+          },
+          "pases_al_ultimo_tercio": {
+            "Canadá": 57,
+            "Marruecos": 37
+          },
+          "pases_en_el_ultimo_tercio": {
+            "Canadá": {
+              "completados": 87,
+              "intentados": 137,
+              "porcentaje": 64
+            },
+            "Marruecos": {
+              "completados": 34,
+              "intentados": 62,
+              "porcentaje": 55
+            }
+          },
+          "pases_largos": {
+            "Canadá": {
+              "completados": 12,
+              "intentados": 31,
+              "porcentaje": 39
+            },
+            "Marruecos": {
+              "completados": 17,
+              "intentados": 51,
+              "porcentaje": 33
+            }
+          },
+          "centros": {
+            "Canadá": {
+              "completados": 8,
+              "intentados": 30,
+              "porcentaje": 27
+            },
+            "Marruecos": {
+              "completados": 1,
+              "intentados": 5,
+              "porcentaje": 20
+            }
+          }
+        },
+        "defensa": {
+          "entradas_ganadas_pct": {
+            "Canadá": 50,
+            "Marruecos": 69
+          },
+          "tackles_totales": {
+            "Canadá": 18,
+            "Marruecos": 13
+          },
+          "intercepciones": {
+            "Canadá": 5,
+            "Marruecos": 9
+          },
+          "recuperaciones": {
+            "Canadá": 43,
+            "Marruecos": 44
+          },
+          "despejes": {
+            "Canadá": 10,
+            "Marruecos": 47
+          },
+          "errores_que_llevan_a_disparo": {
+            "Canadá": 1,
+            "Marruecos": 0
+          }
+        },
+        "porteria": {
+          "paradas": {
+            "Canadá": 1,
+            "Marruecos": 3
+          },
+          "goles_evitados": {
+            "Canadá": -0.85,
+            "Marruecos": 0.53
+          },
+          "grandes_paradas": {
+            "Canadá": 0,
+            "Marruecos": 1
+          },
+          "despejes_por_alto": {
+            "Canadá": 0,
+            "Marruecos": 2
+          },
+          "con_los_punos": {
+            "Canadá": 0,
+            "Marruecos": 3
+          },
+          "saques_de_puerta": {
+            "Canadá": 1,
+            "Marruecos": 3
+          }
+        },
+        "mapa_de_ataques": {
+          "equipo_mostrado": "Canadá",
+          "direccion_de_ataque": "hacia_la_derecha",
+          "descripcion": "Mapa de ataques mostrado para Canadá."
+        },
+        "mapa_de_pases": {
+          "tipo_de_dato": "distribucion_global_no_atribuible_por_equipo",
+          "tercio_defensivo_pct": 15,
+          "tercio_central_pct": 40,
+          "tercio_ofensivo_pct": 45
+        }
+      },
+      "fuentes": [
+        "Captura de pantalla 2026-07-05 173358.png",
+        "Captura de pantalla 2026-07-05 173407.png",
+        "Captura de pantalla 2026-07-05 173416.png"
+      ]
+    }
+  ]
+}

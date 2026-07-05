@@ -1,0 +1,274 @@
+{
+  "descripcion": "Estadísticas profundas revisadas manualmente a partir de capturas de SofaScore.",
+  "numero_de_partidos": 1,
+  "partidos": [
+    {
+      "id": "paraguay_francia",
+      "nombre": "Paraguay vs Francia",
+      "equipos": {
+        "izquierda_verde": "Paraguay",
+        "derecha_azul": "Francia"
+      },
+      "estadisticas": {
+        "resumen_del_partido": {
+          "posesion_de_balon_pct": {
+            "Paraguay": 24,
+            "Francia": 76
+          },
+          "goles_esperados_xg": {
+            "Paraguay": 0.13,
+            "Francia": 1.45
+          },
+          "ocasiones_claras": {
+            "Paraguay": 0,
+            "Francia": 2
+          },
+          "tiros_totales": {
+            "Paraguay": 5,
+            "Francia": 15
+          },
+          "paradas": {
+            "Paraguay": 4,
+            "Francia": 1
+          },
+          "saques_de_esquina": {
+            "Paraguay": 2,
+            "Francia": 12
+          },
+          "faltas": {
+            "Paraguay": 13,
+            "Francia": 11
+          },
+          "pases": {
+            "Paraguay": 183,
+            "Francia": 569
+          },
+          "entradas": {
+            "Paraguay": 29,
+            "Francia": 13
+          },
+          "tiros_libres": {
+            "Paraguay": 11,
+            "Francia": 12
+          },
+          "tarjetas_amarillas": {
+            "Paraguay": 0,
+            "Francia": 3
+          }
+        },
+        "tiros": {
+          "tiros_totales": {
+            "Paraguay": 5,
+            "Francia": 15
+          },
+          "tiros_a_puerta": {
+            "Paraguay": 1,
+            "Francia": 5
+          },
+          "tiros_al_palo": {
+            "Paraguay": 0,
+            "Francia": 0
+          },
+          "tiros_fuera": {
+            "Paraguay": 4,
+            "Francia": 6
+          },
+          "tiros_bloqueados": {
+            "Paraguay": 1,
+            "Francia": 4
+          },
+          "tiros_dentro_del_area_penal": {
+            "Paraguay": 1,
+            "Francia": 5
+          },
+          "tiros_fuera_del_area": {
+            "Paraguay": 4,
+            "Francia": 10
+          }
+        },
+        "ataque": {
+          "ocasiones_claras_realizadas": {
+            "Paraguay": 0,
+            "Francia": 1
+          },
+          "ocasiones_claras_falladas": {
+            "Paraguay": 0,
+            "Francia": 1
+          },
+          "toques_dentro_del_area": {
+            "Paraguay": 4,
+            "Francia": 25
+          },
+          "faltas_recibidas_en_el_tercio_final": {
+            "Paraguay": 0,
+            "Francia": 3
+          }
+        },
+        "duelos": {
+          "duelos_pct": {
+            "Paraguay": 47,
+            "Francia": 53
+          },
+          "perdidas": {
+            "Paraguay": 3,
+            "Francia": 14
+          },
+          "duelos_en_el_suelo": {
+            "Paraguay": {
+              "ganados": 44,
+              "totales": 83,
+              "porcentaje": 53
+            },
+            "Francia": {
+              "ganados": 39,
+              "totales": 83,
+              "porcentaje": 47
+            }
+          },
+          "duelos_aereos": {
+            "Paraguay": {
+              "ganados": 6,
+              "totales": 23,
+              "porcentaje": 26
+            },
+            "Francia": {
+              "ganados": 17,
+              "totales": 23,
+              "porcentaje": 74
+            }
+          },
+          "regates": {
+            "Paraguay": {
+              "completados": 4,
+              "intentados": 14,
+              "porcentaje": 29
+            },
+            "Francia": {
+              "completados": 15,
+              "intentados": 30,
+              "porcentaje": 50
+            }
+          }
+        },
+        "pases": {
+          "pases_precisos": {
+            "Paraguay": 98,
+            "Francia": 510
+          },
+          "saques_de_banda": {
+            "Paraguay": 19,
+            "Francia": 17
+          },
+          "pases_al_ultimo_tercio": {
+            "Paraguay": 42,
+            "Francia": 87
+          },
+          "pases_en_el_ultimo_tercio": {
+            "Paraguay": {
+              "completados": 13,
+              "intentados": 50,
+              "porcentaje": 26
+            },
+            "Francia": {
+              "completados": 198,
+              "intentados": 233,
+              "porcentaje": 85
+            }
+          },
+          "pases_largos": {
+            "Paraguay": {
+              "completados": 12,
+              "intentados": 55,
+              "porcentaje": 22
+            },
+            "Francia": {
+              "completados": 23,
+              "intentados": 39,
+              "porcentaje": 59
+            }
+          },
+          "centros": {
+            "Paraguay": {
+              "completados": 0,
+              "intentados": 5,
+              "porcentaje": 0
+            },
+            "Francia": {
+              "completados": 1,
+              "intentados": 22,
+              "porcentaje": 5
+            }
+          }
+        },
+        "defensa": {
+          "entradas_ganadas_pct": {
+            "Paraguay": 72,
+            "Francia": 54
+          },
+          "tackles_totales": {
+            "Paraguay": 29,
+            "Francia": 13
+          },
+          "intercepciones": {
+            "Paraguay": 14,
+            "Francia": 10
+          },
+          "recuperaciones": {
+            "Paraguay": 39,
+            "Francia": 49
+          },
+          "despejes": {
+            "Paraguay": 21,
+            "Francia": 27
+          },
+          "errores_que_llevan_a_disparo": {
+            "Paraguay": 1,
+            "Francia": 1
+          }
+        },
+        "porteria": {
+          "paradas": {
+            "Paraguay": 4,
+            "Francia": 1
+          },
+          "goles_evitados": {
+            "Paraguay": 0.88,
+            "Francia": 0.37
+          },
+          "grandes_paradas": {
+            "Paraguay": 2,
+            "Francia": 0
+          },
+          "despejes_por_alto": {
+            "Paraguay": 1,
+            "Francia": 3
+          },
+          "con_los_punos": {
+            "Paraguay": 1,
+            "Francia": 1
+          },
+          "saques_de_puerta": {
+            "Paraguay": 12,
+            "Francia": 7
+          }
+        },
+        "mapa_de_ataques": {
+          "equipo_mostrado": "Paraguay",
+          "direccion_de_ataque": "hacia_la_derecha",
+          "descripcion": "Mapa de ataques mostrado para Paraguay."
+        },
+        "mapa_de_pases": {
+          "tipo_de_dato": "distribucion_global_no_atribuible_por_equipo",
+          "tercio_defensivo_pct": 44,
+          "tercio_central_pct": 39,
+          "tercio_ofensivo_pct": 17
+        }
+      },
+      "fuentes": [
+        "Captura de pantalla 2026-07-05 173518.png",
+        "Captura de pantalla 2026-07-05 173530.png",
+        "Captura de pantalla 2026-07-05 173543.png"
+      ]
+    }
+  ]
+}

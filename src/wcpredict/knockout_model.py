@@ -70,6 +70,7 @@ def predict_knockout_match(
     away_gk_rating: float | None = None,
     home_penalty_win_probability: float | None = None,
     extra_time_xg: tuple[float, float] | None = None,
+    regulation_1x2: dict[str, float] | None = None,
 ) -> KnockoutPrediction:
     """Compute advance probabilities for a single knockout tie.
 
@@ -100,9 +101,18 @@ def predict_knockout_match(
     )
     p_away_penalty = 1.0 - p_home_penalty
 
-    home_wins_90 = summary_90.team_a_win
-    away_wins_90 = summary_90.team_b_win
-    p_draw_90 = summary_90.draw
+    if regulation_1x2 is not None:
+        # Use the unified 1X2 (Poisson + ML + corrections + form) for the
+        # 90' split so the funnel matches the headline prediction and the
+        # phase audit; ET/penalty conditionals stay matrix-driven.
+        total = sum(max(0.0, float(regulation_1x2.get(k, 0.0))) for k in ("home", "draw", "away")) or 1.0
+        home_wins_90 = max(0.0, float(regulation_1x2.get("home", 0.0))) / total
+        away_wins_90 = max(0.0, float(regulation_1x2.get("away", 0.0))) / total
+        p_draw_90 = max(0.0, float(regulation_1x2.get("draw", 0.0))) / total
+    else:
+        home_wins_90 = summary_90.team_a_win
+        away_wins_90 = summary_90.team_b_win
+        p_draw_90 = summary_90.draw
     home_wins_et = p_draw_90 * summary_et.team_a_win
     away_wins_et = p_draw_90 * summary_et.team_b_win
     p_draw_after_et = p_draw_90 * summary_et.draw

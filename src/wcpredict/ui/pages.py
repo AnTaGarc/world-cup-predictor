@@ -984,6 +984,15 @@ def _knockout_prediction_for_match(match, bundle, repo: Repository | None = None
             match.kickoff_utc,
         )
         extra_time_xg = adjustment.adjusted_xg
+    unified_1x2 = None
+    primary_rows = getattr(bundle, "primary", None) or ()
+    lookup = {str(row.selection_name): float(row.probability) for row in primary_rows}
+    if lookup:
+        home_p = lookup.get(match.team_a.name)
+        away_p = lookup.get(match.team_b.name)
+        draw_p = lookup.get("Draw")
+        if home_p is not None and away_p is not None and draw_p is not None:
+            unified_1x2 = {"home": home_p, "draw": draw_p, "away": away_p}
     return predict_knockout_match(
         xa, xb,
         dispersion=0.08,    # matches DEFAULT_NB_DISPERSION in services.py
@@ -992,6 +1001,7 @@ def _knockout_prediction_for_match(match, bundle, repo: Repository | None = None
             penalty_context.team_a_shootout_win_probability if penalty_context else None
         ),
         extra_time_xg=extra_time_xg,
+        regulation_1x2=unified_1x2,
     )
 
 

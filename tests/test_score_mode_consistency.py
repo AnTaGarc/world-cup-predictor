@@ -51,3 +51,20 @@ class FavoriteModeRowTests(unittest.TestCase):
             self.assertNotEqual(cond_goals[0], cond_goals[1])
         else:
             self.skipTest("fixture did not produce a draw-mode favorite scenario")
+
+
+class KnockoutFunnelConsistencyTests(unittest.TestCase):
+    def test_regulation_split_matches_unified_1x2(self):
+        from wcpredict.knockout_model import predict_knockout_match
+        unified = {"home": 0.83, "draw": 0.122, "away": 0.048}
+        pred = predict_knockout_match(
+            1.8, 0.6, dispersion=0.08, rho=-0.16, regulation_1x2=unified,
+        )
+        self.assertAlmostEqual(0.83, pred.home_wins_90, places=6)
+        self.assertAlmostEqual(0.122, pred.p_draw_90, places=6)
+        total = (
+            pred.home_wins_90 + pred.away_wins_90
+            + pred.home_wins_et + pred.away_wins_et
+            + pred.home_wins_penalties + pred.away_wins_penalties
+        )
+        self.assertAlmostEqual(1.0, total, places=6)
