@@ -134,6 +134,17 @@ class AppContractTests(unittest.TestCase):
         self.assertNotIn("list_deep_goalkeeper_rows_before", core)
         self.assertNotIn("get_match_result", core)
 
+    def test_prediction_profiles_query_only_the_active_teams(self):
+        source = (Path(__file__).parents[1] / "src" / "wcpredict" / "ui" / "pages.py").read_text(encoding="utf-8")
+        self.assertEqual(
+            2,
+            source.count(
+                "list_deep_team_metric_observations_before(\n"
+                "        match.kickoff_utc, team_names=(team_a, team_b)\n"
+                "    )"
+            ),
+        )
+
     def test_prediction_lab_sections_are_lazy_and_cache_versioned(self):
         source = (Path(__file__).parents[1] / "src" / "wcpredict" / "ui" / "pages.py").read_text(encoding="utf-8")
         self.assertIn("PREDICTION_ENGINE_VERSION", source)
@@ -186,11 +197,30 @@ class AppContractTests(unittest.TestCase):
         # _cached_bundle should hit the cached path, not a fresh CollectorStore each call.
         self.assertIn("_collector_bundle_cached(", source)
 
+    def test_tournament_ui_pushes_competition_filter_into_repository(self):
+        source = (Path(__file__).parents[1] / "src" / "wcpredict" / "ui" / "pages.py").read_text(encoding="utf-8")
+        self.assertIn(
+            'return _repo().list_matches(competition="FIFA World Cup 2026")',
+            source,
+        )
+        self.assertIn(
+            'get_all_match_evidence_statuses(competition="FIFA World Cup 2026")',
+            source,
+        )
+
     def test_daily_refresh_reruns_bracket_resolution_only_after_updates(self):
         source = (Path(__file__).parents[1] / "src" / "wcpredict" / "ui" / "pages.py").read_text(encoding="utf-8")
         self.assertIn("def _resolve_bracket_after_daily_refresh", source)
         self.assertIn('getattr(daily_result, "updated"', source)
         self.assertIn("_resolve_bracket_after_daily_refresh(repo, daily_result)", source)
+
+    def test_daily_refresh_reuses_initialized_repository(self):
+        source = (Path(__file__).parents[1] / "src" / "wcpredict" / "ui" / "pages.py").read_text(encoding="utf-8")
+        start = source.index("def _refresh_current_world_cup_banks_cached")
+        end = source.index("\ndef _refresh_current_world_cup_banks", start)
+        refresh_body = source[start:end]
+        self.assertIn("repo = _repo()", refresh_body)
+        self.assertNotIn("repo.initialize()", refresh_body)
 
     def test_daily_refresh_status_names_aggregate_and_exposes_error_details(self):
         source = (Path(__file__).parents[1] / "src" / "wcpredict" / "ui" / "pages.py").read_text(encoding="utf-8")

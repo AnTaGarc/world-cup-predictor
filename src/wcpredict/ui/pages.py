@@ -272,7 +272,7 @@ def _matches_cached(db_sig: tuple[int, int]):
     # dataclasses with datetime fields that recent Streamlit versions refuse
     # to serialize for cache_data. The list is immutable per db signature so
     # caching as a resource is safe.
-    return _repo().list_matches()
+    return _repo().list_matches(competition="FIFA World Cup 2026")
 
 
 def _list_matches():
@@ -283,7 +283,7 @@ def _list_matches():
     should NOT appear in the schedule selectboxes, dashboard counters or
     backtesting panel — they're training data, not part of the tournament.
     """
-    return [m for m in _matches_cached(_db_signature()) if m.competition == "FIFA World Cup 2026"]
+    return _matches_cached(_db_signature())
 
 
 @st.cache_resource(show_spinner=False)
@@ -316,7 +316,7 @@ def _freshness_rows_now():
 
 @st.cache_resource(show_spinner=False)
 def _all_evidence_statuses_cached(db_sig: tuple[int, int]) -> dict[int, dict]:
-    return _repo().get_all_match_evidence_statuses()
+    return _repo().get_all_match_evidence_statuses(competition="FIFA World Cup 2026")
 
 
 def _all_evidence_statuses() -> dict[int, dict]:
@@ -698,8 +698,7 @@ def _refresh_current_world_cup_banks_cached(
     refresh_bucket: str,
     providers: tuple[str, ...],
 ):
-    repo = Repository(DATABASE_PATH)
-    repo.initialize()
+    repo = _repo()
     now = datetime.now(timezone.utc)
     result = ensure_current_world_cup_data(
         repo,
@@ -1618,7 +1617,9 @@ def _match_analysis_bundle_cached(
     from wcpredict.team_profile import build_team_profiles
     from wcpredict.team_volume_markets import derive_xg_factors_from_profile
     from wcpredict.advanced_form import XgFormAdjustment
-    deep_obs_for_profile = repo.list_deep_team_metric_observations_before(match.kickoff_utc)
+    deep_obs_for_profile = repo.list_deep_team_metric_observations_before(
+        match.kickoff_utc, team_names=(team_a, team_b)
+    )
     # Phase: mark MD3 dead-rubber rows so their weight is cut to 30% in
     # team_profile. Detects the case where a team was already mathematically
     # classified (or eliminated) before its MD3 fixture and likely fielded
@@ -1930,9 +1931,12 @@ def _team_volume_context_from_profiles_cached(
     from wcpredict.team_profile import build_team_profiles
     from wcpredict.team_volume_markets import MARKET_CATALOG, predict_team_volume_markets
 
+    deep_profile_rows = repo.list_deep_team_metric_observations_before(
+        match.kickoff_utc, team_names=(team_a, team_b)
+    )
     team_profiles = build_team_profiles(
         (team_a, team_b),
-        repo.list_deep_team_metric_observations_before(match.kickoff_utc),
+        deep_profile_rows,
         match.kickoff_utc,
         opponent_strengths=opponent_strengths,
     )

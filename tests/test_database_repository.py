@@ -197,6 +197,78 @@ class DatabaseRepositoryTests(unittest.TestCase):
             self.assertEqual(evidence_match_id, matches[0].id)
             self.assertNotEqual(empty_duplicate_id, matches[0].id)
 
+    def test_match_and_evidence_queries_can_filter_by_competition(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            repo = Repository(Path(tmp) / "worldcup.sqlite")
+            repo.initialize()
+            spain_id = repo.upsert_team("Spain")
+            japan_id = repo.upsert_team("Japan")
+            world_cup_id = repo.upsert_match(
+                "FIFA World Cup 2026", "Group",
+                datetime(2026, 6, 18, 19, tzinfo=timezone.utc),
+                spain_id, japan_id, "scheduled",
+            )
+            friendly_id = repo.upsert_match(
+                "Friendly", "Friendly",
+                datetime(2025, 6, 18, 19, tzinfo=timezone.utc),
+                spain_id, japan_id, "finished",
+            )
+
+            matches = repo.list_matches(competition="FIFA World Cup 2026")
+            evidence = repo.get_all_match_evidence_statuses(
+                competition="FIFA World Cup 2026"
+            )
+
+        self.assertEqual([world_cup_id], [match.id for match in matches])
+        self.assertEqual({world_cup_id}, set(evidence))
+        self.assertNotIn(friendly_id, evidence)
+
+    def test_deep_team_metric_observations_can_filter_teams(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            repo = Repository(Path(tmp) / "worldcup.sqlite")
+            repo.initialize()
+            morocco_id = repo.upsert_team("Morocco")
+            france_id = repo.upsert_team("France")
+            match_id = repo.upsert_match(
+                "FIFA World Cup 2026", "Group",
+                datetime(2026, 6, 20, 19, tzinfo=timezone.utc),
+                morocco_id, france_id, "finished",
+            )
+            with repo.session() as con:
+                for team_name, value in (
+                    ("Morocco", 1.4),
+                    ("France", 1.1),
+                    ("Brazil", 2.2),
+                ):
+                    con.execute(
+                        "INSERT INTO observations("
+                        "match_id, subject_type, subject_name, metric, value_number, "
+                        "context_json, source_id, evidence_status, observed_at_utc"
+                        ") VALUES(?, 'team', ?, 'xg', ?, '{}', ?, "
+                        "'verified_user_json', '2026-06-20T22:00:00+00:00')",
+                        (match_id, team_name, value, f"source-{team_name}"),
+                    )
+
+            cutoff = datetime(2026, 6, 21, tzinfo=timezone.utc)
+            filtered = repo.list_deep_team_metric_observations_before(
+                cutoff, team_names=("Morocco", "France")
+            )
+            unfiltered = repo.list_deep_team_metric_observations_before(cutoff)
+
+        self.assertEqual({"Morocco", "France"}, {row["team_name"] for row in filtered})
+        self.assertEqual({"Morocco", "France", "Brazil"}, {row["team_name"] for row in unfiltered})
+
+    def test_schema_has_team_profile_hot_path_index(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            db_path = Path(tmp) / "worldcup.sqlite"
+            initialize_database(db_path)
+            with closing(sqlite3.connect(db_path)) as con:
+                indexes = {
+                    row[1] for row in con.execute("PRAGMA index_list(observations)")
+                }
+
+        self.assertIn("idx_observations_team_profile", indexes)
+
 
 if __name__ == "__main__":
     unittest.main()

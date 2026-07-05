@@ -550,7 +550,9 @@ class Repository:
             neutral_site=bool(row["neutral_site"]),
         )
 
-    def list_matches(self) -> list[Match]:
+    def list_matches(self, competition: str | None = None) -> list[Match]:
+        where_clause = "WHERE m.competition = ? " if competition is not None else ""
+        parameters = (competition,) if competition is not None else ()
         with self.session() as con:
             rows = con.execute(
                 "SELECT m.*, ta.name AS team_a_name, ta.fifa_code AS team_a_code, "
@@ -563,7 +565,9 @@ class Repository:
                 "FROM matches m "
                 "JOIN teams ta ON ta.id=m.team_a_id "
                 "JOIN teams tb ON tb.id=m.team_b_id "
-                "ORDER BY m.kickoff_utc, m.id"
+                + where_clause
+                + "ORDER BY m.kickoff_utc, m.id",
+                parameters,
             ).fetchall()
         chosen: dict[tuple[str, str, str, str], sqlite3.Row] = {}
 
@@ -1081,19 +1085,24 @@ class Repository:
             ).fetchall()
         return self._attach_extended_observations([dict(row) for row in rows])
 
-    def list_deep_team_metric_observations_before(self, as_of_utc: datetime) -> list[dict]:
-        """All team-level deep-stat observations strictly before ``as_of_utc``.
+    def list_deep_team_metric_observations_before(
+        self,
+        as_of_utc: datetime,
+        team_names: tuple[str, ...] | None = None,
+    ) -> list[dict]:
+        """Return deduplicated team metrics before a cutoff.
 
-        Returns one row per (match, team, metric) with columns
-        ``kickoff_utc, team_name, metric, value_number``. Consumed by
-        team_profile.build_team_profile to compute per-team aggregates.
-
-        Deduplicates by (match_id, subject_name, metric): the same metric for
-        the same match can be inserted multiple times if several deep-JSON
-        files import the same fixture (different source_id each time). We keep
-        the most recent (highest observations.id) so sample sizes reflect the
-        real number of *matches*, not the number of import passes.
+        ``team_names`` keeps interactive predictions proportional to the two
+        active teams. Omitting it preserves the complete dataset required by
+        offline training and backtests.
         """
+        team_filter = ""
+        parameters: list[object] = [as_of_utc.isoformat()]
+        if team_names:
+            placeholders = ",".join("?" for _ in team_names)
+            team_filter = f" AND o2.subject_name IN ({placeholders}) "
+            parameters.extend(team_names)
+        parameters.append(as_of_utc.isoformat())
         with self.session() as con:
             rows = con.execute(
                 "SELECT m.kickoff_utc, m.competition, o.subject_name AS team_name, o.metric, o.value_number "
@@ -1108,11 +1117,12 @@ class Repository:
                 "                                 'verified_user_capture', 'verified_external') "
                 "      AND o2.value_number IS NOT NULL "
                 "      AND m2.kickoff_utc < ? "
-                "    GROUP BY o2.match_id, o2.subject_name, o2.metric "
+                + team_filter
+                + "    GROUP BY o2.match_id, o2.subject_name, o2.metric "
                 ") latest ON latest.id = o.id "
                 "WHERE m.kickoff_utc < ? "
                 "ORDER BY m.kickoff_utc",
-                (as_of_utc.isoformat(), as_of_utc.isoformat()),
+                tuple(parameters),
             ).fetchall()
         return [dict(row) for row in rows]
 
@@ -1857,7 +1867,11 @@ class Repository:
             "player_stat_rows": int(row["player_stat_rows"] or 0),
         }
 
-    def get_all_match_evidence_statuses(self) -> dict[int, dict]:
+    def get_all_match_evidence_statuses(
+        self, competition: str | None = None
+    ) -> dict[int, dict]:
+        where_clause = "WHERE m.competition = ? " if competition is not None else ""
+        parameters = (competition,) if competition is not None else ()
         with self.session() as con:
             rows = con.execute(
                 "SELECT m.id AS match_id, "
@@ -1868,7 +1882,9 @@ class Repository:
                 "(SELECT COUNT(*) FROM observations o WHERE o.match_id=m.id AND o.evidence_status='verified_user_json') AS deep_observations, "
                 "(SELECT COUNT(*) FROM player_match_stats p WHERE p.match_id=m.id) AS player_stat_rows "
                 "FROM matches m LEFT JOIN team_match_stats s ON s.match_id=m.id "
-                "GROUP BY m.id"
+                + where_clause
+                + "GROUP BY m.id",
+                parameters,
             ).fetchall()
         result = {}
         for row in rows:

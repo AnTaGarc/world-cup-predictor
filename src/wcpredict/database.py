@@ -617,6 +617,8 @@ CREATE INDEX IF NOT EXISTS idx_observations_subject
 ON observations(subject_type, subject_name);
 CREATE INDEX IF NOT EXISTS idx_observations_deep_latest
 ON observations(subject_type, evidence_status, match_id, subject_name, metric, id);
+CREATE INDEX IF NOT EXISTS idx_observations_team_profile
+ON observations(subject_type, subject_name, evidence_status, match_id, metric, id);
 CREATE INDEX IF NOT EXISTS idx_team_match_stats_match
 ON team_match_stats(match_id);
 CREATE INDEX IF NOT EXISTS idx_player_match_stats_player
