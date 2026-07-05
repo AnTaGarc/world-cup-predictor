@@ -1,0 +1,63 @@
+<!-- @dsCard group="DataViz" name="Marcadores exactos" subtitle="modal · alternativos · favorito condicional" width="700" -->
+<!doctype html><html lang="es"><head><meta charset="utf-8">
+<style>
+:root {
+  --ink: #10233f; --muted: #66758b; --line: #dfe7f1;
+  --panel: #f7f9fc; --panel-2: #eef2f8;
+  --blue-500: #1769e0; --blue-link: #0f5fc7; --sidebar: #0f2342;
+  --success: #17845b; --warning: #b66b00; --danger: #c63c3c;
+  --status-blue-ink: #0f5fc7; --status-blue-fill: #edf5ff; --status-blue-border: #c8ddfb;
+  --status-green-ink: #0e6d4a; --status-green-fill: #eaf8f1; --status-green-border: #bde6d2;
+  --status-amber-ink: #8b5200; --status-amber-fill: #fff7e8; --status-amber-border: #f2d69c;
+  --status-red-ink: #a52929; --status-red-fill: #fff0f0; --status-red-border: #efc0c0;
+  --prob-win: #1769e0; --prob-draw: #66758b; --prob-loss: #9fb0c6; --prob-track: #eef2f8;
+  --r-card: 14px; --r-hero: 20px; --r-button: 9px; --r-pill: 999px;
+  --shadow-card: 0 1px 2px rgba(16,35,63,.04), 0 0 0 1px rgba(16,35,63,.02);
+  --shadow-card-hover: 0 4px 12px rgba(16,35,63,.08);
+  --shadow-hero: 0 16px 42px rgba(19,62,120,.18);
+}
+body { font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  color: var(--ink); background: #fff; margin: 0; padding: 20px;
+  font-feature-settings: "cv02","cv03","cv04","cv11"; }
+.num { font-variant-numeric: tabular-nums lining-nums; }
+
+.pill { display:inline-flex; align-items:center; gap:6px; padding:5px 12px;
+  border-radius:var(--r-pill); font-size:13px; font-weight:700;
+  border:1px solid transparent; line-height:1.2; }
+.pill-blue{color:var(--status-blue-ink);background:var(--status-blue-fill);border-color:var(--status-blue-border);}
+.pill-green{color:var(--status-green-ink);background:var(--status-green-fill);border-color:var(--status-green-border);}
+.pill-amber{color:var(--status-amber-ink);background:var(--status-amber-fill);border-color:var(--status-amber-border);}
+.pill-red{color:var(--status-red-ink);background:var(--status-red-fill);border-color:var(--status-red-border);}
+.pill-neutral{color:var(--muted);background:var(--panel-2);border-color:var(--line);}
+.callout { border-left:4px solid var(--blue-500); background:var(--status-blue-fill);
+  color:var(--status-blue-ink); border-radius:10px; padding:12px 16px; margin:8px 0; font-size:14px; }
+.callout-amber{border-left-color:var(--warning);background:var(--status-amber-fill);color:var(--status-amber-ink);}
+.callout-green{border-left-color:var(--success);background:var(--status-green-fill);color:var(--status-green-ink);}
+.callout-red{border-left-color:var(--danger);background:var(--status-red-fill);color:var(--status-red-ink);}
+.callout-title{font-weight:700;margin-bottom:4px;font-size:14px;}
+.metric { background:var(--panel); border:1px solid var(--line); border-radius:var(--r-card);
+  padding:16px 18px; box-shadow:var(--shadow-card); min-width:130px; }
+.metric .label{color:var(--muted);font-size:12.5px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;}
+.metric .value{color:var(--ink);font-size:28px;font-weight:700;line-height:1.1;}
+.soft-panel{background:var(--panel);border:1px solid var(--line);border-radius:var(--r-card);padding:16px 18px;}
+
+.score-cards{display:flex;gap:12px;flex-wrap:wrap}
+.score-card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r-card);
+  padding:14px 18px;box-shadow:var(--shadow-card);min-width:120px;text-align:center}
+.score-card.rank-1{border-color:var(--status-blue-border);background:var(--status-blue-fill)}
+.rank-tag{font-size:10.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.score-card.rank-1 .rank-tag{color:var(--status-blue-ink)}
+.score-value{font-size:26px;font-weight:760;margin:4px 0}
+.score-prob{font-size:13px;color:var(--muted)}
+</style></head>
+<body>
+<div class="score-cards">
+  <div class="score-card rank-1"><div class="rank-tag">Más probable</div><div class="score-value num">0-0</div><div class="score-prob num">16.7%</div></div>
+  <div class="score-card"><div class="rank-tag">#2</div><div class="score-value num">0-1</div><div class="score-prob num">14.8%</div></div>
+  <div class="score-card"><div class="rank-tag">#3</div><div class="score-value num">1-1</div><div class="score-prob num">11.9%</div></div>
+  <div class="score-card"><div class="rank-tag">Si gana Marruecos</div><div class="score-value num">0-1</div><div class="score-prob num">14.8%</div></div>
+</div>
+<p style="font-size:12.5px;color:var(--muted);max-width:560px;margin-top:12px">
+"Exact Score (favorito)": aunque Marruecos es el 1X2 más probable, su masa se reparte
+entre muchos marcadores mientras el empate se concentra en pocos.</p>
+</body></html>

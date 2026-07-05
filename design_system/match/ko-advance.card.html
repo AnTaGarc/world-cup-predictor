@@ -1,0 +1,96 @@
+<!-- @dsCard group="Match" name="Embudo de eliminatoria" subtitle="avance + 90'/prórroga/penaltis" width="740" -->
+<!doctype html><html lang="es"><head><meta charset="utf-8">
+<style>
+:root {
+  --ink: #10233f; --muted: #66758b; --line: #dfe7f1;
+  --panel: #f7f9fc; --panel-2: #eef2f8;
+  --blue-500: #1769e0; --blue-link: #0f5fc7; --sidebar: #0f2342;
+  --success: #17845b; --warning: #b66b00; --danger: #c63c3c;
+  --status-blue-ink: #0f5fc7; --status-blue-fill: #edf5ff; --status-blue-border: #c8ddfb;
+  --status-green-ink: #0e6d4a; --status-green-fill: #eaf8f1; --status-green-border: #bde6d2;
+  --status-amber-ink: #8b5200; --status-amber-fill: #fff7e8; --status-amber-border: #f2d69c;
+  --status-red-ink: #a52929; --status-red-fill: #fff0f0; --status-red-border: #efc0c0;
+  --prob-win: #1769e0; --prob-draw: #66758b; --prob-loss: #9fb0c6; --prob-track: #eef2f8;
+  --r-card: 14px; --r-hero: 20px; --r-button: 9px; --r-pill: 999px;
+  --shadow-card: 0 1px 2px rgba(16,35,63,.04), 0 0 0 1px rgba(16,35,63,.02);
+  --shadow-card-hover: 0 4px 12px rgba(16,35,63,.08);
+  --shadow-hero: 0 16px 42px rgba(19,62,120,.18);
+}
+body { font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  color: var(--ink); background: #fff; margin: 0; padding: 20px;
+  font-feature-settings: "cv02","cv03","cv04","cv11"; }
+.num { font-variant-numeric: tabular-nums lining-nums; }
+
+.pill { display:inline-flex; align-items:center; gap:6px; padding:5px 12px;
+  border-radius:var(--r-pill); font-size:13px; font-weight:700;
+  border:1px solid transparent; line-height:1.2; }
+.pill-blue{color:var(--status-blue-ink);background:var(--status-blue-fill);border-color:var(--status-blue-border);}
+.pill-green{color:var(--status-green-ink);background:var(--status-green-fill);border-color:var(--status-green-border);}
+.pill-amber{color:var(--status-amber-ink);background:var(--status-amber-fill);border-color:var(--status-amber-border);}
+.pill-red{color:var(--status-red-ink);background:var(--status-red-fill);border-color:var(--status-red-border);}
+.pill-neutral{color:var(--muted);background:var(--panel-2);border-color:var(--line);}
+.callout { border-left:4px solid var(--blue-500); background:var(--status-blue-fill);
+  color:var(--status-blue-ink); border-radius:10px; padding:12px 16px; margin:8px 0; font-size:14px; }
+.callout-amber{border-left-color:var(--warning);background:var(--status-amber-fill);color:var(--status-amber-ink);}
+.callout-green{border-left-color:var(--success);background:var(--status-green-fill);color:var(--status-green-ink);}
+.callout-red{border-left-color:var(--danger);background:var(--status-red-fill);color:var(--status-red-ink);}
+.callout-title{font-weight:700;margin-bottom:4px;font-size:14px;}
+.metric { background:var(--panel); border:1px solid var(--line); border-radius:var(--r-card);
+  padding:16px 18px; box-shadow:var(--shadow-card); min-width:130px; }
+.metric .label{color:var(--muted);font-size:12.5px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;}
+.metric .value{color:var(--ink);font-size:28px;font-weight:700;line-height:1.1;}
+.soft-panel{background:var(--panel);border:1px solid var(--line);border-radius:var(--r-card);padding:16px 18px;}
+
+@keyframes ko-bar-grow{from{width:0%}}
+.ko-advance{background:linear-gradient(135deg,#0e2b57 0%,#12468a 60%,#1769e0 100%);
+  border-radius:20px;padding:22px 24px 20px;box-shadow:0 8px 24px rgba(19,62,120,.15);color:#fff;max-width:680px}
+.ko-advance-label{font-size:10.5px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.7);margin-bottom:12px}
+.ko-advance-bar{display:flex;align-items:center;gap:14px;margin-bottom:8px}
+.ko-advance-team span{font-size:14px;font-weight:700;white-space:nowrap}
+.ko-advance-team.away span{color:rgba(255,255,255,.75)}
+.ko-stacked-bar{flex:1;height:32px;border-radius:6px;overflow:hidden;display:flex;background:rgba(255,255,255,.12)}
+.ko-stacked-fill-home{background:linear-gradient(90deg,#6ee7b7,#34d399);display:flex;align-items:center;justify-content:center;
+  font-size:13px;font-weight:800;color:#022c1f;animation:ko-bar-grow .6s ease-out}
+.ko-stacked-fill-away{flex:1;background:linear-gradient(90deg,#fdba74,#fb923c);display:flex;align-items:center;justify-content:center;
+  font-size:13px;font-weight:800;color:#431407}
+.ko-funnel{display:flex;flex-direction:column;gap:8px;margin-top:14px}
+.ko-funnel-row-label{font-size:10px;font-weight:600;color:rgba(255,255,255,.5);letter-spacing:.04em;text-transform:uppercase;margin-bottom:2px}
+.ko-funnel-row-label .hint{margin-left:8px;text-transform:none;letter-spacing:0;opacity:.8}
+.ko-funnel-row{display:flex;border-radius:5px;overflow:hidden;height:26px}
+.ko-funnel-fill{display:flex;align-items:center;justify-content:center;font-size:11.5px;font-weight:700}
+.ko-f-home{background:linear-gradient(90deg,#6ee7b7,#34d399);color:#022c1f}
+.ko-f-draw{background:rgba(255,255,255,.28)}
+.ko-f-away{background:linear-gradient(90deg,#fdba74,#fb923c);color:#431407}
+</style></head>
+<body>
+<div class="ko-advance">
+  <div class="ko-advance-label">Quién avanza al siguiente cruce</div>
+  <div class="ko-advance-bar">
+    <div class="ko-advance-team"><span>Paraguay</span></div>
+    <div class="ko-stacked-bar">
+      <div class="ko-stacked-fill-home num" style="width:6.2%"></div>
+      <div class="ko-stacked-fill-away num">93.8%</div>
+    </div>
+    <div class="ko-advance-team away"><span>France</span></div>
+  </div>
+  <div class="ko-funnel">
+    <div><div class="ko-funnel-row-label">EN 90' <span class="hint">marginal · ganar o forzar prórroga</span></div>
+      <div class="ko-funnel-row">
+        <div class="ko-funnel-fill ko-f-home num" style="width:12%">2.7%</div>
+        <div class="ko-funnel-fill ko-f-draw num" style="width:20%">12.2%</div>
+        <div class="ko-funnel-fill ko-f-away num" style="width:68%">85.2%</div>
+      </div></div>
+    <div><div class="ko-funnel-row-label">PRÓRROGA <span class="hint">condicional · si hubo empate al 90'</span></div>
+      <div class="ko-funnel-row" style="width:86%">
+        <div class="ko-funnel-fill ko-f-home num" style="width:10%">4.1%</div>
+        <div class="ko-funnel-fill ko-f-draw num" style="width:42%">42.1%</div>
+        <div class="ko-funnel-fill ko-f-away num" style="width:48%">53.9%</div>
+      </div></div>
+    <div><div class="ko-funnel-row-label">PENALTIS <span class="hint">condicional · si hubo empate tras prórroga</span></div>
+      <div class="ko-funnel-row" style="width:72%">
+        <div class="ko-funnel-fill ko-f-home num" style="width:59%">59.0%</div>
+        <div class="ko-funnel-fill ko-f-away num" style="width:41%">41.0%</div>
+      </div></div>
+  </div>
+</div>
+</body></html>
