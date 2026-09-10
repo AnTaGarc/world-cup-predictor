@@ -1,0 +1,302 @@
+{
+  "descripcion": "Estadísticas profundas revisadas manualmente a partir de capturas de SofaScore.",
+  "numero_de_partidos": 1,
+  "partidos": [
+    {
+      "id": "argentina_egipto",
+      "nombre": "Argentina vs Egipto",
+      "equipos": {
+        "izquierda_verde": "Argentina",
+        "derecha_azul": "Egipto"
+      },
+      "estadisticas": {
+        "resumen_del_partido": {
+          "posesion_de_balon_pct": {
+            "Argentina": 64,
+            "Egipto": 36
+          },
+          "distancia_recorrida_km": {
+            "Argentina": 96.6,
+            "Egipto": 104.4
+          },
+          "goles_esperados_xg": {
+            "Argentina": 2.84,
+            "Egipto": 0.89
+          },
+          "ocasiones_claras": {
+            "Argentina": 6,
+            "Egipto": 2
+          },
+          "tiros_totales": {
+            "Argentina": 19,
+            "Egipto": 5
+          },
+          "paradas": {
+            "Argentina": 0,
+            "Egipto": 4
+          },
+          "numero_de_sprints": {
+            "Argentina": 94,
+            "Egipto": 99
+          },
+          "saques_de_esquina": {
+            "Argentina": 6,
+            "Egipto": 1
+          },
+          "faltas": {
+            "Argentina": 13,
+            "Egipto": 11
+          },
+          "pases": {
+            "Argentina": 602,
+            "Egipto": 349
+          },
+          "entradas": {
+            "Argentina": 20,
+            "Egipto": 16
+          },
+          "tiros_libres": {
+            "Argentina": 10,
+            "Egipto": 13
+          },
+          "tarjetas_amarillas": {
+            "Argentina": 0,
+            "Egipto": 4
+          }
+        },
+        "tiros": {
+          "tiros_totales": {
+            "Argentina": 19,
+            "Egipto": 5
+          },
+          "tiros_a_puerta": {
+            "Argentina": 7,
+            "Egipto": 2
+          },
+          "goles_esperados_xg": {
+            "Argentina": 2.84,
+            "Egipto": 0.89
+          },
+          "goles_esperados_a_puerta_xgot": {
+            "Argentina": 2.66,
+            "Egipto": 1.21
+          },
+          "tiros_al_palo": {
+            "Argentina": 1,
+            "Egipto": 0
+          },
+          "tiros_fuera": {
+            "Argentina": 8,
+            "Egipto": 3
+          },
+          "tiros_bloqueados": {
+            "Argentina": 4,
+            "Egipto": 1
+          },
+          "tiros_dentro_del_area_penal": {
+            "Argentina": 11,
+            "Egipto": 4
+          },
+          "tiros_fuera_del_area": {
+            "Argentina": 8,
+            "Egipto": 1
+          }
+        },
+        "ataque": {
+          "ocasiones_claras_realizadas": {
+            "Argentina": 2,
+            "Egipto": 2
+          },
+          "ocasiones_claras_falladas": {
+            "Argentina": 4,
+            "Egipto": 0
+          },
+          "pases_en_profundidad": {
+            "Argentina": 2,
+            "Egipto": 1
+          },
+          "toques_dentro_del_area": {
+            "Argentina": 34,
+            "Egipto": 8
+          },
+          "faltas_recibidas_en_el_tercio_final": {
+            "Argentina": 6,
+            "Egipto": 1
+          },
+          "fueras_de_juego": {
+            "Argentina": 3,
+            "Egipto": 0
+          }
+        },
+        "duelos": {
+          "duelos_pct": {
+            "Argentina": 52,
+            "Egipto": 48
+          },
+          "perdidas": {
+            "Argentina": 11,
+            "Egipto": 5
+          },
+          "duelos_en_el_suelo": {
+            "Argentina": {
+              "ganados": 42,
+              "totales": 82,
+              "porcentaje": 51
+            },
+            "Egipto": {
+              "ganados": 40,
+              "totales": 82,
+              "porcentaje": 49
+            }
+          },
+          "duelos_aereos": {
+            "Argentina": {
+              "ganados": 8,
+              "totales": 15,
+              "porcentaje": 53
+            },
+            "Egipto": {
+              "ganados": 7,
+              "totales": 15,
+              "porcentaje": 47
+            }
+          },
+          "regates": {
+            "Argentina": {
+              "completados": 11,
+              "intentados": 16,
+              "porcentaje": 69
+            },
+            "Egipto": {
+              "completados": 11,
+              "intentados": 26,
+              "porcentaje": 42
+            }
+          }
+        },
+        "pases": {
+          "pases_precisos": {
+            "Argentina": 541,
+            "Egipto": 287
+          },
+          "saques_de_banda": {
+            "Argentina": 19,
+            "Egipto": 25
+          },
+          "pases_al_ultimo_tercio": {
+            "Argentina": 73,
+            "Egipto": 27
+          },
+          "pases_en_el_ultimo_tercio": {
+            "Argentina": {
+              "completados": 191,
+              "intentados": 232,
+              "porcentaje": 82
+            },
+            "Egipto": {
+              "completados": 36,
+              "intentados": 53,
+              "porcentaje": 68
+            }
+          },
+          "pases_largos": {
+            "Argentina": {
+              "completados": 18,
+              "intentados": 30,
+              "porcentaje": 60
+            },
+            "Egipto": {
+              "completados": 13,
+              "intentados": 37,
+              "porcentaje": 35
+            }
+          },
+          "centros": {
+            "Argentina": {
+              "completados": 8,
+              "intentados": 26,
+              "porcentaje": 31
+            },
+            "Egipto": {
+              "completados": 2,
+              "intentados": 8,
+              "porcentaje": 25
+            }
+          }
+        },
+        "defensa": {
+          "entradas_ganadas_pct": {
+            "Argentina": 75,
+            "Egipto": 44
+          },
+          "tackles_totales": {
+            "Argentina": 20,
+            "Egipto": 16
+          },
+          "intercepciones": {
+            "Argentina": 7,
+            "Egipto": 9
+          },
+          "recuperaciones": {
+            "Argentina": 48,
+            "Egipto": 36
+          },
+          "despejes": {
+            "Argentina": 14,
+            "Egipto": 44
+          },
+          "errores_que_llevan_a_disparo": {
+            "Argentina": 1,
+            "Egipto": 0
+          }
+        },
+        "porteria": {
+          "paradas": {
+            "Argentina": 0,
+            "Egipto": 4
+          },
+          "goles_evitados": {
+            "Argentina": -0.79,
+            "Egipto": -0.34
+          },
+          "grandes_paradas": {
+            "Argentina": 0,
+            "Egipto": 2
+          },
+          "despejes_por_alto": {
+            "Argentina": 0,
+            "Egipto": 1
+          },
+          "con_los_punos": {
+            "Argentina": 0,
+            "Egipto": 3
+          },
+          "saques_de_puerta": {
+            "Argentina": 2,
+            "Egipto": 13
+          },
+          "paradas_de_penalti": {
+            "Argentina": 0,
+            "Egipto": 1
+          }
+        },
+        "mapa_de_ataques": {
+          "equipo_mostrado": "Argentina",
+          "direccion_de_ataque": "hacia_la_derecha",
+          "descripcion": "Mapa de ataques mostrado para Argentina."
+        },
+        "mapa_de_pases": {
+          "tipo_de_dato": "distribucion_global_no_atribuible_por_equipo",
+          "tercio_defensivo_pct": 16,
+          "tercio_central_pct": 44,
+          "tercio_ofensivo_pct": 40
+        }
+      },
+      "fuentes": [
+        "Captura de pantalla 2026-09-10 230806.png",
+        "Captura de pantalla 2026-09-10 230820.png",
+        "Captura de pantalla 2026-09-10 230830.png"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,243 @@
+{
+  "descripcion": "Estadísticas profundas revisadas manualmente a partir de capturas de SofaScore.",
+  "numero_de_partidos": 1,
+  "partidos": [
+    {
+      "id": "suiza_colombia_primera_parte_90",
+      "nombre": "Suiza vs Colombia - Primera parte de los 90 minutos",
+      "periodo": "primera_parte_90_minutos",
+      "equipos": {
+        "izquierda_verde": "Suiza",
+        "derecha_azul": "Colombia"
+      },
+      "estadisticas": {
+        "resumen_del_partido": {
+          "posesion_de_balon_pct": {
+            "Suiza": 49,
+            "Colombia": 51
+          },
+          "goles_esperados_xg": {
+            "Suiza": 0.06,
+            "Colombia": 0.25
+          },
+          "ocasiones_claras": {
+            "Suiza": 0,
+            "Colombia": 0
+          },
+          "tiros_totales": {
+            "Suiza": 2,
+            "Colombia": 5
+          },
+          "paradas": {
+            "Suiza": 1,
+            "Colombia": 2
+          },
+          "saques_de_esquina": {
+            "Suiza": 1,
+            "Colombia": 4
+          },
+          "faltas": {
+            "Suiza": 6,
+            "Colombia": 6
+          },
+          "pases": {
+            "Suiza": 253,
+            "Colombia": 260
+          },
+          "entradas": {
+            "Suiza": 6,
+            "Colombia": 11
+          },
+          "tiros_libres": {
+            "Suiza": 6,
+            "Colombia": 6
+          },
+          "tarjetas_amarillas": {
+            "Suiza": 0,
+            "Colombia": 0
+          }
+        },
+        "tiros": {
+          "tiros_totales": {
+            "Suiza": 2,
+            "Colombia": 5
+          },
+          "tiros_a_puerta": {
+            "Suiza": 2,
+            "Colombia": 1
+          },
+          "tiros_al_palo": {
+            "Suiza": 0,
+            "Colombia": 0
+          },
+          "tiros_fuera": {
+            "Suiza": 0,
+            "Colombia": 1
+          },
+          "tiros_bloqueados": {
+            "Suiza": 0,
+            "Colombia": 3
+          },
+          "tiros_dentro_del_area_penal": {
+            "Suiza": 2,
+            "Colombia": 3
+          },
+          "tiros_fuera_del_area": {
+            "Suiza": 0,
+            "Colombia": 2
+          }
+        },
+        "ataque": {
+          "ocasiones_claras_falladas": {
+            "Suiza": 0,
+            "Colombia": 0
+          },
+          "pases_en_profundidad": {
+            "Suiza": 0,
+            "Colombia": 0
+          },
+          "faltas_recibidas_en_el_tercio_final": {
+            "Suiza": 0,
+            "Colombia": 1
+          },
+          "fueras_de_juego": {
+            "Suiza": 1,
+            "Colombia": 1
+          }
+        },
+        "duelos": {
+          "duelos_pct": {
+            "Suiza": 41,
+            "Colombia": 59
+          },
+          "perdidas": {
+            "Suiza": 3,
+            "Colombia": 4
+          },
+          "duelos_en_el_suelo": {
+            "Suiza": {
+              "ganados": 13,
+              "totales": 32,
+              "porcentaje": 41
+            },
+            "Colombia": {
+              "ganados": 19,
+              "totales": 32,
+              "porcentaje": 59
+            }
+          },
+          "duelos_aereos": {
+            "Suiza": {
+              "ganados": 5,
+              "totales": 12,
+              "porcentaje": 42
+            },
+            "Colombia": {
+              "ganados": 7,
+              "totales": 12,
+              "porcentaje": 58
+            }
+          },
+          "regates": {
+            "Suiza": {
+              "completados": 1,
+              "intentados": 9,
+              "porcentaje": 11
+            },
+            "Colombia": {
+              "completados": 2,
+              "intentados": 4,
+              "porcentaje": 50
+            }
+          }
+        },
+        "pases": {
+          "pases_precisos": {
+            "Suiza": 220,
+            "Colombia": 219
+          },
+          "saques_de_banda": {
+            "Suiza": 7,
+            "Colombia": 7
+          },
+          "pases_al_ultimo_tercio": {
+            "Suiza": 22,
+            "Colombia": 24
+          },
+          "pases_largos": {
+            "Suiza": {
+              "completados": 6,
+              "intentados": 14,
+              "porcentaje": 43
+            },
+            "Colombia": {
+              "completados": 11,
+              "intentados": 33,
+              "porcentaje": 33
+            }
+          },
+          "centros": {
+            "Suiza": {
+              "completados": 1,
+              "intentados": 4,
+              "porcentaje": 25
+            },
+            "Colombia": {
+              "completados": 1,
+              "intentados": 9,
+              "porcentaje": 11
+            }
+          }
+        },
+        "defensa": {
+          "entradas_ganadas_pct": {
+            "Suiza": 50,
+            "Colombia": 45
+          },
+          "tackles_totales": {
+            "Suiza": 6,
+            "Colombia": 11
+          },
+          "intercepciones": {
+            "Suiza": 6,
+            "Colombia": 6
+          },
+          "recuperaciones": {
+            "Suiza": 20,
+            "Colombia": 20
+          },
+          "despejes": {
+            "Suiza": 17,
+            "Colombia": 5
+          }
+        },
+        "porteria": {
+          "paradas": {
+            "Suiza": 1,
+            "Colombia": 2
+          },
+          "saques_de_puerta": {
+            "Suiza": 3,
+            "Colombia": 2
+          }
+        },
+        "mapa_de_ataques": {
+          "equipo_mostrado": "Suiza",
+          "direccion_de_ataque": "hacia_la_derecha",
+          "descripcion": "Mapa de ataques mostrado para Suiza."
+        },
+        "mapa_de_pases": {
+          "tipo_de_dato": "distribucion_global_no_atribuible_por_equipo",
+          "tercio_defensivo_pct": 29,
+          "tercio_central_pct": 44,
+          "tercio_ofensivo_pct": 27
+        }
+      },
+      "fuentes": [
+        "Captura de pantalla 2026-07-11 103131.png",
+        "Captura de pantalla 2026-07-11 103140.png",
+        "Captura de pantalla 2026-07-11 103150.png"
+      ]
+    }
+  ]
+}

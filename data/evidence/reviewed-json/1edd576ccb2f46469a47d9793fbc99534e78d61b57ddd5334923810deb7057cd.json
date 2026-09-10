@@ -1,0 +1,290 @@
+{
+  "descripcion": "Estadísticas profundas revisadas manualmente a partir de capturas de SofaScore.",
+  "numero_de_partidos": 1,
+  "partidos": [
+    {
+      "id": "espana_belgica",
+      "nombre": "España vs Bélgica",
+      "equipos": {
+        "izquierda_verde": "España",
+        "derecha_azul": "Bélgica"
+      },
+      "estadisticas": {
+        "resumen_del_partido": {
+          "posesion_de_balon_pct": {
+            "España": 68,
+            "Bélgica": 32
+          },
+          "distancia_recorrida_km": {
+            "España": 103.5,
+            "Bélgica": 105.8
+          },
+          "goles_esperados_xg": {
+            "España": 1.96,
+            "Bélgica": 0.34
+          },
+          "ocasiones_claras": {
+            "España": 2,
+            "Bélgica": 1
+          },
+          "tiros_totales": {
+            "España": 17,
+            "Bélgica": 5
+          },
+          "paradas": {
+            "España": 1,
+            "Bélgica": 6
+          },
+          "numero_de_sprints": {
+            "España": 85,
+            "Bélgica": 69
+          },
+          "saques_de_esquina": {
+            "España": 5,
+            "Bélgica": 1
+          },
+          "faltas": {
+            "España": 13,
+            "Bélgica": 18
+          },
+          "pases": {
+            "España": 664,
+            "Bélgica": 312
+          },
+          "entradas": {
+            "España": 11,
+            "Bélgica": 10
+          },
+          "tiros_libres": {
+            "España": 18,
+            "Bélgica": 13
+          },
+          "tarjetas_amarillas": {
+            "España": 2,
+            "Bélgica": 2
+          }
+        },
+        "tiros": {
+          "tiros_totales": {
+            "España": 17,
+            "Bélgica": 5
+          },
+          "tiros_a_puerta": {
+            "España": 8,
+            "Bélgica": 2
+          },
+          "goles_esperados_xg": {
+            "España": 1.96,
+            "Bélgica": 0.34
+          },
+          "goles_esperados_a_puerta_xgot": {
+            "España": 2.9,
+            "Bélgica": 0.38
+          },
+          "tiros_fuera": {
+            "España": 4,
+            "Bélgica": 1
+          },
+          "tiros_bloqueados": {
+            "España": 5,
+            "Bélgica": 2
+          },
+          "tiros_dentro_del_area_penal": {
+            "España": 10,
+            "Bélgica": 4
+          },
+          "tiros_fuera_del_area": {
+            "España": 7,
+            "Bélgica": 1
+          }
+        },
+        "ataque": {
+          "ocasiones_claras_realizadas": {
+            "España": 2,
+            "Bélgica": 1
+          },
+          "pases_en_profundidad": {
+            "España": 3,
+            "Bélgica": 1
+          },
+          "toques_dentro_del_area": {
+            "España": 41,
+            "Bélgica": 11
+          },
+          "faltas_recibidas_en_el_tercio_final": {
+            "España": 3,
+            "Bélgica": 1
+          },
+          "fueras_de_juego": {
+            "España": 3,
+            "Bélgica": 1
+          }
+        },
+        "duelos": {
+          "duelos_pct": {
+            "España": 51,
+            "Bélgica": 49
+          },
+          "perdidas": {
+            "España": 4,
+            "Bélgica": 6
+          },
+          "duelos_en_el_suelo": {
+            "España": {
+              "ganados": 35,
+              "totales": 64,
+              "porcentaje": 55
+            },
+            "Bélgica": {
+              "ganados": 29,
+              "totales": 64,
+              "porcentaje": 45
+            }
+          },
+          "duelos_aereos": {
+            "España": {
+              "ganados": 7,
+              "totales": 19,
+              "porcentaje": 37
+            },
+            "Bélgica": {
+              "ganados": 12,
+              "totales": 19,
+              "porcentaje": 63
+            }
+          },
+          "regates": {
+            "España": {
+              "completados": 8,
+              "intentados": 14,
+              "porcentaje": 57
+            },
+            "Bélgica": {
+              "completados": 7,
+              "intentados": 12,
+              "porcentaje": 58
+            }
+          }
+        },
+        "pases": {
+          "pases_precisos": {
+            "España": 598,
+            "Bélgica": 243
+          },
+          "saques_de_banda": {
+            "España": 22,
+            "Bélgica": 15
+          },
+          "pases_al_ultimo_tercio": {
+            "España": 64,
+            "Bélgica": 33
+          },
+          "pases_en_el_ultimo_tercio": {
+            "España": {
+              "completados": 229,
+              "intentados": 270,
+              "porcentaje": 85
+            },
+            "Bélgica": {
+              "completados": 45,
+              "intentados": 71,
+              "porcentaje": 63
+            }
+          },
+          "pases_largos": {
+            "España": {
+              "completados": 19,
+              "intentados": 35,
+              "porcentaje": 54
+            },
+            "Bélgica": {
+              "completados": 20,
+              "intentados": 45,
+              "porcentaje": 44
+            }
+          },
+          "centros": {
+            "España": {
+              "completados": 2,
+              "intentados": 20,
+              "porcentaje": 10
+            },
+            "Bélgica": {
+              "completados": 2,
+              "intentados": 11,
+              "porcentaje": 18
+            }
+          }
+        },
+        "defensa": {
+          "entradas_ganadas_pct": {
+            "España": 55,
+            "Bélgica": 60
+          },
+          "tackles_totales": {
+            "España": 11,
+            "Bélgica": 10
+          },
+          "intercepciones": {
+            "España": 5,
+            "Bélgica": 9
+          },
+          "recuperaciones": {
+            "España": 49,
+            "Bélgica": 39
+          },
+          "despejes": {
+            "España": 15,
+            "Bélgica": 34
+          },
+          "errores_que_llevan_a_disparo": {
+            "España": 1,
+            "Bélgica": 1
+          },
+          "errores_que_llevan_a_gol": {
+            "España": 0,
+            "Bélgica": 1
+          }
+        },
+        "porteria": {
+          "paradas": {
+            "España": 1,
+            "Bélgica": 6
+          },
+          "goles_evitados": {
+            "España": -0.62,
+            "Bélgica": 0.9
+          },
+          "grandes_paradas": {
+            "España": 0,
+            "Bélgica": 2
+          },
+          "con_los_punos": {
+            "España": 0,
+            "Bélgica": 1
+          },
+          "saques_de_puerta": {
+            "España": 4,
+            "Bélgica": 13
+          }
+        },
+        "mapa_de_ataques": {
+          "equipo_mostrado": "España",
+          "direccion_de_ataque": "hacia_la_derecha",
+          "descripcion": "Mapa de ataques mostrado para España."
+        },
+        "mapa_de_pases": {
+          "tipo_de_dato": "distribucion_global_no_atribuible_por_equipo",
+          "tercio_defensivo_pct": 19,
+          "tercio_central_pct": 42,
+          "tercio_ofensivo_pct": 39
+        }
+      },
+      "fuentes": [
+        "Captura de pantalla 2026-09-10 231609.png",
+        "Captura de pantalla 2026-09-10 231619.png",
+        "Captura de pantalla 2026-09-10 231637.png"
+      ]
+    }
+  ]
+}

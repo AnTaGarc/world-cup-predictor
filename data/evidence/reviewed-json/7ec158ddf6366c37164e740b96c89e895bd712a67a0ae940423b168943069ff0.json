@@ -1,0 +1,298 @@
+{
+  "descripcion": "Estadísticas profundas revisadas manualmente a partir de capturas de SofaScore.",
+  "numero_de_partidos": 1,
+  "partidos": [
+    {
+      "id": "portugal_espana",
+      "nombre": "Portugal vs España",
+      "equipos": {
+        "izquierda_verde": "Portugal",
+        "derecha_azul": "España"
+      },
+      "estadisticas": {
+        "resumen_del_partido": {
+          "posesion_de_balon_pct": {
+            "Portugal": 45,
+            "España": 55
+          },
+          "distancia_recorrida_km": {
+            "Portugal": 101.0,
+            "España": 101.9
+          },
+          "goles_esperados_xg": {
+            "Portugal": 0.63,
+            "España": 1.69
+          },
+          "ocasiones_claras": {
+            "Portugal": 1,
+            "España": 3
+          },
+          "tiros_totales": {
+            "Portugal": 10,
+            "España": 15
+          },
+          "paradas": {
+            "Portugal": 5,
+            "España": 2
+          },
+          "numero_de_sprints": {
+            "Portugal": 102,
+            "España": 99
+          },
+          "saques_de_esquina": {
+            "Portugal": 3,
+            "España": 7
+          },
+          "faltas": {
+            "Portugal": 9,
+            "España": 13
+          },
+          "pases": {
+            "Portugal": 427,
+            "España": 530
+          },
+          "entradas": {
+            "Portugal": 14,
+            "España": 18
+          },
+          "tiros_libres": {
+            "Portugal": 13,
+            "España": 9
+          },
+          "tarjetas_amarillas": {
+            "Portugal": 2,
+            "España": 1
+          }
+        },
+        "tiros": {
+          "tiros_totales": {
+            "Portugal": 10,
+            "España": 15
+          },
+          "tiros_a_puerta": {
+            "Portugal": 2,
+            "España": 6
+          },
+          "goles_esperados_xg": {
+            "Portugal": 0.63,
+            "España": 1.69
+          },
+          "goles_esperados_a_puerta_xgot": {
+            "Portugal": 0.89,
+            "España": 1.46
+          },
+          "tiros_al_palo": {
+            "Portugal": 1,
+            "España": 0
+          },
+          "tiros_fuera": {
+            "Portugal": 5,
+            "España": 6
+          },
+          "tiros_bloqueados": {
+            "Portugal": 3,
+            "España": 3
+          },
+          "tiros_dentro_del_area_penal": {
+            "Portugal": 7,
+            "España": 8
+          },
+          "tiros_fuera_del_area": {
+            "Portugal": 3,
+            "España": 7
+          }
+        },
+        "ataque": {
+          "ocasiones_claras_realizadas": {
+            "Portugal": 0,
+            "España": 1
+          },
+          "ocasiones_claras_falladas": {
+            "Portugal": 1,
+            "España": 2
+          },
+          "pases_en_profundidad": {
+            "Portugal": 0,
+            "España": 4
+          },
+          "toques_dentro_del_area": {
+            "Portugal": 11,
+            "España": 27
+          },
+          "faltas_recibidas_en_el_tercio_final": {
+            "Portugal": 2,
+            "España": 3
+          },
+          "fueras_de_juego": {
+            "Portugal": 2,
+            "España": 1
+          }
+        },
+        "duelos": {
+          "duelos_pct": {
+            "Portugal": 57,
+            "España": 43
+          },
+          "perdidas": {
+            "Portugal": 5,
+            "España": 9
+          },
+          "duelos_en_el_suelo": {
+            "Portugal": {
+              "ganados": 36,
+              "totales": 67,
+              "porcentaje": 54
+            },
+            "España": {
+              "ganados": 31,
+              "totales": 67,
+              "porcentaje": 46
+            }
+          },
+          "duelos_aereos": {
+            "Portugal": {
+              "ganados": 11,
+              "totales": 15,
+              "porcentaje": 73
+            },
+            "España": {
+              "ganados": 4,
+              "totales": 15,
+              "porcentaje": 27
+            }
+          },
+          "regates": {
+            "Portugal": {
+              "completados": 10,
+              "intentados": 23,
+              "porcentaje": 43
+            },
+            "España": {
+              "completados": 5,
+              "intentados": 10,
+              "porcentaje": 50
+            }
+          }
+        },
+        "pases": {
+          "pases_precisos": {
+            "Portugal": 357,
+            "España": 467
+          },
+          "saques_de_banda": {
+            "Portugal": 20,
+            "España": 17
+          },
+          "pases_al_ultimo_tercio": {
+            "Portugal": 59,
+            "España": 47
+          },
+          "pases_en_el_ultimo_tercio": {
+            "Portugal": {
+              "completados": 81,
+              "intentados": 115,
+              "porcentaje": 70
+            },
+            "España": {
+              "completados": 121,
+              "intentados": 152,
+              "porcentaje": 80
+            }
+          },
+          "pases_largos": {
+            "Portugal": {
+              "completados": 23,
+              "intentados": 52,
+              "porcentaje": 44
+            },
+            "España": {
+              "completados": 16,
+              "intentados": 33,
+              "porcentaje": 48
+            }
+          },
+          "centros": {
+            "Portugal": {
+              "completados": 4,
+              "intentados": 13,
+              "porcentaje": 31
+            },
+            "España": {
+              "completados": 1,
+              "intentados": 16,
+              "porcentaje": 6
+            }
+          }
+        },
+        "defensa": {
+          "entradas_ganadas_pct": {
+            "Portugal": 64,
+            "España": 72
+          },
+          "tackles_totales": {
+            "Portugal": 14,
+            "España": 18
+          },
+          "intercepciones": {
+            "Portugal": 7,
+            "España": 6
+          },
+          "recuperaciones": {
+            "Portugal": 50,
+            "España": 47
+          },
+          "despejes": {
+            "Portugal": 23,
+            "España": 13
+          },
+          "errores_que_llevan_a_disparo": {
+            "Portugal": 4,
+            "España": 1
+          }
+        },
+        "porteria": {
+          "paradas": {
+            "Portugal": 5,
+            "España": 2
+          },
+          "goles_evitados": {
+            "Portugal": 0.46,
+            "España": 0.89
+          },
+          "grandes_paradas": {
+            "Portugal": 1,
+            "España": 0
+          },
+          "despejes_por_alto": {
+            "Portugal": 2,
+            "España": 2
+          },
+          "con_los_punos": {
+            "Portugal": 1,
+            "España": 0
+          },
+          "saques_de_puerta": {
+            "Portugal": 6,
+            "España": 6
+          }
+        },
+        "mapa_de_ataques": {
+          "equipo_mostrado": "Portugal",
+          "direccion_de_ataque": "hacia_la_derecha",
+          "descripcion": "Mapa de ataques mostrado para Portugal."
+        },
+        "mapa_de_pases": {
+          "tipo_de_dato": "distribucion_global_no_atribuible_por_equipo",
+          "tercio_defensivo_pct": 31,
+          "tercio_central_pct": 43,
+          "tercio_ofensivo_pct": 26
+        }
+      },
+      "fuentes": [
+        "Captura de pantalla 2026-09-10 225636.png",
+        "Captura de pantalla 2026-09-10 225651.png",
+        "Captura de pantalla 2026-09-10 225701.png"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,286 @@
+{
+  "descripcion": "Estadísticas profundas revisadas manualmente a partir de capturas de SofaScore.",
+  "numero_de_partidos": 1,
+  "partidos": [
+    {
+      "id": "francia_inglaterra",
+      "nombre": "Francia vs Inglaterra",
+      "equipos": {
+        "izquierda_verde": "Francia",
+        "derecha_azul": "Inglaterra"
+      },
+      "estadisticas": {
+        "resumen_del_partido": {
+          "posesion_de_balon_pct": {
+            "Francia": 46,
+            "Inglaterra": 54
+          },
+          "distancia_recorrida_km": {
+            "Francia": 102.8,
+            "Inglaterra": 101.9
+          },
+          "goles_esperados_xg": {
+            "Francia": 2.88,
+            "Inglaterra": 2.88
+          },
+          "ocasiones_claras": {
+            "Francia": 6,
+            "Inglaterra": 7
+          },
+          "tiros_totales": {
+            "Francia": 19,
+            "Inglaterra": 19
+          },
+          "paradas": {
+            "Francia": 4,
+            "Inglaterra": 5
+          },
+          "numero_de_sprints": {
+            "Francia": 141,
+            "Inglaterra": 134
+          },
+          "saques_de_esquina": {
+            "Francia": 3,
+            "Inglaterra": 4
+          },
+          "faltas": {
+            "Francia": 14,
+            "Inglaterra": 8
+          },
+          "pases": {
+            "Francia": 445,
+            "Inglaterra": 518
+          },
+          "entradas": {
+            "Francia": 16,
+            "Inglaterra": 27
+          },
+          "tiros_libres": {
+            "Francia": 8,
+            "Inglaterra": 13
+          }
+        },
+        "tiros": {
+          "tiros_totales": {
+            "Francia": 19,
+            "Inglaterra": 19
+          },
+          "tiros_a_puerta": {
+            "Francia": 9,
+            "Inglaterra": 11
+          },
+          "goles_esperados_xg": {
+            "Francia": 2.88,
+            "Inglaterra": 2.88
+          },
+          "goles_esperados_a_puerta_xgot": {
+            "Francia": 4.16,
+            "Inglaterra": 4.99
+          },
+          "tiros_fuera": {
+            "Francia": 6,
+            "Inglaterra": 2
+          },
+          "tiros_bloqueados": {
+            "Francia": 4,
+            "Inglaterra": 6
+          },
+          "tiros_dentro_del_area_penal": {
+            "Francia": 12,
+            "Inglaterra": 16
+          },
+          "tiros_fuera_del_area": {
+            "Francia": 7,
+            "Inglaterra": 3
+          }
+        },
+        "ataque": {
+          "ocasiones_claras_realizadas": {
+            "Francia": 4,
+            "Inglaterra": 3
+          },
+          "ocasiones_claras_falladas": {
+            "Francia": 2,
+            "Inglaterra": 4
+          },
+          "pases_en_profundidad": {
+            "Francia": 5,
+            "Inglaterra": 4
+          },
+          "toques_dentro_del_area": {
+            "Francia": 55,
+            "Inglaterra": 34
+          },
+          "faltas_recibidas_en_el_tercio_final": {
+            "Francia": 2,
+            "Inglaterra": 4
+          },
+          "fueras_de_juego": {
+            "Francia": 3,
+            "Inglaterra": 3
+          }
+        },
+        "duelos": {
+          "duelos_pct": {
+            "Francia": 36,
+            "Inglaterra": 64
+          },
+          "perdidas": {
+            "Francia": 15,
+            "Inglaterra": 12
+          },
+          "duelos_en_el_suelo": {
+            "Francia": {
+              "ganados": 31,
+              "totales": 95,
+              "porcentaje": 33
+            },
+            "Inglaterra": {
+              "ganados": 64,
+              "totales": 95,
+              "porcentaje": 67
+            }
+          },
+          "duelos_aereos": {
+            "Francia": {
+              "ganados": 8,
+              "totales": 13,
+              "porcentaje": 62
+            },
+            "Inglaterra": {
+              "ganados": 5,
+              "totales": 13,
+              "porcentaje": 38
+            }
+          },
+          "regates": {
+            "Francia": {
+              "completados": 7,
+              "intentados": 19,
+              "porcentaje": 37
+            },
+            "Inglaterra": {
+              "completados": 23,
+              "intentados": 27,
+              "porcentaje": 85
+            }
+          }
+        },
+        "pases": {
+          "pases_precisos": {
+            "Francia": 404,
+            "Inglaterra": 469
+          },
+          "saques_de_banda": {
+            "Francia": 5,
+            "Inglaterra": 6
+          },
+          "pases_al_ultimo_tercio": {
+            "Francia": 46,
+            "Inglaterra": 32
+          },
+          "pases_en_el_ultimo_tercio": {
+            "Francia": {
+              "completados": 140,
+              "intentados": 166,
+              "porcentaje": 84
+            },
+            "Inglaterra": {
+              "completados": 46,
+              "intentados": 65,
+              "porcentaje": 71
+            }
+          },
+          "pases_largos": {
+            "Francia": {
+              "completados": 17,
+              "intentados": 26,
+              "porcentaje": 65
+            },
+            "Inglaterra": {
+              "completados": 15,
+              "intentados": 35,
+              "porcentaje": 43
+            }
+          },
+          "centros": {
+            "Francia": {
+              "completados": 1,
+              "intentados": 5,
+              "porcentaje": 20
+            },
+            "Inglaterra": {
+              "completados": 4,
+              "intentados": 12,
+              "porcentaje": 33
+            }
+          }
+        },
+        "defensa": {
+          "entradas_ganadas_pct": {
+            "Francia": 63,
+            "Inglaterra": 48
+          },
+          "tackles_totales": {
+            "Francia": 16,
+            "Inglaterra": 27
+          },
+          "intercepciones": {
+            "Francia": 9,
+            "Inglaterra": 11
+          },
+          "recuperaciones": {
+            "Francia": 47,
+            "Inglaterra": 48
+          },
+          "despejes": {
+            "Francia": 10,
+            "Inglaterra": 12
+          },
+          "errores_que_llevan_a_disparo": {
+            "Francia": 0,
+            "Inglaterra": 1
+          }
+        },
+        "porteria": {
+          "paradas": {
+            "Francia": 4,
+            "Inglaterra": 5
+          },
+          "goles_evitados": {
+            "Francia": -1.01,
+            "Inglaterra": 0.16
+          },
+          "grandes_paradas": {
+            "Francia": 1,
+            "Inglaterra": 2
+          },
+          "despejes_por_alto": {
+            "Francia": 1,
+            "Inglaterra": 0
+          },
+          "saques_de_puerta": {
+            "Francia": 5,
+            "Inglaterra": 7
+          }
+        },
+        "mapa_de_ataques": {
+          "equipo_mostrado": "Francia",
+          "direccion_de_ataque": "hacia_la_derecha",
+          "descripcion": "Mapa de ataques mostrado para Francia."
+        },
+        "mapa_de_pases": {
+          "tipo_de_dato": "distribucion_global_no_atribuible_por_equipo",
+          "tercio_defensivo_pct": 21,
+          "tercio_central_pct": 41,
+          "tercio_ofensivo_pct": 38
+        }
+      },
+      "fuentes": [
+        "Captura de pantalla 2026-09-10 232932.png",
+        "Captura de pantalla 2026-09-10 232945.png",
+        "Captura de pantalla 2026-09-10 232958.png"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,286 @@
+{
+  "descripcion": "Estadísticas profundas revisadas manualmente a partir de capturas de SofaScore.",
+  "numero_de_partidos": 1,
+  "partidos": [
+    {
+      "id": "francia_espana",
+      "nombre": "Francia vs España",
+      "equipos": {
+        "izquierda_verde": "Francia",
+        "derecha_azul": "España"
+      },
+      "estadisticas": {
+        "resumen_del_partido": {
+          "posesion_de_balon_pct": {
+            "Francia": 49,
+            "España": 51
+          },
+          "distancia_recorrida_km": {
+            "Francia": 102.4,
+            "España": 102.7
+          },
+          "goles_esperados_xg": {
+            "Francia": 0.31,
+            "España": 1.63
+          },
+          "ocasiones_claras": {
+            "Francia": 0,
+            "España": 3
+          },
+          "tiros_totales": {
+            "Francia": 10,
+            "España": 10
+          },
+          "paradas": {
+            "Francia": 0,
+            "España": 3
+          },
+          "numero_de_sprints": {
+            "Francia": 98,
+            "España": 116
+          },
+          "saques_de_esquina": {
+            "Francia": 7,
+            "España": 1
+          },
+          "faltas": {
+            "Francia": 11,
+            "España": 12
+          },
+          "pases": {
+            "Francia": 472,
+            "España": 502
+          },
+          "entradas": {
+            "Francia": 13,
+            "España": 22
+          },
+          "tiros_libres": {
+            "Francia": 12,
+            "España": 10
+          },
+          "tarjetas_amarillas": {
+            "Francia": 2,
+            "España": 1
+          }
+        },
+        "tiros": {
+          "tiros_totales": {
+            "Francia": 10,
+            "España": 10
+          },
+          "tiros_a_puerta": {
+            "Francia": 3,
+            "España": 2
+          },
+          "goles_esperados_xg": {
+            "Francia": 0.31,
+            "España": 1.63
+          },
+          "goles_esperados_a_puerta_xgot": {
+            "Francia": 0.07,
+            "España": 1.57
+          },
+          "tiros_fuera": {
+            "Francia": 5,
+            "España": 5
+          },
+          "tiros_bloqueados": {
+            "Francia": 2,
+            "España": 3
+          },
+          "tiros_dentro_del_area_penal": {
+            "Francia": 4,
+            "España": 5
+          },
+          "tiros_fuera_del_area": {
+            "Francia": 6,
+            "España": 5
+          }
+        },
+        "ataque": {
+          "ocasiones_claras_realizadas": {
+            "Francia": 0,
+            "España": 2
+          },
+          "ocasiones_claras_falladas": {
+            "Francia": 0,
+            "España": 1
+          },
+          "pases_en_profundidad": {
+            "Francia": 1,
+            "España": 0
+          },
+          "toques_dentro_del_area": {
+            "Francia": 19,
+            "España": 13
+          },
+          "faltas_recibidas_en_el_tercio_final": {
+            "Francia": 3,
+            "España": 3
+          },
+          "fueras_de_juego": {
+            "Francia": 4,
+            "España": 5
+          }
+        },
+        "duelos": {
+          "duelos_pct": {
+            "Francia": 46,
+            "España": 54
+          },
+          "perdidas": {
+            "Francia": 9,
+            "España": 10
+          },
+          "duelos_en_el_suelo": {
+            "Francia": {
+              "ganados": 36,
+              "totales": 71,
+              "porcentaje": 51
+            },
+            "España": {
+              "ganados": 35,
+              "totales": 71,
+              "porcentaje": 49
+            }
+          },
+          "duelos_aereos": {
+            "Francia": {
+              "ganados": 8,
+              "totales": 25,
+              "porcentaje": 32
+            },
+            "España": {
+              "ganados": 17,
+              "totales": 25,
+              "porcentaje": 68
+            }
+          },
+          "regates": {
+            "Francia": {
+              "completados": 11,
+              "intentados": 24,
+              "porcentaje": 46
+            },
+            "España": {
+              "completados": 2,
+              "intentados": 5,
+              "porcentaje": 40
+            }
+          }
+        },
+        "pases": {
+          "pases_precisos": {
+            "Francia": 395,
+            "España": 427
+          },
+          "saques_de_banda": {
+            "Francia": 22,
+            "España": 16
+          },
+          "pases_al_ultimo_tercio": {
+            "Francia": 45,
+            "España": 36
+          },
+          "pases_en_el_ultimo_tercio": {
+            "Francia": {
+              "completados": 91,
+              "intentados": 118,
+              "porcentaje": 77
+            },
+            "España": {
+              "completados": 61,
+              "intentados": 80,
+              "porcentaje": 76
+            }
+          },
+          "pases_largos": {
+            "Francia": {
+              "completados": 19,
+              "intentados": 36,
+              "porcentaje": 53
+            },
+            "España": {
+              "completados": 14,
+              "intentados": 51,
+              "porcentaje": 27
+            }
+          },
+          "centros": {
+            "Francia": {
+              "completados": 4,
+              "intentados": 20,
+              "porcentaje": 20
+            },
+            "España": {
+              "completados": 1,
+              "intentados": 7,
+              "porcentaje": 14
+            }
+          }
+        },
+        "defensa": {
+          "entradas_ganadas_pct": {
+            "Francia": 62,
+            "España": 64
+          },
+          "tackles_totales": {
+            "Francia": 13,
+            "España": 22
+          },
+          "intercepciones": {
+            "Francia": 8,
+            "España": 7
+          },
+          "recuperaciones": {
+            "Francia": 45,
+            "España": 50
+          },
+          "despejes": {
+            "Francia": 11,
+            "España": 22
+          },
+          "errores_que_llevan_a_disparo": {
+            "Francia": 2,
+            "España": 0
+          }
+        },
+        "porteria": {
+          "paradas": {
+            "Francia": 0,
+            "España": 3
+          },
+          "goles_evitados": {
+            "Francia": -0.43,
+            "España": 0.07
+          },
+          "despejes_por_alto": {
+            "Francia": 0,
+            "España": 1
+          },
+          "saques_de_puerta": {
+            "Francia": 8,
+            "España": 10
+          }
+        },
+        "mapa_de_ataques": {
+          "equipo_mostrado": "Francia",
+          "direccion_de_ataque": "hacia_la_derecha",
+          "descripcion": "Mapa de ataques mostrado para Francia."
+        },
+        "mapa_de_pases": {
+          "tipo_de_dato": "distribucion_global_no_atribuible_por_equipo",
+          "tercio_defensivo_pct": 21,
+          "tercio_central_pct": 51,
+          "tercio_ofensivo_pct": 28
+        }
+      },
+      "fuentes": [
+        "Captura de pantalla 2026-09-10 232554.png",
+        "Captura de pantalla 2026-09-10 232603.png",
+        "Captura de pantalla 2026-09-10 232612.png"
+      ]
+    }
+  ]
+}

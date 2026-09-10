@@ -1,0 +1,259 @@
+{
+  "descripcion": "Estadísticas profundas revisadas manualmente a partir de capturas de SofaScore.",
+  "numero_de_partidos": 1,
+  "partidos": [
+    {
+      "id": "argentina_suiza_segunda_parte_90",
+      "nombre": "Argentina vs Suiza - Segunda parte de los 90 minutos",
+      "periodo": "segunda_parte_90_minutos",
+      "equipos": {
+        "izquierda_verde": "Argentina",
+        "derecha_azul": "Suiza"
+      },
+      "estadisticas": {
+        "resumen_del_partido": {
+          "posesion_de_balon_pct": {
+            "Argentina": 66,
+            "Suiza": 34
+          },
+          "goles_esperados_xg": {
+            "Argentina": 0.6,
+            "Suiza": 0.37
+          },
+          "ocasiones_claras": {
+            "Argentina": 1,
+            "Suiza": 1
+          },
+          "tiros_totales": {
+            "Argentina": 6,
+            "Suiza": 6
+          },
+          "paradas": {
+            "Argentina": 3,
+            "Suiza": 1
+          },
+          "saques_de_esquina": {
+            "Argentina": 3,
+            "Suiza": 1
+          },
+          "faltas": {
+            "Argentina": 3,
+            "Suiza": 3
+          },
+          "pases": {
+            "Argentina": 311,
+            "Suiza": 163
+          },
+          "entradas": {
+            "Argentina": 12,
+            "Suiza": 5
+          },
+          "tiros_libres": {
+            "Argentina": 3,
+            "Suiza": 3
+          },
+          "tarjetas_amarillas": {
+            "Argentina": 1,
+            "Suiza": 2
+          },
+          "tarjetas_rojas": {
+            "Argentina": 0,
+            "Suiza": 1
+          }
+        },
+        "tiros": {
+          "tiros_totales": {
+            "Argentina": 6,
+            "Suiza": 6
+          },
+          "tiros_a_puerta": {
+            "Argentina": 1,
+            "Suiza": 4
+          },
+          "goles_esperados_xg": {
+            "Argentina": 0.6,
+            "Suiza": 0.37
+          },
+          "goles_esperados_a_puerta_xgot": {
+            "Argentina": 0.74,
+            "Suiza": 1.01
+          },
+          "tiros_al_palo": {
+            "Argentina": 0,
+            "Suiza": 0
+          },
+          "tiros_fuera": {
+            "Argentina": 4,
+            "Suiza": 0
+          },
+          "tiros_bloqueados": {
+            "Argentina": 1,
+            "Suiza": 2
+          },
+          "tiros_dentro_del_area_penal": {
+            "Argentina": 3,
+            "Suiza": 4
+          },
+          "tiros_fuera_del_area": {
+            "Argentina": 3,
+            "Suiza": 2
+          }
+        },
+        "ataque": {
+          "ocasiones_claras_realizadas": {
+            "Argentina": 0,
+            "Suiza": 1
+          },
+          "ocasiones_claras_falladas": {
+            "Argentina": 1,
+            "Suiza": 0
+          },
+          "pases_en_profundidad": {
+            "Argentina": 1,
+            "Suiza": 1
+          },
+          "faltas_recibidas_en_el_tercio_final": {
+            "Argentina": 0,
+            "Suiza": 1
+          },
+          "fueras_de_juego": {
+            "Argentina": 2,
+            "Suiza": 1
+          }
+        },
+        "duelos": {
+          "duelos_pct": {
+            "Argentina": 67,
+            "Suiza": 33
+          },
+          "perdidas": {
+            "Argentina": 3,
+            "Suiza": 7
+          },
+          "duelos_en_el_suelo": {
+            "Argentina": {
+              "ganados": 22,
+              "totales": 31,
+              "porcentaje": 71
+            },
+            "Suiza": {
+              "ganados": 9,
+              "totales": 31,
+              "porcentaje": 29
+            }
+          },
+          "duelos_aereos": {
+            "Argentina": {
+              "ganados": 2,
+              "totales": 5,
+              "porcentaje": 40
+            },
+            "Suiza": {
+              "ganados": 3,
+              "totales": 5,
+              "porcentaje": 60
+            }
+          },
+          "regates": {
+            "Argentina": {
+              "completados": 8,
+              "intentados": 10,
+              "porcentaje": 80
+            },
+            "Suiza": {
+              "completados": 1,
+              "intentados": 6,
+              "porcentaje": 17
+            }
+          }
+        },
+        "pases": {
+          "pases_precisos": {
+            "Argentina": 278,
+            "Suiza": 136
+          },
+          "saques_de_banda": {
+            "Argentina": 5,
+            "Suiza": 5
+          },
+          "pases_al_ultimo_tercio": {
+            "Argentina": 36,
+            "Suiza": 26
+          },
+          "pases_largos": {
+            "Argentina": {
+              "completados": 11,
+              "intentados": 20,
+              "porcentaje": 55
+            },
+            "Suiza": {
+              "completados": 6,
+              "intentados": 17,
+              "porcentaje": 35
+            }
+          },
+          "centros": {
+            "Argentina": {
+              "completados": 3,
+              "intentados": 10,
+              "porcentaje": 30
+            },
+            "Suiza": {
+              "completados": 3,
+              "intentados": 5,
+              "porcentaje": 60
+            }
+          }
+        },
+        "defensa": {
+          "entradas_ganadas_pct": {
+            "Argentina": 42,
+            "Suiza": 60
+          },
+          "tackles_totales": {
+            "Argentina": 12,
+            "Suiza": 5
+          },
+          "intercepciones": {
+            "Argentina": 5,
+            "Suiza": 4
+          },
+          "recuperaciones": {
+            "Argentina": 25,
+            "Suiza": 20
+          },
+          "despejes": {
+            "Argentina": 4,
+            "Suiza": 14
+          }
+        },
+        "porteria": {
+          "paradas": {
+            "Argentina": 3,
+            "Suiza": 1
+          },
+          "saques_de_puerta": {
+            "Argentina": 2,
+            "Suiza": 6
+          }
+        },
+        "mapa_de_ataques": {
+          "equipo_mostrado": "Argentina",
+          "direccion_de_ataque": "hacia_la_derecha",
+          "descripcion": "Mapa de ataques mostrado para Argentina durante la segunda parte."
+        },
+        "mapa_de_pases": {
+          "tipo_de_dato": "distribucion_global_no_atribuible_por_equipo",
+          "tercio_defensivo_pct": 28,
+          "tercio_central_pct": 41,
+          "tercio_ofensivo_pct": 31
+        }
+      },
+      "fuentes": [
+        "Captura de pantalla 2026-09-10 232056.png",
+        "Captura de pantalla 2026-09-10 232103.png",
+        "Captura de pantalla 2026-09-10 232112.png"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,255 @@
+{
+  "descripcion": "Estadísticas profundas revisadas manualmente a partir de capturas de SofaScore.",
+  "numero_de_partidos": 1,
+  "partidos": [
+    {
+      "id": "espana_argentina_primera_parte_90",
+      "nombre": "España vs Argentina - Primera parte de los 90 minutos",
+      "periodo": "primera_parte_90_minutos",
+      "equipos": {
+        "izquierda_verde": "España",
+        "derecha_azul": "Argentina"
+      },
+      "estadisticas": {
+        "resumen_del_partido": {
+          "posesion_de_balon_pct": {
+            "España": 65,
+            "Argentina": 35
+          },
+          "goles_esperados_xg": {
+            "España": 0.19,
+            "Argentina": 0.0
+          },
+          "ocasiones_claras": {
+            "España": 0,
+            "Argentina": 0
+          },
+          "tiros_totales": {
+            "España": 3,
+            "Argentina": 0
+          },
+          "paradas": {
+            "España": 0,
+            "Argentina": 2
+          },
+          "saques_de_esquina": {
+            "España": 2,
+            "Argentina": 0
+          },
+          "faltas": {
+            "España": 7,
+            "Argentina": 9
+          },
+          "pases": {
+            "España": 348,
+            "Argentina": 196
+          },
+          "entradas": {
+            "España": 7,
+            "Argentina": 8
+          },
+          "tiros_libres": {
+            "España": 9,
+            "Argentina": 7
+          },
+          "tarjetas_amarillas": {
+            "España": 0,
+            "Argentina": 1
+          },
+          "tarjetas_rojas": {
+            "España": 0,
+            "Argentina": 0
+          }
+        },
+        "tiros": {
+          "tiros_totales": {
+            "España": 3,
+            "Argentina": 0
+          },
+          "tiros_a_puerta": {
+            "España": 2,
+            "Argentina": 0
+          },
+          "goles_esperados_xg": {
+            "España": 0.19,
+            "Argentina": 0.0
+          },
+          "goles_esperados_a_puerta_xgot": {
+            "España": 0.46,
+            "Argentina": 0.0
+          },
+          "tiros_fuera": {
+            "España": 1,
+            "Argentina": 0
+          },
+          "tiros_bloqueados": {
+            "España": 0,
+            "Argentina": 0
+          },
+          "tiros_dentro_del_area_penal": {
+            "España": 1,
+            "Argentina": 0
+          },
+          "tiros_fuera_del_area": {
+            "España": 2,
+            "Argentina": 0
+          }
+        },
+        "ataque": {
+          "ocasiones_claras_realizadas": {
+            "España": 0,
+            "Argentina": 0
+          },
+          "ocasiones_claras_falladas": {
+            "España": 0,
+            "Argentina": 0
+          },
+          "pases_en_profundidad": {
+            "España": 0,
+            "Argentina": 0
+          },
+          "faltas_recibidas_en_el_tercio_final": {
+            "España": 0,
+            "Argentina": 0
+          },
+          "fueras_de_juego": {
+            "España": 2,
+            "Argentina": 1
+          }
+        },
+        "duelos": {
+          "duelos_pct": {
+            "España": 50,
+            "Argentina": 50
+          },
+          "perdidas": {
+            "España": 4,
+            "Argentina": 5
+          },
+          "duelos_en_el_suelo": {
+            "España": {
+              "ganados": 23,
+              "totales": 43,
+              "porcentaje": 53
+            },
+            "Argentina": {
+              "ganados": 20,
+              "totales": 43,
+              "porcentaje": 47
+            }
+          },
+          "duelos_aereos": {
+            "España": {
+              "ganados": 2,
+              "totales": 7,
+              "porcentaje": 29
+            },
+            "Argentina": {
+              "ganados": 5,
+              "totales": 7,
+              "porcentaje": 71
+            }
+          },
+          "regates": {
+            "España": {
+              "completados": 8,
+              "intentados": 12,
+              "porcentaje": 67
+            },
+            "Argentina": {
+              "completados": 5,
+              "intentados": 7,
+              "porcentaje": 71
+            }
+          }
+        },
+        "pases": {
+          "pases_precisos": {
+            "España": 313,
+            "Argentina": 155
+          },
+          "saques_de_banda": {
+            "España": 9,
+            "Argentina": 9
+          },
+          "pases_al_ultimo_tercio": {
+            "España": 33,
+            "Argentina": 18
+          },
+          "pases_largos": {
+            "España": {
+              "completados": 10,
+              "intentados": 23,
+              "porcentaje": 43
+            },
+            "Argentina": {
+              "completados": 7,
+              "intentados": 27,
+              "porcentaje": 26
+            }
+          },
+          "centros": {
+            "España": {
+              "completados": 1,
+              "intentados": 10,
+              "porcentaje": 10
+            },
+            "Argentina": {
+              "completados": 0,
+              "intentados": 1,
+              "porcentaje": 0
+            }
+          }
+        },
+        "defensa": {
+          "entradas_ganadas_pct": {
+            "España": 86,
+            "Argentina": 75
+          },
+          "tackles_totales": {
+            "España": 7,
+            "Argentina": 8
+          },
+          "intercepciones": {
+            "España": 5,
+            "Argentina": 5
+          },
+          "recuperaciones": {
+            "España": 24,
+            "Argentina": 24
+          },
+          "despejes": {
+            "España": 5,
+            "Argentina": 4
+          }
+        },
+        "porteria": {
+          "paradas": {
+            "España": 0,
+            "Argentina": 2
+          },
+          "saques_de_puerta": {
+            "España": 1,
+            "Argentina": 2
+          }
+        },
+        "mapa_de_ataques": {
+          "equipo_mostrado": "España",
+          "direccion_de_ataque": "hacia_la_derecha",
+          "descripcion": "Mapa de ataques mostrado para España durante la primera parte."
+        },
+        "mapa_de_pases": {
+          "tipo_de_dato": "distribucion_global_no_atribuible_por_equipo",
+          "tercio_defensivo_pct": 20,
+          "tercio_central_pct": 43,
+          "tercio_ofensivo_pct": 37
+        }
+      },
+      "fuentes": [
+        "Captura de pantalla 2026-09-10 233131.png",
+        "Captura de pantalla 2026-09-10 233142.png",
+        "Captura de pantalla 2026-09-10 233150.png"
+      ]
+    }
+  ]
+}

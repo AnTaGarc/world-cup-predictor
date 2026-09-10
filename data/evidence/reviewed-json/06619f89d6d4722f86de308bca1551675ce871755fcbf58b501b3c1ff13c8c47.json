@@ -1,0 +1,298 @@
+{
+  "descripcion": "Estadísticas profundas revisadas manualmente a partir de capturas de SofaScore.",
+  "numero_de_partidos": 1,
+  "partidos": [
+    {
+      "id": "mexico_inglaterra",
+      "nombre": "México vs Inglaterra",
+      "equipos": {
+        "izquierda_verde": "México",
+        "derecha_azul": "Inglaterra"
+      },
+      "estadisticas": {
+        "resumen_del_partido": {
+          "posesion_de_balon_pct": {
+            "México": 67,
+            "Inglaterra": 33
+          },
+          "distancia_recorrida_km": {
+            "México": 91.6,
+            "Inglaterra": 91.6
+          },
+          "goles_esperados_xg": {
+            "México": 1.88,
+            "Inglaterra": 1.61
+          },
+          "ocasiones_claras": {
+            "México": 2,
+            "Inglaterra": 3
+          },
+          "tiros_totales": {
+            "México": 20,
+            "Inglaterra": 6
+          },
+          "paradas": {
+            "México": 2,
+            "Inglaterra": 3
+          },
+          "numero_de_sprints": {
+            "México": 61,
+            "Inglaterra": 60
+          },
+          "saques_de_esquina": {
+            "México": 12,
+            "Inglaterra": 2
+          },
+          "faltas": {
+            "México": 14,
+            "Inglaterra": 7
+          },
+          "pases": {
+            "México": 454,
+            "Inglaterra": 244
+          },
+          "entradas": {
+            "México": 16,
+            "Inglaterra": 18
+          },
+          "tiros_libres": {
+            "México": 6,
+            "Inglaterra": 13
+          },
+          "tarjetas_amarillas": {
+            "México": 2,
+            "Inglaterra": 4
+          },
+          "tarjetas_rojas": {
+            "México": 0,
+            "Inglaterra": 1
+          }
+        },
+        "tiros": {
+          "tiros_totales": {
+            "México": 20,
+            "Inglaterra": 6
+          },
+          "tiros_a_puerta": {
+            "México": 5,
+            "Inglaterra": 5
+          },
+          "goles_esperados_xg": {
+            "México": 1.88,
+            "Inglaterra": 1.61
+          },
+          "goles_esperados_a_puerta_xgot": {
+            "México": 1.82,
+            "Inglaterra": 2.98
+          },
+          "tiros_al_palo": {
+            "México": 0,
+            "Inglaterra": 1
+          },
+          "tiros_fuera": {
+            "México": 8,
+            "Inglaterra": 1
+          },
+          "tiros_bloqueados": {
+            "México": 7,
+            "Inglaterra": 0
+          },
+          "tiros_dentro_del_area_penal": {
+            "México": 12,
+            "Inglaterra": 4
+          },
+          "tiros_fuera_del_area": {
+            "México": 8,
+            "Inglaterra": 2
+          }
+        },
+        "ataque": {
+          "ocasiones_claras_realizadas": {
+            "México": 2,
+            "Inglaterra": 3
+          },
+          "pases_en_profundidad": {
+            "México": 0,
+            "Inglaterra": 1
+          },
+          "toques_dentro_del_area": {
+            "México": 37,
+            "Inglaterra": 14
+          },
+          "faltas_recibidas_en_el_tercio_final": {
+            "México": 2,
+            "Inglaterra": 1
+          },
+          "fueras_de_juego": {
+            "México": 1,
+            "Inglaterra": 0
+          }
+        },
+        "duelos": {
+          "duelos_pct": {
+            "México": 43,
+            "Inglaterra": 57
+          },
+          "perdidas": {
+            "México": 12,
+            "Inglaterra": 6
+          },
+          "duelos_en_el_suelo": {
+            "México": {
+              "ganados": 27,
+              "totales": 67,
+              "porcentaje": 40
+            },
+            "Inglaterra": {
+              "ganados": 40,
+              "totales": 67,
+              "porcentaje": 60
+            }
+          },
+          "duelos_aereos": {
+            "México": {
+              "ganados": 11,
+              "totales": 22,
+              "porcentaje": 50
+            },
+            "Inglaterra": {
+              "ganados": 11,
+              "totales": 22,
+              "porcentaje": 50
+            }
+          },
+          "regates": {
+            "México": {
+              "completados": 5,
+              "intentados": 11,
+              "porcentaje": 45
+            },
+            "Inglaterra": {
+              "completados": 9,
+              "intentados": 19,
+              "porcentaje": 47
+            }
+          }
+        },
+        "pases": {
+          "pases_precisos": {
+            "México": 418,
+            "Inglaterra": 195
+          },
+          "saques_de_banda": {
+            "México": 24,
+            "Inglaterra": 12
+          },
+          "pases_al_ultimo_tercio": {
+            "México": 75,
+            "Inglaterra": 38
+          },
+          "pases_en_el_ultimo_tercio": {
+            "México": {
+              "completados": 160,
+              "intentados": 189,
+              "porcentaje": 85
+            },
+            "Inglaterra": {
+              "completados": 29,
+              "intentados": 59,
+              "porcentaje": 49
+            }
+          },
+          "pases_largos": {
+            "México": {
+              "completados": 30,
+              "intentados": 42,
+              "porcentaje": 71
+            },
+            "Inglaterra": {
+              "completados": 22,
+              "intentados": 45,
+              "porcentaje": 49
+            }
+          },
+          "centros": {
+            "México": {
+              "completados": 13,
+              "intentados": 52,
+              "porcentaje": 25
+            },
+            "Inglaterra": {
+              "completados": 1,
+              "intentados": 4,
+              "porcentaje": 25
+            }
+          }
+        },
+        "defensa": {
+          "entradas_ganadas_pct": {
+            "México": 50,
+            "Inglaterra": 50
+          },
+          "tackles_totales": {
+            "México": 16,
+            "Inglaterra": 18
+          },
+          "intercepciones": {
+            "México": 7,
+            "Inglaterra": 4
+          },
+          "recuperaciones": {
+            "México": 32,
+            "Inglaterra": 30
+          },
+          "despejes": {
+            "México": 13,
+            "Inglaterra": 49
+          },
+          "errores_que_llevan_a_gol": {
+            "México": 1,
+            "Inglaterra": 1
+          }
+        },
+        "porteria": {
+          "paradas": {
+            "México": 2,
+            "Inglaterra": 3
+          },
+          "goles_evitados": {
+            "México": -0.02,
+            "Inglaterra": -0.18
+          },
+          "grandes_paradas": {
+            "México": 0,
+            "Inglaterra": 2
+          },
+          "despejes_por_alto": {
+            "México": 0,
+            "Inglaterra": 1
+          },
+          "con_los_punos": {
+            "México": 1,
+            "Inglaterra": 5
+          },
+          "saques_de_puerta": {
+            "México": 4,
+            "Inglaterra": 13
+          }
+        },
+        "mapa_de_ataques": {
+          "equipo_mostrado": "México",
+          "direccion_de_ataque": "hacia_la_derecha",
+          "descripcion": "Mapa de ataques mostrado para México."
+        },
+        "mapa_de_pases": {
+          "tipo_de_dato": "distribucion_global_no_atribuible_por_equipo",
+          "tercio_defensivo_pct": 18,
+          "tercio_central_pct": 39,
+          "tercio_ofensivo_pct": 43
+        }
+      },
+      "fuentes": [
+        "Captura de pantalla 2026-09-10 230440.png",
+        "Captura de pantalla 2026-09-10 230449.png",
+        "Captura de pantalla 2026-09-10 230502.png"
+      ]
+    }
+  ]
+}

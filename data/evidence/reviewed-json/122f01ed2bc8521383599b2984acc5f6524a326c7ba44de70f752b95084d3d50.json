@@ -1,0 +1,282 @@
+{
+  "descripcion": "Estadísticas profundas revisadas manualmente a partir de capturas de SofaScore.",
+  "numero_de_partidos": 1,
+  "partidos": [
+    {
+      "id": "brasil_noruega",
+      "nombre": "Brasil vs Noruega",
+      "equipos": {
+        "izquierda_verde": "Brasil",
+        "derecha_azul": "Noruega"
+      },
+      "estadisticas": {
+        "resumen_del_partido": {
+          "posesion_de_balon_pct": {
+            "Brasil": 34,
+            "Noruega": 66
+          },
+          "goles_esperados_xg": {
+            "Brasil": 2.73,
+            "Noruega": 0.84
+          },
+          "ocasiones_claras": {
+            "Brasil": 5,
+            "Noruega": 3
+          },
+          "tiros_totales": {
+            "Brasil": 14,
+            "Noruega": 9
+          },
+          "paradas": {
+            "Brasil": 3,
+            "Noruega": 4
+          },
+          "saques_de_esquina": {
+            "Brasil": 5,
+            "Noruega": 5
+          },
+          "faltas": {
+            "Brasil": 7,
+            "Noruega": 6
+          },
+          "pases": {
+            "Brasil": 329,
+            "Noruega": 680
+          },
+          "entradas": {
+            "Brasil": 23,
+            "Noruega": 14
+          },
+          "tiros_libres": {
+            "Brasil": 4,
+            "Noruega": 7
+          },
+          "tarjetas_amarillas": {
+            "Brasil": 1,
+            "Noruega": 0
+          }
+        },
+        "tiros": {
+          "tiros_totales": {
+            "Brasil": 14,
+            "Noruega": 9
+          },
+          "tiros_a_puerta": {
+            "Brasil": 4,
+            "Noruega": 5
+          },
+          "tiros_al_palo": {
+            "Brasil": 1,
+            "Noruega": 0
+          },
+          "tiros_fuera": {
+            "Brasil": 6,
+            "Noruega": 3
+          },
+          "tiros_bloqueados": {
+            "Brasil": 4,
+            "Noruega": 1
+          },
+          "tiros_dentro_del_area_penal": {
+            "Brasil": 10,
+            "Noruega": 7
+          },
+          "tiros_fuera_del_area": {
+            "Brasil": 4,
+            "Noruega": 2
+          }
+        },
+        "ataque": {
+          "ocasiones_claras_realizadas": {
+            "Brasil": 1,
+            "Noruega": 1
+          },
+          "ocasiones_claras_falladas": {
+            "Brasil": 4,
+            "Noruega": 2
+          },
+          "pases_en_profundidad": {
+            "Brasil": 1,
+            "Noruega": 0
+          },
+          "toques_dentro_del_area": {
+            "Brasil": 32,
+            "Noruega": 17
+          },
+          "faltas_recibidas_en_el_tercio_final": {
+            "Brasil": 3,
+            "Noruega": 1
+          },
+          "fueras_de_juego": {
+            "Brasil": 1,
+            "Noruega": 1
+          }
+        },
+        "duelos": {
+          "duelos_pct": {
+            "Brasil": 51,
+            "Noruega": 49
+          },
+          "perdidas": {
+            "Brasil": 7,
+            "Noruega": 14
+          },
+          "duelos_en_el_suelo": {
+            "Brasil": {
+              "ganados": 39,
+              "totales": 70,
+              "porcentaje": 56
+            },
+            "Noruega": {
+              "ganados": 31,
+              "totales": 70,
+              "porcentaje": 44
+            }
+          },
+          "duelos_aereos": {
+            "Brasil": {
+              "ganados": 4,
+              "totales": 15,
+              "porcentaje": 27
+            },
+            "Noruega": {
+              "ganados": 11,
+              "totales": 15,
+              "porcentaje": 73
+            }
+          },
+          "regates": {
+            "Brasil": {
+              "completados": 10,
+              "intentados": 17,
+              "porcentaje": 59
+            },
+            "Noruega": {
+              "completados": 11,
+              "intentados": 20,
+              "porcentaje": 55
+            }
+          }
+        },
+        "pases": {
+          "pases_precisos": {
+            "Brasil": 279,
+            "Noruega": 617
+          },
+          "saques_de_banda": {
+            "Brasil": 13,
+            "Noruega": 14
+          },
+          "pases_al_ultimo_tercio": {
+            "Brasil": 47,
+            "Noruega": 75
+          },
+          "pases_en_el_ultimo_tercio": {
+            "Brasil": {
+              "completados": 101,
+              "intentados": 122,
+              "porcentaje": 83
+            },
+            "Noruega": {
+              "completados": 175,
+              "intentados": 215,
+              "porcentaje": 81
+            }
+          },
+          "pases_largos": {
+            "Brasil": {
+              "completados": 19,
+              "intentados": 41,
+              "porcentaje": 46
+            },
+            "Noruega": {
+              "completados": 24,
+              "intentados": 49,
+              "porcentaje": 49
+            }
+          },
+          "centros": {
+            "Brasil": {
+              "completados": 1,
+              "intentados": 16,
+              "porcentaje": 6
+            },
+            "Noruega": {
+              "completados": 1,
+              "intentados": 12,
+              "porcentaje": 8
+            }
+          }
+        },
+        "defensa": {
+          "entradas_ganadas_pct": {
+            "Brasil": 39,
+            "Noruega": 79
+          },
+          "tackles_totales": {
+            "Brasil": 23,
+            "Noruega": 14
+          },
+          "intercepciones": {
+            "Brasil": 11,
+            "Noruega": 6
+          },
+          "recuperaciones": {
+            "Brasil": 39,
+            "Noruega": 39
+          },
+          "despejes": {
+            "Brasil": 22,
+            "Noruega": 17
+          },
+          "errores_que_llevan_a_disparo": {
+            "Brasil": 1,
+            "Noruega": 1
+          }
+        },
+        "porteria": {
+          "paradas": {
+            "Brasil": 3,
+            "Noruega": 4
+          },
+          "goles_evitados": {
+            "Brasil": -0.46,
+            "Noruega": 0.76
+          },
+          "grandes_paradas": {
+            "Brasil": 1,
+            "Noruega": 3
+          },
+          "con_los_punos": {
+            "Brasil": 0,
+            "Noruega": 1
+          },
+          "saques_de_puerta": {
+            "Brasil": 4,
+            "Noruega": 8
+          },
+          "paradas_de_penalti": {
+            "Brasil": 0,
+            "Noruega": 1
+          }
+        },
+        "mapa_de_ataques": {
+          "equipo_mostrado": "Brasil",
+          "direccion_de_ataque": "hacia_la_derecha",
+          "descripcion": "Mapa de ataques mostrado para Brasil."
+        },
+        "mapa_de_pases": {
+          "tipo_de_dato": "distribucion_global_no_atribuible_por_equipo",
+          "tercio_defensivo_pct": 30,
+          "tercio_central_pct": 41,
+          "tercio_ofensivo_pct": 29
+        }
+      },
+      "fuentes": [
+        "Captura de pantalla 2026-07-06 003845.png",
+        "Captura de pantalla 2026-07-06 003857.png",
+        "Captura de pantalla 2026-07-06 003916.png"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,294 @@
+{
+  "descripcion": "Estadísticas profundas revisadas manualmente a partir de capturas de SofaScore.",
+  "numero_de_partidos": 1,
+  "partidos": [
+    {
+      "id": "noruega_inglaterra",
+      "nombre": "Noruega vs Inglaterra",
+      "equipos": {
+        "izquierda_verde": "Noruega",
+        "derecha_azul": "Inglaterra"
+      },
+      "estadisticas": {
+        "resumen_del_partido": {
+          "posesion_de_balon_pct": {
+            "Noruega": 48,
+            "Inglaterra": 52
+          },
+          "distancia_recorrida_km": {
+            "Noruega": 137.7,
+            "Inglaterra": 130.3
+          },
+          "goles_esperados_xg": {
+            "Noruega": 0.68,
+            "Inglaterra": 1.04
+          },
+          "ocasiones_claras": {
+            "Noruega": 1,
+            "Inglaterra": 2
+          },
+          "tiros_totales": {
+            "Noruega": 13,
+            "Inglaterra": 14
+          },
+          "paradas": {
+            "Noruega": 6,
+            "Inglaterra": 3
+          },
+          "numero_de_sprints": {
+            "Noruega": 106,
+            "Inglaterra": 96
+          },
+          "saques_de_esquina": {
+            "Noruega": 7,
+            "Inglaterra": 4
+          },
+          "faltas": {
+            "Noruega": 10,
+            "Inglaterra": 8
+          },
+          "pases": {
+            "Noruega": 577,
+            "Inglaterra": 628
+          },
+          "entradas": {
+            "Noruega": 24,
+            "Inglaterra": 15
+          },
+          "tiros_libres": {
+            "Noruega": 8,
+            "Inglaterra": 10
+          },
+          "tarjetas_amarillas": {
+            "Noruega": 1,
+            "Inglaterra": 0
+          }
+        },
+        "tiros": {
+          "tiros_totales": {
+            "Noruega": 13,
+            "Inglaterra": 14
+          },
+          "tiros_a_puerta": {
+            "Noruega": 4,
+            "Inglaterra": 8
+          },
+          "goles_esperados_xg": {
+            "Noruega": 0.68,
+            "Inglaterra": 1.04
+          },
+          "goles_esperados_a_puerta_xgot": {
+            "Noruega": 0.42,
+            "Inglaterra": 2.64
+          },
+          "tiros_al_palo": {
+            "Noruega": 1,
+            "Inglaterra": 0
+          },
+          "tiros_fuera": {
+            "Noruega": 6,
+            "Inglaterra": 3
+          },
+          "tiros_bloqueados": {
+            "Noruega": 3,
+            "Inglaterra": 3
+          },
+          "tiros_dentro_del_area_penal": {
+            "Noruega": 10,
+            "Inglaterra": 8
+          },
+          "tiros_fuera_del_area": {
+            "Noruega": 3,
+            "Inglaterra": 6
+          }
+        },
+        "ataque": {
+          "ocasiones_claras_realizadas": {
+            "Noruega": 1,
+            "Inglaterra": 2
+          },
+          "ocasiones_claras_falladas": {
+            "Noruega": 1,
+            "Inglaterra": 1
+          },
+          "toques_dentro_del_area": {
+            "Noruega": 28,
+            "Inglaterra": 31
+          },
+          "faltas_recibidas_en_el_tercio_final": {
+            "Noruega": 1,
+            "Inglaterra": 3
+          },
+          "fueras_de_juego": {
+            "Noruega": 1,
+            "Inglaterra": 5
+          }
+        },
+        "duelos": {
+          "duelos_pct": {
+            "Noruega": 48,
+            "Inglaterra": 52
+          },
+          "perdidas": {
+            "Noruega": 6,
+            "Inglaterra": 13
+          },
+          "duelos_en_el_suelo": {
+            "Noruega": {
+              "ganados": 36,
+              "totales": 77,
+              "porcentaje": 47
+            },
+            "Inglaterra": {
+              "ganados": 41,
+              "totales": 77,
+              "porcentaje": 53
+            }
+          },
+          "duelos_aereos": {
+            "Noruega": {
+              "ganados": 13,
+              "totales": 25,
+              "porcentaje": 52
+            },
+            "Inglaterra": {
+              "ganados": 12,
+              "totales": 25,
+              "porcentaje": 48
+            }
+          },
+          "regates": {
+            "Noruega": {
+              "completados": 6,
+              "intentados": 15,
+              "porcentaje": 40
+            },
+            "Inglaterra": {
+              "completados": 16,
+              "intentados": 27,
+              "porcentaje": 59
+            }
+          }
+        },
+        "pases": {
+          "pases_precisos": {
+            "Noruega": 494,
+            "Inglaterra": 567
+          },
+          "saques_de_banda": {
+            "Noruega": 16,
+            "Inglaterra": 27
+          },
+          "pases_al_ultimo_tercio": {
+            "Noruega": 62,
+            "Inglaterra": 72
+          },
+          "pases_en_el_ultimo_tercio": {
+            "Noruega": {
+              "completados": 124,
+              "intentados": 165,
+              "porcentaje": 75
+            },
+            "Inglaterra": {
+              "completados": 138,
+              "intentados": 166,
+              "porcentaje": 83
+            }
+          },
+          "pases_largos": {
+            "Noruega": {
+              "completados": 18,
+              "intentados": 46,
+              "porcentaje": 39
+            },
+            "Inglaterra": {
+              "completados": 25,
+              "intentados": 50,
+              "porcentaje": 50
+            }
+          },
+          "centros": {
+            "Noruega": {
+              "completados": 3,
+              "intentados": 19,
+              "porcentaje": 16
+            },
+            "Inglaterra": {
+              "completados": 9,
+              "intentados": 21,
+              "porcentaje": 43
+            }
+          }
+        },
+        "defensa": {
+          "entradas_ganadas_pct": {
+            "Noruega": 46,
+            "Inglaterra": 60
+          },
+          "tackles_totales": {
+            "Noruega": 24,
+            "Inglaterra": 15
+          },
+          "intercepciones": {
+            "Noruega": 9,
+            "Inglaterra": 6
+          },
+          "recuperaciones": {
+            "Noruega": 43,
+            "Inglaterra": 44
+          },
+          "despejes": {
+            "Noruega": 21,
+            "Inglaterra": 35
+          },
+          "errores_que_llevan_a_disparo": {
+            "Noruega": 1,
+            "Inglaterra": 1
+          },
+          "errores_que_llevan_a_gol": {
+            "Noruega": 1,
+            "Inglaterra": 0
+          }
+        },
+        "porteria": {
+          "paradas": {
+            "Noruega": 6,
+            "Inglaterra": 3
+          },
+          "goles_evitados": {
+            "Noruega": 0.64,
+            "Inglaterra": -0.58
+          },
+          "grandes_paradas": {
+            "Noruega": 0,
+            "Inglaterra": 2
+          },
+          "con_los_punos": {
+            "Noruega": 0,
+            "Inglaterra": 2
+          },
+          "saques_de_puerta": {
+            "Noruega": 10,
+            "Inglaterra": 7
+          }
+        },
+        "mapa_de_ataques": {
+          "equipo_mostrado": "Noruega",
+          "direccion_de_ataque": "hacia_la_derecha",
+          "descripcion": "Mapa de ataques mostrado para Noruega."
+        },
+        "mapa_de_pases": {
+          "tipo_de_dato": "distribucion_global_no_atribuible_por_equipo",
+          "tercio_defensivo_pct": 30,
+          "tercio_central_pct": 44,
+          "tercio_ofensivo_pct": 26
+        }
+      },
+      "fuentes": [
+        "Captura de pantalla 2026-09-10 231754.png",
+        "Captura de pantalla 2026-09-10 231806.png",
+        "Captura de pantalla 2026-09-10 231819.png"
+      ]
+    }
+  ]
+}

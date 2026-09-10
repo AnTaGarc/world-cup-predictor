@@ -1,0 +1,286 @@
+{
+  "descripcion": "Estadísticas profundas revisadas manualmente a partir de capturas de SofaScore.",
+  "numero_de_partidos": 1,
+  "partidos": [
+    {
+      "id": "francia_marruecos",
+      "nombre": "Francia vs Marruecos",
+      "equipos": {
+        "izquierda_verde": "Francia",
+        "derecha_azul": "Marruecos"
+      },
+      "estadisticas": {
+        "resumen_del_partido": {
+          "posesion_de_balon_pct": {
+            "Francia": 48,
+            "Marruecos": 52
+          },
+          "distancia_recorrida_km": {
+            "Francia": 95.6,
+            "Marruecos": 97.5
+          },
+          "goles_esperados_xg": {
+            "Francia": 3.69,
+            "Marruecos": 0.14
+          },
+          "ocasiones_claras": {
+            "Francia": 6,
+            "Marruecos": 0
+          },
+          "tiros_totales": {
+            "Francia": 22,
+            "Marruecos": 5
+          },
+          "paradas": {
+            "Francia": 1,
+            "Marruecos": 6
+          },
+          "numero_de_sprints": {
+            "Francia": 114,
+            "Marruecos": 99
+          },
+          "saques_de_esquina": {
+            "Francia": 5,
+            "Marruecos": 5
+          },
+          "faltas": {
+            "Francia": 10,
+            "Marruecos": 13
+          },
+          "pases": {
+            "Francia": 486,
+            "Marruecos": 526
+          },
+          "entradas": {
+            "Francia": 11,
+            "Marruecos": 16
+          },
+          "tiros_libres": {
+            "Francia": 12,
+            "Marruecos": 10
+          },
+          "tarjetas_amarillas": {
+            "Francia": 0,
+            "Marruecos": 1
+          }
+        },
+        "tiros": {
+          "tiros_totales": {
+            "Francia": 22,
+            "Marruecos": 5
+          },
+          "tiros_a_puerta": {
+            "Francia": 8,
+            "Marruecos": 1
+          },
+          "goles_esperados_xg": {
+            "Francia": 3.69,
+            "Marruecos": 0.14
+          },
+          "goles_esperados_a_puerta_xgot": {
+            "Francia": 2.88,
+            "Marruecos": 0.04
+          },
+          "tiros_al_palo": {
+            "Francia": 1,
+            "Marruecos": 0
+          },
+          "tiros_fuera": {
+            "Francia": 9,
+            "Marruecos": 3
+          },
+          "tiros_bloqueados": {
+            "Francia": 5,
+            "Marruecos": 1
+          },
+          "tiros_dentro_del_area_penal": {
+            "Francia": 12,
+            "Marruecos": 1
+          },
+          "tiros_fuera_del_area": {
+            "Francia": 10,
+            "Marruecos": 4
+          }
+        },
+        "ataque": {
+          "ocasiones_claras_falladas": {
+            "Francia": 6,
+            "Marruecos": 0
+          },
+          "toques_dentro_del_area": {
+            "Francia": 28,
+            "Marruecos": 8
+          },
+          "faltas_recibidas_en_el_tercio_final": {
+            "Francia": 3,
+            "Marruecos": 5
+          }
+        },
+        "duelos": {
+          "duelos_pct": {
+            "Francia": 54,
+            "Marruecos": 46
+          },
+          "perdidas": {
+            "Francia": 4,
+            "Marruecos": 3
+          },
+          "duelos_en_el_suelo": {
+            "Francia": {
+              "ganados": 31,
+              "totales": 66,
+              "porcentaje": 47
+            },
+            "Marruecos": {
+              "ganados": 35,
+              "totales": 66,
+              "porcentaje": 53
+            }
+          },
+          "duelos_aereos": {
+            "Francia": {
+              "ganados": 12,
+              "totales": 13,
+              "porcentaje": 92
+            },
+            "Marruecos": {
+              "ganados": 1,
+              "totales": 13,
+              "porcentaje": 8
+            }
+          },
+          "regates": {
+            "Francia": {
+              "completados": 9,
+              "intentados": 21,
+              "porcentaje": 43
+            },
+            "Marruecos": {
+              "completados": 11,
+              "intentados": 19,
+              "porcentaje": 58
+            }
+          }
+        },
+        "pases": {
+          "pases_precisos": {
+            "Francia": 432,
+            "Marruecos": 452
+          },
+          "saques_de_banda": {
+            "Francia": 17,
+            "Marruecos": 18
+          },
+          "pases_al_ultimo_tercio": {
+            "Francia": 64,
+            "Marruecos": 35
+          },
+          "pases_en_el_ultimo_tercio": {
+            "Francia": {
+              "completados": 141,
+              "intentados": 180,
+              "porcentaje": 78
+            },
+            "Marruecos": {
+              "completados": 85,
+              "intentados": 111,
+              "porcentaje": 77
+            }
+          },
+          "pases_largos": {
+            "Francia": {
+              "completados": 14,
+              "intentados": 30,
+              "porcentaje": 47
+            },
+            "Marruecos": {
+              "completados": 11,
+              "intentados": 39,
+              "porcentaje": 28
+            }
+          },
+          "centros": {
+            "Francia": {
+              "completados": 5,
+              "intentados": 12,
+              "porcentaje": 42
+            },
+            "Marruecos": {
+              "completados": 2,
+              "intentados": 13,
+              "porcentaje": 15
+            }
+          }
+        },
+        "defensa": {
+          "entradas_ganadas_pct": {
+            "Francia": 73,
+            "Marruecos": 31
+          },
+          "tackles_totales": {
+            "Francia": 11,
+            "Marruecos": 16
+          },
+          "intercepciones": {
+            "Francia": 13,
+            "Marruecos": 6
+          },
+          "recuperaciones": {
+            "Francia": 42,
+            "Marruecos": 41
+          },
+          "despejes": {
+            "Francia": 20,
+            "Marruecos": 12
+          },
+          "errores_que_llevan_a_disparo": {
+            "Francia": 0,
+            "Marruecos": 3
+          }
+        },
+        "porteria": {
+          "paradas": {
+            "Francia": 1,
+            "Marruecos": 6
+          },
+          "goles_evitados": {
+            "Francia": 0.04,
+            "Marruecos": 0.88
+          },
+          "grandes_paradas": {
+            "Francia": 0,
+            "Marruecos": 3
+          },
+          "despejes_por_alto": {
+            "Francia": 1,
+            "Marruecos": 0
+          },
+          "saques_de_puerta": {
+            "Francia": 7,
+            "Marruecos": 13
+          },
+          "paradas_de_penalti": {
+            "Francia": 0,
+            "Marruecos": 1
+          }
+        },
+        "mapa_de_ataques": {
+          "equipo_mostrado": "Francia",
+          "direccion_de_ataque": "hacia_la_derecha",
+          "descripcion": "Mapa de ataques mostrado para Francia."
+        },
+        "mapa_de_pases": {
+          "tipo_de_dato": "distribucion_global_no_atribuible_por_equipo",
+          "tercio_defensivo_pct": 20,
+          "tercio_central_pct": 41,
+          "tercio_ofensivo_pct": 39
+        }
+      },
+      "fuentes": [
+        "Captura de pantalla 2026-09-10 231436.png",
+        "Captura de pantalla 2026-09-10 231446.png",
+        "Captura de pantalla 2026-09-10 231454.png"
+      ]
+    }
+  ]
+}

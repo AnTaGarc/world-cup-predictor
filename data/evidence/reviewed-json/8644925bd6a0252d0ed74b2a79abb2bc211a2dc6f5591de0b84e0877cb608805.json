@@ -1,0 +1,286 @@
+{
+  "descripcion": "Estadísticas profundas revisadas manualmente a partir de capturas de SofaScore.",
+  "numero_de_partidos": 1,
+  "partidos": [
+    {
+      "id": "inglaterra_argentina",
+      "nombre": "Inglaterra vs Argentina",
+      "equipos": {
+        "izquierda_verde": "Inglaterra",
+        "derecha_azul": "Argentina"
+      },
+      "estadisticas": {
+        "resumen_del_partido": {
+          "posesion_de_balon_pct": {
+            "Inglaterra": 36,
+            "Argentina": 64
+          },
+          "distancia_recorrida_km": {
+            "Inglaterra": 95.2,
+            "Argentina": 93.9
+          },
+          "goles_esperados_xg": {
+            "Inglaterra": 0.53,
+            "Argentina": 1.59
+          },
+          "ocasiones_claras": {
+            "Inglaterra": 1,
+            "Argentina": 3
+          },
+          "tiros_totales": {
+            "Inglaterra": 5,
+            "Argentina": 15
+          },
+          "paradas": {
+            "Inglaterra": 3,
+            "Argentina": 1
+          },
+          "numero_de_sprints": {
+            "Inglaterra": 94,
+            "Argentina": 78
+          },
+          "saques_de_esquina": {
+            "Inglaterra": 1,
+            "Argentina": 6
+          },
+          "faltas": {
+            "Inglaterra": 11,
+            "Argentina": 15
+          },
+          "pases": {
+            "Inglaterra": 325,
+            "Argentina": 588
+          },
+          "entradas": {
+            "Inglaterra": 15,
+            "Argentina": 20
+          },
+          "tiros_libres": {
+            "Inglaterra": 15,
+            "Argentina": 11
+          },
+          "tarjetas_amarillas": {
+            "Inglaterra": 1,
+            "Argentina": 3
+          }
+        },
+        "tiros": {
+          "tiros_totales": {
+            "Inglaterra": 5,
+            "Argentina": 15
+          },
+          "tiros_a_puerta": {
+            "Inglaterra": 2,
+            "Argentina": 5
+          },
+          "goles_esperados_xg": {
+            "Inglaterra": 0.53,
+            "Argentina": 1.59
+          },
+          "goles_esperados_a_puerta_xgot": {
+            "Inglaterra": 1.02,
+            "Argentina": 1.54
+          },
+          "tiros_al_palo": {
+            "Inglaterra": 0,
+            "Argentina": 2
+          },
+          "tiros_fuera": {
+            "Inglaterra": 1,
+            "Argentina": 7
+          },
+          "tiros_bloqueados": {
+            "Inglaterra": 2,
+            "Argentina": 3
+          },
+          "tiros_dentro_del_area_penal": {
+            "Inglaterra": 2,
+            "Argentina": 7
+          },
+          "tiros_fuera_del_area": {
+            "Inglaterra": 3,
+            "Argentina": 8
+          }
+        },
+        "ataque": {
+          "ocasiones_claras_realizadas": {
+            "Inglaterra": 1,
+            "Argentina": 1
+          },
+          "ocasiones_claras_falladas": {
+            "Inglaterra": 0,
+            "Argentina": 2
+          },
+          "toques_dentro_del_area": {
+            "Inglaterra": 7,
+            "Argentina": 28
+          },
+          "faltas_recibidas_en_el_tercio_final": {
+            "Inglaterra": 2,
+            "Argentina": 0
+          },
+          "fueras_de_juego": {
+            "Inglaterra": 1,
+            "Argentina": 3
+          }
+        },
+        "duelos": {
+          "duelos_pct": {
+            "Inglaterra": 49,
+            "Argentina": 51
+          },
+          "perdidas": {
+            "Inglaterra": 8,
+            "Argentina": 12
+          },
+          "duelos_en_el_suelo": {
+            "Inglaterra": {
+              "ganados": 37,
+              "totales": 80,
+              "porcentaje": 46
+            },
+            "Argentina": {
+              "ganados": 43,
+              "totales": 80,
+              "porcentaje": 54
+            }
+          },
+          "duelos_aereos": {
+            "Inglaterra": {
+              "ganados": 13,
+              "totales": 22,
+              "porcentaje": 59
+            },
+            "Argentina": {
+              "ganados": 9,
+              "totales": 22,
+              "porcentaje": 41
+            }
+          },
+          "regates": {
+            "Inglaterra": {
+              "completados": 7,
+              "intentados": 19,
+              "porcentaje": 37
+            },
+            "Argentina": {
+              "completados": 13,
+              "intentados": 16,
+              "porcentaje": 81
+            }
+          }
+        },
+        "pases": {
+          "pases_precisos": {
+            "Inglaterra": 273,
+            "Argentina": 537
+          },
+          "saques_de_banda": {
+            "Inglaterra": 19,
+            "Argentina": 20
+          },
+          "pases_al_ultimo_tercio": {
+            "Inglaterra": 46,
+            "Argentina": 51
+          },
+          "pases_en_el_ultimo_tercio": {
+            "Inglaterra": {
+              "completados": 60,
+              "intentados": 91,
+              "porcentaje": 66
+            },
+            "Argentina": {
+              "completados": 197,
+              "intentados": 228,
+              "porcentaje": 86
+            }
+          },
+          "pases_largos": {
+            "Inglaterra": {
+              "completados": 16,
+              "intentados": 42,
+              "porcentaje": 38
+            },
+            "Argentina": {
+              "completados": 13,
+              "intentados": 27,
+              "porcentaje": 48
+            }
+          },
+          "centros": {
+            "Inglaterra": {
+              "completados": 3,
+              "intentados": 16,
+              "porcentaje": 19
+            },
+            "Argentina": {
+              "completados": 6,
+              "intentados": 20,
+              "porcentaje": 30
+            }
+          }
+        },
+        "defensa": {
+          "entradas_ganadas_pct": {
+            "Inglaterra": 60,
+            "Argentina": 45
+          },
+          "tackles_totales": {
+            "Inglaterra": 15,
+            "Argentina": 20
+          },
+          "intercepciones": {
+            "Inglaterra": 9,
+            "Argentina": 6
+          },
+          "recuperaciones": {
+            "Inglaterra": 27,
+            "Argentina": 33
+          },
+          "despejes": {
+            "Inglaterra": 27,
+            "Argentina": 31
+          },
+          "errores_que_llevan_a_disparo": {
+            "Inglaterra": 1,
+            "Argentina": 2
+          }
+        },
+        "porteria": {
+          "paradas": {
+            "Inglaterra": 3,
+            "Argentina": 1
+          },
+          "goles_evitados": {
+            "Inglaterra": -0.46,
+            "Argentina": 0.02
+          },
+          "grandes_paradas": {
+            "Inglaterra": 2,
+            "Argentina": 0
+          },
+          "saques_de_puerta": {
+            "Inglaterra": 9,
+            "Argentina": 3
+          }
+        },
+        "mapa_de_ataques": {
+          "equipo_mostrado": "Inglaterra",
+          "direccion_de_ataque": "hacia_la_derecha",
+          "descripcion": "Mapa de ataques mostrado para Inglaterra."
+        },
+        "mapa_de_pases": {
+          "tipo_de_dato": "distribucion_global_no_atribuible_por_equipo",
+          "tercio_defensivo_pct": 35,
+          "tercio_central_pct": 38,
+          "tercio_ofensivo_pct": 27
+        }
+      },
+      "fuentes": [
+        "Captura de pantalla 2026-09-10 232755.png",
+        "Captura de pantalla 2026-09-10 232805.png",
+        "Captura de pantalla 2026-09-10 232817.png"
+      ]
+    }
+  ]
+}
