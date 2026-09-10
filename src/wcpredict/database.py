@@ -67,19 +67,6 @@ CREATE TABLE IF NOT EXISTS player_match_stats (
     PRIMARY KEY(match_id, player_id)
 );
 
-CREATE TABLE IF NOT EXISTS manual_odds (
-    id INTEGER PRIMARY KEY,
-    match_id INTEGER NOT NULL REFERENCES matches(id),
-    market_family TEXT NOT NULL,
-    market_name TEXT NOT NULL,
-    selection_name TEXT NOT NULL,
-    line REAL,
-    decimal_odds REAL NOT NULL,
-    bookmaker TEXT NOT NULL,
-    captured_at_utc TEXT NOT NULL,
-    considered INTEGER NOT NULL DEFAULT 0
-);
-
 CREATE TABLE IF NOT EXISTS predictions (
     id INTEGER PRIMARY KEY,
     match_id INTEGER NOT NULL REFERENCES matches(id),

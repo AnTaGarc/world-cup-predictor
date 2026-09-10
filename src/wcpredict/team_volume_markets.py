@@ -22,7 +22,9 @@ We build λ as a weighted blend of three signals:
   a proxy)
 * The tournament-wide mean (prior, important when per-team samples are tiny)
 
-Then we report ``over/under`` probabilities at the common bookmaker lines.
+The legacy adapter can additionally derive threshold probabilities; the public
+analytics interface in :mod:`wcpredict.team_projections` exposes only central
+expectations.
 
 Used by services.predict_match_markets and rendered as the "Estadísticas
 estimadas por equipo" panel in the Predicción y Valor page.

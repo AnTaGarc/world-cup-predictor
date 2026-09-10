@@ -6,6 +6,7 @@ from wcpredict.team_volume_markets import (
     derive_xg_factors_from_profile,
     predict_team_volume_markets,
 )
+from wcpredict.team_projections import predict_team_statistics
 
 
 def _row(team: str, metric: str, value: float, kickoff: str, competition: str = "FIFA World Cup 2022") -> dict:
@@ -19,6 +20,22 @@ def _row(team: str, metric: str, value: float, kickoff: str, competition: str = 
 
 
 class TeamProfileTests(unittest.TestCase):
+    def test_team_statistics_expose_expected_values_without_betting_lines(self):
+        rows_in = [
+            _row("Alpha", "resumen_del_partido.saques_de_esquina", 5.0, "2026-06-20T12:00:00+00:00"),
+            _row("Bravo", "resumen_del_partido.saques_de_esquina", 3.0, "2026-06-20T12:00:00+00:00"),
+        ]
+        as_of = datetime(2026, 6, 22, tzinfo=timezone.utc)
+        a = build_team_profile("Alpha", rows_in, as_of)
+        b = build_team_profile("Bravo", rows_in, as_of)
+
+        rows = predict_team_statistics(a, b)
+
+        self.assertTrue(rows)
+        self.assertTrue(all(hasattr(row, "expected") for row in rows))
+        self.assertTrue(all(not hasattr(row, "line") for row in rows))
+        self.assertTrue(all(not hasattr(row, "over_probability") for row in rows))
+
     def test_profile_shrinks_toward_tournament_mean_with_small_sample(self):
         # Spain has 1 match with 10 corners; tournament average is 4.
         deep_rows = [

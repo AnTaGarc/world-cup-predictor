@@ -15,8 +15,6 @@ CREDENTIALS = {
     "api_sports_football": "API_SPORTS_KEY",
     "apifootball": "APIFOOTBALL_API_KEY",
     "football_data": "FOOTBALL_DATA_API_KEY",
-    "oddspapi_winamax": "ODDSPAPI_API_KEY",
-    "the_odds_api": "THE_ODDS_API_KEY",
     "thesportsdb": "THESPORTSDB_API_KEY",
     "sportmonks": "SPORTMONKS_API_TOKEN",
 }

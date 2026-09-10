@@ -349,7 +349,7 @@ Tests must prove:
 - Live in-play substitution/event ingestion.
 - Claiming that an estimated substitution path is an observed coaching decision.
 - Player-dismissal paths and the associated equalisation-of-numbers procedure.
-- Betting placement or bookmaker-account integration.
+- Financial transaction or account integration.
 - Treating general save percentage as direct penalty save percentage.
 - Claiming exact substitution sequences before kickoff.
 - Automatically accepting low-confidence Transfermarkt identity matches.

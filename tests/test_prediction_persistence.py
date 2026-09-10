@@ -57,7 +57,7 @@ class PredictionPersistenceTests(unittest.TestCase):
         self.assertEqual(2, len(model_runs))
         self.assertTrue(all(row["status"] == "insufficient_data" for row in model_runs))
 
-    def test_predictions_and_odds_roundtrip_for_match(self):
+    def test_predictions_roundtrip_for_match(self):
         with tempfile.TemporaryDirectory() as tmp:
             repo = Repository(Path(tmp) / "worldcup.sqlite")
             repo.initialize()
@@ -82,18 +82,7 @@ class PredictionPersistenceTests(unittest.TestCase):
                 generated_at_utc=datetime(2026, 6, 18, 10, tzinfo=timezone.utc),
                 explanation="test",
             )
-            repo.add_manual_odds(
-                match_id=match_id,
-                market_family="match_result",
-                market_name="1X2",
-                selection_name="Spain",
-                line=None,
-                decimal_odds=2.25,
-                bookmaker="Winamax",
-                captured_at_utc=datetime(2026, 6, 18, 11, tzinfo=timezone.utc),
-            )
             self.assertEqual(1, len(repo.list_predictions(match_id)))
-            self.assertEqual(1, len(repo.list_manual_odds(match_id)))
             prediction_id = repo.list_predictions(match_id)[0]["id"]
             repo.add_backtest(
                 prediction_id=prediction_id,

@@ -8,6 +8,8 @@ class SourceCatalogTests(unittest.TestCase):
     def test_catalog_contains_ranked_costed_sources(self):
         catalog = default_source_catalog()
         by_id = {row.provider_id: row for row in catalog}
+        self.assertNotIn("exact_bookmaker", by_id)
+        self.assertNotIn("historical_odds", by_id["xgabora"].domains)
         self.assertEqual(by_id["reviewed_capture"].bank, 0)
         self.assertEqual(by_id["martj42"].cost_tier, "free")
         # The catalog only declares free/community sources; no paid APIs

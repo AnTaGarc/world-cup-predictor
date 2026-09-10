@@ -92,14 +92,14 @@ class AppContractTests(unittest.TestCase):
         self.assertIn("cluster_player_styles(profiles[:120]", source)
 
 
-    def test_odds_and_player_ev_paths_avoid_heavy_rerun_work(self):
+    def test_player_projection_path_avoids_heavy_rerun_work(self):
         source = (Path(__file__).parents[1] / "src" / "wcpredict" / "ui" / "pages.py").read_text(encoding="utf-8")
         self.assertIn("@st.cache_resource(show_spinner=False)\ndef _repo", source)
         self.assertIn("@st.cache_resource(ttl=900, show_spinner=False)\ndef _refresh_current_world_cup_banks_cached", source)
         self.assertIn("_load_outcome_model_cached", source)
-        self.assertIn("evaluation = evaluate_odds_rows(predictions", source)
-        self.assertIn("player_ev_comparison = compare_odds_to_probability", source)
-        self.assertNotIn('st.button("Calcular probabilidad y valor"', source)
+        self.assertIn("estimate = estimate_player_projection(", source)
+        self.assertNotIn("evaluate_odds_rows", source)
+        self.assertNotIn("compare_odds_to_probability", source)
 
     def test_match_analysis_bundle_is_cached_so_tab_switches_skip_recomputation(self):
         source = (Path(__file__).parents[1] / "src" / "wcpredict" / "ui" / "pages.py").read_text(encoding="utf-8")
@@ -153,7 +153,10 @@ class AppContractTests(unittest.TestCase):
         self.assertIn("st.segmented_control(", source)
         self.assertIn('"Vista de análisis"', source)
         self.assertIn('if section == "Modelo":', source)
-        self.assertIn('elif section == "Mercados y EV":', source)
+        self.assertIn('elif section == "Estadísticas por equipo":', source)
+        self.assertIn('elif section == "Datos y fuentes":', source)
+        self.assertIn('elif section == "Historial":', source)
+        self.assertNotIn('elif section == "Mercados y EV":', source)
         self.assertNotIn('st.tabs(\n        ["Modelo", "Mercados y EV", "Jugadores", "Datos / SofaScore", "Guardado"]', source)
 
     def test_prediction_workspace_is_fragment_scoped(self):
@@ -164,15 +167,18 @@ class AppContractTests(unittest.TestCase):
         self.assertIn("_render_prediction_workspace(match, bundle, cached, repo)", outer)
         self.assertNotIn('"Vista de análisis"', outer)
 
-    def test_odds_and_player_controls_live_inside_workspace_fragment(self):
+    def test_player_controls_live_inside_neutral_workspace_fragment(self):
         source = (Path(__file__).parents[1] / "src" / "wcpredict" / "ui" / "pages.py").read_text(encoding="utf-8")
         workspace = source[
             source.index("def _render_prediction_workspace"):
             source.index("def render_prediction_lab")
         ]
         self.assertIn('"Vista de análisis"', workspace)
-        self.assertIn('elif section == "Mercados y EV":', workspace)
+        self.assertNotIn('elif section == "Mercados y EV":', workspace)
         self.assertIn('elif section == "Jugadores":', workspace)
+        self.assertNotIn('number_input(\n                        "Cuota"', workspace)
+        self.assertIn('"Umbral estadístico"', workspace)
+        self.assertIn('"Probabilidad estimada"', workspace)
 
     def test_player_intelligence_rankings_are_lazy(self):
         source = (Path(__file__).parents[1] / "src" / "wcpredict" / "ui" / "pages.py").read_text(encoding="utf-8")
@@ -363,14 +369,15 @@ class AppContractTests(unittest.TestCase):
         self.assertNotIn("cond_home_pen=0.5", knockout_block)
         self.assertNotIn("st.subheader(", knockout_block)
 
-    def test_volume_markets_render_without_manual_button(self):
+    def test_team_statistics_render_without_volume_markets(self):
         source = (Path(__file__).parents[1] / "src" / "wcpredict" / "ui" / "pages.py").read_text(encoding="utf-8")
         self.assertNotIn('st.button("Calcular mercados de volumen"', source)
         self.assertIn("class MatchVolumeBundle", source)
         self.assertIn("def _match_volume_context_cached", source)
         self.assertIn("volume_market_rows: list[dict]", source)
-        self.assertIn("def _render_volume_markets", source)
-        self.assertIn("_render_volume_markets(_match_volume_context(match))", source)
+        self.assertIn("def _render_team_statistics", source)
+        self.assertIn("_render_team_statistics(_match_volume_context(match))", source)
+        self.assertNotIn('st.subheader("Mercados de volumen")', source)
 
     def test_player_intelligence_caches_profiles_and_clusters(self):
         source = (Path(__file__).parents[1] / "src" / "wcpredict" / "ui" / "pages.py").read_text(encoding="utf-8")
@@ -447,7 +454,7 @@ class AppContractTests(unittest.TestCase):
         self.assertNotIn("st.cache_data.clear()", source)
         self.assertNotIn("st.cache_resource.clear()", source)
         self.assertIn("def _invalidate_match_analysis_caches", source)
-        self.assertIn("def _invalidate_odds_caches", source)
+        self.assertNotIn("def _invalidate_odds_caches", source)
         self.assertIn("def _invalidate_player_caches", source)
 
     def test_theme_exposes_full_design_system(self):

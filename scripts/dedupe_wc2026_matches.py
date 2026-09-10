@@ -2,8 +2,8 @@
 home/away invertido respecto a los del seed.
 
 Para cada par de equipos (sin orden) que tenga varios matches WC2026, se
-queda con el de id más bajo (el seed original) y reasigna manual_odds,
-predictions, observations, etc. al match conservado antes de borrar los
+queda con el de id más bajo (el seed original) y reasigna predicciones,
+observaciones y demás datos al partido conservado antes de borrar los
 duplicados. Hace backup de la BD antes.
 """
 from __future__ import annotations
@@ -16,7 +16,6 @@ ROOT = Path(__file__).resolve().parents[1]
 DB = ROOT / "data" / "worldcup.sqlite"
 
 TABLES_WITH_MATCH_ID = [
-    "manual_odds",
     "predictions",
     "observations",
     "imported_lineups",

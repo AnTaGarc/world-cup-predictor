@@ -98,7 +98,8 @@ class DatabaseRepositoryTests(unittest.TestCase):
             initialize_database(db_path)
             with closing(sqlite3.connect(db_path)) as con:
                 tables = {row[0] for row in con.execute("SELECT name FROM sqlite_master WHERE type='table'")}
-            self.assertTrue({"teams", "players", "matches", "team_match_stats", "manual_odds", "predictions", "sources"}.issubset(tables))
+            self.assertTrue({"teams", "players", "matches", "team_match_stats", "predictions", "sources"}.issubset(tables))
+            self.assertNotIn("manual_odds", tables)
 
     def test_phase_schema_migrates_without_changing_existing_result(self):
         with tempfile.TemporaryDirectory() as tmp:

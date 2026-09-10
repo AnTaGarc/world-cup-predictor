@@ -273,7 +273,7 @@ class Repository:
                 # Tables that reference matches.id; we must clean these before
                 # deleting a match that couldn't be re-written to the survivor.
                 match_child_tables = (
-                    "import_runs", "imported_lineups", "manual_odds",
+                    "import_runs", "imported_lineups",
                     "match_results", "observations", "player_match_stats",
                     "predictions", "screenshot_batches", "sentiment_snapshots",
                     "settlement_versions", "team_match_stats",
@@ -382,7 +382,7 @@ class Repository:
                 groups[(row["competition"], pair)].append(row)
             # Tables that reference matches.id; child rows must be moved or removed.
             match_child_tables = (
-                "import_runs", "imported_lineups", "manual_odds", "match_results",
+                "import_runs", "imported_lineups", "match_results",
                 "observations", "player_match_stats", "predictions",
                 "screenshot_batches", "sentiment_snapshots", "settlement_versions",
                 "team_match_stats",
@@ -489,7 +489,6 @@ class Repository:
             con.execute(
                 "DELETE FROM matches WHERE competition=? AND team_a_id=? AND team_b_id=? "
                 "AND status='scheduled' AND id<>? "
-                "AND NOT EXISTS(SELECT 1 FROM manual_odds o WHERE o.match_id=matches.id) "
                 "AND NOT EXISTS(SELECT 1 FROM predictions p WHERE p.match_id=matches.id) "
                 "AND NOT EXISTS(SELECT 1 FROM team_match_stats t WHERE t.match_id=matches.id) "
                 "AND NOT EXISTS(SELECT 1 FROM player_match_stats ps WHERE ps.match_id=matches.id) "
@@ -513,7 +512,6 @@ class Repository:
                     "FROM matches m JOIN teams ta ON ta.id=m.team_a_id JOIN teams tb ON tb.id=m.team_b_id "
                     "WHERE m.competition=? AND m.status='scheduled' AND m.id<>? "
                     "AND NOT EXISTS(SELECT 1 FROM match_results r WHERE r.match_id=m.id) "
-                    "AND NOT EXISTS(SELECT 1 FROM manual_odds o WHERE o.match_id=m.id) "
                     "AND NOT EXISTS(SELECT 1 FROM predictions p WHERE p.match_id=m.id) "
                     "AND NOT EXISTS(SELECT 1 FROM team_match_stats t WHERE t.match_id=m.id) "
                     "AND NOT EXISTS(SELECT 1 FROM observations ob WHERE ob.match_id=m.id)",
@@ -1363,34 +1361,6 @@ class Repository:
             if event_id:
                 written += 1
         return written
-
-    def add_manual_odds(
-        self,
-        match_id: int,
-        market_family: str,
-        market_name: str,
-        selection_name: str,
-        line: float | None,
-        decimal_odds: float,
-        bookmaker: str,
-        captured_at_utc: datetime,
-        considered: bool = False,
-    ) -> int:
-        with self.session() as con:
-            cur = con.execute(
-                "INSERT INTO manual_odds(match_id, market_family, market_name, selection_name, line, decimal_odds, bookmaker, captured_at_utc, considered) "
-                "VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)",
-                (match_id, market_family, market_name, selection_name, line, decimal_odds, bookmaker, captured_at_utc.isoformat(), int(considered)),
-            )
-            return int(cur.lastrowid)
-
-    def list_manual_odds(self, match_id: int) -> list[dict]:
-        with self.session() as con:
-            rows = con.execute(
-                "SELECT * FROM manual_odds WHERE match_id=? ORDER BY id",
-                (match_id,),
-            ).fetchall()
-        return [dict(row) for row in rows]
 
     def add_prediction(
         self,

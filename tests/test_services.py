@@ -2,11 +2,36 @@ from datetime import date, timedelta
 import unittest
 
 from wcpredict.ratings import MatchResult, build_team_ratings
-from wcpredict.services import predict_match_markets
+from wcpredict.services import predict_match, predict_match_markets
 from wcpredict.advanced_form import XgFormAdjustment
 
 
 class ServiceTests(unittest.TestCase):
+    def test_predict_match_exposes_only_neutral_analytics_targets(self):
+        projections = predict_match("Spain", "Portugal", [], date(2026, 6, 18))
+
+        self.assertEqual(
+            {
+                "match_outcome",
+                "score_mode",
+                "score_alternative",
+                "expected_goals",
+                "score_grid",
+            },
+            {row.target.value for row in projections},
+        )
+        outcome_labels = {
+            row.selection_name
+            for row in projections
+            if row.target.value == "match_outcome"
+        }
+        self.assertEqual({"Spain", "Empate", "Portugal"}, outcome_labels)
+        visible_text = " ".join(
+            f"{row.label} {row.selection_name}" for row in projections
+        ).lower()
+        for betting_term in ("1x2", "draw no bet", "over/under", "both teams to score"):
+            self.assertNotIn(betting_term, visible_text)
+
     def test_advanced_form_moves_1x2_without_breaking_normalization(self):
         baseline = predict_match_markets("Czechia", "South Africa", [], date(2026, 6, 18))
         adjusted = predict_match_markets(

@@ -372,7 +372,7 @@ div[data-testid="stDataEditor"] tbody tr:hover {
 .prob-fill.draw { background: var(--prob-draw); }
 .prob-fill.loss { background: var(--prob-loss); }
 
-/* ---- Exact-score cards (Mercados y EV) ---- */
+/* ---- Exact-score cards ---- */
 .score-cards {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -659,7 +659,7 @@ div[data-testid="stDataEditor"] tbody tr:hover {
   }
 }
 
-/* ---- Mercados table (Mercados y EV) ---- */
+/* ---- Analytical results table ---- */
 .mk-table {
   width: 100%;
   border-collapse: separate;

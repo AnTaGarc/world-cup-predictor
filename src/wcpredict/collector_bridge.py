@@ -55,26 +55,6 @@ def event_coverage_rows(bundle: CollectorBundle, event: dict) -> list[dict]:
     ]
 
 
-def event_market_rows(event: dict) -> list[dict]:
-    rows = []
-    for market in event.get("market_comparisons", []):
-        rows.append(
-            {
-                "Bookmaker": market.get("bookmaker"),
-                "Fuente": market.get("source_label"),
-                "Familia": market.get("market_family"),
-                "Mercado": market.get("market_name"),
-                "Periodo": market.get("period"),
-                "Seleccion": market.get("outcome_name"),
-                "Linea": market.get("line"),
-                "Cuota": market.get("decimal_price"),
-                "Imp.": market.get("implied_probability"),
-                "Stale": bool(market.get("stale")),
-            }
-        )
-    return rows
-
-
 def event_evidence_rows(event: dict) -> list[dict]:
     rows = []
     for stat in event.get("statistics", []):

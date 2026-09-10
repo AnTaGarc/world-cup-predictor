@@ -17,14 +17,12 @@ from wcpredict.backtesting import brier_score, calibration_bands, summarize_by_m
 from wcpredict.collector_store import CollectorEventBundle, CollectorStore
 from wcpredict.group_context import draw_incentive_for_match
 from wcpredict.models import MarketFamily
-from wcpredict.odds import compare_odds_to_probability
-from wcpredict.odds import parse_odds_csv
 from wcpredict.outcome_ml import current_match_features, load_outcome_model, match_results_to_feature_rows
-from wcpredict.player_markets import (
+from wcpredict.player_projections import (
     GOALKEEPER_MARKETS,
     PLAYER_MARKET_METRICS,
     derive_player_assumption,
-    estimate_player_market_probability,
+    estimate_player_projection,
     is_goalkeeper,
 )
 from wcpredict.player_analytics import build_player_profiles, cluster_player_styles
@@ -59,7 +57,6 @@ from wcpredict.world_cup_data import (
 )
 from wcpredict.advanced_form import (
     build_goalkeeper_baseline,
-    build_volume_rate_observations,
     build_xg_form_adjustment,
 )
 from wcpredict.calibration import build_calibration_samples, summarise_bias
@@ -106,19 +103,13 @@ from wcpredict.ui.translations import (
 from wcpredict.ui.view_models import (
     coverage_summary,
     dataset_freshness_rows,
-    ev_rows,
     model_comparison_rows,
     model_policy_rows,
     postmatch_queue_message,
     prediction_rows,
     probability_chart_rows,
 )
-from wcpredict.ui.interaction_models import (
-    evaluate_odds_rows,
-    localized_default_odds_rows,
-    prepare_player_match_context,
-)
-from wcpredict.volume_markets import estimate_total_market
+from wcpredict.ui.interaction_models import prepare_player_match_context
 
 
 ROOT = Path(__file__).resolve().parents[3]
@@ -1071,49 +1062,6 @@ def _render_knockout_advance_section(match, bundle, team_a: str, team_b: str, re
     )
 
 
-def _build_saved_odds_index(saved_odds: list[dict]) -> dict[tuple[str, str, float | None], float]:
-    """Latest decimal_odds per (market_name, selection_name, line).
-
-    Multiple entries with different captured_at_utc may exist; we keep the
-    most recent one for each market/selection/line triple.
-    """
-    index: dict[tuple[str, str, float | None], tuple[str, float]] = {}
-    for row in saved_odds:
-        market = str(row.get("market_name") or "")
-        selection = str(row.get("selection_name") or "")
-        line_raw = row.get("line")
-        line = float(line_raw) if line_raw is not None else None
-        try:
-            decimal = float(row.get("decimal_odds") or 0.0)
-        except (TypeError, ValueError):
-            continue
-        if decimal <= 1.0:
-            continue
-        captured = str(row.get("captured_at_utc") or "")
-        key = (market, selection, line)
-        existing = index.get(key)
-        if existing is None or captured > existing[0]:
-            index[key] = (captured, decimal)
-    return {key: value[1] for key, value in index.items()}
-
-
-def _edge_pill(edge: float) -> str:
-    """Render the BET / SKIP / FADE pill for a given edge (e.g. 0.07 → BET)."""
-    if edge >= 0.05:
-        return "<span class='pill pill-green'>BET</span>"
-    if edge <= -0.05:
-        return "<span class='pill pill-red'>FADE</span>"
-    return "<span class='pill pill-neutral'>SKIP</span>"
-
-
-def _edge_class(edge: float) -> str:
-    if edge >= 0.05:
-        return "edge-pos"
-    if edge <= -0.05:
-        return "edge-neg"
-    return "edge-neu"
-
-
 def _score_grid_html(
     team_a: str,
     team_b: str,
@@ -1201,143 +1149,13 @@ def _render_exact_score_panel(
             f'<div class="score-cards">{cards_html}</div>',
             unsafe_allow_html=True,
         )
-        st.caption("Probabilidades Dixon-Coles. Úsalo como contexto, no como apuesta directa.")
+        st.caption("Probabilidades estimadas con la distribución Dixon-Coles.")
 
     grid_html = _score_grid_html(team_a, team_b, predictions)
     if grid_html:
         st.markdown(grid_html, unsafe_allow_html=True)
     else:
         st.info("Sin probabilidades de marcador exacto para este partido.")
-
-
-def _render_market_visual_panel(
-    team_a: str,
-    team_b: str,
-    predictions: list[MarketPrediction],
-    volume_predictions: dict[str, float],
-    saved_odds: list[dict] | None = None,
-    *,
-    match=None,
-    ko_prediction=None,
-) -> None:
-    """Visual top-of-tab summary for "Mercados y EV".
-
-    * Main markets (1X2, O/U 2.5, BTTS) with model %, fair odds and —
-      when the user has saved odds — Tu cuota / Edge / Pick (BET/SKIP/FADE).
-    * Heuristic secondary markets (corners, cards, shots) with a
-      suggested line and a LEAN over/under hint, plus edge when there
-      are saved odds for that line.
-
-    Exact-score cards/grid moved to the dedicated "Marcadores" section.
-    """
-    odds_index = _build_saved_odds_index(saved_odds or [])
-    has_odds = bool(odds_index)
-
-    def _fair_odds(p: float) -> str:
-        return f"{1.0 / p:.2f}" if p and p > 0.01 else "—"
-
-    # (market_label, market_name_canonical, selection_label, selection_canonical, line, probability)
-    main_rows: list[tuple[str, str, str, str, float | None, float]] = []
-    for row in predictions:
-        if row.market_name == "1X2":
-            main_rows.append(("1X2", "1X2", localize_selection(row.selection_name),
-                              row.selection_name, None, row.probability))
-        elif row.market_name == "Over/Under 2.5":
-            main_rows.append(("Total 2.5 goles", "Over/Under 2.5",
-                              localize_selection(row.selection_name),
-                              row.selection_name, 2.5, row.probability))
-        elif row.market_name == "Both Teams To Score":
-            sel = "Sí" if row.selection_name == "Yes" else "No"
-            main_rows.append(("Ambos marcan", "Both Teams To Score", sel,
-                              row.selection_name, None, row.probability))
-
-    if main_rows:
-        rows_html = []
-        for mkt, mkt_canon, sel, sel_canon, line, prob in main_rows:
-            cells = (
-                f"<td class='market-name'>{mkt}<div class='market-sub'>{sel}</div></td>"
-                f"<td class='num'>{prob:.1%}</td>"
-                f"<td class='num'>{_fair_odds(prob)}</td>"
-            )
-            if has_odds:
-                user_odds = odds_index.get((mkt_canon, sel_canon, line))
-                if user_odds:
-                    edge = prob * user_odds - 1.0
-                    cells += (
-                        f"<td class='num'>{user_odds:.2f}</td>"
-                        f"<td class='num {_edge_class(edge)}'>{edge * 100:+.1f}%</td>"
-                        f"<td class='center'>{_edge_pill(edge)}</td>"
-                    )
-                else:
-                    cells += "<td class='num'>—</td><td class='num'>—</td><td class='center'>—</td>"
-            rows_html.append(f"<tr>{cells}</tr>")
-        header = (
-            "<th>Mercado</th><th class='num'>Modelo</th><th class='num'>Cuota justa</th>"
-            + ("<th class='num'>Tu cuota</th><th class='num'>Edge</th><th class='center'>Pick</th>" if has_odds else "")
-        )
-        st.markdown(
-            '<div class="eyebrow">Mercados principales · Modelo</div>'
-            "<table class='mk-table'>"
-            f"<thead><tr>{header}</tr></thead>"
-            f"<tbody>{''.join(rows_html)}</tbody></table>",
-            unsafe_allow_html=True,
-        )
-
-    # Knockout fixtures keep all the volume markets, but with a slightly
-    # higher cards line (KO matches tend to be tighter and more physical),
-    # plus a "llega a penaltis" probability that only makes sense in KOs.
-    is_knockout = _is_knockout_stage(getattr(match, "stage", None))
-    cards_line = 5.5 if is_knockout else 4.5
-    secondary = [
-        ("Córners totales", "corners", 9.5),
-        (f"Tarjetas totales (KO {cards_line})" if is_knockout else "Tarjetas totales", "cards", cards_line),
-        ("Tiros totales", "shots", 22.5),
-        ("Tiros a puerta totales", "shots_on_target", 8.5),
-    ]
-    sec_rows: list[str] = []
-    for label, key, line in secondary:
-        est = volume_predictions.get(key)
-        if est is None:
-            continue
-        gap = est - line
-        if gap >= 0.5:
-            lean_html = f"<span class='pill pill-green'>OVER {line}</span>"
-        elif gap <= -0.5:
-            lean_html = f"<span class='pill pill-amber'>UNDER {line}</span>"
-        else:
-            lean_html = "<span class='pill pill-neutral'>PUSH</span>"
-        sec_rows.append(
-            f"<tr><td class='market-name'>{label}</td>"
-            f"<td class='num'>{est:.1f}</td>"
-            f"<td class='num'>{line}</td>"
-            f"<td class='center'>{lean_html}</td></tr>"
-        )
-    if is_knockout and ko_prediction is not None:
-        # Add the "llega a penaltis" probability row. Pre-kickoff this
-        # uses the predicted draw-after-ET probability from the KO model.
-        ko_pred = ko_prediction
-        if ko_pred is not None:
-            pen_prob = ko_pred.p_draw_after_et
-            if pen_prob >= 0.18:
-                lean_pen = "<span class='pill pill-amber'>POSIBLE</span>"
-            elif pen_prob <= 0.08:
-                lean_pen = "<span class='pill pill-neutral'>BAJO</span>"
-            else:
-                lean_pen = "<span class='pill pill-neutral'>SKIP</span>"
-            sec_rows.append(
-                f"<tr><td class='market-name'>Llega a penaltis</td>"
-                f"<td class='num'>{pen_prob*100:.1f}%</td>"
-                f"<td class='num'>—</td>"
-                f"<td class='center'>{lean_pen}</td></tr>"
-            )
-    if sec_rows:
-        st.markdown(
-            '<div class="eyebrow">Mercados secundarios · Heurístico</div>'
-            "<table class='mk-table'>"
-            "<thead><tr><th>Mercado</th><th class='num'>Estimación</th><th class='num'>Línea</th><th class='center'>Lean</th></tr></thead>"
-            f"<tbody>{''.join(sec_rows)}</tbody></table>",
-            unsafe_allow_html=True,
-        )
 
 
 def _database_summary() -> dict[str, int | bool]:
@@ -1356,11 +1174,6 @@ def _database_summary() -> dict[str, int | bool]:
             "teams": con.execute(
                 "SELECT COUNT(DISTINCT t.id) FROM teams t "
                 "JOIN matches m ON t.id IN (m.team_a_id, m.team_b_id) "
-                f"WHERE m.{wc_filter}"
-            ).fetchone()[0],
-            "odds": con.execute(
-                "SELECT COUNT(*) FROM manual_odds o "
-                "JOIN matches m ON m.id = o.match_id "
                 f"WHERE m.{wc_filter}"
             ).fetchone()[0],
             "predictions": con.execute(
@@ -1849,6 +1662,10 @@ def _bundle_snapshot_payload(
             "probability": float(getattr(row, "probability", 0.0)),
             "confidence": str(getattr(getattr(row, "confidence", None), "value", "")),
         }
+    neutral_names = {
+        "1X2", "Exact Score", "Exact Score (favorito)",
+        "Exact Score (alt)", "Expected Score", "Exact Score Grid",
+    }
     return {
         "team_a": team_a,
         "team_b": team_b,
@@ -1856,7 +1673,7 @@ def _bundle_snapshot_payload(
         "deep_count": int(deep_count),
         "prior_deep_samples": int(prior_deep_samples),
         "primary": [_row(p) for p in primary],
-        "predictions": [_row(p) for p in predictions],
+        "predictions": [_row(p) for p in predictions if p.market_name in neutral_names],
     }
 
 
@@ -1929,7 +1746,7 @@ def _team_volume_context_from_profiles_cached(
         for name, rating in ratings_for_match.items()
     }
     from wcpredict.team_profile import build_team_profiles
-    from wcpredict.team_volume_markets import MARKET_CATALOG, predict_team_volume_markets
+    from wcpredict.team_projections import predict_team_statistics
 
     deep_profile_rows = repo.list_deep_team_metric_observations_before(
         match.kickoff_utc, team_names=(team_a, team_b)
@@ -1945,14 +1762,14 @@ def _team_volume_context_from_profiles_cached(
         card_multiplier, referee_name = referee_card_multiplier_for_match(repo, match.id)
     except Exception:
         card_multiplier, referee_name = 1.0, None
-    team_lines = predict_team_volume_markets(
+    team_lines = predict_team_statistics(
         team_profiles[team_a], team_profiles[team_b],
         card_multiplier=card_multiplier,
     )
     if referee_name and abs(card_multiplier - 1.0) >= 0.02:
         section_note(
             f"Árbitro asignado: {referee_name} — tendencia de tarjetas x{card_multiplier:.2f} "
-            "aplicada al mercado de amarillas."
+            "aplicada a la estimación de tarjetas amarillas."
         )
     team_volume_stat_rows: list[dict] = []
     team_volume_predictions: dict[str, dict[str, float]] = {}
@@ -1960,7 +1777,7 @@ def _team_volume_context_from_profiles_cached(
         return TeamVolumeContext()
     expected_by_team_metric: dict[tuple[str, str], dict] = {}
     for row in team_lines:
-        key = (row.team_name, row.market)
+        key = (row.team_name, row.metric)
         if key in expected_by_team_metric:
             continue
         expected_by_team_metric[key] = {
@@ -1968,16 +1785,16 @@ def _team_volume_context_from_profiles_cached(
             "confidence": row.confidence,
             "sample": row.sample_size,
         }
-        team_volume_predictions.setdefault(row.market, {})[row.team_name] = float(row.expected)
+        team_volume_predictions.setdefault(row.metric, {})[row.team_name] = float(row.expected)
     metric_aliases = {"shots_total": "shots", "yellow_cards": "cards"}
     for source_metric, target_metric in metric_aliases.items():
         values = team_volume_predictions.get(source_metric)
         if values:
             team_volume_predictions[target_metric] = dict(values)
-    for market_id in MARKET_CATALOG.keys():
-        label = MARKET_CATALOG[market_id]["label"]
-        a = expected_by_team_metric.get((team_a, market_id))
-        b = expected_by_team_metric.get((team_b, market_id))
+    metric_labels = {row.metric: row.label for row in team_lines}
+    for metric_id, label in metric_labels.items():
+        a = expected_by_team_metric.get((team_a, metric_id))
+        b = expected_by_team_metric.get((team_b, metric_id))
         if not a and not b:
             continue
         team_volume_stat_rows.append({
@@ -2010,49 +1827,17 @@ def _match_volume_context_cached(
     repo = _repo()
     match = next(item for item in _matches_cached(db_sig) if item.id == match_id)
     team_a, team_b = match.team_a.name, match.team_b.name
-    observations_for_match = repo.list_observations(match.id)
-
-    volume_predictions: dict[str, float] = {}
     team_volume = _team_volume_context_from_profiles_cached(match_id, db_sig, engine_version)
-    volume_market_rows: list[dict] = []
-    rate_observations = observations_for_match + build_volume_rate_observations(
-        team_a, team_b, repo.list_deep_volume_rows_before(match.kickoff_utc)
-    )
-    volume_lines = {"corners": 8.5, "cards": 3.5, "shots": 21.5, "shots_on_target": 8.5}
-    for metric, line in volume_lines.items():
-        dispersion_row = next(
-            (row for row in rate_observations if row.get("metric") == f"{metric}_dispersion"),
-            None,
-        )
-        dispersion = (
-            float(dispersion_row["value_number"])
-            if dispersion_row and dispersion_row.get("value_number") is not None
-            else None
-        )
-        estimate = estimate_total_market(
-            team_a, team_b, rate_observations, metric, line, dispersion=dispersion
-        )
-        volume_market_rows.append(
-            {
-                "Mercado": localize_metric(metric),
-                "Línea": line,
-                "Modelo": localize_model(estimate.model_family),
-                "Esperado": estimate.expected_total,
-                "Probabilidad de más": estimate.over_probability,
-                "Rango bajo": estimate.low_probability,
-                "Rango alto": estimate.high_probability,
-                "Confianza": estimate.confidence,
-                "Muestra": estimate.sample_size,
-                "Explicación": estimate.explanation,
-            }
-        )
-        if estimate.expected_total is not None:
-            volume_predictions[metric] = float(estimate.expected_total)
+    volume_predictions = {
+        metric: sum(values.values())
+        for metric, values in team_volume.team_volume_predictions.items()
+        if metric in {"corners", "cards", "shots", "shots_on_target"}
+    }
 
     return MatchVolumeBundle(
         volume_predictions=volume_predictions,
         team_volume_predictions=team_volume.team_volume_predictions,
-        volume_market_rows=volume_market_rows,
+        volume_market_rows=[],
         team_volume_stat_rows=team_volume.team_volume_stat_rows,
     )
 
@@ -2126,19 +1911,11 @@ def _player_match_context_cached(
 
 
 @st.cache_resource(show_spinner=False)
-def _manual_odds_cached(match_id: int, db_sig: tuple[int, int]):
-    return _repo().list_manual_odds(match_id)
-
-
 def _invalidate_match_analysis_caches() -> None:
     _match_analysis_bundle_cached.clear()
     _match_volume_context_cached.clear()
     _match_auxiliary_context_cached.clear()
     _player_match_context_cached.clear()
-
-
-def _invalidate_odds_caches() -> None:
-    _manual_odds_cached.clear()
 
 
 def _invalidate_player_caches() -> None:
@@ -2148,37 +1925,21 @@ def _invalidate_player_caches() -> None:
     _player_intelligence_rows_cached.clear()
 
 
-def _render_volume_markets(auxiliary: MatchVolumeBundle | MatchAuxiliaryBundle) -> None:
-    st.subheader("Mercados de volumen")
-    if auxiliary.volume_market_rows:
-        st.dataframe(
-            pd.DataFrame(auxiliary.volume_market_rows),
-            width="stretch",
-            hide_index=True,
-            column_config={
-                "Probabilidad de más": st.column_config.ProgressColumn(
-                    format="%.1f%%", min_value=0, max_value=1
-                ),
-                "Rango bajo": st.column_config.NumberColumn(format="%.1f%%"),
-                "Rango alto": st.column_config.NumberColumn(format="%.1f%%"),
-            },
-        )
-    else:
-        st.info("No hay muestra suficiente para estimar mercados de volumen.")
-
+def _render_team_statistics(auxiliary: MatchVolumeBundle | MatchAuxiliaryBundle) -> None:
     team_volume_stat_rows = getattr(auxiliary, "team_volume_stat_rows", [])
     if team_volume_stat_rows:
         st.subheader("Estadísticas estimadas por equipo")
         st.caption(
             "Valor esperado por partido para cada métrica, derivado del perfil "
-            "deep (45% propio + 30% rival + 25% media del torneo). Las líneas "
-            "over/under aparecen en la pestaña Mercados y EV cuando hay cuotas."
+            "deep (45% propio + 30% rival + 25% media del torneo)."
         )
         st.dataframe(
             pd.DataFrame(team_volume_stat_rows),
             width="stretch",
             hide_index=True,
         )
+    else:
+        st.info("No hay muestra suficiente para estimar estadísticas por equipo.")
 
 
 def _render_audit_table(rows) -> None:
@@ -2449,7 +2210,7 @@ def _render_post_match_audit(
     metric_cols[1].metric(
         "Brier medio",
         f"{brier_average:.3f}" if brier_average is not None else "—",
-        help=f"Promedio de {len(auxiliary.backtests)} apuestas evaluadas",
+        help=f"Promedio de {len(auxiliary.backtests)} predicciones evaluadas",
     )
     metric_cols[2].metric(
         "Estadísticas observadas",
@@ -2488,7 +2249,7 @@ def _render_post_match_audit(
             "el partido en Calibración con las stats, esta tabla mostrará córners/tarjetas/tiros."
         )
     st.caption(
-        "Lo registrado aquí ya alimenta `build_xg_form_adjustment` y `build_volume_rate_observations` "
+        "Lo registrado aquí ya alimenta el ajuste de xG y las proyecciones estadísticas "
         "para los próximos partidos de ambas selecciones (auditoría usada, no solo registrada)."
     )
     if is_knockout and repo is not None and match is not None:
@@ -2515,15 +2276,14 @@ def render_dashboard() -> None:
     hero(
         "Mundial 2026 · Mesa de análisis",
         "Decidir con probabilidades, no con ruido.",
-        "Forma actual, cobertura de datos, cuotas manuales, EV y calibración en un solo flujo.",
+        "Forma actual, cobertura de datos, modelos explicables y calibración en un solo flujo.",
     )
-    cols = st.columns(5)
+    cols = st.columns(4)
     metrics = [
         ("Partidos", summary["matches"]),
         ("Selecciones", summary["teams"]),
         ("Importaciones", summary["imports"]),
         ("Predicciones", summary["predictions"]),
-        ("Cuotas", summary["odds"]),
     ]
     for col, (label, value) in zip(cols, metrics):
         col.metric(label, int(value))
@@ -2799,7 +2559,7 @@ def _render_prediction_workspace(
     ml_model_meta = bundle.ml_model_meta
     section = st.segmented_control(
         "Vista de análisis",
-        ["Modelo", "Marcadores", "Mercados y EV", "Jugadores", "Datos / SofaScore", "Guardado"],
+        ["Modelo", "Marcadores", "Estadísticas por equipo", "Jugadores", "Datos y fuentes", "Historial"],
         default="Modelo",
         label_visibility="collapsed",
     )
@@ -2816,7 +2576,7 @@ def _render_prediction_workspace(
                 repo=repo,
                 match=match,
             )
-        with st.expander("Cómo se elige el modelo de cada mercado"):
+        with st.expander("Cómo se elige cada modelo"):
             st.caption("Activo es lo que calcula hoy la app; challenger solo se promueve si gana una validación temporal.")
             st.dataframe(pd.DataFrame(model_policy_rows()), width="stretch", hide_index=True)
         if ml_probabilities is not None and ml_features is not None and ml_model_meta is not None:
@@ -2839,7 +2599,7 @@ def _render_prediction_workspace(
             )
             with st.expander("Diagnóstico de señales"):
                 col_cfg = {
-                    "Modelo unificado 1X2 (%)": st.column_config.ProgressColumn(format="%.1f%%", min_value=0, max_value=100),
+                    "Modelo unificado (%)": st.column_config.ProgressColumn(format="%.1f%%", min_value=0, max_value=100),
                     "ML cronológico (%)": st.column_config.ProgressColumn(format="%.1f%%", min_value=0, max_value=100),
                     "Matriz de marcadores (%)": st.column_config.ProgressColumn(format="%.1f%%", min_value=0, max_value=100),
                     "Diferencia (pp)": st.column_config.NumberColumn(format="%+.1f"),
@@ -2865,9 +2625,29 @@ def _render_prediction_workspace(
             expected_xg=bundle.expected_xg,
         )
 
-        st.subheader("Mercados modelados")
-        frame = pd.DataFrame(prediction_rows(predictions)).rename(
-            columns={"Market": "Mercado", "Selection": "Selección", "Line": "Línea", "Probability": "Prob.", "Low": "Mín.", "High": "Máx.", "Confidence": "Confianza", "Sample": "Muestra", "Origin": "Origen", "Explanation": "Explicación"}
+        st.subheader("Resultados estimados")
+        neutral_predictions = [
+            row for row in predictions
+            if row.market_name in {
+                "1X2", "Exact Score", "Exact Score (favorito)",
+                "Exact Score (alt)", "Expected Score",
+            }
+        ]
+        frame = pd.DataFrame(prediction_rows(neutral_predictions)).rename(
+            columns={"Market": "Resultado", "Selection": "Selección", "Probability": "Prob.", "Low": "Mín.", "High": "Máx.", "Confidence": "Confianza", "Sample": "Muestra", "Origin": "Origen", "Explanation": "Explicación"}
+        )
+        if "Line" in frame.columns:
+            frame = frame.drop(columns=["Line"])
+        frame["Resultado"] = frame["Resultado"].replace({
+            "1X2": "Resultado probable",
+            "Exact Score": "Marcador principal",
+            "Exact Score (favorito)": "Marcador condicionado",
+            "Exact Score (alt)": "Marcador alternativo",
+            "Expected Score": "Goles esperados",
+        })
+        frame["Selección"] = frame["Selección"].replace({"Draw": "Empate"})
+        frame["Explicación"] = frame["Explicación"].str.replace(
+            "Modelo unificado 1X2", "Modelo unificado de resultado", regex=False
         )
         st.dataframe(
             frame,
@@ -2879,75 +2659,24 @@ def _render_prediction_workspace(
                 "Máx.": st.column_config.NumberColumn(format="%.1f%%"),
             },
         )
-        _render_volume_markets(_match_volume_context(match))
         if st.button("Guardar snapshot de predicciones", width="stretch"):
             now = datetime.now(timezone.utc)
             persisted_predictions = [
-                row for row in predictions if row.market_name != "Exact Score Grid"
+                row for row in predictions
+                if row.market_name in {
+                    "1X2", "Exact Score", "Exact Score (favorito)",
+                    "Exact Score (alt)", "Expected Score",
+                }
             ]
             for row in persisted_predictions:
                 repo.add_prediction(match.id, row.market_family.value, row.market_name, row.selection_name, row.line, row.probability, row.confidence.value, now, row.explanation)
-            st.success(f"Snapshot guardado: {len(persisted_predictions)} mercados.")
+            st.success(f"Snapshot guardado: {len(persisted_predictions)} proyecciones.")
 
     elif section == "Marcadores":
         _render_exact_score_panel(team_a, team_b, predictions)
 
-    elif section == "Mercados y EV":
-        saved_odds_for_match = _manual_odds_cached(match.id, _db_signature())
-        auxiliary = _match_auxiliary_context(match)
-        ko_prediction = _knockout_prediction_for_match(match, bundle, repo)
-        _render_market_visual_panel(
-            team_a, team_b, predictions, auxiliary.volume_predictions, saved_odds_for_match,
-            match=match, ko_prediction=ko_prediction,
-        )
-        st.markdown("---")
-        st.markdown("**Introducir cuotas manualmente para calcular EV**")
-        st.caption("Rellena únicamente las cuotas que quieras comparar. La app no envía apuestas ni accede a tu cuenta.")
-        uploaded_odds = st.file_uploader("Importar cuotas CSV", type=["csv"], key=f"odds_csv_{match.id}")
-        if uploaded_odds is not None:
-            try:
-                csv_odds = parse_odds_csv(
-                    uploaded_odds.getvalue().decode("utf-8-sig"),
-                    match.id,
-                    datetime.now(timezone.utc),
-                )
-            except (UnicodeDecodeError, ValueError) as exc:
-                st.error(f"CSV no válido: {exc}")
-            else:
-                st.success(f"CSV validado: {len(csv_odds)} cuotas listas para guardar.")
-                if st.button("Guardar cuotas del CSV", width="stretch"):
-                    for row in csv_odds:
-                        repo.add_manual_odds(row.match_id, row.market_family.value, row.market_name, row.selection_name, row.line, row.decimal_odds, row.bookmaker, row.captured_at_utc)
-                    _invalidate_odds_caches()
-                    st.success(f"Guardadas {len(csv_odds)} cuotas del CSV.")
-        odds_frame = pd.DataFrame(localized_default_odds_rows(team_a, team_b))
-        editor = st.data_editor(
-            odds_frame,
-            key=f"odds_{match.id}", width="stretch", num_rows="dynamic", hide_index=True,
-            column_config={
-                "market_family": st.column_config.TextColumn("Familia"),
-                "market_name": st.column_config.TextColumn("Mercado"),
-                "selection_name": st.column_config.TextColumn("Selección"),
-                "line": st.column_config.NumberColumn("Línea"),
-                "decimal_odds": st.column_config.NumberColumn("Cuota", min_value=1.01, step=0.01),
-                "bookmaker": st.column_config.TextColumn("Casa"),
-            },
-        )
-        evaluation = evaluate_odds_rows(predictions, editor.to_dict("records"))
-        entered = evaluation.entered
-        comparisons = evaluation.comparisons
-        if comparisons:
-            ranked = sorted(ev_rows(comparisons), key=lambda row: row["EV"], reverse=True)
-            st.subheader("Ranking EV")
-            st.dataframe(pd.DataFrame(ranked), width="stretch", hide_index=True)
-        elif entered:
-            callout("Las cuotas introducidas aún no tienen un modelo comparable; quedan guardables, pero sin EV inventado.")
-        if st.button("Guardar cuotas rellenadas", width="stretch"):
-            captured = datetime.now(timezone.utc)
-            for row in entered:
-                repo.add_manual_odds(match.id, row["market_family"], row["market_name"], row["selection_name"], row["line"], row["decimal_odds"], row["bookmaker"], captured)
-            _invalidate_odds_caches()
-            st.success(f"Guardadas {len(entered)} cuotas.")
+    elif section == "Estadísticas por equipo":
+        _render_team_statistics(_match_volume_context(match))
 
     elif section == "Jugadores":
         auxiliary = _match_auxiliary_context(match)
@@ -2970,7 +2699,7 @@ def _render_prediction_workspace(
                 )
         else:
             st.info("Alineación no confirmada: las tasas observadas sí están disponibles, pero la confianza se mantiene baja.")
-        st.caption("Elige jugador, mercado, línea y cuota. La tasa por 90, los minutos y la titularidad se calculan desde el banco de jugadores.")
+        st.caption("Elige jugador, métrica y umbral estadístico. La tasa por 90, los minutos y la titularidad se calculan desde el banco de jugadores.")
         selected_team = st.segmented_control(
             "Equipo",
             [team_a, team_b],
@@ -3049,7 +2778,7 @@ def _render_prediction_workspace(
                 )
                 st.caption(
                     f"{len(visible_roster)}/{len(roster_frame)} jugadores visibles. "
-                    "Usa esta tabla para identificar a quién meterle cuota antes del cálculo de EV."
+                    "Usa esta tabla para explorar las proyecciones individuales del modelo."
                 )
                 player_by_name = {str(row["player_name"]): row for row in roster_source}
                 selected_player = st.selectbox(
@@ -3060,7 +2789,7 @@ def _render_prediction_workspace(
                 player_row = player_by_name[selected_player]
                 gk_mode = is_goalkeeper(player_row)
                 if gk_mode:
-                    # Goalkeeper markets only — saves / goals conceded / clean sheet.
+                    # Goalkeeper metrics: saves, goals conceded and clean sheet.
                     available_families = [
                         family for family in (
                             MarketFamily.PLAYER_SAVES,
@@ -3075,42 +2804,27 @@ def _render_prediction_workspace(
                         if family not in GOALKEEPER_MARKETS and player_row.get(metric) is not None
                     ]
                 if not available_families:
-                    st.warning("Este jugador tiene minutos, pero ninguna métrica de mercado publicada.")
+                    st.warning("Este jugador tiene minutos, pero ninguna métrica predictiva publicada.")
                     continue
                 family_picker = st.selectbox(
-                    "Mercado",
+                    "Métrica",
                     available_families,
                     format_func=lambda value: localize_market_family(value.value),
                     key=f"player_market_{match.id}_{team_name}_{position_filter}",
                 )
                 family = family_picker
-                # Clean sheet is binary; line is meaningless. For the rest the
-                # user picks the line.
+                # Clean sheet is binary; the threshold is fixed. For the rest
+                # the user selects the analytical threshold.
                 if family == MarketFamily.PLAYER_CLEAN_SHEET:
                     line = 0.5
-                    odds_col, = st.columns(1)
-                    player_odds = odds_col.number_input(
-                        "Cuota",
-                        min_value=1.01,
-                        value=2.0,
-                        step=0.01,
-                        key=f"player_odds_{match.id}_{team_name}_{family.value}",
-                    )
+                    st.caption("Umbral estadístico fijo: portería a cero.")
                 else:
-                    line_col, odds_col = st.columns(2)
-                    line = line_col.number_input(
-                        "Línea",
+                    line = st.number_input(
+                        "Umbral estadístico",
                         min_value=0.0,
                         value=float(default_lines[family]),
                         step=0.5,
                         key=f"player_line_{match.id}_{team_name}_{family.value}",
-                    )
-                    player_odds = odds_col.number_input(
-                        "Cuota",
-                        min_value=1.01,
-                        value=2.0,
-                        step=0.01,
-                        key=f"player_odds_{match.id}_{team_name}_{family.value}",
                     )
                 if family in GOALKEEPER_MARKETS:
                     baseline = team_context.goalkeeper_baseline
@@ -3143,7 +2857,7 @@ def _render_prediction_workspace(
                 else:
                     derived = derive_player_assumption(player_row, family)
                 if derived is None:
-                    st.warning("La fuente no aporta minutos o la métrica necesaria; este mercado no se estima.")
+                    st.warning("La fuente no aporta minutos o la métrica necesaria; esta proyección no se estima.")
                     continue
                 rate_labels = {
                     MarketFamily.PLAYER_SAVES: "Paradas esperadas / 90",
@@ -3158,27 +2872,19 @@ def _render_prediction_workspace(
                 detail_cols[1].metric("Minutos esperados", derived.assumption.expected_minutes)
                 detail_cols[2].metric("Prob. de titularidad", f"{derived.assumption.starter_probability:.0%}")
                 st.caption(derived.explanation)
-                estimate = estimate_player_market_probability(
+                estimate = estimate_player_projection(
                     derived.assumption, family, line, derived.sample_size
                 )
                 if estimate.probability is None:
                     st.warning(estimate.explanation)
-                elif estimate.probability <= 0:
-                    st.info("Probabilidad estimada 0.0%; no hay cuota justa ni EV calculable para este mercado.")
-                    st.caption(estimate.explanation)
                 else:
-                    player_ev_comparison = compare_odds_to_probability(
-                        estimate.probability,
-                        player_odds,
-                        family,
-                        family.value,
-                        selected_player,
-                        estimate.confidence.value,
-                    )
-                    st.dataframe(pd.DataFrame(ev_rows([player_ev_comparison])), width="stretch", hide_index=True)
+                    projection_cols = st.columns(3)
+                    projection_cols[0].metric("Valor esperado", f"{estimate.expected_count:.2f}")
+                    projection_cols[1].metric("Probabilidad estimada", f"{estimate.probability:.1%}")
+                    projection_cols[2].metric("Confianza", estimate.confidence.value)
                     st.caption(estimate.explanation)
 
-    elif section == "Datos / SofaScore":
+    elif section == "Datos y fuentes":
         st.subheader("Importar estadísticas profundas revisadas")
         st.caption("Admite el JSON estructurado obtenido de capturas y conserva su procedencia. No crea sanciones nominales sin identificar al jugador.")
         deep_upload = st.file_uploader("JSON de estadísticas de partidos", type=["json"], key=f"deep_json_{match.id}")
@@ -3254,9 +2960,8 @@ def _render_prediction_workspace(
                 st.subheader("Jugadores")
                 st.dataframe(_visible_frame(cached.lineups), width="stretch", hide_index=True)
 
-    elif section == "Guardado":
+    elif section == "Historial":
         saved_predictions = repo.list_predictions(match.id)
-        saved_odds = _manual_odds_cached(match.id, _db_signature())
         imports = repo.list_import_runs(match.id)
         if imports:
             st.subheader("Historial de datos")
@@ -3264,10 +2969,7 @@ def _render_prediction_workspace(
         if saved_predictions:
             st.subheader("Predicciones")
             st.dataframe(_visible_frame(saved_predictions), width="stretch", hide_index=True)
-        if saved_odds:
-            st.subheader("Cuotas")
-            st.dataframe(_visible_frame(saved_odds), width="stretch", hide_index=True)
-        if not imports and not saved_predictions and not saved_odds:
+        if not imports and not saved_predictions:
             empty_state("Sin predicciones guardadas", "Guarda un snapshot antes del partido para evaluarlo después.", icon="📭")
 
 
@@ -3354,7 +3056,7 @@ def render_prediction_lab() -> None:
         with button_col:
             refresh_clicked = st.button("Actualizar datos", type="primary", width="stretch")
         with note_col:
-            st.caption("Consulta acotada: un partido, máximo 14 llamadas y 0 créditos de cuotas. Conserva la caché si falla.")
+            st.caption("Consulta acotada: un partido y máximo 14 llamadas. Conserva la caché si falla.")
     else:
         refresh_clicked = False
     if refresh_clicked:
@@ -3376,11 +3078,10 @@ def render_prediction_lab() -> None:
         }
         tone, default_message = status_tone.get(result.status, ("warning", result.message))
         getattr(st, tone)(default_message)
-        metric_cols = st.columns(4)
+        metric_cols = st.columns(3)
         metric_cols[0].metric("Llamadas hechas", result.calls_made)
         metric_cols[1].metric("Proveedores OK", len(result.providers))
-        metric_cols[2].metric("Cuotas tocadas", len(result.odds_providers))
-        metric_cols[3].metric("Faltantes", len(result.missing_critical))
+        metric_cols[2].metric("Faltantes", len(result.missing_critical))
         if result.providers:
             st.caption("Proveedores que respondieron: " + ", ".join(result.providers))
         if result.missing_critical:
@@ -3389,8 +3090,6 @@ def render_prediction_lab() -> None:
                 + ", ".join(result.missing_critical)
                 + ". La app no los inventa: aparecerán como vacíos en cobertura."
             )
-        if result.odds_status == "skipped_zero_budget":
-            st.caption("Cuotas automáticas deshabilitadas (presupuesto 0); usa la pestaña Mercados para meterlas manualmente.")
         if result.stderr_tail:
             with st.expander("Salida técnica del recolector"):
                 st.code(result.stderr_tail)

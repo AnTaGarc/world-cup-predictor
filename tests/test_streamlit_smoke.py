@@ -10,7 +10,7 @@ class StreamlitSmokeTests(unittest.TestCase):
 
         for view in [
             "📊 Resumen",
-            "🎯 Predicción y valor",
+            "🎯 Análisis predictivo",
             "👤 Jugadores",
             "📐 Calibración",
             "🗄️ Calidad de datos",
@@ -25,7 +25,7 @@ class StreamlitSmokeTests(unittest.TestCase):
         prediction_view = next(
             option
             for option in app.sidebar.radio[0].options
-            if "Predicción y valor" in option
+            if "Análisis predictivo" in option
         )
         app.sidebar.radio[0].set_value(prediction_view)
         app.run()
@@ -34,10 +34,10 @@ class StreamlitSmokeTests(unittest.TestCase):
         for section in [
             "Modelo",
             "Marcadores",
-            "Mercados y EV",
+            "Estadísticas por equipo",
             "Jugadores",
-            "Datos / SofaScore",
-            "Guardado",
+            "Datos y fuentes",
+            "Historial",
         ]:
             with self.subTest(section=section):
                 control = next(

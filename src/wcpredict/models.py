@@ -27,6 +27,16 @@ class MarketFamily(str, Enum):
     CUSTOM = "custom"
 
 
+class PredictionTarget(str, Enum):
+    """Public, betting-neutral analytical outputs for a match."""
+
+    MATCH_OUTCOME = "match_outcome"
+    SCORE_MODE = "score_mode"
+    SCORE_ALTERNATIVE = "score_alternative"
+    EXPECTED_GOALS = "expected_goals"
+    SCORE_GRID = "score_grid"
+
+
 @dataclass(frozen=True)
 class Team:
     id: int

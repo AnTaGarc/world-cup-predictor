@@ -59,7 +59,7 @@ class ViewModelTests(unittest.TestCase):
 
     def test_model_policy_rows_expose_active_challenger_and_fallback(self):
         rows = model_policy_rows()
-        corners = next(row for row in rows if row["Mercado"] == "córners")
+        corners = next(row for row in rows if row["Salida"] == "córners")
         self.assertEqual("Binomial negativa", corners["Activo"])
         self.assertEqual("Poisson", corners["Fallback"])
 
@@ -105,10 +105,10 @@ class ViewModelTests(unittest.TestCase):
         )
 
         self.assertEqual(["Czechia", "Empate", "South Africa"], [row["Resultado"] for row in rows])
-        self.assertAlmostEqual(100.0, sum(row["Modelo unificado 1X2 (%)"] for row in rows))
+        self.assertAlmostEqual(100.0, sum(row["Modelo unificado (%)"] for row in rows))
         self.assertAlmostEqual(100.0, sum(row["Matriz de marcadores (%)"] for row in rows))
         self.assertAlmostEqual(100.0, sum(row["ML cronológico (%)"] for row in rows))
-        self.assertGreater(rows[0]["Modelo unificado 1X2 (%)"], rows[2]["Modelo unificado 1X2 (%)"])
+        self.assertGreater(rows[0]["Modelo unificado (%)"], rows[2]["Modelo unificado (%)"])
         self.assertAlmostEqual(23.8, rows[0]["Diferencia (pp)"])
         note = model_disagreement_note(rows)
         self.assertIn("modelo operativo", note)

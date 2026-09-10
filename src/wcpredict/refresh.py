@@ -18,9 +18,7 @@ class RefreshResult:
     message: str
     calls_made: int
     bundle: Any | None
-    odds_status: str = "skipped_zero_budget"
     providers: tuple[str, ...] = ()
-    odds_providers: tuple[str, ...] = ()
     missing_critical: tuple[str, ...] = ()
     stderr_tail: str = ""
 
@@ -53,8 +51,6 @@ def build_collect_command(
         str(sports_data_dir),
         "--max-api-calls",
         "14",
-        "--max-odds-credits",
-        "0",
     ]
 
 
@@ -115,7 +111,6 @@ def refresh_match(
     cached = evidence_store.find_event(team_a, team_b, kickoff_utc.date())
     calls_made = int(summary.get("calls_made") or 0)
     providers = tuple(str(value) for value in (summary.get("providers") or ()))
-    odds_providers = tuple(str(value) for value in (summary.get("odds_providers") or ()))
     missing_critical = tuple(str(value) for value in (summary.get("missing_critical") or ()))
     stderr_tail = "\n".join((completed.stderr or "").splitlines()[-5:])
     if completed.returncode != 0:
@@ -123,7 +118,7 @@ def refresh_match(
             "cached" if cached else "failed",
             "El proveedor no pudo completar la actualizacion; se conserva el ultimo estado disponible.",
             calls_made, cached,
-            providers=providers, odds_providers=odds_providers,
+            providers=providers,
             missing_critical=missing_critical, stderr_tail=stderr_tail,
         )
     complete = bool(summary.get("coverage_complete"))
@@ -131,6 +126,6 @@ def refresh_match(
         "complete" if complete else "partial",
         "Actualizacion completa." if complete else "Actualizacion parcial: faltan algunos campos y se muestran como tales.",
         calls_made, cached,
-        providers=providers, odds_providers=odds_providers,
+        providers=providers,
         missing_critical=missing_critical, stderr_tail=stderr_tail,
     )

@@ -13,7 +13,7 @@ Cinco páginas navegadas por radio en el sidebar oscuro:
 1. **Resumen** — hero, KPIs, partidos de hoy, estado de datos diarios,
    bracket eliminatorio.
 2. **Predicción y valor** — la vista principal por partido: 1X2 con barras,
-   marcadores exactos, mercados con EV contra cuotas manuales, embudo de
+   marcadores exactos, proyecciones estadísticas, embudo de
    avance en eliminatorias (90'/prórroga/penaltis), auditoría postpartido
    por fases.
 3. **Jugadores** — rankings de impacto/goles/asistencias/tiros.

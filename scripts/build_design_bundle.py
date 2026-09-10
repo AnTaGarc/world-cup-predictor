@@ -157,7 +157,7 @@ METRICS_BODY = """
   <div class="metric"><div class="label">Partidos</div><div class="value num">96</div></div>
   <div class="metric"><div class="label">Selecciones</div><div class="value num">48</div></div>
   <div class="metric"><div class="label">Importaciones</div><div class="value num">217</div></div>
-  <div class="metric"><div class="label">Cuotas</div><div class="value num">37</div></div>
+  <div class="metric"><div class="label">Deep stats</div><div class="value num">3.618</div></div>
 </div>
 <div class="callout"><div class="callout-title">Ajuste por forma del torneo activo</div>
 score +0.34 · peso 0.57 (4 partidos) · α 1.50 → +0.29 logit</div>

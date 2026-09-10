@@ -39,7 +39,7 @@ st.sidebar.markdown(
     unsafe_allow_html=True,
 )
 
-PAGE_OPTIONS = ["📊 Resumen", "🎯 Predicción y valor", "👤 Jugadores", "📐 Calibración", "🗄️ Calidad de datos"]
+PAGE_OPTIONS = ["📊 Resumen", "🎯 Análisis predictivo", "👤 Jugadores", "📐 Calibración", "🗄️ Calidad de datos"]
 
 # Allow other views (dashboard match links) to deep-link into the prediction
 # lab via ?page=lab&match_id=N. Set the default index of the radio so the
@@ -47,7 +47,7 @@ PAGE_OPTIONS = ["📊 Resumen", "🎯 Predicción y valor", "👤 Jugadores", "�
 _default_index = 0
 _qp_page = st.query_params.get("page")
 if _qp_page == "lab":
-    _default_index = 1  # Predicción y valor
+    _default_index = 1  # Análisis predictivo
 
 page = st.sidebar.radio(
     "Vista",
@@ -60,7 +60,7 @@ page = page.split(" ", 1)[1] if " " in page else page
 
 if page == "Resumen":
     render_dashboard()
-elif page == "Predicción y valor":
+elif page == "Análisis predictivo":
     render_prediction_lab()
 elif page == "Jugadores":
     render_player_intelligence()

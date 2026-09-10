@@ -1,4 +1,3 @@
-from wcpredict.odds import OddsComparison
 from wcpredict.services import MarketPrediction
 from wcpredict.model_registry import POLICIES
 from datetime import datetime, timezone
@@ -105,7 +104,7 @@ def model_comparison_rows(
     for key, label in labels:
         row: dict = {
             "Resultado": label,
-            "Modelo unificado 1X2 (%)": unified.get(key, 0.0),
+            "Modelo unificado (%)": unified.get(key, 0.0),
             "ML cronológico (%)": ml.get(key, 0.0),
         }
         if deep is not None:
@@ -141,22 +140,6 @@ def postmatch_queue_message(
     if missing_statistics:
         message += f" {missing_statistics} además tienen estadísticas de equipo incompletas."
     return message
-
-
-def ev_rows(comparisons: list[OddsComparison]) -> list[dict]:
-    return [
-        {
-            "Mercado": localize_market(comparison.market_name),
-            "Selección": localize_selection(comparison.selection_name),
-            "Probabilidad del modelo": round(comparison.probability, 4),
-            "Cuota": comparison.decimal_odds,
-            "Probabilidad implícita": round(comparison.implied_probability, 4),
-            "Cuota justa": round(comparison.fair_odds, 3),
-            "EV": round(comparison.expected_value, 4),
-            "Confianza": localize_confidence(comparison.confidence),
-        }
-        for comparison in comparisons
-    ]
 
 
 def dataset_freshness_rows(
@@ -203,17 +186,19 @@ def model_policy_rows() -> list[dict]:
     seen = set()
     rows = []
     for policy in POLICIES.values():
+        if policy.market in {"BTTS", "doble oportunidad", "empate no válido"}:
+            continue
         if policy.market in seen:
             continue
         seen.add(policy.market)
         rows.append(
             {
-                "Mercado": policy.market,
+                "Salida": "Resultado a 90 min" if policy.market == "1X2" else policy.market,
                 "Activo": localize_model(policy.active),
                 "Challenger": localize_model(policy.challenger),
                 "Fallback": localize_model(policy.fallback),
                 "Validación": policy.validation_metric,
-                "Nota": policy.note,
+                "Nota": policy.note.replace("1X2", "resultado a 90 min"),
             }
         )
     return rows

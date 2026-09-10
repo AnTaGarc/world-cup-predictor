@@ -9,9 +9,29 @@ from wcpredict.player_markets import (
     is_goalkeeper,
 )
 from wcpredict.quality import Confidence
+from wcpredict.player_projections import estimate_player_projection
 
 
 class PlayerMarketTests(unittest.TestCase):
+    def test_player_projection_exposes_expected_count_and_threshold(self):
+        assumption = PlayerAssumption(
+            player_name="Example Forward",
+            team_name="Spain",
+            expected_minutes=75,
+            starter_probability=0.85,
+            per90_rate=2.4,
+            opponent_adjustment=0.95,
+            manually_estimated=False,
+        )
+
+        projection = estimate_player_projection(
+            assumption, MarketFamily.PLAYER_SHOTS, threshold=1.5, sample_size=12
+        )
+
+        self.assertAlmostEqual(1.9, projection.expected_count)
+        self.assertEqual(1.5, projection.threshold)
+        self.assertGreater(projection.probability, 0.4)
+
     def test_player_shots_probability_scales_by_minutes(self):
         assumption = PlayerAssumption(
             player_name="Example Forward",

@@ -28,7 +28,8 @@ class ProviderHealthTests(unittest.TestCase):
             {"API_SPORTS_KEY": "secret", "THE_ODDS_API_KEY": ""}
         )
         self.assertTrue(matrix["api_sports_football"]["configured"])
-        self.assertFalse(matrix["the_odds_api"]["configured"])
+        self.assertNotIn("the_odds_api", matrix)
+        self.assertNotIn("oddspapi_winamax", matrix)
         self.assertNotIn("secret", repr(matrix))
 
 

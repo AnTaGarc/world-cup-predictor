@@ -4,7 +4,7 @@ import math
 
 from wcpredict.advanced_form import XgFormAdjustment
 from wcpredict.model_corrections import ModelCorrections, apply_outcome_shifts, is_active
-from wcpredict.models import MarketFamily
+from wcpredict.models import MarketFamily, PredictionTarget
 from wcpredict.names import canonical_team_name
 from wcpredict.player_impact import adjust_expected_goals, build_team_player_adjustment
 from wcpredict.poisson import (
@@ -59,6 +59,22 @@ class MarketPrediction:
     market_name: str
     selection_name: str
     line: float | None
+    probability: float
+    confidence: Confidence
+    explanation: str
+    low_probability: float = 0.0
+    high_probability: float = 1.0
+    sample_size: float = 0.0
+    data_origin: str = "baseline"
+
+
+@dataclass(frozen=True)
+class MatchProjection:
+    """A model output described as analysis rather than a betting market."""
+
+    target: PredictionTarget
+    label: str
+    selection_name: str
     probability: float
     confidence: Confidence
     explanation: str
@@ -608,3 +624,49 @@ def predict_match_markets(
         ]
     )
     return rows
+
+
+def predict_match(*args, **kwargs) -> list[MatchProjection]:
+    """Return the match model's public, betting-neutral projections.
+
+    The legacy generator remains an internal numerical adapter during the
+    migration so its calibrated score matrix and audit behaviour stay exactly
+    the same. Betting-only derivatives are deliberately not exposed here.
+    """
+    legacy_rows = predict_match_markets(*args, **kwargs)
+    mapping = {
+        "1X2": (PredictionTarget.MATCH_OUTCOME, "Resultado probable"),
+        "Exact Score": (PredictionTarget.SCORE_MODE, "Marcador principal"),
+        "Exact Score (favorito)": (
+            PredictionTarget.SCORE_ALTERNATIVE,
+            "Marcador condicionado",
+        ),
+        "Exact Score (alt)": (
+            PredictionTarget.SCORE_ALTERNATIVE,
+            "Marcador alternativo",
+        ),
+        "Expected Score": (PredictionTarget.EXPECTED_GOALS, "Goles esperados"),
+        "Exact Score Grid": (PredictionTarget.SCORE_GRID, "Mapa de marcadores"),
+    }
+    projections: list[MatchProjection] = []
+    for row in legacy_rows:
+        mapped = mapping.get(row.market_name)
+        if mapped is None:
+            continue
+        target, label = mapped
+        selection = "Empate" if row.selection_name == "Draw" else row.selection_name
+        projections.append(
+            MatchProjection(
+                target=target,
+                label=label,
+                selection_name=selection,
+                probability=row.probability,
+                confidence=row.confidence,
+                explanation=row.explanation,
+                low_probability=row.low_probability,
+                high_probability=row.high_probability,
+                sample_size=row.sample_size,
+                data_origin=row.data_origin,
+            )
+        )
+    return projections

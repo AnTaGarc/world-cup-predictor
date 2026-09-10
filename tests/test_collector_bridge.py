@@ -13,7 +13,7 @@ class CollectorBridgeTests(unittest.TestCase):
         self.assertIsNotNone(event)
         self.assertEqual("netherlands", event["participant1_name"])
         self.assertEqual("japan", event["participant2_name"])
-        self.assertGreater(len(event["market_comparisons"]), 0)
+        self.assertGreater(len(event["statistics"]), 0)
 
     def test_missing_cache_returns_none(self):
         export_dir = Path(__file__).resolve().parents[2] / "sports-data" / "exports"

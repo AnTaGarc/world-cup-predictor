@@ -31,12 +31,11 @@ def default_source_catalog() -> list[SourceDefinition]:
     return [
         SourceDefinition("reviewed_capture", "Captura revisada por el usuario", 0, 0.99, "free", "medium", ("postmatch_stats", "player_stats", "results"), 24 * 365, notes="Revisión obligatoria y huella del archivo"),
         SourceDefinition("official_competition", "FIFA / competición oficial", 0, 0.99, "free_or_restricted", "low", ("fixtures", "results", "lineups", "postmatch_stats"), 12),
-        SourceDefinition("exact_bookmaker", "Cuota del bookmaker exacto", 0, 0.99, "free_manual", "low", ("odds",), 1),
         SourceDefinition("martj42", "Resultados internacionales (fuente original)", 1, 0.94, "free", "low", ("historical_results", "international_scorers"), 24 * 30),
         SourceDefinition("openfootball", "OpenFootball internationals", 1, 0.91, "free", "low", ("historical_results",), 24 * 30),
         SourceDefinition("statsbomb_open", "StatsBomb Open Data", 1, 0.95, "free", "medium", ("events", "player_stats"), 24 * 30),
         SourceDefinition("transfermarkt_dataset", "Transfermarkt datasets", 1, 0.88, "free", "medium", ("entities", "squads", "valuations"), 24 * 14, notes="Usar el dataset publicado y revisar términos de procedencia"),
-        SourceDefinition("xgabora", "Datos históricos de partidos de clubes", 1, 0.88, "free", "medium", ("club_history", "historical_odds"), 24 * 30),
+        SourceDefinition("xgabora", "Datos históricos de partidos de clubes", 1, 0.88, "free", "medium", ("club_history",), 24 * 30),
         SourceDefinition("swaptr_wc2026_matches", "Partidos diarios del Mundial 2026", 1, 0.86, "free", "low", ("world_cup_2026", "fixtures", "results", "postmatch_stats"), 36, notes="Fuente comunitaria diaria; contrastar conflictos con FIFA o captura revisada"),
         SourceDefinition("swaptr_wc2026_teams", "Selecciones diarias del Mundial 2026", 1, 0.84, "free", "low", ("world_cup_2026", "team_form", "postmatch_stats"), 36, notes="Fuente comunitaria diaria; conserva versión y hash"),
         SourceDefinition("swaptr_wc2026_players", "Jugadores diarios del Mundial 2026", 1, 0.84, "free", "medium", ("world_cup_2026", "player_stats"), 36, notes="Fuente comunitaria diaria; alta importancia predictiva, autoridad subordinada a evidencia revisada"),

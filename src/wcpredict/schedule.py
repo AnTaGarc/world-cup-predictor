@@ -102,7 +102,7 @@ def _move_match_data(con: sqlite3.Connection, old_id: int, new_id: int) -> None:
     from old_id to new_id before deleting old_id."""
     tables = [
         "match_results", "team_match_stats", "observations",
-        "predictions", "manual_odds", "import_runs",
+        "predictions", "import_runs",
     ]
     for table in tables:
         cols = [r[1] for r in con.execute(f"PRAGMA table_info({table})").fetchall()]
