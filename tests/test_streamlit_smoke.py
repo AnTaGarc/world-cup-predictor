@@ -34,7 +34,10 @@ class StreamlitSmokeTests(unittest.TestCase):
             "quality",
         ]:
             with self.subTest(view=view):
-                app.sidebar.radio[0].set_value(view)
+                navigation = next(
+                    item for item in app.sidebar.radio if item.label in {"Vista", "View"}
+                )
+                navigation.set_value(view)
                 app.run()
                 self.assertEqual([], list(app.exception))
 
@@ -42,7 +45,10 @@ class StreamlitSmokeTests(unittest.TestCase):
         app = AppTest.from_file("app.py", default_timeout=120)
         app.session_state["ui_language"] = "es"
         app.run()
-        app.sidebar.radio[0].set_value("analysis")
+        navigation = next(
+            item for item in app.sidebar.radio if item.label in {"Vista", "View"}
+        )
+        navigation.set_value("analysis")
         app.run()
         self.assertEqual([], list(app.exception))
 

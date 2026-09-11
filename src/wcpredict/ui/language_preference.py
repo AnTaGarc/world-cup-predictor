@@ -12,27 +12,6 @@ STORAGE_KEY = "wcpredict.language.v1"
 SESSION_KEY = "ui_language"
 WRITE_KEY = "_ui_language_write"
 
-SELECTOR_CSS = """
-<style>
-.st-key-language-selector button[aria-pressed="false"] {
-    background: #f4f7fb !important;
-    border-color: #d6dfeb !important;
-    color: #41546c !important;
-    opacity: 1 !important;
-}
-.st-key-language-selector button[aria-pressed="true"] {
-    background: #e8f1fd !important;
-    border-color: #9bbce8 !important;
-    color: #174f91 !important;
-    font-weight: 650 !important;
-    box-shadow: inset 0 0 0 1px rgba(23, 105, 224, 0.08) !important;
-}
-.st-key-language-selector button:hover {
-    border-color: #9bbce8 !important;
-}
-</style>
-"""
-
 COMPONENT_JS = f"""
 export default function(component) {{
     const {{ data, setStateValue }} = component;
@@ -100,7 +79,7 @@ def render_language_preference() -> Language | None:
     component_value = _preference_component()(
         key="language-browser-preference",
         data={"write": pending_write},
-        default={"ready": False, "language": None},
+        default={"ready": True, "language": None},
         height=0,
         on_ready_change=lambda: None,
         on_language_change=lambda: None,
@@ -131,13 +110,15 @@ def render_language_preference() -> Language | None:
 
 
 def render_language_selector(language: Language) -> Language:
-    st.sidebar.markdown(SELECTOR_CSS, unsafe_allow_html=True)
-    selected = st.sidebar.segmented_control(
+    st.sidebar.caption(translate("language.selector", language=language))
+    selected = st.sidebar.radio(
         translate("language.selector", language=language),
         options=("es", "en"),
-        default=language,
+        index=0 if language == "es" else 1,
         format_func=lambda value: "ES" if value == "es" else "EN",
         key="language-selector",
+        horizontal=False,
+        label_visibility="collapsed",
     )
     selected_language = normalise_language(selected) or language
     if selected_language != language:
