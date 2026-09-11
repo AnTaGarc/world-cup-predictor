@@ -1,4 +1,5 @@
 import unittest
+from pathlib import Path
 
 from wcpredict.ui.language_preference import (
     COMPONENT_JS,
@@ -9,6 +10,13 @@ from wcpredict.ui.language_preference import (
 
 
 class LanguagePreferenceTests(unittest.TestCase):
+    def test_selector_keeps_both_options_visible_with_subtle_active_state(self):
+        source = (Path(__file__).parents[1] / "src" / "wcpredict" / "ui" / "language_preference.py").read_text(encoding="utf-8")
+        self.assertIn('[aria-pressed="false"]', source)
+        self.assertIn('[aria-pressed="true"]', source)
+        self.assertIn("#f4f7fb", source)
+        self.assertIn("#e8f1fd", source)
+
     def test_unresolved_component_withholds_the_application(self):
         self.assertEqual(resolve_preference(None, None), PreferenceState("resolving", None))
 
