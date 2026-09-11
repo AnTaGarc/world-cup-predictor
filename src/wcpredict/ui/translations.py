@@ -1,5 +1,17 @@
 from __future__ import annotations
 
+from wcpredict.ui.i18n import localize_controlled, localize_table_columns as localize_columns_i18n
+
+
+def _active_language(language: str | None) -> str:
+    if language in {"es", "en"}:
+        return language
+    try:
+        from wcpredict.ui.language_preference import current_language
+        return current_language()
+    except Exception:
+        return "es"
+
 
 MARKETS = {
     "Double Chance": "Doble oportunidad",
@@ -135,7 +147,9 @@ TABLE_COLUMNS = {
 }
 
 
-def localize_market(value: str) -> str:
+def localize_market(value: str, language: str | None = None) -> str:
+    if _active_language(language) == "en":
+        return value
     if value.startswith("Over/Under "):
         return "Más/menos de " + value.removeprefix("Over/Under ")
     if value.startswith("Total Corners "):
@@ -157,7 +171,9 @@ def localize_market(value: str) -> str:
     return MARKETS.get(value, value)
 
 
-def localize_selection(value: str) -> str:
+def localize_selection(value: str, language: str | None = None) -> str:
+    if _active_language(language) == "en":
+        return value
     if value == "Draw":
         return "Empate"
     if value == "Yes":
@@ -173,37 +189,48 @@ def localize_selection(value: str) -> str:
     return value
 
 
-def localize_confidence(value: str) -> str:
-    return CONFIDENCE.get(value, value)
+def localize_confidence(value: str, language: str | None = None) -> str:
+    return str(localize_controlled("confidence", value, language=_active_language(language)))
 
 
-def localize_model(value: str | None) -> str:
+def localize_model(value: str | None, language: str | None = None) -> str:
     if not value:
         return "—"
+    if _active_language(language) == "en":
+        return value.replace("_", " ").title()
     return MODELS.get(value, value.replace("_", " "))
 
 
-def localize_status(value: str) -> str:
-    return STATUSES.get(value, value)
+def localize_status(value: str, language: str | None = None) -> str:
+    return str(localize_controlled("status", value, language=_active_language(language)))
 
 
-def localize_origin(value: str) -> str:
+def localize_origin(value: str, language: str | None = None) -> str:
+    if _active_language(language) == "en":
+        return value.replace("_", " ").title()
     return ORIGINS.get(value, value)
 
 
-def localize_market_family(value: str) -> str:
+def localize_market_family(value: str, language: str | None = None) -> str:
+    if _active_language(language) == "en":
+        return value.replace("_", " ").title()
     return MARKET_FAMILIES.get(value, value.replace("_", " "))
 
 
-def localize_metric(value: str) -> str:
-    return METRICS.get(value, value.replace("_", " "))
+def localize_metric(value: str, language: str | None = None) -> str:
+    translated = localize_controlled("metric", value, language=_active_language(language))
+    return str(translated if translated != value else value.replace("_", " "))
 
 
-def localize_resource_tier(value: str) -> str:
+def localize_resource_tier(value: str, language: str | None = None) -> str:
+    if _active_language(language) == "en":
+        return value.title()
     return RESOURCE_TIERS.get(value, value)
 
 
-def localize_cost_tier(value: str) -> str:
+def localize_cost_tier(value: str, language: str | None = None) -> str:
+    if _active_language(language) == "en":
+        return value.replace("_", " ").title()
     return COST_TIERS.get(value, value)
 
 
@@ -243,9 +270,6 @@ def canonical_market_family(value: str) -> str:
     return reverse.get(value, value)
 
 
-def localize_table_columns(rows: list[dict]) -> list[dict]:
+def localize_table_columns(rows: list[dict], language: str | None = None) -> list[dict]:
     """Translate storage-oriented field names before presenting records to users."""
-    return [
-        {TABLE_COLUMNS.get(str(key), str(key).replace("_", " ").capitalize()): value for key, value in row.items()}
-        for row in rows
-    ]
+    return localize_columns_i18n(rows, language=_active_language(language))

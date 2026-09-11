@@ -2,6 +2,8 @@
 
 Aplicación Streamlit para explorar el Mundial 2026 mediante modelos probabilísticos, ingeniería de datos reproducible y auditorías posteriores al partido. El proyecto muestra cómo combinar fuentes heterogéneas, estadísticas profundas y aprendizaje automático sin ocultar la incertidumbre ni la procedencia de los datos.
 
+La interfaz está disponible en español e inglés. En la primera visita desde cada navegador se solicita el idioma una sola vez; la elección se conserva en el almacenamiento local del dispositivo y puede cambiarse en cualquier momento desde la barra lateral.
+
 ## Qué incluye
 
 - Probabilidades de resultado, xG esperado y distribución de marcadores 0–5.

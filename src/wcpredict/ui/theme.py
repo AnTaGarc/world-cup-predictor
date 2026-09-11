@@ -1479,6 +1479,7 @@ def knockout_advance_html(
     crest_b: str = "",
     next_fixture: str | None = None,
     pen_pending: bool = True,
+    language: str = "es",
 ) -> str:
     """Full 'who advances' card with stacked bar + conditional via funnel.
 
@@ -1494,6 +1495,7 @@ def knockout_advance_html(
     aa = away_advances * 100
     img_a = f'{crest_a} ' if crest_a else ''
     img_b = f' {crest_b}' if crest_b else ''
+    en = language == "en"
 
     def _three_seg_row(
         css_class: str, h: float, d: float, a: float,
@@ -1526,22 +1528,22 @@ def knockout_advance_html(
         )
 
     row_90 = (
-        '<div class="ko-funnel-row-label">EN 90\''
-        '<span class="hint">marginal · ganar o forzar prórroga</span></div>'
+        f'<div class="ko-funnel-row-label">{"AT 90′" if en else "EN 90′"}'
+        f'<span class="hint">{"marginal · win or force extra time" if en else "marginal · ganar o forzar prórroga"}</span></div>'
         + _three_seg_row("via-90", home_wins_90, draw_90, away_wins_90)
     )
     row_et = (
-        '<div class="ko-funnel-row-label">PRÓRROGA'
-        '<span class="hint">condicional · si hubo empate al 90\'</span></div>'
+        f'<div class="ko-funnel-row-label">{"EXTRA TIME" if en else "PRÓRROGA"}'
+        f'<span class="hint">{"conditional · after a draw at 90′" if en else "condicional · si hubo empate al 90′"}</span></div>'
         + _three_seg_row("via-et", cond_home_et, cond_draw_et, cond_away_et)
     )
     pen_hint = (
-        'condicional · si hubo empate tras prórroga · modelo en desarrollo (50/50)'
+        ('conditional · after a draw following extra time · model in development (50/50)' if en else 'condicional · si hubo empate tras prórroga · modelo en desarrollo (50/50)')
         if pen_pending else
-        'condicional · si hubo empate tras prórroga'
+        ('conditional · after a draw following extra time' if en else 'condicional · si hubo empate tras prórroga')
     )
     row_pen = (
-        f'<div class="ko-funnel-row-label">PENALTIS<span class="hint">{pen_hint}</span></div>'
+        f'<div class="ko-funnel-row-label">{"PENALTY SHOOTOUT" if en else "PENALTIS"}<span class="hint">{pen_hint}</span></div>'
         + _two_seg_row("via-pen", cond_home_pen, cond_away_pen)
     )
 
@@ -1551,7 +1553,7 @@ def knockout_advance_html(
     )
     return (
         '<div class="ko-advance">'
-        '<div class="ko-advance-label">Quién avanza al siguiente cruce</div>'
+        f'<div class="ko-advance-label">{"Who advances to the next tie" if en else "Quién avanza al siguiente cruce"}</div>'
         '<div class="ko-advance-bar">'
         f'<div class="ko-advance-team">{img_a}<span>{escape(team_a)}</span></div>'
         '<div class="ko-stacked-bar">'
@@ -1563,7 +1565,7 @@ def knockout_advance_html(
         '<div class="ko-funnel">'
         '<div class="ko-funnel-header">'
         f'<span>{escape(team_a)}</span>'
-        '<span>Vía de avance</span>'
+        f'<span>{"Route to advancement" if en else "Vía de avance"}</span>'
         f'<span>{escape(team_b)}</span>'
         '</div>'
         + row_90

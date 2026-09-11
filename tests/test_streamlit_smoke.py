@@ -4,16 +4,34 @@ from streamlit.testing.v1 import AppTest
 
 
 class StreamlitSmokeTests(unittest.TestCase):
+    def test_dashboard_renders_contextual_english_copy(self):
+        app = AppTest.from_file("app.py", default_timeout=120)
+        app.session_state["ui_language"] = "en"
+        app.run()
+        self.assertEqual([], list(app.exception))
+        visible = "\n".join(
+            str(getattr(element, "value", ""))
+            for element in app
+        )
+        visible += "\n" + "\n".join(expander.label for expander in app.expander)
+        self.assertIn("2026 World Cup Predictive Analytics", visible)
+        self.assertIn("Matches today and over the next two days", visible)
+        self.assertIn("External dataset", visible)
+        self.assertNotIn("Decidir con probabilidades, no con ruido", visible)
+        self.assertNotIn("mominullptr", visible)
+
     def test_every_navigation_view_renders_without_exception(self):
-        app = AppTest.from_file("app.py", default_timeout=120).run()
+        app = AppTest.from_file("app.py", default_timeout=120)
+        app.session_state["ui_language"] = "es"
+        app.run()
         self.assertEqual([], list(app.exception))
 
         for view in [
-            "📊 Resumen",
-            "🎯 Análisis predictivo",
-            "👤 Jugadores",
-            "📐 Calibración",
-            "🗄️ Calidad de datos",
+            "dashboard",
+            "analysis",
+            "players",
+            "calibration",
+            "quality",
         ]:
             with self.subTest(view=view):
                 app.sidebar.radio[0].set_value(view)
@@ -21,29 +39,26 @@ class StreamlitSmokeTests(unittest.TestCase):
                 self.assertEqual([], list(app.exception))
 
     def test_prediction_workspace_sections_render_without_exception(self):
-        app = AppTest.from_file("app.py", default_timeout=120).run()
-        prediction_view = next(
-            option
-            for option in app.sidebar.radio[0].options
-            if "Análisis predictivo" in option
-        )
-        app.sidebar.radio[0].set_value(prediction_view)
+        app = AppTest.from_file("app.py", default_timeout=120)
+        app.session_state["ui_language"] = "es"
+        app.run()
+        app.sidebar.radio[0].set_value("analysis")
         app.run()
         self.assertEqual([], list(app.exception))
 
         for section in [
-            "Modelo",
-            "Marcadores",
-            "Estadísticas por equipo",
-            "Jugadores",
-            "Datos y fuentes",
-            "Historial",
+            "model",
+            "scorelines",
+            "team_stats",
+            "players",
+            "sources",
+            "history",
         ]:
             with self.subTest(section=section):
                 control = next(
                     item
                     for item in app.segmented_control
-                    if item.label == "Vista de análisis"
+                    if item.label in {"Vista de análisis", "Analysis view"}
                 )
                 control.set_value(section)
                 app.run()

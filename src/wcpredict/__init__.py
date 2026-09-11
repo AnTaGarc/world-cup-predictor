@@ -1,1 +1,1 @@
-"""World Cup prediction and EV analysis package."""
+"""World Cup predictive analytics package."""

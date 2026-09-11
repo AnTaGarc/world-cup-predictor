@@ -20,12 +20,10 @@ class AppContractTests(unittest.TestCase):
         ):
             self.assertTrue(callable(getattr(pages, name, None)), name)
 
-    def test_navigation_visible_to_user_is_in_spanish(self):
+    def test_navigation_uses_stable_keys_and_localized_labels(self):
         source = (Path(__file__).parents[1] / "app.py").read_text(encoding="utf-8")
-        self.assertNotIn('"Dashboard"', source)
-        self.assertNotIn('"Backtesting"', source)
-        self.assertIn('"Resumen"', source)
-        self.assertIn('"Calibración"', source)
+        self.assertIn('(\"dashboard\", \"analysis\", \"players\", \"calibration\", \"quality\")', source)
+        self.assertIn('format_func=lambda key: translate(f"nav.{key}"', source)
 
     def test_match_labels_use_madrid_local_day(self):
         match = SimpleNamespace(
@@ -53,7 +51,7 @@ class AppContractTests(unittest.TestCase):
         self.assertIn("model_comparison_rows", source)
         self.assertNotIn("Evidencia de modelo disponible", source)
         self.assertNotIn("modelo operativo", source)
-        self.assertIn('["Impacto", "Goles", "Asistencias", "Tiros"]', source)
+        self.assertIn('["impact", "goals", "assists", "shots"]', source)
 
     def test_market_panel_renders_exact_score_grid(self):
         source = (Path(__file__).parents[1] / "src" / "wcpredict" / "ui" / "pages.py").read_text(encoding="utf-8")
@@ -87,7 +85,7 @@ class AppContractTests(unittest.TestCase):
 
     def test_player_rankings_default_to_a_sample_available_during_group_stage(self):
         source = (Path(__file__).parents[1] / "src" / "wcpredict" / "ui" / "pages.py").read_text(encoding="utf-8")
-        self.assertIn('"Minutos mínimos (solo afecta a Impacto)", 0, 900, 60, 30', source)
+        self.assertIn('_t("players.minimum_minutes"), 0, 900, 60, 30', source)
         self.assertIn("minimum_minutes > 0", source)
         self.assertIn("cluster_player_styles(profiles[:120]", source)
 
@@ -151,11 +149,12 @@ class AppContractTests(unittest.TestCase):
         self.assertIn("engine_version: str", source)
         self.assertIn("PREDICTION_ENGINE_VERSION,", source)
         self.assertIn("st.segmented_control(", source)
-        self.assertIn('"Vista de análisis"', source)
-        self.assertIn('if section == "Modelo":', source)
-        self.assertIn('elif section == "Estadísticas por equipo":', source)
-        self.assertIn('elif section == "Datos y fuentes":', source)
-        self.assertIn('elif section == "Historial":', source)
+        self.assertIn('_t("analysis.view")', source)
+        self.assertIn('if section == "model":', source)
+        self.assertIn('elif section == "team_stats":', source)
+        self.assertIn('elif section == "sources":', source)
+        self.assertIn('elif section == "history":', source)
+        self.assertIn('elif section == "scorelines":', source)
         self.assertNotIn('elif section == "Mercados y EV":', source)
         self.assertNotIn('st.tabs(\n        ["Modelo", "Mercados y EV", "Jugadores", "Datos / SofaScore", "Guardado"]', source)
 
@@ -173,17 +172,17 @@ class AppContractTests(unittest.TestCase):
             source.index("def _render_prediction_workspace"):
             source.index("def render_prediction_lab")
         ]
-        self.assertIn('"Vista de análisis"', workspace)
+        self.assertIn('_t("analysis.view")', workspace)
         self.assertNotIn('elif section == "Mercados y EV":', workspace)
-        self.assertIn('elif section == "Jugadores":', workspace)
+        self.assertIn('elif section == "players":', workspace)
         self.assertNotIn('number_input(\n                        "Cuota"', workspace)
-        self.assertIn('"Umbral estadístico"', workspace)
-        self.assertIn('"Probabilidad estimada"', workspace)
+        self.assertIn('"Umbral estadístico", "Statistical threshold"', workspace)
+        self.assertIn('"Probabilidad estimada", "Estimated probability"', workspace)
 
     def test_player_intelligence_rankings_are_lazy(self):
         source = (Path(__file__).parents[1] / "src" / "wcpredict" / "ui" / "pages.py").read_text(encoding="utf-8")
         self.assertIn("st.segmented_control(", source)
-        self.assertIn('"Ranking"', source)
+        self.assertIn('_t("players.ranking")', source)
         self.assertIn('ranking_specs = {', source)
         self.assertNotIn('ranking_tabs = st.tabs(["Impacto", "Goles", "Asistencias", "Tiros"])', source)
 
@@ -231,20 +230,21 @@ class AppContractTests(unittest.TestCase):
     def test_daily_refresh_status_names_aggregate_and_exposes_error_details(self):
         source = (Path(__file__).parents[1] / "src" / "wcpredict" / "ui" / "pages.py").read_text(encoding="utf-8")
         self.assertIn("def _daily_refresh_failure_details", source)
-        self.assertIn('status_pill(f"Datos diarios:', source)
-        self.assertIn('st.expander("Detalle de errores de actualización")', source)
+        self.assertIn('_t("dashboard.daily_data"', source)
+        self.assertIn('_t("dashboard.error_details")', source)
         self.assertNotIn('status_pill(f"Calendario diario:', source)
 
     def test_external_dataset_review_expander_present(self):
         source = (Path(__file__).parents[1] / "src" / "wcpredict" / "ui" / "pages.py").read_text(encoding="utf-8")
         self.assertIn("def _render_external_dataset_review", source)
-        self.assertIn('st.expander("Dataset externo (mominullptr)"', source)
-        self.assertIn("Discrepancias de marcador pendientes", source)
-        self.assertIn("Alias de equipos pendientes", source)
-        self.assertIn("Alias de jugadores pendientes", source)
-        self.assertIn("Cierres candidatos pendientes", source)
+        self.assertIn('st.expander(_t("source.external_dataset")', source)
+        self.assertNotIn("(mominullptr)", source)
+        self.assertIn('_t("source.pending_score_mismatches"', source)
+        self.assertIn('_t("source.pending_team_aliases"', source)
+        self.assertIn('_t("source.pending_player_aliases"', source)
+        self.assertIn('_t("source.pending_results"', source)
         self.assertIn("verified_external_confirmed", source)
-        self.assertIn("descuento largo", source)
+        self.assertIn("stoppage time", source)
 
     def test_referee_card_multiplier_is_wired(self):
         source = (Path(__file__).parents[1] / "src" / "wcpredict" / "ui" / "pages.py").read_text(encoding="utf-8")
@@ -315,7 +315,7 @@ class AppContractTests(unittest.TestCase):
         self.assertIn('knockout_badge_html(', source)
         self.assertIn('knockout_advance_html(', source)
         self.assertIn('"Clasifica"', source)
-        self.assertIn('st.subheader("Probabilidad 1X2")', source)
+        self.assertIn('st.subheader(_t("summary.outcome_probabilities"))', source)
         self.assertIn('if is_knockout:', source)
 
     def test_knockout_penalty_context_is_cached_separately(self):
@@ -389,10 +389,10 @@ class AppContractTests(unittest.TestCase):
 
     def test_lectura_inmediata_shows_top_alternative_scores_and_expected(self):
         source = (Path(__file__).parents[1] / "src" / "wcpredict" / "ui" / "pages.py").read_text(encoding="utf-8")
-        self.assertIn('"Marcador más probable (modo)"', source)
-        self.assertIn('"Marcador esperado (goles xG)"', source)
+        self.assertIn('_t("summary.most_likely_score")', source)
+        self.assertIn('_t("summary.expected_score")', source)
         self.assertIn('Exact Score (alt)', source)
-        self.assertIn("Alternativos más probables", source)
+        self.assertIn('_t("summary.alternatives"', source)
 
     def test_backtesting_settlement_uses_form_to_avoid_rerun_on_typing(self):
         source = (Path(__file__).parents[1] / "src" / "wcpredict" / "ui" / "pages.py").read_text(encoding="utf-8")
@@ -411,7 +411,7 @@ class AppContractTests(unittest.TestCase):
         self.assertIn("volume_predictions=volume_predictions", source)
         # The deep-stat per-team comparison must be wired into the panel.
         self.assertIn("build_per_team_audit", source)
-        self.assertIn("Comparación por equipo (deep stats vs reales)", source)
+        self.assertIn('_t("audit.team_comparison")', source)
         # The audit table must not depend on pandas.Styler (jinja2): we render HTML.
         self.assertNotIn("styler = frame.style", source)
 
@@ -444,10 +444,10 @@ class AppContractTests(unittest.TestCase):
     def test_refresh_button_surfaces_providers_and_invalidates_cache(self):
         source = (Path(__file__).parents[1] / "src" / "wcpredict" / "ui" / "pages.py").read_text(encoding="utf-8")
         self.assertIn("_invalidate_match_analysis_caches()", source)
-        self.assertIn("Llamadas hechas", source)
-        self.assertIn("Proveedores OK", source)
-        self.assertIn("Faltantes", source)
-        self.assertIn("Salida técnica del recolector", source)
+        self.assertIn('_b("Llamadas realizadas", "Requests made")', source)
+        self.assertIn('_b("Proveedores disponibles", "Providers available")', source)
+        self.assertIn('_b("Campos pendientes", "Missing fields")', source)
+        self.assertIn('_b("Salida técnica del recolector", "Collector technical output")', source)
 
     def test_ui_mutations_never_clear_all_streamlit_caches(self):
         source = (Path(__file__).parents[1] / "src" / "wcpredict" / "ui" / "pages.py").read_text(encoding="utf-8")
@@ -522,14 +522,14 @@ class AppContractTests(unittest.TestCase):
     def test_player_intelligence_has_manual_refresh_button(self):
         source = (Path(__file__).parents[1] / "src" / "wcpredict" / "ui" / "pages.py").read_text(encoding="utf-8")
         self.assertIn("def _force_refresh_players", source)
-        self.assertIn('"Actualizar datos de jugadores"', source)
+        self.assertIn('_t("players.refresh")', source)
         # Force-refresh bypasses the 24h freshness gate.
         self.assertIn("max_age=timedelta(seconds=0)", source)
         # The button is rendered inside render_player_intelligence, NOT inside
         # the per-match tab_players block.
         player_intel_index = source.index("def render_player_intelligence")
         intel_section = source[player_intel_index:]
-        self.assertIn('"Actualizar datos de jugadores"', intel_section)
+        self.assertIn('_t("players.refresh")', intel_section)
         self.assertIn("refresh_players_intelligence", intel_section)
 
     def test_global_bias_panel_is_opt_in_to_avoid_blocking_the_ui(self):
@@ -537,8 +537,8 @@ class AppContractTests(unittest.TestCase):
         # The 36-match reconstruction sits behind an expander + button so it
         # only runs when the user asks for it, otherwise switching matches in
         # Calibración would lock the UI for ~minute every time.
-        self.assertIn('"Recalcular reporte de calibración (pesado)"', source)
-        self.assertIn('"Calcular reporte ahora"', source)
+        self.assertIn('_b("Recalcular informe de calibración (proceso intensivo)"', source)
+        self.assertIn('_b("Calcular informe ahora", "Calculate report now")', source)
 
     def test_settle_match_keeps_working_when_outcome_model_save_fails(self):
         source = (Path(__file__).parents[1] / "src" / "wcpredict" / "repository.py").read_text(encoding="utf-8")

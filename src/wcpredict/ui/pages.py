@@ -90,6 +90,7 @@ from wcpredict.ui.theme import (
     status_pill,
 )
 from wcpredict.ui.translations import (
+    localize_confidence,
     localize_cost_tier,
     localize_market,
     localize_market_family,
@@ -110,6 +111,12 @@ from wcpredict.ui.view_models import (
     probability_chart_rows,
 )
 from wcpredict.ui.interaction_models import prepare_player_match_context
+from wcpredict.ui.i18n import (
+    localize_controlled as localize_controlled_i18n,
+    localize_table_columns as localize_table_columns_i18n,
+    translate,
+)
+from wcpredict.ui.language_preference import current_language
 
 
 ROOT = Path(__file__).resolve().parents[3]
@@ -123,6 +130,19 @@ SPORTS_DB_PATH = SPORTS_DATA_DIR / "sports.db"
 OUTCOME_MODEL_PATH = DATA_DIR / "models" / "outcome_ml.joblib"
 DEEP_OUTCOME_MODEL_PATH = DATA_DIR / "models" / "outcome_ml_deep.joblib"
 OPEN_SCHEDULE_PATH = DATA_DIR / "open" / "martj42-results.csv"
+
+
+def _lang():
+    return current_language()
+
+
+def _t(key: str, *, count: int | None = None, **values: object) -> str:
+    return translate(key, language=_lang(), count=count, **values)
+
+
+def _b(es: str, en: str) -> str:
+    """Contextual paired copy for highly local, workflow-specific messages."""
+    return es if _lang() == "es" else en
 PRECOMPUTED_PENALTY_DIR = DATA_DIR / "precomputed" / "penalties"
 DAILY_PROVIDERS = (*DEFAULT_PROVIDERS, "martj42_world_schedule")
 HOST_TEAMS = {"USA", "Canada", "Mexico"}
@@ -563,14 +583,15 @@ def _render_player_panel(
     don't disappear from the goal-scorers list.
     """
     if metric not in frame:
-        st.info(f"La fuente actual no publica datos suficientes para {title.lower()}.")
+        st.info(_b(f"La fuente actual no publica datos suficientes para {title.lower()}.", f"The current source does not publish enough data for {title.lower()}."))
         return
     if metric == "impact":
         st.caption(
-            "Escala 0-100 (percentil del jugador dentro de su posición). "
+            _b("Escala 0-100 (percentil del jugador dentro de su posición). "
             "Cada rol pondera lo suyo: delanteros premia goles/tiros, medios "
             "asistencias/pases, defensas tackles+despejes, porteros % paradas. "
-            "El slider de minutos solo filtra la vista; la puntuación es estable."
+            "El selector de minutos solo filtra la vista; la puntuación es estable.",
+            "0-100 scale (the player's percentile within their position). Each role weights the relevant contributions: goals and shots for forwards, assists and passing for midfielders, tackles and clearances for defenders, and save percentage for goalkeepers. The minutes control only filters the view; the score itself remains stable.")
         )
     subset = frame[frame[metric].notna()]
     if metric == "impact" and minimum_minutes > 0 and "minutes" in subset:
@@ -581,12 +602,12 @@ def _render_player_panel(
         sort_col1, sort_col2 = st.columns([2, 1])
         with sort_col1:
             search = st.text_input(
-                "Buscar jugador", key=f"search_{metric}",
-                placeholder="Nombre del jugador…", label_visibility="collapsed",
+                _t("players.search"), key=f"search_{metric}",
+                placeholder=_t("players.search_placeholder"), label_visibility="collapsed",
             ).strip()
         with sort_col2:
             sort_choice = st.radio(
-                "Ordenar por", [total_label, rate_label], horizontal=True,
+                _t("players.sort"), [total_label, rate_label], horizontal=True,
                 key=f"sort_{metric}", label_visibility="collapsed",
             )
         if search:
@@ -602,12 +623,12 @@ def _render_player_panel(
     else:
         ranked = subset.sort_values(metric, ascending=False).head(30)
     if ranked.empty:
-        empty_state("Sin resultados", "Ningún jugador coincide con el filtro.", icon="🔍")
+        empty_state(_t("players.no_results"), _t("players.no_results_body"), icon="🔍")
         return
     _render_player_ranking_table(ranked, total_col, total_label, rate_col, rate_label)
     # Chart in an expander — Altair rendering is the heaviest step and most
     # users don't need to expand the bar chart every interaction.
-    with st.expander(f"📊 Gráfico — top 15 por {title.lower()}"):
+    with st.expander(_t("players.chart", metric=title.lower())):
         chart = alt.Chart(ranked.head(15)).mark_bar(cornerRadiusEnd=4, color="#1769E0").encode(
             y=alt.Y("player_name:N", sort="-x", title=None),
             x=alt.X(f"{metric}:Q", title=title),
@@ -616,7 +637,10 @@ def _render_player_panel(
         st.altair_chart(chart, width="stretch")
 
 
-_POSITION_LABEL = {"ATT": "Delantero", "MID": "Medio", "DEF": "Defensa", "GK": "Portero"}
+_POSITION_LABEL = {
+    "es": {"ATT": "Delantero", "MID": "Centrocampista", "DEF": "Defensa", "GK": "Portero"},
+    "en": {"ATT": "Forward", "MID": "Midfielder", "DEF": "Defender", "GK": "Goalkeeper"},
+}
 
 
 def _render_player_ranking_table(
@@ -645,7 +669,7 @@ def _render_player_ranking_table(
             total_display = f"{float(total_value):.1f}" if total_col == "impact" else f"{float(total_value):.2f}"
         cells = [f'<td class="pt-name">{row.get("player_name") or ""}</td>']
         if show_position:
-            pos_label = _POSITION_LABEL.get(str(row.get("position_group") or ""), "")
+            pos_label = _POSITION_LABEL[_lang()].get(str(row.get("position_group") or ""), "")
             cells.append(f'<td class="pt-pos">{pos_label}</td>')
         cells.extend([
             f'<td class="pt-team">{team_cell}</td>',
@@ -660,11 +684,11 @@ def _render_player_ranking_table(
                 if rate_value is not None and not pd.isna(rate_value) else '<td class="pt-num">—</td>'
             )
         rows_html.append("<tr>" + "".join(cells) + "</tr>")
-    header_cells = ['<th>Jugador</th>']
+    header_cells = [f'<th>{_t("players.player")}</th>']
     if show_position:
-        header_cells.append('<th>Posición</th>')
+        header_cells.append(f'<th>{_t("players.position")}</th>')
     header_cells.extend([
-        '<th>Selección</th>', '<th>Minutos</th>', '<th>Partidos</th>',
+        f'<th>{_t("players.team")}</th>', f'<th>{_t("players.minutes")}</th>', f'<th>{_t("players.matches")}</th>',
         f'<th>{total_label}</th>',
     ])
     if rate_label:
@@ -681,7 +705,7 @@ def _visible_frame(data) -> pd.DataFrame:
     frame = data.copy() if isinstance(data, pd.DataFrame) else pd.DataFrame(data)
     if frame.empty:
         return frame
-    return pd.DataFrame(localize_table_columns(frame.to_dict(orient="records")))
+    return pd.DataFrame(localize_table_columns_i18n(frame.to_dict(orient="records"), language=_lang()))
 
 
 @st.cache_resource(ttl=900, show_spinner=False)
@@ -736,8 +760,8 @@ def _render_external_dataset_review(repo: Repository) -> None:
         candidates = repo.list_gh_score_candidates()
     except Exception:
         candidates = []
-    with st.expander("Dataset externo (mominullptr)", expanded=False):
-        st.write(f"Cierres candidatos pendientes: {len(candidates)}")
+    with st.expander(_t("source.external_dataset"), expanded=False):
+        st.write(_t("source.pending_results", count=len(candidates)))
         for row in candidates:
             label = (
                 f"{row['home_team_name']} {row['home_score']}-{row['away_score']} "
@@ -748,11 +772,12 @@ def _render_external_dataset_review(repo: Repository) -> None:
             col1.write(label)
             if max_minute > 90:
                 col1.caption(
-                    f"Eventos hasta el minuto {max_minute}: confirma solo si el partido "
-                    "terminó en los 90 (descuento largo). Si hubo prórroga o penaltis, "
-                    "usa el cierre manual por periodos."
+                    _b(
+                        f"Eventos hasta el minuto {max_minute}: confirma solo si el partido terminó en los 90 minutos (incluido el descuento). Si hubo prórroga o penaltis, usa el cierre manual por periodos.",
+                        f"Events are recorded through minute {max_minute}. Confirm only if the match ended in regulation, including stoppage time. If extra time or a shootout was played, use the period-by-period settlement workflow.",
+                    )
                 )
-            if col2.button("Confirmar", key=f"gh_score_confirm_{row['match_id']}"):
+            if col2.button(_t("source.confirm"), key=f"gh_score_confirm_{row['match_id']}"):
                 repo.settle_match(
                     int(row["match_id"]), int(row["goals_a"]), int(row["goals_b"]),
                     [], datetime.now(timezone.utc),
@@ -763,13 +788,13 @@ def _render_external_dataset_review(repo: Repository) -> None:
                 except Exception:
                     pass
                 st.rerun()
-        st.write(f"Discrepancias de marcador pendientes: {len(mismatches)}")
-        st.write(f"Alias de equipos pendientes: {len(pending_teams)}")
-        st.write(f"Alias de jugadores pendientes: {len(pending_players)}")
+        st.write(_t("source.pending_score_mismatches", count=len(mismatches)))
+        st.write(_t("source.pending_team_aliases", count=len(pending_teams)))
+        st.write(_t("source.pending_player_aliases", count=len(pending_players)))
         if mismatches:
             st.dataframe(_visible_frame(mismatches), use_container_width=True)
         if pending_teams:
-            st.markdown("**Equipos por asignar**")
+            st.markdown(_t("source.teams_to_assign"))
             team_options = {
                 f"{row['name']} (id {row['id']})": int(row["id"])
                 for row in sorted(
@@ -781,12 +806,12 @@ def _render_external_dataset_review(repo: Repository) -> None:
                 col1, col2, col3 = st.columns([2, 2, 1])
                 col1.write(f"{row['display_name']} (ext {row['external_id']})")
                 choice = col2.selectbox(
-                    "Equipo local",
+                    _t("source.local_team"),
                     list(team_options),
                     key=f"gh_team_alias_{row['external_id']}",
                     label_visibility="collapsed",
                 )
-                if col3.button("Confirmar", key=f"gh_team_confirm_{row['external_id']}"):
+                if col3.button(_t("source.confirm"), key=f"gh_team_confirm_{row['external_id']}"):
                     repo.confirm_alias(
                         "team", "github_wc2026", str(row["external_id"]),
                         team_options[choice], "ui",
@@ -1110,8 +1135,8 @@ def _score_grid_html(
     return (
         "<div class='score-grid-wrap'>"
         "<div class='score-grid-head'>"
-        "<span>Marcadores posibles</span>"
-        f"<small>{escape(team_a)} goles ↓ · {escape(team_b)} goles →</small>"
+        f"<span>{_b('Marcadores posibles', 'Possible scorelines')}</span>"
+        f"<small>{escape(team_a)} {_b('goles', 'goals')} ↓ · {escape(team_b)} {_b('goles', 'goals')} →</small>"
         "</div>"
         f"<div class='score-grid' style='grid-template-columns:{columns}'>"
         + "".join(cells)
@@ -1128,7 +1153,7 @@ def _render_exact_score_panel(
     score_cards: list[tuple[str, str, float]] = []
     main_exact = next((row for row in predictions if row.market_name == "Exact Score"), None)
     if main_exact is not None:
-        score_cards.append(("MÁS PROBABLE", main_exact.selection_name, main_exact.probability))
+        score_cards.append((_b("MÁS PROBABLE", "MOST LIKELY"), main_exact.selection_name, main_exact.probability))
     alt_scores = [row for row in predictions if row.market_name == "Exact Score (alt)"]
     for idx, row in enumerate(alt_scores[:2], start=2):
         label = f"#{idx}"
@@ -1145,17 +1170,17 @@ def _render_exact_score_panel(
             for i, (label, score, prob) in enumerate(score_cards)
         )
         st.markdown(
-            '<div class="eyebrow">Marcadores exactos más probables</div>'
+            f'<div class="eyebrow">{_b("Marcadores exactos más probables", "Most likely exact scorelines")}</div>'
             f'<div class="score-cards">{cards_html}</div>',
             unsafe_allow_html=True,
         )
-        st.caption("Probabilidades estimadas con la distribución Dixon-Coles.")
+        st.caption(_b("Probabilidades estimadas con la distribución Dixon-Coles.", "Probabilities estimated with the Dixon-Coles distribution."))
 
     grid_html = _score_grid_html(team_a, team_b, predictions)
     if grid_html:
         st.markdown(grid_html, unsafe_allow_html=True)
     else:
-        st.info("Sin probabilidades de marcador exacto para este partido.")
+        st.info(_b("Sin probabilidades de marcador exacto para este partido.", "No exact-score probabilities are available for this match."))
 
 
 def _database_summary() -> dict[str, int | bool]:
@@ -1250,10 +1275,10 @@ def _cached_bundle(match) -> CollectorEventBundle | None:
 
 def _coverage_status(bundle: CollectorEventBundle | None) -> tuple[str, str]:
     if bundle is None:
-        return "Sin datos", "red"
+        return _b("Sin datos", "No data"), "red"
     if bundle.missing_critical:
-        return "Cobertura parcial", "amber"
-    return "Datos listos", "green"
+        return _b("Cobertura parcial", "Partial coverage"), "amber"
+    return _b("Datos listos", "Data ready"), "green"
 
 
 def _probability_chart(predictions: list[MarketPrediction]) -> alt.Chart:
@@ -1277,8 +1302,8 @@ def _render_bundle(bundle: CollectorEventBundle, deep_count: int = 0, daily_play
     st.markdown(
         '<div class="status-row">'
         + status_pill(label, tone)
-        + status_pill(f"Actualizado {_display_time(bundle.updated_at_utc, '%d/%m %H:%M')}")
-        + status_pill(f"Fuente event #{bundle.event_id}")
+        + status_pill(_b("Actualizado ", "Updated ") + _display_time(bundle.updated_at_utc, '%d/%m %H:%M'))
+        + status_pill(_b("Evento de la fuente #", "Source event #") + str(bundle.event_id))
         + "</div>",
         unsafe_allow_html=True,
     )
@@ -1290,23 +1315,23 @@ def _render_bundle(bundle: CollectorEventBundle, deep_count: int = 0, daily_play
         deep_statistics=deep_count,
     )
     c1, c2, c3, c4, c5 = st.columns(5)
-    c1.metric("Estadísticas disponibles", summary["Estadísticas disponibles"])
-    c2.metric("Jugadores disponibles", summary["Jugadores disponibles"])
-    c3.metric("Fuentes", summary["Fuentes"])
-    c4.metric("Profundidad", summary["Estadísticas profundas"])
-    c5.metric("Alineación", summary["Alineación"])
+    c1.metric(_b("Estadísticas disponibles", "Statistics available"), summary["Estadísticas disponibles"])
+    c2.metric(_b("Jugadores disponibles", "Players available"), summary["Jugadores disponibles"])
+    c3.metric(_b("Fuentes", "Sources"), summary["Fuentes"])
+    c4.metric(_b("Profundidad", "Deep statistics"), summary["Estadísticas profundas"])
+    c5.metric(_b("Alineación", "Line-up"), _b(str(summary["Alineación"]), "Confirmed" if summary["Alineación"] == "Confirmada" else "Unconfirmed"))
     if bundle.missing_critical or bundle.missing_optional:
         missing_labels = {
-            "team_statistics": "estadísticas de equipo",
-            "players": "alineación confirmada",
-            "availability": "disponibilidad",
-            "lineups": "alineaciones",
-            "event": "evento",
+            "team_statistics": _b("estadísticas de equipo", "team statistics"),
+            "players": _b("alineación confirmada", "confirmed line-up"),
+            "availability": _b("disponibilidad", "availability"),
+            "lineups": _b("alineaciones", "line-ups"),
+            "event": _b("evento", "event"),
         }
         callout(
-            "Faltan: "
+            _b("Faltan: ", "Missing: ")
             + ", ".join(missing_labels.get(value, value) for value in bundle.missing_critical + bundle.missing_optional)
-            + ". La app no sustituye esos campos con valores inventados.",
+            + _b(". La aplicación no sustituye esos campos con valores inventados.", ". The application does not replace those fields with invented values."),
             tone="amber",
         )
 
@@ -1928,18 +1953,15 @@ def _invalidate_player_caches() -> None:
 def _render_team_statistics(auxiliary: MatchVolumeBundle | MatchAuxiliaryBundle) -> None:
     team_volume_stat_rows = getattr(auxiliary, "team_volume_stat_rows", [])
     if team_volume_stat_rows:
-        st.subheader("Estadísticas estimadas por equipo")
-        st.caption(
-            "Valor esperado por partido para cada métrica, derivado del perfil "
-            "deep (45% propio + 30% rival + 25% media del torneo)."
-        )
+        st.subheader(_t("team_stats.title"))
+        st.caption(_t("team_stats.note"))
         st.dataframe(
             pd.DataFrame(team_volume_stat_rows),
             width="stretch",
             hide_index=True,
         )
     else:
-        st.info("No hay muestra suficiente para estimar estadísticas por equipo.")
+        st.info(_t("team_stats.empty"))
 
 
 def _render_audit_table(rows) -> None:
@@ -1952,9 +1974,9 @@ def _render_audit_table(rows) -> None:
         '<div class="audit-table-wrap" style="overflow-x:auto;-webkit-overflow-scrolling:touch;max-width:100%;margin:4px 0 12px;">',
         '<table style="width:100%; border-collapse:separate; border-spacing:0 4px; font-size:0.92rem; min-width:560px;">',
         '<thead><tr>'
-        '<th style="text-align:left;padding:6px 10px;color:#5b6b80;font-weight:600">Métrica</th>'
-        '<th style="text-align:left;padding:6px 10px;color:#5b6b80;font-weight:600">Predicho</th>'
-        '<th style="text-align:left;padding:6px 10px;color:#5b6b80;font-weight:600">Real</th>'
+        f'<th style="text-align:left;padding:6px 10px;color:#5b6b80;font-weight:600">{_t("audit.metric")}</th>'
+        f'<th style="text-align:left;padding:6px 10px;color:#5b6b80;font-weight:600">{_t("audit.predicted")}</th>'
+        f'<th style="text-align:left;padding:6px 10px;color:#5b6b80;font-weight:600">{_t("audit.actual")}</th>'
         '<th style="text-align:right;padding:6px 10px;color:#5b6b80;font-weight:600">Δ</th>'
         '</tr></thead><tbody>',
     ]
@@ -1979,16 +2001,16 @@ def _render_per_team_audit_table(rows: list[dict], team_a: str, team_b: str) -> 
         '<div class="audit-table-wrap" style="overflow-x:auto;-webkit-overflow-scrolling:touch;max-width:100%;margin:4px 0 12px;">',
         '<table style="width:100%; border-collapse:separate; border-spacing:0 4px; font-size:0.92rem; min-width:560px;">',
         '<thead><tr>'
-        '<th rowspan="2" style="text-align:left;padding:6px 10px;color:#5b6b80;font-weight:600">Métrica</th>'
+        f'<th rowspan="2" style="text-align:left;padding:6px 10px;color:#5b6b80;font-weight:600">{_b("Métrica", "Metric")}</th>'
         f'<th colspan="3" style="text-align:center;padding:6px 10px;color:#10233F;font-weight:700;background:#0b1f3a11">{team_a}</th>'
         f'<th colspan="3" style="text-align:center;padding:6px 10px;color:#10233F;font-weight:700;background:#0b1f3a11">{team_b}</th>'
         '</tr>'
         '<tr>'
-        '<th style="text-align:right;padding:4px 8px;color:#5b6b80;font-weight:600;font-size:0.82rem">Pred.</th>'
-        '<th style="text-align:right;padding:4px 8px;color:#5b6b80;font-weight:600;font-size:0.82rem">Real</th>'
+        f'<th style="text-align:right;padding:4px 8px;color:#5b6b80;font-weight:600;font-size:0.82rem">{_b("Pred.", "Pred.")}</th>'
+        f'<th style="text-align:right;padding:4px 8px;color:#5b6b80;font-weight:600;font-size:0.82rem">{_b("Real", "Actual")}</th>'
         '<th style="text-align:right;padding:4px 8px;color:#5b6b80;font-weight:600;font-size:0.82rem">Δ</th>'
-        '<th style="text-align:right;padding:4px 8px;color:#5b6b80;font-weight:600;font-size:0.82rem">Pred.</th>'
-        '<th style="text-align:right;padding:4px 8px;color:#5b6b80;font-weight:600;font-size:0.82rem">Real</th>'
+        f'<th style="text-align:right;padding:4px 8px;color:#5b6b80;font-weight:600;font-size:0.82rem">{_b("Pred.", "Pred.")}</th>'
+        f'<th style="text-align:right;padding:4px 8px;color:#5b6b80;font-weight:600;font-size:0.82rem">{_b("Real", "Actual")}</th>'
         '<th style="text-align:right;padding:4px 8px;color:#5b6b80;font-weight:600;font-size:0.82rem">Δ</th>'
         '</tr></thead><tbody>',
     ]
@@ -2050,8 +2072,7 @@ def _render_knockout_phase_audit(repo: Repository, match, bundle=None) -> None:
     phase_result = repo.get_active_match_phase_result(match.id)
     if phase_result is None:
         st.caption(
-            "Auditoría por fases no disponible: este cierre no tiene "
-            "desglose de eliminatoria."
+            _b("Auditoría por fases no disponible: este cierre no tiene desglose de eliminatoria.", "Phase-by-phase audit unavailable: this completed match has no knockout-stage breakdown.")
         )
         return
     snapshot = None
@@ -2064,8 +2085,7 @@ def _render_knockout_phase_audit(repo: Repository, match, bundle=None) -> None:
         snapshots = repo.list_prediction_snapshots(match.id)
         if not snapshots:
             st.caption(
-                "Auditoría por fases no disponible: este cierre no tiene snapshot "
-                "prepartido o desglose de eliminatoria."
+                _b("Auditoría por fases no disponible: este cierre no tiene snapshot prepartido o desglose de eliminatoria.", "Phase-by-phase audit unavailable: this completed match has no pre-match snapshot or knockout-stage breakdown.")
             )
             return
         snapshot = json.loads(snapshots[0]["payload_json"])
@@ -2076,49 +2096,49 @@ def _render_knockout_phase_audit(repo: Repository, match, bundle=None) -> None:
             repo.list_active_shootout_kicks(match.id),
         )
     except (KeyError, TypeError, ValueError, json.JSONDecodeError):
-        st.caption("El snapshot anterior no contiene el formato de auditoría por fases.")
+        st.caption(_b("El snapshot anterior no contiene el formato de auditoría por fases.", "The earlier snapshot does not contain the phase-audit format."))
         return
 
-    st.markdown("#### Auditoría por fases")
+    st.markdown(_b("#### Auditoría por fases", "#### Phase-by-phase audit"))
     sections = (
-        ("90 minutos", audit.regulation),
-        ("Prórroga", audit.extra_time),
-        ("Penaltis", audit.shootout),
+        (_b("90 minutos", "90 minutes"), audit.regulation),
+        (_b("Prórroga", "Extra time"), audit.extra_time),
+        (_b("Penaltis", "Penalty shootout"), audit.shootout),
     )
     for label, section in sections:
-        with st.expander(label, expanded=label == "90 minutos"):
+        with st.expander(label, expanded=section is audit.regulation):
             if section.status == "not_played":
-                st.caption("No se disputó.")
+                st.caption(_b("No se disputó.", "Not played."))
                 continue
             cols = st.columns(3)
-            cols[0].metric("Real", section.actual_score or "—")
+            cols[0].metric(_b("Real", "Actual"), section.actual_score or "—")
             cols[1].metric(
-                "Resultado previsto",
-                {"home": match.team_a.name, "draw": "Empate", "away": match.team_b.name}.get(
+                _b("Resultado previsto", "Predicted outcome"),
+                {"home": match.team_a.name, "draw": _b("Empate", "Draw"), "away": match.team_b.name}.get(
                     section.predicted_outcome, "—"
                 ),
             )
             cols[2].metric(
-                "Probabilidad de lo ocurrido",
+                _b("Probabilidad de lo ocurrido", "Probability of the observed outcome"),
                 f"{section.observed_probability:.1%}"
                 if section.observed_probability is not None else "—",
             )
-            if label == "Prórroga" and section.rows:
+            if section is audit.extra_time and section.rows:
                 details = section.rows[0]
                 st.caption(
-                    "xG esperado de prórroga: "
+                    _b("xG esperado de prórroga: ", "Expected extra-time xG: ")
                     + "–".join(f"{float(value):.2f}" for value in details.get("expected_xg", []))
-                    + f" · marcador modal {details.get('mode_score') or '—'}"
+                    + _b(f" · marcador modal {details.get('mode_score') or '—'}", f" · modal score {details.get('mode_score') or '—'}")
                 )
-            if label == "Penaltis" and section.rows:
+            if section is audit.shootout and section.rows:
                 st.dataframe(
                     pd.DataFrame(section.rows).rename(columns={
-                        "team_name": "Selección",
-                        "player_name": "Tirador",
-                        "outcome": "Resultado",
-                        "predicted_conversion": "Prob. gol",
-                        "on_field_probability": "Prob. al 120'",
-                        "first_five_probability": "Prob. primeros cinco",
+                        "team_name": _b("Selección", "Team"),
+                        "player_name": _b("Tirador", "Taker"),
+                        "outcome": _b("Resultado", "Outcome"),
+                        "predicted_conversion": _b("Prob. gol", "Scoring probability"),
+                        "on_field_probability": _b("Prob. al 120'", "On-field probability at 120'"),
+                        "first_five_probability": _b("Prob. primeros cinco", "First-five probability"),
                         "brier": "Brier",
                     }),
                     hide_index=True,
@@ -2200,22 +2220,19 @@ def _render_post_match_audit(
         brier_average=brier_average,
         evaluations=len(auxiliary.backtests),
     )
-    st.subheader("Auditoría del partido cerrado")
-    st.caption(
-        f"Resultado final {audit['actual_score']}. Verde = el modelo acertó · "
-        "Azul = razonable · Ámbar = desviación notable · Rojo = error grande."
-    )
+    st.subheader(_t("audit.title"))
+    st.caption(_t("audit.legend", score=audit["actual_score"]))
     metric_cols = st.columns(3)
-    metric_cols[0].metric("Marcador final", audit["actual_score"])
+    metric_cols[0].metric(_t("audit.final_score"), audit["actual_score"])
     metric_cols[1].metric(
-        "Brier medio",
+        _t("audit.mean_brier"),
         f"{brier_average:.3f}" if brier_average is not None else "—",
-        help=f"Promedio de {len(auxiliary.backtests)} predicciones evaluadas",
+        help=_b(f"Promedio de {len(auxiliary.backtests)} predicciones evaluadas", f"Average across {len(auxiliary.backtests)} evaluated predictions"),
     )
     metric_cols[2].metric(
-        "Estadísticas observadas",
+        _t("audit.observed_stats"),
         len(auxiliary.team_match_stats),
-        help="Filas de team_match_stats: alimentan automáticamente las predicciones de partidos posteriores.",
+        help=_b("Filas de estadísticas por equipo: alimentan automáticamente las predicciones de partidos posteriores.", "Team-statistics rows automatically feed predictions for later matches."),
     )
     # The knockout header already renders these probabilities in Claude's
     # advance/funnel bars. Do not reintroduce the group-stage 1X2 table when
@@ -2239,18 +2256,16 @@ def _render_post_match_audit(
         ),
     )
     if per_team_rows:
-        st.markdown("#### Comparación por equipo (deep stats vs reales)")
+        st.markdown(_t("audit.team_comparison"))
         _render_per_team_audit_table(per_team_rows, team_a, team_b)
 
     _render_audit_table(audit["volume"])
     if not audit["volume"] and not per_team_rows:
         st.caption(
-            "Sin estadísticas de equipo todavía. Cuando importes el JSON revisado o cierres "
-            "el partido en Calibración con las stats, esta tabla mostrará córners/tarjetas/tiros."
+            _b("Sin estadísticas de equipo todavía. Cuando importes el JSON revisado o cierres el partido en Calibración con las estadísticas, esta tabla mostrará córners, tarjetas y tiros.", "No team statistics are available yet. After importing the reviewed JSON or completing the match with statistics in Calibration, this table will show corners, cards and shots.")
         )
     st.caption(
-        "Lo registrado aquí ya alimenta el ajuste de xG y las proyecciones estadísticas "
-        "para los próximos partidos de ambas selecciones (auditoría usada, no solo registrada)."
+        _b("Lo registrado aquí ya alimenta el ajuste de xG y las proyecciones estadísticas para los próximos partidos de ambas selecciones: la evidencia de auditoría se utiliza, no solo se almacena.", "The evidence recorded here already feeds xG adjustments and statistical projections for both teams' later matches: audit data is used, not merely stored.")
     )
     if is_knockout and repo is not None and match is not None:
         _render_knockout_phase_audit(repo, match, bundle)
@@ -2269,29 +2284,27 @@ def _match_analysis_bundle(match) -> MatchAnalysisBundle:
 
 def render_dashboard() -> None:
     repo = _repo()
-    with st.spinner("Actualizando el calendario diario del Mundial…"):
+    with st.spinner(_t("dashboard.refreshing")):
         daily_result = _refresh_current_world_cup_banks(repo)
     _resolve_bracket_after_daily_refresh(repo, daily_result)
     summary = _database_summary()
     hero(
-        "Mundial 2026 · Mesa de análisis",
-        "Decidir con probabilidades, no con ruido.",
-        "Forma actual, cobertura de datos, modelos explicables y calibración en un solo flujo.",
+        _t("hero.eyebrow"),
+        _t("hero.title"),
+        _t("hero.supporting"),
     )
     cols = st.columns(4)
     metrics = [
-        ("Partidos", summary["matches"]),
-        ("Selecciones", summary["teams"]),
-        ("Importaciones", summary["imports"]),
-        ("Predicciones", summary["predictions"]),
+        (_t("dashboard.matches"), summary["matches"]),
+        (_t("dashboard.teams"), summary["teams"]),
+        (_t("dashboard.imports"), summary["imports"]),
+        (_t("dashboard.predictions"), summary["predictions"]),
     ]
     for col, (label, value) in zip(cols, metrics):
         col.metric(label, int(value))
 
-    st.subheader("Partidos de hoy y los próximos dos días")
-    section_note(
-        "El estado de cobertura se calcula por partido; una fuente parcial no bloquea el resto."
-    )
+    st.subheader(_t("dashboard.upcoming"))
+    section_note(_t("dashboard.coverage_note"))
     daily_tone = (
         "green" if daily_result.status in {"current", "updated"}
         else "amber" if daily_result.status in {"partial", "stale"}
@@ -2299,15 +2312,15 @@ def render_dashboard() -> None:
     )
     st.markdown(
         '<div class="status-row">'
-        + status_pill(f"Datos diarios: {localize_status(daily_result.status)}", daily_tone)
-        + status_pill(f"Actualizadas {len(daily_result.updated)}", "green" if daily_result.updated else "neutral")
-        + status_pill(f"Con error {len(daily_result.failed)}", "red" if daily_result.failed else "neutral")
+        + status_pill(_t("dashboard.daily_data", status=localize_controlled_i18n("status", daily_result.status, language=_lang())), daily_tone)
+        + status_pill(_t("dashboard.updated", count=len(daily_result.updated)), "green" if daily_result.updated else "neutral")
+        + status_pill(_t("dashboard.failed", count=len(daily_result.failed)), "red" if daily_result.failed else "neutral")
         + "</div>",
         unsafe_allow_html=True,
     )
     failure_details = _daily_refresh_failure_details(repo, daily_result)
     if failure_details:
-        with st.expander("Detalle de errores de actualización"):
+        with st.expander(_t("dashboard.error_details")):
             for detail in failure_details:
                 st.write(detail)
     _render_external_dataset_review(repo)
@@ -2351,24 +2364,23 @@ def render_dashboard() -> None:
             '<div class="soft-panel match-table-wrap" style="padding:0;overflow-x:auto;">'
             '<table style="width:100%;min-width:640px;border-collapse:collapse;font-size:14px;">'
             '<thead><tr style="background:var(--panel-2);">'
-            '<th style="text-align:left;padding:10px 12px;color:var(--muted);font-size:12px;'
-            'font-weight:700;text-transform:uppercase;letter-spacing:.04em;">Hora local</th>'
-            '<th style="text-align:left;padding:10px 12px;color:var(--muted);font-size:12px;'
-            'font-weight:700;text-transform:uppercase;letter-spacing:.04em;">Partido</th>'
-            '<th style="text-align:left;padding:10px 12px;color:var(--muted);font-size:12px;'
-            'font-weight:700;text-transform:uppercase;letter-spacing:.04em;">Sede</th>'
-            '<th style="text-align:left;padding:10px 12px;color:var(--muted);font-size:12px;'
-            'font-weight:700;text-transform:uppercase;letter-spacing:.04em;">Datos</th>'
-            '<th style="text-align:left;padding:10px 12px;color:var(--muted);font-size:12px;'
-            'font-weight:700;text-transform:uppercase;letter-spacing:.04em;">Última captura</th>'
+            f'<th style="text-align:left;padding:10px 12px;color:var(--muted);font-size:12px;'
+            f'font-weight:700;text-transform:uppercase;letter-spacing:.04em;">{_t("dashboard.local_time")}</th>'
+            f'<th style="text-align:left;padding:10px 12px;color:var(--muted);font-size:12px;'
+            f'font-weight:700;text-transform:uppercase;letter-spacing:.04em;">{_t("dashboard.match")}</th>'
+            f'<th style="text-align:left;padding:10px 12px;color:var(--muted);font-size:12px;'
+            f'font-weight:700;text-transform:uppercase;letter-spacing:.04em;">{_t("dashboard.venue")}</th>'
+            f'<th style="text-align:left;padding:10px 12px;color:var(--muted);font-size:12px;'
+            f'font-weight:700;text-transform:uppercase;letter-spacing:.04em;">{_t("dashboard.data")}</th>'
+            f'<th style="text-align:left;padding:10px 12px;color:var(--muted);font-size:12px;'
+            f'font-weight:700;text-transform:uppercase;letter-spacing:.04em;">{_t("dashboard.last_capture")}</th>'
             '</tr></thead><tbody>' + "".join(rows_html) + "</tbody></table></div>",
             unsafe_allow_html=True,
         )
     else:
         empty_state(
-            "Sin partidos en la ventana",
-            "La fuente diaria no contiene todavía partidos con selecciones confirmadas "
-            "en los próximos dos días.",
+            _t("dashboard.empty_title"),
+            _t("dashboard.empty_body"),
             icon="📅",
         )
 
@@ -2441,7 +2453,7 @@ def _render_bracket_section(repo: Repository) -> None:
     slots = bracket_view(repo)
     if not slots:
         return
-    st.subheader("Bracket eliminatorio")
+    st.subheader(_t("bracket.title"))
 
     # Bulk-fetch results for all knockout match_ids — used to label the cards
     # as "closed" (with score) or "live" instead of always "pending".
@@ -2539,7 +2551,7 @@ def _render_bracket_section(repo: Repository) -> None:
             "href": href,
         })
 
-    st.markdown(render_bracket(rendered_slots), unsafe_allow_html=True)
+    st.markdown(render_bracket(rendered_slots, language=_lang()), unsafe_allow_html=True)
 
 
 @st.fragment
@@ -2558,14 +2570,15 @@ def _render_prediction_workspace(
     ml_features = bundle.ml_features
     ml_model_meta = bundle.ml_model_meta
     section = st.segmented_control(
-        "Vista de análisis",
-        ["Modelo", "Marcadores", "Estadísticas por equipo", "Jugadores", "Datos y fuentes", "Historial"],
-        default="Modelo",
+        _t("analysis.view"),
+        ["model", "scorelines", "team_stats", "players", "sources", "history"],
+        default="model",
+        format_func=lambda key: _t(f"analysis.sections.{key}"),
         label_visibility="collapsed",
     )
     deep_ml_probabilities = bundle.deep_ml_probabilities
     deep_weight = bundle.deep_outcome_weight
-    if section == "Modelo":
+    if section == "model":
         if match.status == "finished":
             _render_post_match_audit(
                 bundle,
@@ -2576,8 +2589,8 @@ def _render_prediction_workspace(
                 repo=repo,
                 match=match,
             )
-        with st.expander("Cómo se elige cada modelo"):
-            st.caption("Activo es lo que calcula hoy la app; challenger solo se promueve si gana una validación temporal.")
+        with st.expander(_t("analysis.model_selection")):
+            st.caption(_t("analysis.model_selection_help"))
             st.dataframe(pd.DataFrame(model_policy_rows()), width="stretch", hide_index=True)
         if ml_probabilities is not None and ml_features is not None and ml_model_meta is not None:
             score_probabilities = {
@@ -2597,7 +2610,7 @@ def _render_prediction_workspace(
                 unified_probabilities,
                 deep_ml_probabilities=deep_ml_probabilities,
             )
-            with st.expander("Diagnóstico de señales"):
+            with st.expander(_t("analysis.signal_diagnostics")):
                 col_cfg = {
                     "Modelo unificado (%)": st.column_config.ProgressColumn(format="%.1f%%", min_value=0, max_value=100),
                     "ML cronológico (%)": st.column_config.ProgressColumn(format="%.1f%%", min_value=0, max_value=100),
@@ -2613,7 +2626,7 @@ def _render_prediction_workspace(
                     column_config=col_cfg,
                 )
         else:
-            callout("Modelo ML no activado: ejecuta scripts/import_open_history.py para crear el artefacto calibrado.")
+            callout(_t("analysis.ml_unavailable"))
 
         # Panel completo para partidos de eliminatoria (sustituye al 1X2
         # estándar con avance/vía/cruce + 90' + ET/penaltis). Para grupos
@@ -2625,7 +2638,7 @@ def _render_prediction_workspace(
             expected_xg=bundle.expected_xg,
         )
 
-        st.subheader("Resultados estimados")
+        st.subheader(_b("Resultados estimados", "Estimated outcomes"))
         neutral_predictions = [
             row for row in predictions
             if row.market_name in {
@@ -2633,21 +2646,27 @@ def _render_prediction_workspace(
                 "Exact Score (alt)", "Expected Score",
             }
         ]
-        frame = pd.DataFrame(prediction_rows(neutral_predictions)).rename(
-            columns={"Market": "Resultado", "Selection": "Selección", "Probability": "Prob.", "Low": "Mín.", "High": "Máx.", "Confidence": "Confianza", "Sample": "Muestra", "Origin": "Origen", "Explanation": "Explicación"}
+        result_columns = (
+            {"Market": "Resultado", "Selection": "Selección", "Probability": "Prob.", "Low": "Mín.", "High": "Máx.", "Confidence": "Confianza", "Sample": "Muestra", "Origin": "Origen", "Explanation": "Explicación"}
+            if _lang() == "es" else
+            {"Market": "Outcome", "Selection": "Selection", "Probability": "Prob.", "Low": "Low", "High": "High", "Confidence": "Confidence", "Sample": "Sample", "Origin": "Origin", "Explanation": "Explanation"}
         )
+        frame = pd.DataFrame(prediction_rows(neutral_predictions)).rename(columns=result_columns)
         if "Line" in frame.columns:
             frame = frame.drop(columns=["Line"])
-        frame["Resultado"] = frame["Resultado"].replace({
-            "1X2": "Resultado probable",
-            "Exact Score": "Marcador principal",
-            "Exact Score (favorito)": "Marcador condicionado",
-            "Exact Score (alt)": "Marcador alternativo",
-            "Expected Score": "Goles esperados",
+        outcome_column = result_columns["Market"]
+        frame[outcome_column] = frame[outcome_column].replace({
+            "1X2": _b("Resultado probable", "Likely outcome"),
+            "Exact Score": _b("Marcador principal", "Primary scoreline"),
+            "Exact Score (favorito)": _b("Marcador condicionado", "Conditional scoreline"),
+            "Exact Score (alt)": _b("Marcador alternativo", "Alternative scoreline"),
+            "Expected Score": _b("Goles esperados", "Expected goals"),
         })
-        frame["Selección"] = frame["Selección"].replace({"Draw": "Empate"})
-        frame["Explicación"] = frame["Explicación"].str.replace(
-            "Modelo unificado 1X2", "Modelo unificado de resultado", regex=False
+        selection_column = result_columns["Selection"]
+        explanation_column = result_columns["Explanation"]
+        frame[selection_column] = frame[selection_column].replace({"Draw": _b("Empate", "Draw")})
+        frame[explanation_column] = frame[explanation_column].str.replace(
+            "Modelo unificado 1X2", _b("Modelo unificado de resultado", "Unified outcome model"), regex=False
         )
         st.dataframe(
             frame,
@@ -2655,11 +2674,11 @@ def _render_prediction_workspace(
             hide_index=True,
             column_config={
                 "Prob.": st.column_config.ProgressColumn(format="%.1f%%", min_value=0, max_value=1),
-                "Mín.": st.column_config.NumberColumn(format="%.1f%%"),
-                "Máx.": st.column_config.NumberColumn(format="%.1f%%"),
+                result_columns["Low"]: st.column_config.NumberColumn(format="%.1f%%"),
+                result_columns["High"]: st.column_config.NumberColumn(format="%.1f%%"),
             },
         )
-        if st.button("Guardar snapshot de predicciones", width="stretch"):
+        if st.button(_b("Guardar instantánea de predicciones", "Save prediction snapshot"), width="stretch"):
             now = datetime.now(timezone.utc)
             persisted_predictions = [
                 row for row in predictions
@@ -2670,15 +2689,15 @@ def _render_prediction_workspace(
             ]
             for row in persisted_predictions:
                 repo.add_prediction(match.id, row.market_family.value, row.market_name, row.selection_name, row.line, row.probability, row.confidence.value, now, row.explanation)
-            st.success(f"Snapshot guardado: {len(persisted_predictions)} proyecciones.")
+            st.success(_b(f"Instantánea guardada: {len(persisted_predictions)} proyecciones.", f"Snapshot saved: {len(persisted_predictions)} projections."))
 
-    elif section == "Marcadores":
+    elif section == "scorelines":
         _render_exact_score_panel(team_a, team_b, predictions)
 
-    elif section == "Estadísticas por equipo":
+    elif section == "team_stats":
         _render_team_statistics(_match_volume_context(match))
 
-    elif section == "Jugadores":
+    elif section == "players":
         auxiliary = _match_auxiliary_context(match)
         player_context = _player_match_context_cached(
             match.id,
@@ -2690,18 +2709,18 @@ def _render_prediction_workspace(
             auxiliary,
         )
         if player_context.lineups:
-            st.success("Alineación importada para este partido.")
-            with st.expander("Ver alineación"):
+            st.success(_b("Alineación importada para este partido.", "A line-up has been imported for this match."))
+            with st.expander(_b("Ver alineación", "View line-up")):
                 st.dataframe(
                     _visible_frame(player_context.lineups),
                     width="stretch",
                     hide_index=True,
                 )
         else:
-            st.info("Alineación no confirmada: las tasas observadas sí están disponibles, pero la confianza se mantiene baja.")
-        st.caption("Elige jugador, métrica y umbral estadístico. La tasa por 90, los minutos y la titularidad se calculan desde el banco de jugadores.")
+            st.info(_b("Alineación no confirmada: las tasas observadas están disponibles, pero la confianza se mantiene baja.", "Line-up not confirmed: observed rates are available, but confidence remains low."))
+        st.caption(_b("Elige un jugador, una métrica y un umbral estadístico. La tasa por 90, los minutos y la probabilidad de titularidad se calculan con los datos de jugadores.", "Choose a player, metric and statistical threshold. Rates per 90, expected minutes and starting probability are derived from player data."))
         selected_team = st.segmented_control(
-            "Equipo",
+            _b("Equipo", "Team"),
             [team_a, team_b],
             default=team_a,
             label_visibility="collapsed",
@@ -2721,32 +2740,33 @@ def _render_prediction_workspace(
                 team_context = player_context.by_team[team_name]
                 team_players = team_context.players
                 if not team_players:
-                    st.warning(f"No hay estadísticas observadas de jugadores de {team_name}.")
+                    st.warning(_b(f"No hay estadísticas observadas de jugadores de {team_name}.", f"No observed player statistics are available for {team_name}."))
                     continue
                 goalkeepers = team_context.goalkeepers
                 field_players = team_context.field_players
                 # Player roster table: lets the user scan candidates and pick
-                # interesting names before drilling into market/odds entry.
-                st.markdown(f"**Plantilla disponible de {team_name}**")
+                # interesting names before opening an individual projection.
+                st.markdown(_b(f"**Plantilla disponible de {team_name}**", f"**Available {team_name} squad**"))
 
                 position_filter = st.radio(
-                    "Filtrar por posición",
-                    ["Todos", "Campo", "Porteros"],
+                    _b("Filtrar por posición", "Filter by position"),
+                    ["all", "outfield", "goalkeepers"],
+                    format_func=lambda key: {"all": _b("Todos", "All"), "outfield": _b("Campo", "Outfield"), "goalkeepers": _b("Porteros", "Goalkeepers")}[key],
                     horizontal=True,
                     key=f"roster_pos_{match.id}_{team_name}",
                 )
-                if position_filter == "Campo":
+                if position_filter == "outfield":
                     roster_source = field_players
-                elif position_filter == "Porteros":
+                elif position_filter == "goalkeepers":
                     roster_source = goalkeepers
                 else:
                     roster_source = team_players
 
                 if not roster_source:
-                    st.info(
-                        "No hay jugadores en este filtro." +
-                        ("" if goalkeepers else " (Aún sin porteros con minutos publicados.)")
-                    )
+                    st.info(_b(
+                        "No hay jugadores en este filtro." + ("" if goalkeepers else " Todavía no hay porteros con minutos publicados."),
+                        "No players match this filter." + ("" if goalkeepers else " No goalkeepers have published minutes yet."),
+                    ))
                     continue
 
                 roster_names = {
@@ -2759,7 +2779,7 @@ def _render_prediction_workspace(
                 ]
                 roster_frame = pd.DataFrame(roster_rows)
                 min_minutes = st.slider(
-                    "Minutos mínimos para mostrar",
+                    _b("Minutos mínimos para mostrar", "Minimum minutes to display"),
                     0, max(90, int(roster_frame["Min"].max())),
                     0, 30,
                     key=f"roster_min_{match.id}_{team_name}_{position_filter}",
@@ -2776,13 +2796,13 @@ def _render_prediction_workspace(
                     visible_roster, width="stretch", hide_index=True,
                     column_config={k: v for k, v in column_config.items() if k in visible_roster.columns},
                 )
-                st.caption(
-                    f"{len(visible_roster)}/{len(roster_frame)} jugadores visibles. "
-                    "Usa esta tabla para explorar las proyecciones individuales del modelo."
-                )
+                st.caption(_b(
+                    f"{len(visible_roster)}/{len(roster_frame)} jugadores visibles. Usa esta tabla para explorar las proyecciones individuales del modelo.",
+                    f"{len(visible_roster)}/{len(roster_frame)} players shown. Use this table to explore individual model projections.",
+                ))
                 player_by_name = {str(row["player_name"]): row for row in roster_source}
                 selected_player = st.selectbox(
-                    f"Jugador de {team_name}",
+                    _b(f"Jugador de {team_name}", f"{team_name} player"),
                     list(player_by_name),
                     key=f"player_select_{match.id}_{team_name}_{position_filter}",
                 )
@@ -2804,10 +2824,10 @@ def _render_prediction_workspace(
                         if family not in GOALKEEPER_MARKETS and player_row.get(metric) is not None
                     ]
                 if not available_families:
-                    st.warning("Este jugador tiene minutos, pero ninguna métrica predictiva publicada.")
+                    st.warning(_b("Este jugador tiene minutos, pero no dispone de ninguna métrica predictiva publicada.", "This player has recorded minutes but no published predictive metric."))
                     continue
                 family_picker = st.selectbox(
-                    "Métrica",
+                    _b("Métrica", "Metric"),
                     available_families,
                     format_func=lambda value: localize_market_family(value.value),
                     key=f"player_market_{match.id}_{team_name}_{position_filter}",
@@ -2817,10 +2837,10 @@ def _render_prediction_workspace(
                 # the user selects the analytical threshold.
                 if family == MarketFamily.PLAYER_CLEAN_SHEET:
                     line = 0.5
-                    st.caption("Umbral estadístico fijo: portería a cero.")
+                    st.caption(_b("Umbral estadístico fijo: portería a cero.", "Fixed statistical threshold: clean sheet."))
                 else:
                     line = st.number_input(
-                        "Umbral estadístico",
+                        _b("Umbral estadístico", "Statistical threshold"),
                         min_value=0.0,
                         value=float(default_lines[family]),
                         step=0.5,
@@ -2857,7 +2877,7 @@ def _render_prediction_workspace(
                 else:
                     derived = derive_player_assumption(player_row, family)
                 if derived is None:
-                    st.warning("La fuente no aporta minutos o la métrica necesaria; esta proyección no se estima.")
+                    st.warning(_b("La fuente no aporta los minutos o la métrica necesarios; no se puede estimar esta proyección.", "The source does not provide the required minutes or metric, so this projection cannot be estimated."))
                     continue
                 rate_labels = {
                     MarketFamily.PLAYER_SAVES: "Paradas esperadas / 90",
@@ -2869,8 +2889,8 @@ def _render_prediction_workspace(
                     rate_labels.get(family, "Tasa observada / 90"),
                     f"{derived.assumption.per90_rate:.2f}",
                 )
-                detail_cols[1].metric("Minutos esperados", derived.assumption.expected_minutes)
-                detail_cols[2].metric("Prob. de titularidad", f"{derived.assumption.starter_probability:.0%}")
+                detail_cols[1].metric(_b("Minutos esperados", "Expected minutes"), derived.assumption.expected_minutes)
+                detail_cols[2].metric(_b("Probabilidad de titularidad", "Starting probability"), f"{derived.assumption.starter_probability:.0%}")
                 st.caption(derived.explanation)
                 estimate = estimate_player_projection(
                     derived.assumption, family, line, derived.sample_size
@@ -2879,17 +2899,17 @@ def _render_prediction_workspace(
                     st.warning(estimate.explanation)
                 else:
                     projection_cols = st.columns(3)
-                    projection_cols[0].metric("Valor esperado", f"{estimate.expected_count:.2f}")
-                    projection_cols[1].metric("Probabilidad estimada", f"{estimate.probability:.1%}")
-                    projection_cols[2].metric("Confianza", estimate.confidence.value)
+                    projection_cols[0].metric(_b("Proyección", "Projected total"), f"{estimate.expected_count:.2f}")
+                    projection_cols[1].metric(_b("Probabilidad estimada", "Estimated probability"), f"{estimate.probability:.1%}")
+                    projection_cols[2].metric(_b("Confianza", "Confidence"), localize_confidence(estimate.confidence.value))
                     st.caption(estimate.explanation)
 
-    elif section == "Datos y fuentes":
-        st.subheader("Importar estadísticas profundas revisadas")
-        st.caption("Admite el JSON estructurado obtenido de capturas y conserva su procedencia. No crea sanciones nominales sin identificar al jugador.")
-        deep_upload = st.file_uploader("JSON de estadísticas de partidos", type=["json"], key=f"deep_json_{match.id}")
-        reviewed_json = st.checkbox("He revisado que equipos y valores corresponden a las capturas", key=f"deep_json_reviewed_{match.id}")
-        if st.button("Validar e importar JSON", disabled=deep_upload is None or not reviewed_json, key=f"deep_json_import_{match.id}"):
+    elif section == "sources":
+        st.subheader(_b("Importar estadísticas profundas revisadas", "Import reviewed deep statistics"))
+        st.caption(_b("Admite el JSON estructurado obtenido de capturas y conserva su procedencia. No crea sanciones nominales sin identificar al jugador.", "Accepts structured JSON derived from screenshots and preserves its provenance. It never creates player suspensions without identifying the player."))
+        deep_upload = st.file_uploader(_b("JSON de estadísticas de partidos", "Match-statistics JSON"), type=["json"], key=f"deep_json_{match.id}")
+        reviewed_json = st.checkbox(_b("He comprobado que los equipos y valores corresponden a las capturas", "I have verified that teams and values match the screenshots"), key=f"deep_json_reviewed_{match.id}")
+        if st.button(_b("Validar e importar JSON", "Validate and import JSON"), disabled=deep_upload is None or not reviewed_json, key=f"deep_json_import_{match.id}"):
             content = deep_upload.getvalue()
             evidence_dir = DATA_DIR / "evidence" / "reviewed-json"
             evidence_dir.mkdir(parents=True, exist_ok=True)
@@ -2954,34 +2974,34 @@ def _render_prediction_workspace(
         st.divider()
         if cached:
             if cached.statistics:
-                st.subheader("Evidencia normalizada")
+                st.subheader(_b("Evidencia normalizada", "Normalised evidence"))
                 st.dataframe(_visible_frame(cached.statistics), width="stretch", hide_index=True)
             if cached.lineups:
-                st.subheader("Jugadores")
+                st.subheader(_b("Jugadores", "Players"))
                 st.dataframe(_visible_frame(cached.lineups), width="stretch", hide_index=True)
 
-    elif section == "Historial":
+    elif section == "history":
         saved_predictions = repo.list_predictions(match.id)
         imports = repo.list_import_runs(match.id)
         if imports:
-            st.subheader("Historial de datos")
+            st.subheader(_t("analysis.saved_data_history"))
             st.dataframe(_visible_frame(imports), width="stretch", hide_index=True)
         if saved_predictions:
-            st.subheader("Predicciones")
+            st.subheader(_t("analysis.saved_predictions"))
             st.dataframe(_visible_frame(saved_predictions), width="stretch", hide_index=True)
         if not imports and not saved_predictions:
-            empty_state("Sin predicciones guardadas", "Guarda un snapshot antes del partido para evaluarlo después.", icon="📭")
+            empty_state(_t("analysis.no_saved_predictions"), _t("analysis.no_saved_predictions_body"), icon="📭")
 
 
 
 def render_prediction_lab() -> None:
     repo = _repo()
-    with st.spinner("Comprobando calendario y bancos diarios del Mundial…"):
+    with st.spinner(_t("analysis.refreshing")):
         daily_result = _refresh_current_world_cup_banks(repo)
     _resolve_bracket_after_daily_refresh(repo, daily_result)
     matches = _list_matches()
     if not matches:
-        empty_state("Sin partidos", "No hay partidos cargados en el calendario.", icon="📅")
+        empty_state(_t("analysis.no_matches"), _t("analysis.no_matches_body"), icon="📅")
         return
     labels, by_label = _match_labels(matches)
     calibration_labels = {
@@ -3013,9 +3033,9 @@ def render_prediction_lab() -> None:
             (index for index, label in enumerate(labels) if label in by_label),
             0,
         )
-    selected_label = st.selectbox("Partido", labels, index=preselect_index, label_visibility="collapsed")
+    selected_label = st.selectbox(_t("analysis.match"), labels, index=preselect_index, label_visibility="collapsed")
     if selected_label not in by_label:
-        st.info("Selecciona un partido de la lista (no un separador).")
+        st.info(_t("analysis.choose_match"))
         return
     match = by_label[selected_label]
     team_a, team_b = match.team_a.name, match.team_b.name
@@ -3029,15 +3049,15 @@ def render_prediction_lab() -> None:
     hero(
         f"{match.stage} · {_display_time(match.kickoff_utc, '%d %b %Y · %H:%M')}",
         title_html,
-        f"{match.venue or 'Sede por confirmar'} · horario local del sistema",
+        f"{match.venue or _t('analysis.venue_pending')} · {_t('analysis.local_time')}",
     )
 
     tone = "green" if daily_result.status in {"current", "updated"} else "amber" if daily_result.status in {"partial", "stale"} else "red"
     st.markdown(
         '<div class="status-row">'
-        + status_pill(f"Datos del Mundial: {localize_status(daily_result.status)}", tone)
-        + status_pill(f"Actualizados: {len(daily_result.updated)}")
-        + status_pill(f"Sin cambios: {len(daily_result.unchanged) + len(daily_result.skipped_recent)}")
+        + status_pill(_t("analysis.world_cup_data", status=localize_status(daily_result.status)), tone)
+        + status_pill(_t("analysis.updated", count=len(daily_result.updated)))
+        + status_pill(_t("analysis.unchanged", count=len(daily_result.unchanged) + len(daily_result.skipped_recent)))
         + "</div>",
         unsafe_allow_html=True,
     )
@@ -3054,13 +3074,13 @@ def render_prediction_lab() -> None:
     if collector_available:
         button_col, note_col = st.columns([1, 2.2])
         with button_col:
-            refresh_clicked = st.button("Actualizar datos", type="primary", width="stretch")
+            refresh_clicked = st.button(_t("analysis.refresh"), type="primary", width="stretch")
         with note_col:
-            st.caption("Consulta acotada: un partido y máximo 14 llamadas. Conserva la caché si falla.")
+            st.caption(_t("analysis.refresh_note"))
     else:
         refresh_clicked = False
     if refresh_clicked:
-        with st.spinner("Recopilando y normalizando datos del partido…"):
+        with st.spinner(_t("analysis.collecting")):
             result = refresh_match(team_a, team_b, match.kickoff_utc, SPORTS_DATA_DIR)
         st.session_state[cache_key] = result
         if result.bundle is not None:
@@ -3070,28 +3090,28 @@ def render_prediction_lab() -> None:
             # actually reflects the freshly imported evidence.
             _invalidate_match_analysis_caches()
         status_tone = {
-            "complete": ("success", "Datos del partido completos."),
-            "partial": ("warning", "Datos parciales: el modelo usa lo disponible y marca lo que falta."),
-            "cached": ("info", "No se pudieron añadir datos nuevos; se conserva la caché previa."),
-            "failed": ("error", "La actualización falló y no había caché previa."),
-            "unavailable": ("error", "El recolector local no está instalado o accesible."),
+            "complete": ("success", _b("Datos del partido completos.", "Match data is complete.")),
+            "partial": ("warning", _b("Datos parciales: el modelo usa lo disponible y marca lo que falta.", "Partial data: the model uses what is available and identifies the missing fields.")),
+            "cached": ("info", _b("No se pudieron añadir datos nuevos; se conserva la caché previa.", "No new data could be added; the previous cache has been retained.")),
+            "failed": ("error", _b("La actualización falló y no había caché previa.", "The refresh failed and no previous cache was available.")),
+            "unavailable": ("error", _b("El recolector local no está instalado o accesible.", "The local data collector is not installed or accessible.")),
         }
         tone, default_message = status_tone.get(result.status, ("warning", result.message))
         getattr(st, tone)(default_message)
         metric_cols = st.columns(3)
-        metric_cols[0].metric("Llamadas hechas", result.calls_made)
-        metric_cols[1].metric("Proveedores OK", len(result.providers))
-        metric_cols[2].metric("Faltantes", len(result.missing_critical))
+        metric_cols[0].metric(_b("Llamadas realizadas", "Requests made"), result.calls_made)
+        metric_cols[1].metric(_b("Proveedores disponibles", "Providers available"), len(result.providers))
+        metric_cols[2].metric(_b("Campos pendientes", "Missing fields"), len(result.missing_critical))
         if result.providers:
-            st.caption("Proveedores que respondieron: " + ", ".join(result.providers))
+            st.caption(_b("Proveedores que respondieron: ", "Providers that responded: ") + ", ".join(result.providers))
         if result.missing_critical:
             st.warning(
-                "Campos no obtenidos en este partido: "
+                _b("Campos no obtenidos en este partido: ", "Fields unavailable for this match: ")
                 + ", ".join(result.missing_critical)
-                + ". La app no los inventa: aparecerán como vacíos en cobertura."
+                + _b(". La aplicación no los inventa: aparecerán vacíos en la cobertura.", ". The application does not infer them; they remain blank in the coverage report.")
             )
         if result.stderr_tail:
-            with st.expander("Salida técnica del recolector"):
+            with st.expander(_b("Salida técnica del recolector", "Collector technical output")):
                 st.code(result.stderr_tail)
     bundle = _match_analysis_bundle(match)
     current_players = bundle.current_players
@@ -3103,8 +3123,8 @@ def render_prediction_lab() -> None:
         _render_bundle(cached, deep_count, len(current_players))
     elif not (deep_count or current_players or prior_deep_samples):
         callout(
-            "No hay evidencia previa ni caché automática suficiente para modelar este partido con confianza.",
-            tone="red", title="Sin datos",
+            _b("No hay evidencia previa ni caché automática suficiente para modelar este partido con confianza.", "There is not enough prior evidence or cached data to model this match with confidence."),
+            tone="red", title=_b("Sin datos", "No data"),
         )
 
     results = bundle.results
@@ -3165,6 +3185,7 @@ def render_prediction_lab() -> None:
                 crest_b=crest_html(team_b, size=28),
                 next_fixture=next_caption,
                 pen_pending=penalty_context.simulations == 0,
+                language=_lang(),
             ),
             unsafe_allow_html=True,
         )
@@ -3302,40 +3323,36 @@ def render_prediction_lab() -> None:
     else:
         top_left, top_right = st.columns([1.55, 1])
         with top_left:
-            st.subheader("Probabilidad 1X2")
-            section_note(
-                "Modelo unificado: matriz de marcadores (xG ajustado + Dixon-Coles) + "
-                "ML cronológico (Elo, ~50k partidos) + ML deep stats (HistGBM con xG/posesión/tiros/defensa). "
-                "Pesos adaptativos según la muestra deep disponible para cada equipo."
-            )
+            st.subheader(_t("summary.outcome_probabilities"))
+            section_note(_t("summary.model_note"))
             bars_html = (
                 probability_bar(team_with_crest_html(team_a, size=18), home_p, "win")
-                + probability_bar("Empate", draw_p, "draw")
+                + probability_bar(_t("summary.draw"), draw_p, "draw")
                 + probability_bar(team_with_crest_html(team_b, size=18), away_p, "loss")
             )
             st.markdown(bars_html, unsafe_allow_html=True)
         with top_right:
-            st.subheader("Lectura inmediata")
-            st.metric("Resultado más probable", localize_selection(best.selection_name), f"{best.probability:.1%}")
-            st.metric("Marcador más probable (modo)", exact_score.selection_name, f"{exact_score.probability:.1%}")
+            st.subheader(_t("summary.quick_read"))
+            st.metric(_t("summary.most_likely_outcome"), localize_selection(best.selection_name), f"{best.probability:.1%}")
+            st.metric(_t("summary.most_likely_score"), exact_score.selection_name, f"{exact_score.probability:.1%}")
             if expected_row is not None:
                 st.metric(
-                    "Marcador esperado (goles xG)",
+                    _t("summary.expected_score"),
                     expected_row.selection_name,
-                    help="Goles esperados según la distribución conjunta. Es una lectura promedio, no un marcador entero.",
+                    help=_t("summary.expected_score_help"),
                 )
             if alt_scores:
                 alt_lines = " · ".join(
                     f"{row.selection_name.split(' ')[0]} ({row.probability:.1%})"
                     for row in alt_scores[:3]
                 )
-                st.caption(f"Alternativos más probables: {alt_lines}")
+                st.caption(_t("summary.alternatives", scores=alt_lines))
             short_explanation = best.explanation.split("Ajuste de jugadores:", 1)[0].strip()
             st.caption(short_explanation)
-            with st.expander("Ver cálculo y jugadores usados"):
+            with st.expander(_t("summary.calculation")):
                 st.caption(best.explanation)
             if best.confidence.value == "low":
-                st.warning("Confianza baja: la base observada para estos equipos aún es insuficiente.")
+                st.warning(_t("summary.low_confidence"))
 
     _render_prediction_workspace(match, bundle, cached, repo)
 
@@ -3347,34 +3364,34 @@ def _render_global_bias_panel() -> None:
     collapsed expander and only runs when the user opts in via the button (or
     the toggle for auto-corrections is already on).
     """
-    st.subheader("Sesgo global del modelo")
+    st.subheader(_b("Sesgo global del modelo", "Overall model bias"))
     auto_corrections_on = bool(st.session_state.get("apply_corrections", False))
     with st.expander(
-        "Recalcular reporte de calibración (pesado)",
+        _b("Recalcular informe de calibración (proceso intensivo)", "Recalculate calibration report (resource-intensive)"),
         expanded=auto_corrections_on,
     ):
         st.caption(
-            "Reconstruye la predicción de cada partido cerrado con stats profundas "
+            _b("Reconstruye la predicción de cada partido cerrado con estadísticas profundas "
             "usando SOLO datos anteriores a su kickoff y compara con lo real. "
             "Tarda unos segundos por la cantidad de partidos. Sólo es necesario "
-            "cuando quieras revisar el sesgo o activar la corrección automática."
+            "cuando quieras revisar el sesgo o activar la corrección automática.",
+            "Rebuilds each completed match prediction from deep statistics using only data available before kick-off, then compares it with the observed result. It may take several seconds and is only needed to review bias or enable automatic correction.")
         )
         run = st.button(
-            "Calcular reporte ahora", key="run_bias_report", type="primary"
+            _b("Calcular informe ahora", "Calculate report now"), key="run_bias_report", type="primary"
         )
         if not run and not auto_corrections_on:
             st.info(
-                "Reporte no calculado. Pulsa el botón para generarlo, o activa "
-                "la corrección automática para que se mantenga al día."
+                _b("Informe no calculado. Pulsa el botón para generarlo o activa la corrección automática para mantenerlo al día.", "The report has not been calculated. Use the button to generate it, or enable automatic correction to keep it current.")
             )
             return
         samples, report = _calibration_bias_report()
     if report.sample_size == 0:
-        st.info(report.notes[0] if report.notes else "Sin datos.")
+        st.info(report.notes[0] if report.notes else _b("Sin datos.", "No data."))
         return
     cols = st.columns(4)
-    cols[0].metric("Partidos auditados", report.sample_size)
-    cols[1].metric("Acierto 1X2 (argmax)", f"{report.outcome_accuracy:.0%}")
+    cols[0].metric(_b("Partidos auditados", "Matches audited"), report.sample_size)
+    cols[1].metric(_b("Precisión del resultado (máxima probabilidad)", "Outcome accuracy (highest probability)"), f"{report.outcome_accuracy:.0%}")
     if report.xg_bias_per_team is not None:
         cols[2].metric(
             "Sesgo xG /equipo",
@@ -3388,7 +3405,7 @@ def _render_global_bias_panel() -> None:
             help=f"MAE {report.total_goals_mae:.2f}. Positivo = el modelo sobreestima.",
         )
     # 1X2 calibration table.
-    st.markdown("**Calibración 1X2 (frecuencia real vs media predicha)**")
+    st.markdown(_b("**Calibración de resultados (frecuencia real frente a media predicha)**", "**Outcome calibration (observed frequency vs mean prediction)**"))
     cal_rows = [
         {"Resultado": "Local", "Media predicha": f"{report.home_predicted_avg:.1%}",
          "Frecuencia real": f"{report.home_actual_frequency:.1%}",
@@ -3410,7 +3427,7 @@ def _render_global_bias_panel() -> None:
              "Gap (pp)": f"{(data['predicted'] - data['actual'])*100:+.1f}"}
             for label, data in report.favourites_calibration.items()
         ]
-        st.markdown("**Cuando el modelo elige favorito, ¿acierta?**")
+        st.markdown(_b("**Cuando el modelo identifica un favorito, ¿acierta?**", "**How often is the model's favourite correct?**"))
         st.dataframe(pd.DataFrame(fav_rows), width="stretch", hide_index=True)
     if report.notes:
         callout(
@@ -3421,11 +3438,11 @@ def _render_global_bias_panel() -> None:
         callout("Sin sesgos significativos detectados con la muestra actual.", tone="green")
 
     # Bayesian-shrunk auto-correction toggle.
-    st.markdown("**Corrección automática del motor**")
+    st.markdown(_b("**Corrección automática del modelo**", "**Automatic model correction**"))
     preview = derive_corrections(report)
     st.caption(describe_corrections(preview))
     apply_toggle = st.toggle(
-        "Aplicar corrección al motor para todas las predicciones",
+        _b("Aplicar la corrección a todas las predicciones", "Apply correction to all predictions"),
         key="apply_corrections",
         help=(
             "Aplica un shrinkage bayesiano: con muestra pequeña sólo aplica una "
@@ -3439,7 +3456,7 @@ def _render_global_bias_panel() -> None:
             "Toggle ON pero ningún parámetro supera los umbrales mínimos; "
             "no se está aplicando corrección."
         )
-    with st.expander("Ver muestras individuales auditadas"):
+    with st.expander(_b("Ver muestras individuales auditadas", "View individual audited samples")):
         rows = [{
             "Partido": f"{s.team_a} vs {s.team_b}",
             "Kickoff": _display_time(s.kickoff_utc, "%d/%m %H:%M"),
@@ -3528,7 +3545,7 @@ def _aggregate_card_assignments(assignments: list[dict]) -> tuple[list[dict], li
 
 
 def render_backtesting() -> None:
-    hero("Calibración", "¿Predice bien el modelo?", "Brier score, acierto y bandas de probabilidad; no confundir una muestra corta con rentabilidad demostrada.")
+    hero(_t("calibration.eyebrow"), _t("calibration.title"), _t("calibration.supporting"))
     _render_global_bias_panel()
     repo = _repo()
     matches = _list_matches()
@@ -3545,7 +3562,7 @@ def render_backtesting() -> None:
                 with_imported_statistics=with_statistics,
                 missing_statistics=len(due) - with_statistics,
             ),
-            tone="amber", title="Partidos pendientes de cierre",
+            tone="amber", title=_t("calibration.pending"),
         )
     now_utc = datetime.now(timezone.utc)
     status_by_id: dict[int, dict] = {}
@@ -3570,18 +3587,18 @@ def render_backtesting() -> None:
         for item in matches
     ]
     by_annotated = dict(zip(annotated_labels, matches))
-    st.caption("Marcas: ✅ completo · 🟡 falta marcador · 📊 falta estadísticas · 🔴 faltan ambos · ⏭️ aún por jugar")
-    label = st.selectbox("Partido", annotated_labels)
+    st.caption(_t("calibration.legend"))
+    label = st.selectbox(_t("calibration.match"), annotated_labels)
     match = by_annotated[label]
-    st.subheader("Cierre postpartido")
+    st.subheader(_t("calibration.close"))
     existing_result = repo.get_match_result(match.id)
     evidence_status = all_statuses.get(match.id, repo.get_match_evidence_status(match.id))
     has_result = bool(evidence_status.get("has_result"))
     has_stats = bool(evidence_status.get("has_team_statistics") or evidence_status.get("deep_observations"))
     status_cols = st.columns(3)
-    status_cols[0].metric("Estadísticas profundas", evidence_status["deep_observations"])
-    status_cols[1].metric("Equipos con estadísticas", evidence_status["team_stat_rows"])
-    status_cols[2].metric("Marcador final", "Guardado" if has_result else "Pendiente")
+    status_cols[0].metric(_t("calibration.deep_stats"), evidence_status["deep_observations"])
+    status_cols[1].metric(_t("calibration.teams_with_stats"), evidence_status["team_stat_rows"])
+    status_cols[2].metric(_t("calibration.final_score"), _t("calibration.saved") if has_result else _t("calibration.pending_value"))
     if has_stats and has_result:
         callout(
             "Partido completo: estadísticas importadas y marcador guardado. "
@@ -3623,23 +3640,24 @@ def render_backtesting() -> None:
             category = metric.split(".")[0] if "." in metric else "otros"
             by_category[category].append(row)
         category_labels = {
-            "resumen_del_partido": "Resumen del partido",
-            "ataque": "Ataque",
-            "defensa": "Defensa",
-            "duelos": "Duelos",
-            "pases": "Pases",
-            "tiros": "Tiros",
-            "porteria": "Portería",
-            "otros": "Otros",
+            "resumen_del_partido": _b("Resumen del partido", "Match summary"),
+            "ataque": _b("Ataque", "Attacking"),
+            "defensa": _b("Defensa", "Defending"),
+            "duelos": _b("Duelos", "Duels"),
+            "pases": _b("Pases", "Passing"),
+            "tiros": _b("Tiros", "Shooting"),
+            "porteria": _b("Portería", "Goalkeeping"),
+            "otros": _b("Otros", "Other"),
         }
         unique_metric_count = len({row["metric"] for row in team_observations})
         with st.expander(
-            f"Ver todas las estadísticas profundas ({unique_metric_count} métricas por equipo)"
+            _b(f"Ver todas las estadísticas profundas ({unique_metric_count} métricas por equipo)", f"View all deep statistics ({unique_metric_count} metrics per team)")
         ):
             st.caption(
-                "Todas las métricas presentes en el JSON deep importado, una columna por equipo. "
+                _b("Todas las métricas presentes en el JSON de estadísticas profundas importado, una columna por equipo. "
                 "Las métricas estructuradas se usan ya en el modelo; el resto "
-                "alimenta auditoría y futuras extensiones."
+                "alimenta la auditoría y futuras extensiones.",
+                "Every metric in the imported deep-statistics JSON, with one column per team. Structured metrics already feed the model; the remainder supports auditing and future extensions.")
             )
             for category in (
                 "resumen_del_partido", "ataque", "defensa", "duelos",
@@ -3662,13 +3680,13 @@ def render_backtesting() -> None:
                 table_rows = []
                 for metric_short, by_team in sorted(pivot.items()):
                     table_rows.append({
-                        "Métrica": metric_short.replace("_", " "),
+                        _b("Métrica", "Metric"): metric_short.replace("_", " "),
                         team_a_name: by_team.get(team_a_name),
                         team_b_name: by_team.get(team_b_name),
                     })
                 st.markdown(f"**{category_labels.get(category, category)}** ({len(pivot)} métricas)")
                 st.dataframe(pd.DataFrame(table_rows), width="stretch", hide_index=True)
-    st.caption("La tabla siguiente contiene solo campos de equipo ausentes. Puedes añadir filas de jugador u otras métricas; las vacías no se guardan.")
+    st.caption(_b("La tabla siguiente contiene solo campos de equipo ausentes. Puedes añadir filas de jugador u otras métricas; las vacías no se guardan.", "The table below contains only missing team fields. You may add player rows or other metrics; blank rows are not saved."))
     stats_by_team = {row["team_name"]: row for row in existing_stats}
     team_names = (match.team_a.name, match.team_b.name)
     settlement_rows = []
@@ -3742,17 +3760,17 @@ def render_backtesting() -> None:
     predictions = repo.list_predictions(match.id)
     backtests = repo.list_backtests(match.id)
     c1, c2, c3 = st.columns(3)
-    c1.metric("Snapshots", len(predictions))
-    c2.metric("Evaluaciones", len(backtests))
-    c3.metric("Brier medio", f"{sum(row['brier_score'] for row in backtests if row['brier_score'] is not None) / len(backtests):.3f}" if backtests else "—")
+    c1.metric(_t("calibration.snapshots"), len(predictions))
+    c2.metric(_t("calibration.evaluations"), len(backtests))
+    c3.metric(_t("calibration.mean_brier"), f"{sum(row['brier_score'] for row in backtests if row['brier_score'] is not None) / len(backtests):.3f}" if backtests else "—")
     if not predictions:
-        empty_state("Sin snapshots", "Guarda un snapshot en Modelo antes de evaluar.", icon="📊")
+        empty_state(_t("calibration.no_snapshots"), _t("calibration.no_snapshots_body"), icon="📊")
         return
     options = {f"#{row['id']} · {row['market_name']} · {row['selection_name']} · p={row['probability']:.1%}": row for row in predictions}
-    chosen_label = st.selectbox("Predicción guardada", list(options))
+    chosen_label = st.selectbox(_t("calibration.saved_prediction"), list(options))
     chosen = options[chosen_label]
-    occurred = st.checkbox("La selección ocurrió")
-    if st.button("Guardar evaluación", type="primary"):
+    occurred = st.checkbox(_t("calibration.occurred"))
+    if st.button(_t("calibration.save_evaluation"), type="primary"):
         score = brier_score(float(chosen["probability"]), occurred)
         repo.add_backtest(int(chosen["id"]), 1.0 if occurred else 0.0, score, occurred, datetime.now(timezone.utc))
         st.success(f"Evaluación guardada · Brier {score:.4f}")
@@ -3761,30 +3779,30 @@ def render_backtesting() -> None:
         st.dataframe(_visible_frame(backtests), width="stretch", hide_index=True)
         bands = calibration_bands([(float(row["probability"]), bool(row["hit"])) for row in backtests], band_size=0.2)
         chart_rows = [{"Banda": key, "Predicha": value["avg_probability"], "Observada": value["hit_rate"], "N": value["count"]} for key, value in bands.items()]
-        st.subheader("Calibración por banda")
+        st.subheader(_t("calibration.by_band"))
         st.dataframe(pd.DataFrame(chart_rows), width="stretch", hide_index=True)
         family = summarize_by_market_family(backtests)
-        st.subheader("Fiabilidad por familia")
+        st.subheader(_t("calibration.reliability"))
         family_rows = [{"Familia": name, **values} for name, values in family.items()]
         st.dataframe(pd.DataFrame(family_rows), width="stretch", hide_index=True)
         st.caption("Menos de 20 evaluaciones por familia se etiqueta como provisional y no aumenta la confianza del modelo.")
         drift = calibration_drift(backtests)
         if drift:
-            st.subheader("Deriva acumulada")
+            st.subheader(_t("calibration.drift"))
             st.line_chart(pd.DataFrame(drift).set_index("evaluated_at_utc")["cumulative_brier"])
 
 
 def render_data_quality() -> None:
-    hero("Control de evidencia", "Qué sabemos, qué falta y de cuándo es.", "La ausencia de un registro no se interpreta como una ausencia real; se marca como dato no disponible.")
+    hero(_t("quality.eyebrow"), _t("quality.title"), _t("quality.supporting"))
     repo = _repo()
     repo.sync_source_catalog(default_source_catalog(), datetime.now(timezone.utc))
-    st.subheader("Frescura de los bancos diarios")
-    section_note("El estado de cada proveedor se actualiza automáticamente antes de la primera previsión del día.")
+    st.subheader(_t("quality.freshness"))
+    section_note(_t("quality.freshness_note"))
     freshness_rows = _freshness_rows_now()
     if freshness_rows:
         st.dataframe(pd.DataFrame(freshness_rows), width="stretch", hide_index=True)
     else:
-        empty_state("Sin bancos registrados", "Los bancos diarios se comprobarán antes de la primera previsión.", icon="🗄️")
+        empty_state(_t("quality.no_sources"), _t("quality.no_sources_body"), icon="🗄️")
     matches = _list_matches()
     all_daily_players = repo.list_current_world_cup_players()
     db_sig = _db_signature()
@@ -3821,19 +3839,19 @@ def render_data_quality() -> None:
         )
     frame = pd.DataFrame(rows)
     coverage_filter = st.multiselect(
-        "Filtrar cobertura",
+        _t("quality.coverage_filter"),
         sorted(frame["Cobertura"].unique()),
         default=[],
-        placeholder="Selecciona uno o varios estados",
+        placeholder=_t("quality.coverage_placeholder"),
     )
     if coverage_filter:
         frame = frame[frame["Cobertura"].isin(coverage_filter)]
     st.dataframe(frame, width="stretch", hide_index=True)
-    st.subheader("Corrección manual trazable")
+    st.subheader(_t("quality.manual"))
     labels, by_label = _match_labels(matches)
-    selected_label = st.selectbox("Partido a corregir", labels)
+    selected_label = st.selectbox(_t("quality.match_to_correct"), labels)
     if selected_label not in by_label:
-        st.info("Selecciona un partido de la lista (no un separador).")
+        st.info(_b("Selecciona un partido de la lista (no un separador).", "Select a match from the list, not a section divider."))
         return
     selected = by_label[selected_label]
     existing = repo.list_observations(selected.id)
@@ -3855,35 +3873,38 @@ def render_data_quality() -> None:
         num_rows="dynamic",
         key=f"manual_observations_{selected.id}",
     )
-    if st.button("Guardar correcciones manuales", width="stretch"):
+    if st.button(_t("quality.save_manual"), width="stretch"):
         repo.save_manual_observations(
             selected.id,
             edited.to_dict("records"),
             datetime.now(timezone.utc),
         )
-        st.success("Correcciones guardadas con fuente manual y marca temporal.")
-    st.subheader("Sanciones, lesiones y cambios de entrenador")
-    st.caption("Solo una incidencia nominal revisada afecta a la disponibilidad. Las tarjetas agregadas no identifican por sí solas al jugador.")
+        st.success(_b("Correcciones guardadas con fuente manual y marca temporal.", "Corrections saved with a manual source and timestamp."))
+    st.subheader(_t("quality.context"))
+    st.caption(_b("Solo una incidencia nominal revisada afecta a la disponibilidad. Las tarjetas agregadas no identifican por sí solas al jugador.", "Only a reviewed, player-specific incident affects availability. Aggregate card totals do not identify a player on their own."))
     c1, c2 = st.columns(2)
-    context_team = c1.selectbox("Selección afectada", [selected.team_a.name, selected.team_b.name], key="context_team")
+    context_team = c1.selectbox(_b("Selección afectada", "Affected team"), [selected.team_a.name, selected.team_b.name], key="context_team")
     event_label = c2.selectbox(
-        "Tipo de incidencia",
-        ["Sanción por roja", "Sanción por amarillas", "Lesión", "Enfermedad", "Cambio de entrenador"],
+        _b("Tipo de incidencia", "Incident type"),
+        ["suspension_red", "suspension_yellows", "injury", "illness", "coach_change"],
+        format_func=lambda value: {
+            "suspension_red": _b("Sanción por roja", "Red-card suspension"),
+            "suspension_yellows": _b("Sanción por amarillas", "Yellow-card suspension"),
+            "injury": _b("Lesión", "Injury"),
+            "illness": _b("Enfermedad", "Illness"),
+            "coach_change": _b("Cambio de entrenador", "Manager change"),
+        }[value],
         key="context_event_type",
     )
-    event_types = {
-        "Sanción por roja": "suspension_red", "Sanción por amarillas": "suspension_yellows",
-        "Lesión": "injury", "Enfermedad": "illness", "Cambio de entrenador": "coach_change",
-    }
-    player_name = st.text_input("Jugador (obligatorio salvo cambio de entrenador)", key="context_player_name")
-    source_reference = st.text_input("Fuente o referencia revisada", key="context_source")
-    incident_notes = st.text_area("Notas de la incidencia", key="context_notes")
-    if st.button("Guardar incidencia de plantilla", key="save_context_event"):
-        event_type = event_types[event_label]
+    player_name = st.text_input(_b("Jugador (obligatorio salvo cambio de entrenador)", "Player (required unless this is a manager change)"), key="context_player_name")
+    source_reference = st.text_input(_b("Fuente o referencia revisada", "Reviewed source or reference"), key="context_source")
+    incident_notes = st.text_area(_b("Notas de la incidencia", "Incident notes"), key="context_notes")
+    if st.button(_b("Guardar incidencia de plantilla", "Save squad incident"), key="save_context_event"):
+        event_type = event_label
         if event_type != "coach_change" and not player_name.strip():
-            st.error("Debes identificar al jugador para aplicar una ausencia.")
+            st.error(_b("Debes identificar al jugador para aplicar una ausencia.", "Identify the player before recording an absence."))
         elif not source_reference.strip():
-            st.error("Debes indicar una fuente o referencia revisada.")
+            st.error(_b("Debes indicar una fuente o referencia revisada.", "Provide a reviewed source or reference."))
         else:
             repo.save_squad_context_event({
                 "team_name": context_team, "player_name": player_name.strip() or None,
@@ -3894,16 +3915,16 @@ def render_data_quality() -> None:
                 "evidence_status": "reviewed",
                 "notes": f"{incident_notes}\nFuente: {source_reference}".strip(),
             }, datetime.now(timezone.utc))
-            st.success("Incidencia guardada y aplicable a la predicción de este partido.")
-    st.subheader("Estado del proveedor local")
+            st.success(_b("Incidencia guardada y aplicable a la predicción de este partido.", "Incident saved and applied to this match prediction."))
+    st.subheader(_t("quality.provider"))
     provider_rows = [
-        {"Componente": "sports-data SQLite", "Estado": "Disponible" if SPORTS_DB_PATH.exists() else "No disponible", "Ruta": str(SPORTS_DB_PATH)},
-        {"Componente": "Collector analisis-de-datos", "Estado": "Se comprueba al actualizar", "Ruta": "CODEX_HOME/skills/analisis-de-datos"},
-        {"Componente": "SofaScore URL", "Estado": "Experimental", "Ruta": "Sin cookies ni sesión"},
+        {_b("Componente", "Component"): "sports-data SQLite", _b("Estado", "Status"): _b("Disponible", "Available") if SPORTS_DB_PATH.exists() else _b("No disponible", "Unavailable"), _b("Ruta", "Path"): str(SPORTS_DB_PATH)},
+        {_b("Componente", "Component"): "Collector analisis-de-datos", _b("Estado", "Status"): _b("Se comprueba al actualizar", "Checked during refresh"), _b("Ruta", "Path"): "CODEX_HOME/skills/analisis-de-datos"},
+        {_b("Componente", "Component"): "SofaScore URL", _b("Estado", "Status"): _b("Experimental", "Experimental"), _b("Ruta", "Path"): _b("Sin cookies ni sesión", "No cookies or session")},
     ]
     st.dataframe(pd.DataFrame(provider_rows), width="stretch", hide_index=True)
-    st.caption("Fuentes: SQLite local del collector, importaciones manuales y SofaScore experimental cuando el usuario lo solicita.")
-    st.subheader("Bancos de información")
+    st.caption(_b("Fuentes: SQLite local del recolector, importaciones manuales y SofaScore experimental cuando el usuario lo solicita.", "Sources: the collector's local SQLite database, manual imports and experimental SofaScore retrieval when requested by the user."))
+    st.subheader(_t("quality.sources"))
     bank_labels = {0: "Prioritario / autoridad", 1: "Primario abierto", 2: "Secundario API", 3: "Terciario / experimental"}
     catalog_rows = [
         {
@@ -3919,14 +3940,14 @@ def render_data_quality() -> None:
         for row in repo.list_source_catalog()
     ]
     st.dataframe(pd.DataFrame(catalog_rows), width="stretch", hide_index=True)
-    st.caption("El enrutador elige por dominio el banco disponible más alto; los desacuerdos del mismo banco se marcan como conflicto.")
+    st.caption(_b("El enrutador elige por dominio el banco disponible más alto; los desacuerdos del mismo banco se marcan como conflicto.", "The router selects the highest-priority available source tier for each domain; disagreements within a tier are flagged as conflicts."))
 
 
 def render_player_intelligence() -> None:
     hero(
-        "Inteligencia de jugadores",
-        "Rendimiento verificado, impacto interpretable y estilos comparables.",
-        "Los clusters describen perfiles; no elevan por sí solos la confianza de una predicción.",
+        _t("players.eyebrow"),
+        _t("players.title"),
+        _t("players.supporting"),
     )
     repo = _repo()
     # Manual refresh of the daily player bank. Useful right after a fixture
@@ -3934,58 +3955,55 @@ def render_player_intelligence() -> None:
     refresh_col, info_col = st.columns([1, 2.5])
     with refresh_col:
         refresh_players = st.button(
-            "Actualizar datos de jugadores",
+            _t("players.refresh"),
             key="refresh_players_intelligence",
             type="primary", width="stretch",
-            help="Fuerza la recarga del banco diario (swaptr_wc2026_players), "
-                 "bypaseando la ventana de 24h. Trae goles, asistencias, paradas y demás recientes.",
+            help=_t("players.refresh_help"),
         )
     with info_col:
-        st.caption(
-            "Los rankings de abajo se calculan sobre el banco diario. "
-            "Si falta un jugador o un gol reciente, usa el botón para forzar la recarga ahora."
-        )
+        st.caption(_t("players.refresh_note"))
     if refresh_players:
-        with st.spinner("Recargando banco de jugadores…"):
+        with st.spinner(_t("players.refreshing")):
             try:
                 refresh_result = _force_refresh_players(repo)
             except Exception as exc:
-                st.error(f"No se pudo recargar el banco: {type(exc).__name__}: {exc}")
+                st.error(_b(f"No se pudo recargar el banco: {type(exc).__name__}: {exc}", f"The player dataset could not be refreshed: {type(exc).__name__}: {exc}"))
                 refresh_result = None
         if refresh_result is not None:
             if refresh_result.updated:
                 st.success(
-                    f"Banco actualizado: {len(refresh_result.updated)} fuente(s) recibida(s)."
+                    _b(f"Banco actualizado: {len(refresh_result.updated)} fuente(s) recibida(s).", f"Player dataset updated: {len(refresh_result.updated)} source(s) received.")
                 )
             elif refresh_result.unchanged:
-                st.info("Sin cambios: el proveedor no ha publicado nuevas estadísticas desde la última recarga.")
+                st.info(_b("Sin cambios: el proveedor no ha publicado nuevas estadísticas desde la última recarga.", "No changes: the provider has not published new statistics since the last refresh."))
             if refresh_result.failed:
                 st.warning(
-                    "Proveedor con error: " + ", ".join(refresh_result.failed)
-                    + ". Se conservan los datos cacheados."
+                    _b("Proveedor con error: ", "Provider error: ") + ", ".join(refresh_result.failed)
+                    + _b(". Se conservan los datos en caché.", ". Cached data has been retained.")
                 )
             _invalidate_player_caches()
             st.rerun()
     minimum_minutes = st.slider(
-        "Minutos mínimos (solo afecta a Impacto)", 0, 900, 60, 30,
-        help="Los rankings de Goles/Asistencias/Tiros siempre muestran a quien tenga al menos uno, sin importar minutos.",
+        _t("players.minimum_minutes"), 0, 900, 60, 30,
+        help=_t("players.minimum_help"),
     )
     rows = _player_intelligence_rows_cached(_db_signature(), 0)
     if not rows:
-        empty_state("Sin estadísticas verificadas", "Las capturas postpartido revisadas alimentarán esta vista.", icon="👤")
+        empty_state(_t("players.empty"), _t("players.empty_body"), icon="👤")
     else:
         frame = pd.DataFrame(rows)
         selected_ranking = st.segmented_control(
-            "Ranking",
-            ["Impacto", "Goles", "Asistencias", "Tiros"],
-            default="Impacto",
+            _t("players.ranking"),
+            ["impact", "goals", "assists", "shots"],
+            default="impact",
+            format_func=lambda key: _t(f"players.{key}"),
             label_visibility="collapsed",
         )
         ranking_specs = {
-            "Impacto": ("impact", "Impacto relativo", "impact", "Impacto", None, None),
-            "Goles": ("goals_per90", "Goles / 90", "goals", "Goles", "goals_per90", "Goles/90"),
-            "Asistencias": ("assists_per90", "Asistencias / 90", "assists", "Asistencias", "assists_per90", "Asist./90"),
-            "Tiros": ("shots_per90", "Tiros / 90", "shots", "Tiros", "shots_per90", "Tiros/90"),
+            "impact": ("impact", _t("players.impact"), "impact", _t("players.impact"), None, None),
+            "goals": ("goals_per90", f'{_t("players.goals")} / 90', "goals", _t("players.goals"), "goals_per90", f'{_t("players.goals")}/90'),
+            "assists": ("assists_per90", f'{_t("players.assists")} / 90', "assists", _t("players.assists"), "assists_per90", f'{_t("players.assists")}/90'),
+            "shots": ("shots_per90", f'{_t("players.shots")} / 90', "shots", _t("players.shots"), "shots_per90", f'{_t("players.shots")}/90'),
         }
         metric, title, total_col, total_label, rate_col, rate_label = ranking_specs[selected_ranking]
         _render_player_panel(

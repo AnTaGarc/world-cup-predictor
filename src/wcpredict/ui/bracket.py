@@ -57,11 +57,8 @@ _ROUND_KEYS = {
 _ROUND_ORDER = ["r32", "r16", "qf", "sf", "final"]
 
 _ROUND_LABELS = {
-    "r32": "Dieciseisavos",
-    "r16": "Octavos",
-    "qf": "Cuartos",
-    "sf": "Semifinales",
-    "final": "Final",
+    "es": {"r32": "Dieciseisavos", "r16": "Octavos", "qf": "Cuartos", "sf": "Semifinales", "final": "Final"},
+    "en": {"r32": "Round of 32", "r16": "Round of 16", "qf": "Quarter-finals", "sf": "Semi-finals", "final": "Final"},
 }
 
 # How many connector pairs between consecutive rounds
@@ -160,7 +157,7 @@ def _team_row(
     return h
 
 
-def _card_html(slot: dict) -> str:
+def _card_html(slot: dict, language: str = "es") -> str:
     status = slot.get("status", "pending")
     live = status == "live"
     closed = status == "closed"
@@ -212,16 +209,16 @@ def _card_html(slot: dict) -> str:
         away_win,
     )
     decision_label = {
-        "extra_time": "Prórroga",
-        "shootout": "Penaltis",
-    }.get(slot.get("decided_in"))
+        "es": {"extra_time": "Prórroga", "shootout": "Penaltis"},
+        "en": {"extra_time": "Extra time", "shootout": "Penalties"},
+    }[language].get(slot.get("decided_in"))
     if closed and decision_label:
         h += f'<span class="bracket-decision-label">{decision_label}</span>'
     h += f"</div>{close_tag}"
     return h
 
 
-def render_bracket(slots: list[dict]) -> str:
+def render_bracket(slots: list[dict], language: str = "es") -> str:
     """Return the complete bracket HTML for all knockout slots."""
     by_round: dict[str, list[dict]] = {r: [] for r in _ROUND_ORDER}
     by_round["third"] = []
@@ -236,7 +233,7 @@ def render_bracket(slots: list[dict]) -> str:
     for i, rk in enumerate(_ROUND_ORDER):
         if i > 0:
             h += '<div class="bracket-rh-spacer"></div>'
-        h += f'<div class="bracket-rh bracket-rh-{rk}">{_ROUND_LABELS[rk]}</div>'
+        h += f'<div class="bracket-rh bracket-rh-{rk}">{_ROUND_LABELS[language][rk]}</div>'
     h += "</div>"
 
     # ── Bracket body ──
@@ -244,7 +241,7 @@ def render_bracket(slots: list[dict]) -> str:
     for i, rk in enumerate(_ROUND_ORDER):
         h += f'<div class="bracket-round bracket-{rk}">'
         for slot in by_round[rk]:
-            h += _card_html(slot)
+            h += _card_html(slot, language)
         h += "</div>"
 
         # Connector column (except after final)
@@ -273,9 +270,10 @@ def render_bracket(slots: list[dict]) -> str:
     third_slots = by_round.get("third", [])
     if third_slots:
         h += '<div class="bracket-third">'
-        h += '<div class="bracket-third-label">Tercer y cuarto puesto</div>'
+        third_label = "Tercer y cuarto puesto" if language == "es" else "Third-place play-off"
+        h += f'<div class="bracket-third-label">{third_label}</div>'
         for slot in third_slots:
-            h += _card_html(slot)
+            h += _card_html(slot, language)
         h += "</div>"
 
     h += "</div></div>"  # bracket-inner, bracket-container

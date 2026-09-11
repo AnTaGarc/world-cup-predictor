@@ -111,12 +111,25 @@ def render_knockout_settlement(
     import streamlit as st
 
     from wcpredict.deep_match_import import load_deep_match_file
+    from wcpredict.ui.language_preference import current_language
+
+    language = current_language()
+    b = lambda es, en: es if language == "es" else en
+    period_labels = PERIOD_LABELS if language == "es" else {
+        "first_half": "First half (0’–45’)",
+        "second_half": "Second half (45’–90’)",
+        "regulation_total": "90-minute total",
+        "extra_time_first": "First half of extra time (90’–105’)",
+        "extra_time_second": "Second half of extra time (105’–120’)",
+        "extra_time_total": "Extra-time total",
+        "full_match_total": "120-minute total (optional)",
+    }
 
     active = repo.get_active_match_phase_result(match.id) or {}
     decision_labels = {
-        "En 90 minutos": "regulation",
-        "En prórroga": "extra_time",
-        "En penaltis": "shootout",
+        b("En 90 minutos", "In 90 minutes"): "regulation",
+        b("En prórroga", "After extra time"): "extra_time",
+        b("En penaltis", "On penalties"): "shootout",
     }
     # Restore a durable draft (survives app restarts) into the widget
     # session state, only for keys the user hasn't touched this session.
@@ -133,7 +146,7 @@ def render_knockout_settlement(
         label for label, value in decision_labels.items() if value == default_decision
     )
     chosen_label = st.radio(
-        "¿Cómo terminó la eliminatoria?",
+        b("¿Cómo terminó la eliminatoria?", "How was the knockout tie decided?"),
         tuple(decision_labels),
         index=list(decision_labels).index(default_label),
         horizontal=True,
@@ -147,34 +160,34 @@ def render_knockout_settlement(
     issues = repo.validate_match_period_stats(match.id)
     statuses = period_statuses(decided_in, imported_periods, issues)
     status_labels = {
-        "imported": "✅ Importado",
-        "pending": "🟡 Pendiente",
-        "optional": "Opcional",
-        "not_played": "No disputado",
-        "mismatch": "🔴 No cuadra",
+        "imported": b("✅ Importado", "✅ Imported"),
+        "pending": b("🟡 Pendiente", "🟡 Pending"),
+        "optional": b("Opcional", "Optional"),
+        "not_played": b("No disputado", "Not played"),
+        "mismatch": b("🔴 No cuadra", "🔴 Totals do not match"),
     }
-    st.markdown("#### Estadísticas por periodo")
+    st.markdown(b("#### Estadísticas por periodo", "#### Statistics by period"))
     if decided_in == "regulation":
-        st.caption("Si el partido terminó en 90', importa el JSON acumulado de los 90 minutos.")
+        st.caption(b("Si el partido terminó en 90', importa el JSON acumulado de los 90 minutos.", "If the match ended in regulation, import the JSON containing the 90-minute total."))
     else:
-        st.caption(
-            "Importa por separado las dos partes de los 90 minutos y las dos partes "
-            "de la prórroga. El acumulado de 120' es opcional y sirve para comprobar las sumas."
-        )
+        st.caption(b(
+            "Importa por separado las dos partes de los 90 minutos y las dos partes de la prórroga. El acumulado de 120' es opcional y sirve para comprobar las sumas.",
+            "Import both regulation halves and both extra-time halves separately. The 120-minute total is optional and is used to verify the sums.",
+        ))
     for period in sections.visible_periods:
         status = statuses[period]
-        with st.expander(f"{PERIOD_LABELS[period]} · {status_labels[status]}"):
+        with st.expander(f"{period_labels[period]} · {status_labels[status]}"):
             upload = st.file_uploader(
-                f"JSON · {PERIOD_LABELS[period]}",
+                f"JSON · {period_labels[period]}",
                 type=["json"],
                 key=f"ko_period_upload_{match.id}_{period}",
             )
             reviewed = st.checkbox(
-                "He comprobado que corresponde a este periodo",
+                b("He comprobado que corresponde a este periodo", "I have verified that this file covers this period"),
                 key=f"ko_period_reviewed_{match.id}_{period}",
             )
             if st.button(
-                "Validar e importar",
+                b("Validar e importar", "Validate and import"),
                 disabled=upload is None or not reviewed,
                 key=f"ko_period_import_{match.id}_{period}",
             ):
@@ -189,10 +202,10 @@ def render_knockout_settlement(
                         intended_match_id=match.id,
                         period=period,
                     )
-                    st.success(
-                        f"Periodo importado: {result.imported_matches}; "
-                        f"sin cambios: {result.unchanged_matches}."
-                    )
+                    st.success(b(
+                        f"Periodo importado: {result.imported_matches}; sin cambios: {result.unchanged_matches}.",
+                        f"Period imported: {result.imported_matches}; unchanged: {result.unchanged_matches}.",
+                    ))
                 except (ValueError, OSError) as exc:
                     st.error(str(exc))
     if issues:
@@ -201,12 +214,12 @@ def render_knockout_settlement(
 
     score_cols = st.columns(2)
     regulation_a = int(score_cols[0].number_input(
-        f"Goles al 90' · {match.team_a.name}",
+        f'{b("Goles al 90’", "Goals after 90 minutes")} · {match.team_a.name}',
         0, 20, int(active.get("regulation_goals_a") or 0),
         key=f"ko_reg_a_{match.id}",
     ))
     regulation_b = int(score_cols[1].number_input(
-        f"Goles al 90' · {match.team_b.name}",
+        f'{b("Goles al 90’", "Goals after 90 minutes")} · {match.team_b.name}',
         0, 20, int(active.get("regulation_goals_b") or 0),
         key=f"ko_reg_b_{match.id}",
     ))
@@ -214,12 +227,12 @@ def render_knockout_settlement(
     if sections.show_extra_time_score:
         et_cols = st.columns(2)
         extra_a = int(et_cols[0].number_input(
-            f"Goles en prórroga · {match.team_a.name}",
+            f'{b("Goles en prórroga", "Extra-time goals")} · {match.team_a.name}',
             0, 10, int(active.get("extra_time_goals_a") or 0),
             key=f"ko_et_a_{match.id}",
         ))
         extra_b = int(et_cols[1].number_input(
-            f"Goles en prórroga · {match.team_b.name}",
+            f'{b("Goles en prórroga", "Extra-time goals")} · {match.team_b.name}',
             0, 10, int(active.get("extra_time_goals_b") or 0),
             key=f"ko_et_b_{match.id}",
         ))
@@ -228,19 +241,19 @@ def render_knockout_settlement(
     keeper_a_id = keeper_b_id = None
     shootout_a = shootout_b = None
     if sections.show_shootout:
-        st.markdown("#### Tanda de penaltis")
+        st.markdown(b("#### Tanda de penaltis", "#### Penalty shootout"))
         squad_a = repo.list_selectable_squad_players(match.team_a.id, match.team_a.name)
         squad_b = repo.list_selectable_squad_players(match.team_b.id, match.team_b.name)
         keepers_a = [row for row in squad_a if "GK" in str(row.get("position") or "").upper()]
         keepers_b = [row for row in squad_b if "GK" in str(row.get("position") or "").upper()]
         keeper_cols = st.columns(2)
         keeper_a_name = keeper_cols[0].selectbox(
-            f"Portero · {match.team_a.name}",
+            f'{b("Portero", "Goalkeeper")} · {match.team_a.name}',
             [row["player_name"] for row in keepers_a],
             key=f"ko_keeper_a_{match.id}",
         ) if keepers_a else None
         keeper_b_name = keeper_cols[1].selectbox(
-            f"Portero · {match.team_b.name}",
+            f'{b("Portero", "Goalkeeper")} · {match.team_b.name}',
             [row["player_name"] for row in keepers_b],
             key=f"ko_keeper_b_{match.id}",
         ) if keepers_b else None
@@ -248,15 +261,15 @@ def render_knockout_settlement(
         keeper_b_id = next((row["player_id"] for row in keepers_b if row["player_name"] == keeper_b_name), None)
         existing_kicks = repo.list_active_shootout_kicks(match.id)
         kick_count = int(st.number_input(
-            "Lanzamientos registrados",
+            b("Lanzamientos registrados", "Recorded kicks"),
             2, 30, max(10, len(existing_kicks)), 2,
             key=f"ko_kick_count_{match.id}",
         ))
         kick_values = []
         outcome_labels = {
-            "Gol": "scored",
-            "Parada": "saved",
-            "Fuera/poste": "off_target_or_woodwork",
+            b("Gol", "Scored"): "scored",
+            b("Parada", "Saved"): "saved",
+            b("Fuera/poste", "Off target/woodwork"): "off_target_or_woodwork",
         }
         for index in range(kick_count):
             team_is_a = index % 2 == 0
@@ -269,7 +282,7 @@ def render_knockout_settlement(
             previous = existing_kicks[index] if index < len(existing_kicks) else None
             default_name = previous.get("player_name") if previous else None
             player_name = cols[1].selectbox(
-                "Tirador",
+                b("Tirador", "Taker"),
                 names,
                 index=names.index(default_name) if default_name in names else 0,
                 key=f"ko_taker_{match.id}_{index}",
@@ -278,10 +291,10 @@ def render_knockout_settlement(
             default_outcome = previous.get("outcome") if previous else "scored"
             default_label_outcome = next(
                 (label for label, value in outcome_labels.items() if value == default_outcome),
-                "Gol",
+                b("Gol", "Scored"),
             )
             outcome_label = cols[2].selectbox(
-                "Resultado",
+                b("Resultado", "Outcome"),
                 tuple(outcome_labels),
                 index=list(outcome_labels).index(default_label_outcome),
                 key=f"ko_outcome_{match.id}_{index}",
@@ -295,7 +308,7 @@ def render_knockout_settlement(
         kicks = tuple(kick_values)
         shootout_a = sum(kick.team_id == match.team_a.id and kick.outcome == "scored" for kick in kicks)
         shootout_b = sum(kick.team_id == match.team_b.id and kick.outcome == "scored" for kick in kicks)
-        st.caption(f"Marcador calculado de la tanda: {shootout_a}-{shootout_b}")
+        st.caption(b(f"Marcador calculado de la tanda: {shootout_a}-{shootout_b}", f"Calculated shootout score: {shootout_a}-{shootout_b}"))
 
     phase_result = MatchPhaseResultInput(
         regulation_a,
@@ -315,7 +328,7 @@ def render_knockout_settlement(
     )
     errors = list(validate_settlement_draft(draft))
     errors.extend(issue.message for issue in issues if issue.severity == "blocking")
-    if st.button("Guardar borrador", key=f"ko_save_draft_{match.id}"):
+    if st.button(b("Guardar borrador", "Save draft"), key=f"ko_save_draft_{match.id}"):
         import json as _json
         prefixes = (
             f"ko_decision_{match.id}", f"ko_reg_a_{match.id}", f"ko_reg_b_{match.id}",
@@ -335,10 +348,10 @@ def render_knockout_settlement(
             _json.dumps({"widget_state": widget_state}, ensure_ascii=False),
             datetime.now(timezone.utc).isoformat(),
         )
-        st.success(
-            "Borrador guardado en la base de datos: sobrevive a reinicios de la app. "
-            "Los periodos importados ya estaban guardados."
-        )
+        st.success(b(
+            "Borrador guardado en la base de datos: sobrevive a reinicios de la app. Los periodos importados ya estaban guardados.",
+            "Draft saved to the database and retained across application restarts. Imported periods were already stored.",
+        ))
     notices = [issue.message for issue in issues if issue.severity == "warning"]
     if notices:
         st.info(
@@ -346,9 +359,9 @@ def render_knockout_settlement(
             + " ".join(dict.fromkeys(notices))
         )
     if errors:
-        st.warning("No se puede cerrar todavía: " + " ".join(dict.fromkeys(errors)))
+        st.warning(b("No se puede cerrar todavía: ", "The match cannot be completed yet: ") + " ".join(dict.fromkeys(errors)))
     if st.button(
-        "Cerrar eliminatoria y recalibrar",
+        b("Cerrar eliminatoria y recalibrar", "Complete knockout match and recalibrate"),
         type="primary",
         disabled=bool(errors),
         key=f"ko_finalize_{match.id}",

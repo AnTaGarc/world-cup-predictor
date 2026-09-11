@@ -35,6 +35,7 @@ def render_capture_review(repo, match, evidence_dir):
     import streamlit as st
 
     from wcpredict.review import CandidateDecision
+    from wcpredict.ui.language_preference import current_language
     from wcpredict.screenshot_evidence import (
         ScreenshotUpload,
         classify_player_tables_from_ocr_rows,
@@ -43,25 +44,27 @@ def render_capture_review(repo, match, evidence_dir):
         store_upload,
     )
 
-    st.subheader("Capturas postpartido de SofaScore")
-    st.caption(
-        "Todas las lecturas requieren confirmación, corrección o descarte. "
-        "La confianza OCR nunca sustituye la revisión."
-    )
+    language = current_language()
+    b = lambda es, en: es if language == "es" else en
+    st.subheader(b("Capturas postpartido de SofaScore", "Post-match SofaScore captures"))
+    st.caption(b(
+        "Todas las lecturas requieren confirmación, corrección o descarte. La confianza OCR nunca sustituye la revisión.",
+        "Every extracted value must be confirmed, corrected or discarded. OCR confidence never replaces human review.",
+    ))
     uploads = st.file_uploader(
-        "Añadir capturas",
+        b("Añadir capturas", "Add screenshots"),
         type=["png", "jpg", "jpeg", "webp"],
         accept_multiple_files=True,
         key=f"postmatch_images_{match.id}",
     )
     source_url = st.text_input(
-        "URL pública de SofaScore (opcional)",
+        b("URL pública de SofaScore (opcional)", "Public SofaScore URL (optional)"),
         key=f"postmatch_source_{match.id}",
     )
     batch_key = f"capture_batch_{match.id}"
     finalized_key = f"finalized_capture_batch_{match.id}"
     if st.button(
-        "Procesar capturas",
+        b("Procesar capturas", "Process screenshots"),
         disabled=not uploads,
         key=f"process_captures_{match.id}",
         width="stretch",
@@ -100,14 +103,14 @@ def render_capture_review(repo, match, evidence_dir):
                     )
                 )
         except (ImportError, RuntimeError) as exc:
-            st.error(f"OCR local no disponible: {exc}")
+            st.error(b(f"OCR local no disponible: {exc}", f"Local OCR is unavailable: {exc}"))
         st.session_state[batch_key] = batch_id
         if total:
-            st.success(f"{total} valores candidatos. Debes revisar todos.")
+            st.success(b(f"{total} valores candidatos. Debes revisar todos.", f"{total} candidate values found. Review every one before continuing."))
         else:
             st.warning(
-                "No se reconocieron estadísticas automáticamente. "
-                "Conservamos las capturas como evidencia."
+                b("No se reconocieron estadísticas automáticamente. Conservamos las capturas como evidencia.",
+                  "No statistics were recognised automatically. The screenshots have been retained as evidence.")
             )
 
     batch_id = st.session_state.get(batch_key)
@@ -121,15 +124,19 @@ def render_capture_review(repo, match, evidence_dir):
             st.image(stored_path, caption=Path(stored_path).name)
     edited_frames = []
     decision_labels = {
-        "pending_review": "Pendiente",
-        "confirmed": "Confirmar",
-        "corrected": "Corregir",
-        "discarded": "Descartar",
+        "pending_review": b("Pendiente", "Pending"),
+        "confirmed": b("Confirmar", "Confirm"),
+        "corrected": b("Corregir", "Correct"),
+        "discarded": b("Descartar", "Discard"),
+    }
+    section_labels_en = {
+        "Resultado": "Result", "Equipos": "Teams", "Alineaciones": "Line-ups",
+        "Jugadores": "Players", "Disciplina y contexto": "Discipline and context",
     }
     for section, rows in review_sections(candidates).items():
         if not rows:
             continue
-        st.markdown(f"#### {section}")
+        st.markdown(f"#### {section if language == 'es' else section_labels_en[section]}")
         frame = pd.DataFrame(rows)
         frame["decision"] = frame["review_status"].map(decision_labels)
         edited = st.data_editor(
@@ -153,8 +160,8 @@ def render_capture_review(repo, match, evidence_dir):
             disabled=["id", "confidence", "raw_label", "raw_value", "warnings_json"],
             column_config={
                 "decision": st.column_config.SelectboxColumn(
-                    "Revisión",
-                    options=["Pendiente", "Confirmar", "Corregir", "Descartar"],
+                    b("Revisión", "Review"),
+                    options=list(decision_labels.values()),
                     required=True,
                 )
             },
@@ -162,17 +169,17 @@ def render_capture_review(repo, match, evidence_dir):
             width="stretch",
         )
         edited_frames.append(edited)
-    if st.button("Guardar decisiones de revisión", width="stretch"):
+    if st.button(b("Guardar decisiones de revisión", "Save review decisions"), width="stretch"):
         now = datetime.now(timezone.utc)
         for frame in edited_frames:
             for row in frame.to_dict("records"):
                 label = row["decision"]
-                if label == "Pendiente":
+                if label == decision_labels["pending_review"]:
                     continue
                 decision_name = {
-                    "Confirmar": "confirm",
-                    "Corregir": "correct",
-                    "Descartar": "discard",
+                    decision_labels["confirmed"]: "confirm",
+                    decision_labels["corrected"]: "correct",
+                    decision_labels["discarded"]: "discard",
                 }[label]
                 correction = decision_name == "correct"
                 repo.review_candidate(
@@ -188,17 +195,17 @@ def render_capture_review(repo, match, evidence_dir):
                     ),
                     now,
                 )
-        st.success("Decisiones guardadas.")
+        st.success(b("Decisiones guardadas.", "Review decisions saved."))
         candidates = repo.list_extraction_candidates(int(batch_id))
     ready = can_finalize(candidates)
     if st.button(
-        "Guardar capturas verificadas",
+        b("Guardar capturas verificadas", "Save verified screenshots"),
         type="primary",
         disabled=not ready,
         width="stretch",
     ):
         repo.finalize_screenshot_batch(int(batch_id), datetime.now(timezone.utc))
         st.session_state[finalized_key] = int(batch_id)
-        st.success("Evidencia verificada guardada para análisis y calibración.")
+        st.success(b("Evidencia verificada guardada para análisis y calibración.", "Verified evidence saved for analysis and calibration."))
         return int(batch_id)
     return st.session_state.get(finalized_key)
