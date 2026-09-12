@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from wcpredict.ui.i18n import localize_controlled, localize_table_columns as localize_columns_i18n
+from wcpredict.names import canonical_team_name
 
 
 def _active_language(language: str | None) -> str:
@@ -146,6 +147,44 @@ TABLE_COLUMNS = {
     "value": "Valor",
 }
 
+TEAM_NAMES_ES = {
+    "Algeria": "Argelia", "Argentina": "Argentina", "Australia": "Australia",
+    "Austria": "Austria", "Belgium": "Bélgica", "Bolivia": "Bolivia",
+    "Bosnia and Herzegovina": "Bosnia y Herzegovina", "Brazil": "Brasil",
+    "Canada": "Canadá", "Cape Verde": "Cabo Verde", "Chile": "Chile",
+    "China": "China", "Colombia": "Colombia", "Congo DR": "RD del Congo",
+    "Costa Rica": "Costa Rica", "Cote d'Ivoire": "Costa de Marfil",
+    "Croatia": "Croacia", "Curacao": "Curazao", "Czechia": "Chequia",
+    "Denmark": "Dinamarca", "Ecuador": "Ecuador", "Egypt": "Egipto",
+    "England": "Inglaterra", "France": "Francia", "Germany": "Alemania",
+    "Ghana": "Ghana", "Haiti": "Haití", "Honduras": "Honduras",
+    "Hungary": "Hungría", "Iceland": "Islandia", "India": "India",
+    "Indonesia": "Indonesia", "IR Iran": "Irán", "Iraq": "Irak",
+    "Ireland": "Irlanda", "Israel": "Israel", "Italy": "Italia",
+    "Jamaica": "Jamaica", "Japan": "Japón", "Jordan": "Jordania",
+    "Mali": "Malí", "Mexico": "México", "Morocco": "Marruecos",
+    "Netherlands": "Países Bajos", "New Zealand": "Nueva Zelanda",
+    "Nigeria": "Nigeria", "North Macedonia": "Macedonia del Norte",
+    "Northern Ireland": "Irlanda del Norte", "Norway": "Noruega",
+    "Panama": "Panamá", "Paraguay": "Paraguay", "Peru": "Perú",
+    "Poland": "Polonia", "Portugal": "Portugal", "Qatar": "Catar",
+    "Romania": "Rumanía", "Saudi Arabia": "Arabia Saudí", "Scotland": "Escocia",
+    "Senegal": "Senegal", "Serbia": "Serbia", "Slovakia": "Eslovaquia",
+    "Slovenia": "Eslovenia", "South Africa": "Sudáfrica",
+    "South Korea": "Corea del Sur", "Spain": "España", "Sweden": "Suecia",
+    "Switzerland": "Suiza", "Tunisia": "Túnez", "Turkiye": "Turquía",
+    "Ukraine": "Ucrania", "United Arab Emirates": "Emiratos Árabes Unidos",
+    "Uruguay": "Uruguay", "USA": "Estados Unidos", "Uzbekistan": "Uzbekistán",
+    "Venezuela": "Venezuela", "Wales": "Gales",
+}
+
+
+def localize_team_name(value: str, language: str | None = None) -> str:
+    """Return a display-only team name without changing stored identifiers."""
+    if _active_language(language) == "en" or not value:
+        return value
+    return TEAM_NAMES_ES.get(canonical_team_name(value), value)
+
 
 def localize_market(value: str, language: str | None = None) -> str:
     if _active_language(language) == "en":
@@ -185,8 +224,8 @@ def localize_selection(value: str, language: str | None = None) -> str:
     if value.startswith("Under "):
         return "Menos de " + value.removeprefix("Under ")
     if value.endswith(" or Draw"):
-        return value.removesuffix(" or Draw") + " o empate"
-    return value
+        return localize_team_name(value.removesuffix(" or Draw"), language) + " o empate"
+    return localize_team_name(value, language)
 
 
 def localize_confidence(value: str, language: str | None = None) -> str:
@@ -272,4 +311,12 @@ def canonical_market_family(value: str) -> str:
 
 def localize_table_columns(rows: list[dict], language: str | None = None) -> list[dict]:
     """Translate storage-oriented field names before presenting records to users."""
-    return localize_columns_i18n(rows, language=_active_language(language))
+    active = _active_language(language)
+    localized = localize_columns_i18n(rows, language=active)
+    return [
+        {
+            key: localize_team_name(value, active) if isinstance(value, str) else value
+            for key, value in row.items()
+        }
+        for row in localized
+    ]

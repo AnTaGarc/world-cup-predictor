@@ -34,7 +34,7 @@ class AppContractTests(unittest.TestCase):
         labels, by_label = pages._match_labels([match])
         # New label list starts with a separator row ("─── Fase de grupos ───"),
         # the real match label sits at index 1 with Madrid local time applied.
-        match_label = "26 Jun · 00:00 — Scotland vs Brazil"
+        match_label = "26 Jun · 00:00 — Escocia vs Brasil"
         self.assertIn(match_label, labels)
         self.assertIn(match_label, by_label)
         source = (Path(__file__).parents[1] / "src" / "wcpredict" / "ui" / "pages.py").read_text(encoding="utf-8")
@@ -81,7 +81,7 @@ class AppContractTests(unittest.TestCase):
 
     def test_long_model_audit_is_collapsed_from_the_primary_reading_path(self):
         source = (Path(__file__).parents[1] / "src" / "wcpredict" / "ui" / "pages.py").read_text(encoding="utf-8")
-        self.assertIn('st.expander("Ver cálculo y jugadores usados")', source)
+        self.assertIn('st.expander(_t("summary.calculation"))', source)
 
     def test_player_rankings_default_to_a_sample_available_during_group_stage(self):
         source = (Path(__file__).parents[1] / "src" / "wcpredict" / "ui" / "pages.py").read_text(encoding="utf-8")
@@ -314,7 +314,7 @@ class AppContractTests(unittest.TestCase):
         # that the KO branch is reached and that the advance metric is shown.
         self.assertIn('knockout_badge_html(', source)
         self.assertIn('knockout_advance_html(', source)
-        self.assertIn('"Clasifica"', source)
+        self.assertIn('_t("knockout.qualifies")', source)
         self.assertIn('st.subheader(_t("summary.outcome_probabilities"))', source)
         self.assertIn('if is_knockout:', source)
 
@@ -337,7 +337,7 @@ class AppContractTests(unittest.TestCase):
         source = (Path(__file__).parents[1] / "src" / "wcpredict" / "ui" / "pages.py").read_text(encoding="utf-8")
         self.assertIn("Probables al minuto 120", source)
         self.assertIn("Prob. entre los 5 primeros", source)
-        self.assertIn("Cobertura penalty_history", source)
+        self.assertIn("Penalty-history coverage", source)
         self.assertIn("Porteros titulares usados", source)
         self.assertIn("Penaltis afrontados", source)
         self.assertIn("Tandas recientes cubiertas", source)
@@ -358,16 +358,39 @@ class AppContractTests(unittest.TestCase):
 
         source = (Path(__file__).parents[1] / "src" / "wcpredict" / "ui" / "pages.py").read_text(encoding="utf-8")
         lab = source[source.index("def render_prediction_lab"):source.index("def _render_global_bias_panel")]
-        knockout_block = lab[lab.index("if is_knockout:"):lab.index("    else:", lab.index("if is_knockout:"))]
+        knockout_block = lab[lab.index("if is_knockout:"):lab.index("    else:\n        top_left")]
         self.assertIn("knockout_badge_html(", knockout_block)
         self.assertIn("knockout_advance_html(", knockout_block)
-        self.assertIn('title="Contexto de penaltis"', knockout_block)
+        self.assertIn('title=_t("knockout.penalty_context")', knockout_block)
         self.assertIn(
             "cond_home_pen=knockout_prediction.cond_home_wins_penalties_given_draw_after_et",
             knockout_block,
         )
         self.assertNotIn("cond_home_pen=0.5", knockout_block)
         self.assertNotIn("st.subheader(", knockout_block)
+
+    def test_knockout_cards_and_audit_tables_are_fully_localized(self):
+        source = (Path(__file__).parents[1] / "src" / "wcpredict" / "ui" / "pages.py").read_text(encoding="utf-8")
+        lab = source[source.index("def render_prediction_lab"):source.index("def _render_global_bias_panel")]
+        knockout_block = lab[lab.index("if is_knockout:"):lab.index("    else:\n        top_left")]
+        for key in (
+            "knockout.qualifies",
+            "summary.most_likely_score",
+            "summary.expected_score",
+            "summary.alternatives",
+            "knockout.penalty_context",
+            "summary.calculation",
+        ):
+            self.assertIn(f'_t("{key}"', knockout_block)
+        for spanish_literal in (
+            'metric("Clasifica"',
+            'metric("Marcador más probable',
+            'title="Contexto de penaltis"',
+            'st.caption(f"Marcadores alternativos',
+        ):
+            self.assertNotIn(spanish_literal, knockout_block)
+        self.assertIn("_localize_audit_row(record)", source)
+        self.assertIn("_localize_per_team_audit_row(row)", source)
 
     def test_team_statistics_render_without_volume_markets(self):
         source = (Path(__file__).parents[1] / "src" / "wcpredict" / "ui" / "pages.py").read_text(encoding="utf-8")

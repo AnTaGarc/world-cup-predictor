@@ -100,22 +100,30 @@ def apply_outcome_shifts(
     return {key: value / total for key, value in adjusted.items()}
 
 
-def describe_corrections(corrections: ModelCorrections) -> str:
+def describe_corrections(corrections: ModelCorrections, language: str = "es") -> str:
     """Human-readable summary of what corrections are doing right now."""
     parts: list[str] = []
     if corrections.xg_shift:
         sign = "−" if corrections.xg_shift > 0 else "+"
-        parts.append(f"xG por equipo {sign}{abs(corrections.xg_shift):.2f}")
+        parts.append(
+            f"xG {'por equipo' if language == 'es' else 'per team'} {sign}{abs(corrections.xg_shift):.2f}"
+        )
     for outcome, shift in corrections.outcome_logit_shifts.items():
         if abs(shift) > 0.005:
             direction = "↓" if shift < 0 else "↑"
-            label = {"home": "local", "draw": "empate", "away": "visitante"}.get(outcome, outcome)
+            labels = (
+                {"home": "local", "draw": "empate", "away": "visitante"}
+                if language == "es" else
+                {"home": "home", "draw": "draw", "away": "away"}
+            )
+            label = labels.get(outcome, outcome)
             parts.append(f"{label} {direction}{abs(shift):.2f} (logit)")
     if not parts:
-        return (
-            f"Sin corrección aplicable: el sesgo medido está por debajo del umbral "
-            f"o la muestra ({corrections.sample_size} partidos) es insuficiente."
-        )
+        if language == "en":
+            return f"No correction applied: the measured bias is below the threshold or the sample ({corrections.sample_size} matches) is insufficient."
+        return f"Sin corrección aplicable: el sesgo medido está por debajo del umbral o la muestra ({corrections.sample_size} partidos) es insuficiente."
+    if language == "en":
+        return f"Active correction (Bayesian shrinkage, based on {corrections.sample_size} audited matches): " + ", ".join(parts) + "."
     return (
         "Corrección activa (shrinkage bayesiano, "
         f"basada en {corrections.sample_size} partidos auditados): "

@@ -8,6 +8,7 @@ from wcpredict.ui.i18n import (
     placeholders,
     translate,
 )
+from wcpredict.ui.translations import localize_selection, localize_team_name
 
 
 class I18nTests(unittest.TestCase):
@@ -24,6 +25,9 @@ class I18nTests(unittest.TestCase):
         self.assertEqual(translate("metric.shots_on_target", language="es"), "Tiros a puerta")
         self.assertEqual(translate("metric.shots_on_target", language="en"), "Shots on target")
         self.assertEqual(translate("score.most_likely", language="en"), "Most likely scoreline")
+        self.assertEqual(translate("knockout.qualifies", language="en"), "Advances")
+        self.assertEqual(translate("knockout.penalty_context", language="en"), "Penalty shootout context")
+        self.assertEqual(translate("audit.row.shots_on_target", language="en"), "Shots on target")
 
     def test_invalid_language_is_not_accepted(self):
         self.assertIsNone(normalise_language("fr"))
@@ -49,6 +53,14 @@ class I18nTests(unittest.TestCase):
         english = localize_table_columns(rows, language="en")
         self.assertEqual(english, [{"Player": "Diego Gomez", "Shots on target": 3}])
         self.assertEqual(rows, [{"player_name": "Diego Gomez", "shots_on_target": 3}])
+
+    def test_team_names_are_localized_only_for_spanish_display(self):
+        self.assertEqual(localize_team_name("Spain", "es"), "España")
+        self.assertEqual(localize_team_name("South Korea", "es"), "Corea del Sur")
+        self.assertEqual(localize_team_name("Cote d'Ivoire", "es"), "Costa de Marfil")
+        self.assertEqual(localize_team_name("Spain", "en"), "Spain")
+        self.assertEqual(localize_selection("Spain", "es"), "España")
+        self.assertEqual(localize_selection("Spain or Draw", "es"), "España o empate")
 
 
 if __name__ == "__main__":

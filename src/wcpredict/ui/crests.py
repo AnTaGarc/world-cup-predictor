@@ -124,7 +124,6 @@ def crest_html(team_name: str | None, *, size: int = 20, alt: str | None = None)
     )
 
 
-@lru_cache(maxsize=256)
 def team_with_crest_html(team_name: str | None, *, size: int = 20) -> str:
     """Crest + team name on a single line, vertically centered.
 
@@ -133,11 +132,13 @@ def team_with_crest_html(team_name: str | None, *, size: int = 20) -> str:
     Caching by (team_name, size) collapses that to one lookup per team."""
     if not team_name:
         return ""
+    from wcpredict.ui.translations import localize_team_name
+    display_name = localize_team_name(team_name)
     icon = crest_html(team_name, size=size)
     if icon:
         return (
             f'<span style="display:inline-flex;align-items:center;gap:8px;'
             f'white-space:nowrap;">{icon}'
-            f'<span>{team_name}</span></span>'
+            f'<span>{display_name}</span></span>'
         )
-    return f"<span>{team_name}</span>"
+    return f"<span>{display_name}</span>"

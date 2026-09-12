@@ -1478,11 +1478,11 @@ _VIA_BAR_COLORS = {
 }
 
 
-def knockout_badge_html(stage_label: str) -> str:
+def knockout_badge_html(stage_label: str, badge_label: str = "ELIMINATORIA") -> str:
     """Gradient pill with trophy icon signalling 'this is a knockout match'."""
     return (
         '<div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">'
-        f'<span class="ko-badge">{_KO_TROPHY_SVG} ELIMINATORIA</span>'
+        f'<span class="ko-badge">{_KO_TROPHY_SVG} {escape(badge_label)}</span>'
         f'<span class="ko-badge-stage">{stage_label}</span>'
         '</div>'
     )
