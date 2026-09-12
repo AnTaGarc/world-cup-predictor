@@ -20,6 +20,28 @@ def _slot(**overrides):
 
 
 class BracketScoreRenderingTests(unittest.TestCase):
+    def test_knockout_halves_converge_on_a_central_final(self):
+        slots = [
+            _slot(match_id="L32", round="round_of_32"),
+            _slot(match_id="R32", round="round_of_32"),
+            _slot(match_id="L16", round="round_of_16"),
+            _slot(match_id="R16", round="round_of_16"),
+            _slot(match_id="LQF", round="quarter"),
+            _slot(match_id="RQF", round="quarter"),
+            _slot(match_id="LSF", round="semi"),
+            _slot(match_id="RSF", round="semi"),
+            _slot(match_id="F", round="final"),
+        ]
+
+        html = render_bracket(slots)
+
+        visual_order = ["L32", "L16", "LQF", "LSF", "F", "RSF", "RQF", "R16", "R32"]
+        positions = [html.index(f'>{match_id}</span>') for match_id in visual_order]
+        self.assertEqual(sorted(positions), positions)
+        self.assertIn('class="bracket-half bracket-half-left"', html)
+        self.assertIn('class="bracket-centre"', html)
+        self.assertIn('class="bracket-half bracket-half-right"', html)
+
     def test_phase_result_is_not_double_counted_with_official_match_score(self):
         display = bracket_result_display({
             "goals_a": 2,

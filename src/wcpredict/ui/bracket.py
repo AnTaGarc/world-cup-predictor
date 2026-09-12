@@ -55,15 +55,12 @@ _ROUND_KEYS = {
 }
 
 _ROUND_ORDER = ["r32", "r16", "qf", "sf", "final"]
+_SIDE_ROUNDS = ["r32", "r16", "qf", "sf"]
 
 _ROUND_LABELS = {
     "es": {"r32": "Dieciseisavos", "r16": "Octavos", "qf": "Cuartos", "sf": "Semifinales", "final": "Final"},
     "en": {"r32": "Round of 32", "r16": "Round of 16", "qf": "Quarter-finals", "sf": "Semi-finals", "final": "Final"},
 }
-
-# How many connector pairs between consecutive rounds
-_CONN_COUNTS = [8, 4, 2, 1]
-
 
 def _normalise_round(raw: str) -> str:
     key = _ROUND_KEYS.get(raw)
@@ -219,52 +216,73 @@ def _card_html(slot: dict, language: str = "es") -> str:
 
 
 def render_bracket(slots: list[dict], language: str = "es") -> str:
-    """Return the complete bracket HTML for all knockout slots."""
+    """Return a mirrored knockout bracket whose two halves meet centrally."""
     by_round: dict[str, list[dict]] = {r: [] for r in _ROUND_ORDER}
     by_round["third"] = []
     for s in slots:
         rk = _normalise_round(s["round"])
         by_round[rk].append(s)
 
-    h = '<div class="bracket-container"><div class="bracket-inner">'
+    halves: dict[str, dict[str, list[dict]]] = {"left": {}, "right": {}}
+    for rk in _SIDE_ROUNDS:
+        midpoint = (len(by_round[rk]) + 1) // 2
+        halves["left"][rk] = by_round[rk][:midpoint]
+        halves["right"][rk] = by_round[rk][midpoint:]
 
-    # ── Round headers ──
+    def _round_html(rk: str, side: str) -> str:
+        return (
+            f'<div class="bracket-round bracket-{rk} bracket-round-{side}">'
+            + "".join(_card_html(slot, language) for slot in halves[side][rk])
+            + "</div>"
+        )
+
+    def _connector_html(source: list[dict], side: str, single: bool = False) -> str:
+        side_cls = f" bracket-conn-col-{side}"
+        if single:
+            resolved = bool(source and source[0].get("status") == "closed")
+            resolved_cls = " bracket-conn-resolved" if resolved else ""
+            return (
+                f'<div class="bracket-conn-col{side_cls}">'
+                f'<div class="bracket-conn-single{resolved_cls}"></div></div>'
+            )
+        count = max(1, (len(source) + 1) // 2)
+        parts = [f'<div class="bracket-conn-col{side_cls}">']
+        for j in range(count):
+            pair = source[j * 2:j * 2 + 2]
+            resolved = len(pair) == 2 and all(slot.get("status") == "closed" for slot in pair)
+            resolved_cls = " bracket-conn-resolved" if resolved else ""
+            parts.append(f'<div class="bracket-conn-pair{resolved_cls}"></div>')
+        parts.append("</div>")
+        return "".join(parts)
+
+    def _header(rk: str) -> str:
+        return f'<div class="bracket-rh bracket-rh-{rk}">{_ROUND_LABELS[language][rk]}</div>'
+
+    h = '<div class="bracket-container"><div class="bracket-inner">'
     h += '<div class="bracket-headers">'
-    for i, rk in enumerate(_ROUND_ORDER):
-        if i > 0:
-            h += '<div class="bracket-rh-spacer"></div>'
-        h += f'<div class="bracket-rh bracket-rh-{rk}">{_ROUND_LABELS[language][rk]}</div>'
+    for rk in _SIDE_ROUNDS:
+        h += _header(rk) + '<div class="bracket-rh-spacer"></div>'
+    h += _header("final")
+    for rk in reversed(_SIDE_ROUNDS):
+        h += '<div class="bracket-rh-spacer"></div>' + _header(rk)
     h += "</div>"
 
-    # ── Bracket body ──
     h += '<div class="bracket-body">'
-    for i, rk in enumerate(_ROUND_ORDER):
-        h += f'<div class="bracket-round bracket-{rk}">'
-        for slot in by_round[rk]:
-            h += _card_html(slot, language)
-        h += "</div>"
+    h += '<div class="bracket-half bracket-half-left">'
+    for rk in _SIDE_ROUNDS:
+        h += _round_html(rk, "left")
+        h += _connector_html(halves["left"][rk], "left", single=rk == "sf")
+    h += "</div>"
 
-        # Connector column (except after final)
-        if i < len(_ROUND_ORDER) - 1:
-            src = by_round[rk]
-            count = _CONN_COUNTS[i]
-            h += '<div class="bracket-conn-col">'
-            for j in range(count):
-                a = src[j * 2] if j * 2 < len(src) else None
-                b = src[j * 2 + 1] if j * 2 + 1 < len(src) else None
-                resolved = (
-                    a is not None
-                    and b is not None
-                    and a.get("status") == "closed"
-                    and b.get("status") == "closed"
-                )
-                cls = "bracket-conn-pair"
-                if resolved:
-                    cls += " bracket-conn-resolved"
-                h += f'<div class="{cls}"></div>'
-            h += "</div>"
+    h += '<div class="bracket-centre"><div class="bracket-round bracket-final">'
+    h += "".join(_card_html(slot, language) for slot in by_round["final"])
+    h += "</div></div>"
 
-    h += "</div>"  # bracket-body
+    h += '<div class="bracket-half bracket-half-right">'
+    for rk in reversed(_SIDE_ROUNDS):
+        h += _connector_html(halves["right"][rk], "right", single=rk == "sf")
+        h += _round_html(rk, "right")
+    h += "</div></div>"  # right half, bracket-body
 
     # Third-place match (below the main bracket)
     third_slots = by_round.get("third", [])

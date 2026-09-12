@@ -515,7 +515,7 @@ class AppContractTests(unittest.TestCase):
         self.assertIn('"third_place"', pages_src)
         bracket_src = (Path(__file__).parents[1] / "src" / "wcpredict" / "ui" / "bracket.py").read_text(encoding="utf-8")
         # Third-place section sits after the bracket body in render_bracket.
-        body_end = bracket_src.index('h += "</div>"  # bracket-body')
+        body_end = bracket_src.index('h += "</div></div>"  # right half, bracket-body')
         third_block = bracket_src.index('Third-place match')
         self.assertLess(body_end, third_block)
 

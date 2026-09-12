@@ -766,7 +766,7 @@ div[data-testid="stDataEditor"] tbody tr:hover {
   --bracket-final: #9b6b18;
 }
 .bracket-container { overflow-x: auto; -webkit-overflow-scrolling: touch; padding-bottom: 16px; }
-.bracket-inner { display: flex; flex-direction: column; min-width: 1260px; }
+.bracket-inner { display: flex; flex-direction: column; min-width: 2146px; }
 .bracket-headers { display: flex; align-items: center; margin-bottom: 10px; }
 .bracket-rh { width: 210px; padding: 8px 12px; font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; border-radius: 6px; text-align: center; }
 .bracket-rh-spacer { width: 32px; }
@@ -775,7 +775,10 @@ div[data-testid="stDataEditor"] tbody tr:hover {
 .bracket-rh-qf  { background: rgba(23,132,91,.10);  color: var(--bracket-qf); }
 .bracket-rh-sf  { background: rgba(182,107,0,.10);   color: var(--bracket-sf); }
 .bracket-rh-final { background: rgba(155,107,24,.10); color: var(--bracket-final); }
-.bracket-body { display: flex; align-items: stretch; min-height: 2500px; }
+.bracket-body { display: flex; align-items: stretch; min-height: 1320px; }
+.bracket-half { display: flex; align-items: stretch; }
+.bracket-centre { width: 210px; display: flex; align-items: stretch; }
+.bracket-centre .bracket-round { width: 100%; }
 .bracket-round { width: 210px; display: flex; flex-direction: column; justify-content: space-around; }
 
 /* Match slot — card style with gradient header */
@@ -854,14 +857,27 @@ div[data-testid="stDataEditor"] tbody tr:hover {
   border-top: 2px solid var(--line);
 }
 .bracket-conn-resolved::before, .bracket-conn-resolved::after { border-color: var(--blue-500); }
+.bracket-conn-col-right .bracket-conn-pair::before {
+  left: 50%; right: 0; width: 50%;
+  border-right: 0; border-left: 2px solid var(--line);
+  border-radius: 4px 0 0 4px;
+}
+.bracket-conn-col-right .bracket-conn-pair::after { left: 0; right: 50%; }
+.bracket-conn-col-right .bracket-conn-resolved::before { border-left-color: var(--blue-500); }
+.bracket-conn-single { flex: 1; position: relative; }
+.bracket-conn-single::after {
+  content: ''; position: absolute; top: calc(50% - 1px); left: 0; right: 0;
+  border-top: 2px solid var(--line);
+}
+.bracket-conn-single.bracket-conn-resolved::after { border-color: var(--blue-500); }
 
 /* Third place match */
-.bracket-third { margin-top: 28px; padding-top: 20px; border-top: 1px solid var(--line); }
+.bracket-third { margin-top: 28px; padding-top: 20px; border-top: 1px solid var(--line); display: flex; flex-direction: column; align-items: center; }
 .bracket-third-label { font-size: 12px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--bracket-sf); margin-bottom: 10px; }
-.bracket-third .bracket-slot { max-width: 250px; }
+.bracket-third .bracket-slot, .bracket-third .bracket-slot-link { width: 250px; }
 
 @media (max-width: 720px) {
-  .bracket-inner { min-width: 1260px; }
+  .bracket-inner { min-width: 2146px; }
 }
 
 /* ---- Knockout panel (eliminatoria identity) ---- */
