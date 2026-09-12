@@ -137,6 +137,16 @@ h3 { font-size: 17px; line-height: 1.3; }
   font-size: 14.5px !important;
 }
 [data-testid="stSidebar"] [data-testid="stCaption"] { opacity: 0.6; }
+.st-key-language-selector-shell {
+  position: fixed;
+  left: 20px;
+  bottom: 20px;
+  width: 110px;
+  z-index: 3;
+}
+.st-key-language-selector-shell [role="radiogroup"] {
+  padding-top: 2px !important;
+}
 
 /* ---- Metric cards (KPI tiles) ---- */
 [data-testid="stMetric"] {

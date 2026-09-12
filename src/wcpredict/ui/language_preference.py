@@ -110,8 +110,9 @@ def render_language_preference() -> Language | None:
 
 
 def render_language_selector(language: Language) -> Language:
-    st.sidebar.caption(translate("language.selector", language=language))
-    selected = st.sidebar.radio(
+    selector = st.sidebar.container(key="language-selector-shell")
+    selector.caption(translate("language.selector", language=language))
+    selected = selector.radio(
         translate("language.selector", language=language),
         options=("es", "en"),
         index=0 if language == "es" else 1,

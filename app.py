@@ -46,7 +46,6 @@ language = render_language_preference()
 if language is None:
     st.stop()
 
-render_language_selector(language)
 st.sidebar.markdown(
     '<div style="padding:6px 0 2px;">'
     f'<div style="font-size:18px;font-weight:760;letter-spacing:-0.01em;">⚽ {translate("app.name", language=language)}</div>'
@@ -72,6 +71,8 @@ page = st.sidebar.radio(
     format_func=lambda key: translate(f"nav.{key}", language=language),
     label_visibility="collapsed",
 )
+
+render_language_selector(language)
 
 if page == "dashboard":
     render_dashboard()

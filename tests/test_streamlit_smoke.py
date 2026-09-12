@@ -4,6 +4,14 @@ from streamlit.testing.v1 import AppTest
 
 
 class StreamlitSmokeTests(unittest.TestCase):
+    def test_language_control_follows_the_main_navigation_in_sidebar(self):
+        app = AppTest.from_file("app.py", default_timeout=120)
+        app.session_state["ui_language"] = "es"
+        app.run()
+
+        self.assertEqual([], list(app.exception))
+        self.assertEqual(["Vista", "Idioma"], [item.label for item in app.sidebar.radio])
+
     def test_dashboard_renders_contextual_english_copy(self):
         app = AppTest.from_file("app.py", default_timeout=120)
         app.session_state["ui_language"] = "en"
