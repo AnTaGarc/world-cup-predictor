@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import re
+
 from wcpredict.ui.i18n import localize_controlled, localize_table_columns as localize_columns_i18n
 from wcpredict.names import canonical_team_name
 
@@ -184,6 +186,20 @@ def localize_team_name(value: str, language: str | None = None) -> str:
     if _active_language(language) == "en" or not value:
         return value
     return TEAM_NAMES_ES.get(canonical_team_name(value), value)
+
+
+def localize_team_mentions(value: str, language: str | None = None) -> str:
+    """Translate canonical team names embedded in display-only prose."""
+    if _active_language(language) == "en" or not value:
+        return value
+    translated = str(value)
+    for team_name in sorted(TEAM_NAMES_ES, key=len, reverse=True):
+        translated = re.sub(
+            rf"(?<!\w){re.escape(team_name)}(?!\w)",
+            TEAM_NAMES_ES[team_name],
+            translated,
+        )
+    return translated
 
 
 def localize_market(value: str, language: str | None = None) -> str:

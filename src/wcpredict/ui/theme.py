@@ -10,6 +10,8 @@ Keep visual decisions HERE. The page renderers in ``pages.py`` should only
 import these helpers, never inline CSS.
 """
 
+from html import escape
+
 import streamlit as st
 
 

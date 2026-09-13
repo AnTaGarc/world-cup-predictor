@@ -100,6 +100,7 @@ from wcpredict.ui.translations import (
     localize_selection,
     localize_status,
     localize_table_columns,
+    localize_team_mentions,
     localize_team_name,
 )
 from wcpredict.ui.view_models import (
@@ -2206,7 +2207,7 @@ def _render_knockout_phase_audit(repo: Repository, match, bundle=None) -> None:
             cols[0].metric(_b("Real", "Actual"), section.actual_score or "—")
             cols[1].metric(
                 _b("Resultado previsto", "Predicted outcome"),
-                {"home": match.team_a.name, "draw": _b("Empate", "Draw"), "away": match.team_b.name}.get(
+                {"home": localize_team_name(match.team_a.name, _lang()), "draw": _b("Empate", "Draw"), "away": localize_team_name(match.team_b.name, _lang())}.get(
                     section.predicted_outcome, "—"
                 ),
             )
@@ -2757,10 +2758,11 @@ def _render_prediction_workspace(
         })
         selection_column = result_columns["Selection"]
         explanation_column = result_columns["Explanation"]
-        frame[selection_column] = frame[selection_column].replace({"Draw": _b("Empate", "Draw")})
+        frame[selection_column] = frame[selection_column].map(lambda value: localize_selection(value, _lang()))
         frame[explanation_column] = frame[explanation_column].str.replace(
             "Modelo unificado 1X2", _b("Modelo unificado de resultado", "Unified outcome model"), regex=False
         )
+        frame[explanation_column] = frame[explanation_column].map(lambda value: localize_team_mentions(value, _lang()))
         if _lang() == "en":
             explanation_by_outcome = {
                 "Likely outcome": "Unified match-outcome estimate derived from the scoreline distribution, team form, player availability and deep-stat adjustments.",

@@ -457,6 +457,19 @@ class AppContractTests(unittest.TestCase):
         for percentage in ("42.0%", "31.0%", "27.0%", "53.0%", "47.0%"):
             self.assertIn(f'<span class="pct">{percentage}</span>', html)
 
+    def test_knockout_badge_renders_and_escapes_localized_labels(self):
+        from wcpredict.ui.theme import knockout_badge_html
+
+        html = knockout_badge_html("Final", "ELIMINATORIA & FINAL")
+        self.assertIn("ELIMINATORIA &amp; FINAL", html)
+        self.assertIn("Final", html)
+
+    def test_prediction_lab_localizes_team_names_in_audits_and_result_tables(self):
+        source = (Path(__file__).parents[1] / "src" / "wcpredict" / "ui" / "pages.py").read_text(encoding="utf-8")
+        self.assertIn('localize_team_name(match.team_a.name, _lang())', source)
+        self.assertIn('frame[selection_column].map(lambda value: localize_selection(value, _lang()))', source)
+        self.assertIn('frame[explanation_column].map(lambda value: localize_team_mentions(value, _lang()))', source)
+
     def test_player_tab_lists_full_squad_table_for_the_selected_team(self):
         source = (Path(__file__).parents[1] / "src" / "wcpredict" / "ui" / "pages.py").read_text(encoding="utf-8")
         self.assertIn('"**Plantilla disponible de', source)
